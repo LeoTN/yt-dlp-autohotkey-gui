@@ -1,5 +1,6 @@
 AutoDownloadYouTubeVideo.exe
 .vscode/
 files/config
-files/*.txt
+files/deleted
 files/download
+files/*.txt
