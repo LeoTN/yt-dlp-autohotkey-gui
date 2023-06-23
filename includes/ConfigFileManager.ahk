@@ -279,7 +279,15 @@ editConfigFile(pOptionName, pData)
                     Return
                 }
             }
+            Catch
+            {
+                ; If the try statement fails the object above can not be an array.
+                IniWrite(data, configFileLocation
+                    , configSectionNameArray[A_Index]
+                    , configVariableNameArray[A_Index])
+                Return
+            }
         }
     }
-    Throw
+    Throw ("Error while editing config file")
 }

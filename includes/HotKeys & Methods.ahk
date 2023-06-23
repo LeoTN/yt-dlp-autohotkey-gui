@@ -125,28 +125,24 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     If (booleanSilent = 1)
     {
         ; Execute the command line command and wait for it to be finished.
-        RunWait(A_ComSpec " /c " . stringToExecute, , "Hide")
+        RunWait(A_ComSpec " /c " . stringToExecute, , "Hide", &consoleId)
+        If (terminateScriptAfterDownloadCheckbox.Value = 1)
+        {
+            MsgBox("The download has completed.`n`nTerminating script.", "Download status", "O Iconi T2")
+            ExitApp()
+            ExitApp()
+        }
     }
     Else
     {
         ; Enables the user to access the command and to review potential errors thrown by yt-dlp.
-        Run(A_ComSpec, , , &consoleId)
-        WinWaitActive("ahk_pid " . consoleId)
-        If (WinActive("ahk_pid " . consoleId))
+        RunWait(A_ComSpec " /k " . stringToExecute, , , &consoleId)
+        If (terminateScriptAfterDownloadCheckbox.Value = 1)
         {
-            Send(stringToExecute)
-            Sleep(50)
-            Send("{Enter}")
+            MsgBox("The download has completed.`n`nTerminating script.", "Download status", "O Iconi T2")
+            ExitApp()
+            ExitApp()
         }
-        Else
-        {
-            WinActivate("ahk_pid " . consoleId)
-            Sleep(100)
-            Send(stringToExecute)
-            Sleep(50)
-            Send("{Enter}")
-        }
-        Sleep(1000)
     }
 }
 

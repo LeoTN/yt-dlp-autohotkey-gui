@@ -58,7 +58,7 @@ createDownloadOptionsGUI()
 
     ignoreErrorsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     abortOnErrorCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    ignoreAllOptionsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    ignoreAllOptionsCheckbox.OnEvent("Click", (*) => handleGUI_Checkbox_ignoreAllOptions())
     hideDownloadCommandPromptCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     askForDownloadConfirmationCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     enableFastDownloadModeCheckbox.OnEvent("Click", (*) => handleGUI_Checkbox_fastDownload())
@@ -143,17 +143,6 @@ handleGUI_Checkboxes()
             commandString .= "--abort-on-error "
         }
     }
-    Switch (ignoreAllOptionsCheckbox.Value)
-    {
-        Case 0:
-        {
-            ; Do not ignore the config file.
-        }
-        Case 1:
-        {
-            ; Do ignore the config file.
-        }
-    }
     Switch (askForDownloadConfirmationCheckbox.Value)
     {
         Case 0:
@@ -183,9 +172,14 @@ handleGUI_Checkboxes()
         Case 1:
         {
             ; Add the video description to a .description file.
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-description "
+            }
+            Else
+            {
+                ; Do not download the video description.
+                commandString .= "--no-write-description "
             }
         }
     }
@@ -199,9 +193,14 @@ handleGUI_Checkboxes()
         Case 1:
         {
             ; Download the video 's comment section.
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-comments "
+            }
+            Else
+            {
+                ; Do not download the video's comment section.
+                commandString .= "--no-write-comments "
             }
         }
     }
@@ -210,10 +209,15 @@ handleGUI_Checkboxes()
         Case 1:
         {
             ; Download the video thumbnail and add it to the downloaded video.
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-thumbnail "
                 commandString .= "--embed-thumbnail "
+            }
+            Else
+            {
+                commandString .= "--no-write-thumbnail "
+                commandString .= "--no-embed-thumbnail "
             }
         }
     }
@@ -222,10 +226,14 @@ handleGUI_Checkboxes()
         Case 1:
         {
             ; Download the video's subtitles and embed tem into the downloaded video.
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-description "
                 commandString .= "--embed-subs "
+            }
+            Else
+            {
+                commandString .= "--no-write-description "
             }
         }
     }
@@ -277,7 +285,7 @@ handleGUI_Checkboxes()
         Case 0:
         {
             ; Downloads the video with audio.
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 chooseVideoFormatDropDownList.Opt("-Disabled")
             }
@@ -288,7 +296,7 @@ handleGUI_Checkboxes()
             ; Only extracts the audio and creates the desired audio file type.
             chooseVideoFormatDropDownList.Opt("+Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
-            If (enableFastDownloadModeCheckbox.Value = 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 chooseAudioFormatDropDownList.Opt("-Disabled")
             }
@@ -309,7 +317,7 @@ handleGUI_Checkboxes()
             ; Try to choose the best audio quality both audio and video.
             prioritiseVideoQualityCheckbox.Opt("+Disabled")
             prioritiseAudioQualityCheckbox.Opt("+Disabled")
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= '-f "bestvideo+bestaudio" '
             }
@@ -330,7 +338,7 @@ handleGUI_Checkboxes()
                 ; Try to choose the best audio quality both audio and video.
                 alwaysHighestQualityBothCheckbox.Opt("+Disabled")
                 prioritiseAudioQualityCheckbox.Opt("+Disabled")
-                If (enableFastDownloadModeCheckbox.Value != 1)
+                If (enableFastDownloadModeCheckbox.Value = 0)
                 {
                     commandString .= '-f "bestvideo" '
                 }
@@ -351,7 +359,7 @@ handleGUI_Checkboxes()
                     ; Try to choose the best audio quality both audio and video.
                     alwaysHighestQualityBothCheckbox.Opt("+Disabled")
                     prioritiseVideoQualityCheckbox.Opt("+Disabled")
-                    If (enableFastDownloadModeCheckbox.Value != 1)
+                    If (enableFastDownloadModeCheckbox.Value = 0)
                     {
                         commandString .= '-f "bestaudio" '
                     }
@@ -379,10 +387,8 @@ handleGUI_Checkbox_fastDownload()
             prioritiseVideoQualityCheckbox.Opt("-Disabled")
             prioritiseAudioQualityCheckbox.Opt("-Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
-            If (downloadAudioOnlyCheckbox.Value = 0)
-            {
-                chooseAudioFormatDropDownList.Opt("+Disabled")
-            }
+            ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
+            handleGUI_Checkboxes()
         }
         Case 1:
         {
@@ -405,6 +411,58 @@ handleGUI_Checkbox_fastDownload()
         }
     }
 }
+
+handleGUI_Checkbox_ignoreAllOptions()
+{
+    Switch (ignoreAllOptionsCheckbox.Value)
+    {
+        Case 0:
+        {
+            ; Do not ignore all possible options.
+            ignoreErrorsCheckbox.Opt("-Disabled")
+            abortOnErrorCheckbox.Opt("-Disabled")
+            hideDownloadCommandPromptCheckbox.Opt("-Disabled")
+            askForDownloadConfirmationCheckbox.Opt("-Disabled")
+            enableFastDownloadModeCheckbox.Opt("-Disabled")
+            limitDownloadRateEdit.Opt("-Disabled")
+            higherRetryAmountCheckbox.Opt("-Disabled")
+            downloadVideoDescriptionCheckbox.Opt("-Disabled")
+            downloadVideoCommentsCheckbox.Opt("-Disabled")
+            downloadVideoThumbnail.Opt("-Disabled")
+            downloadVideoSubtitles.Opt("-Disabled")
+            chooseVideoFormatDropDownList.Opt("-Disabled")
+            downloadAudioOnlyCheckbox.Opt("-Disabled")
+            alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+            prioritiseVideoQualityCheckbox.Opt("-Disabled")
+            prioritiseAudioQualityCheckbox.Opt("-Disabled")
+            chooseAudioFormatDropDownList.Opt("-Disabled")
+            ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
+            handleGUI_Checkboxes()
+        }
+        Case 1:
+        {
+            ; Execute a pure download with only necessary parameters while disabeling all other options.
+            ignoreErrorsCheckbox.Opt("+Disabled")
+            abortOnErrorCheckbox.Opt("+Disabled")
+            hideDownloadCommandPromptCheckbox.Opt("+Disabled")
+            askForDownloadConfirmationCheckbox.Opt("+Disabled")
+            enableFastDownloadModeCheckbox.Opt("+Disabled")
+            limitDownloadRateEdit.Opt("+Disabled")
+            higherRetryAmountCheckbox.Opt("+Disabled")
+            downloadVideoDescriptionCheckbox.Opt("+Disabled")
+            downloadVideoCommentsCheckbox.Opt("+Disabled")
+            downloadVideoThumbnail.Opt("+Disabled")
+            downloadVideoSubtitles.Opt("+Disabled")
+            chooseVideoFormatDropDownList.Opt("+Disabled")
+            downloadAudioOnlyCheckbox.Opt("+Disabled")
+            alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+            prioritiseVideoQualityCheckbox.Opt("+Disabled")
+            prioritiseAudioQualityCheckbox.Opt("+Disabled")
+            chooseAudioFormatDropDownList.Opt("+Disabled")
+        }
+    }
+}
+
 ; Function that deals with changes made to any input field.
 handleGUI_InputFields()
 {
@@ -416,7 +474,7 @@ handleGUI_InputFields()
             limitDownloadRateEdit.Value := 100
         }
         ; Limit the download rate to a maximum value in Megabytes per second.
-        If (enableFastDownloadModeCheckbox.Value != 1)
+        If (enableFastDownloadModeCheckbox.Value = 0)
         {
             commandString .= "--limit-rate " . limitDownloadRateEdit.Value . "MB "
         }
@@ -433,10 +491,43 @@ handleGUI_InputFields()
 ; Returns the string to it's caller.
 buildCommandString()
 {
-    global commandString := "yt-dlp "
-    handleGUI_Checkboxes()
-    handleGUI_InputFields()
-    ; Adds the ffmpeg location for the script to remux / extract audio etc.
-    commandString .= "--ffmpeg-location " . ffmpegLocation . " "
-    Return commandString
+    If (ignoreAllOptionsCheckbox.Value = 1)
+    {
+        global commandString := "yt-dlp "
+        ; Basic options such as download path and single URL or multiple URLs.
+        Switch (useTextFileForURLsCheckbox.Value)
+        {
+            Case 0:
+            {
+                commandString .= "--no-batch-file "
+                commandString .= customURLInputEdit.Value . " "
+            }
+            Case 1:
+            {
+                commandString .= "--batch-file " . readConfigFile("URL_FILE_LOCATION") . " "
+            }
+        }
+        Switch (useDefaultDownloadLocationCheckbox.Value)
+        {
+            Case 0:
+            {
+                commandString .= "--paths " . customDownloadLocation.Value . " "
+            }
+            Case 1:
+            {
+                commandString .= "--paths " . readConfigFile("DEFAULT_DOWNLOAD_PATH") . " "
+            }
+        }
+        commandString .= "--ffmpeg-location " . ffmpegLocation . " "
+        Return commandString
+    }
+    Else If (ignoreAllOptionsCheckbox.Value = 0)
+    {
+        global commandString := "yt-dlp "
+        handleGUI_Checkboxes()
+        handleGUI_InputFields()
+        ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
+        commandString .= "--ffmpeg-location " . ffmpegLocation . " "
+        Return commandString
+    }
 }

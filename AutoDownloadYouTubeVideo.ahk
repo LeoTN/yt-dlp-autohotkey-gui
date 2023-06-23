@@ -38,7 +38,6 @@ F7::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below
-        startDownload(buildCommandString(), true)
     }
     Return
 }
