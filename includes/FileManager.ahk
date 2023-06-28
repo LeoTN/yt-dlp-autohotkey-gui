@@ -213,27 +213,31 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
     Return false
 }
 
-manageURLFile()
+manageURLFile(pBooleanShowPrompt := true)
 {
-    result := MsgBox("Do you want to clear the URL file?`n`nA backup will be created anyways.", "Manage URL File", "4164 T10")
+    booleanShowPrompt := pBooleanShowPrompt
 
-    If (result = "Yes")
+    If (booleanShowPrompt = true)
+    {
+        result := MsgBox("Do you want to clear the URL file?`n`nA backup will be created anyways.", "Manage URL File", "4164 T10")
+
+        If (result = "Yes")
+        {
+            Try
+            {
+                FileMove(readConfigFile("URL_FILE_LOCATION"), readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
+            }
+            Catch
+            {
+                MsgBox("The file does not exist !	`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
+            }
+        }
+    }
+    Else If (booleanShowPrompt = false)
     {
         Try
         {
             FileMove(readConfigFile("URL_FILE_LOCATION"), readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
-            Sleep(100)
-            Reload()
         }
-        Catch
-        {
-            MsgBox("The file does not exist !	`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
-            Reload()
-        }
-
-    }
-    Else If (result = "No" || "Timeout")
-    {
-        Reload()
     }
 }

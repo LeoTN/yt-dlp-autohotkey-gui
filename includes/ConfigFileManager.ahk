@@ -29,8 +29,11 @@ URL_FILE_LOCATION := A_ScriptDir . "\files\YT_URLS.txt"
 URL_BACKUP_FILE_LOCATION := A_ScriptDir . "\files\YT_URLS_BACKUP.txt"
 ; Specifies path for the .txt file which stores the blacklist file.
 BLACKLIST_FILE_LOCATION := A_ScriptDir . "\files\YT_BLACKLIST.txt"
+; Standard download log file path.
+DOWNLOAD_LOG_FILE_LOCATION := A_ScriptDir . "\files\download_log.txt"
 ; Standard download path.
-DEFAULT_DOWNLOAD_PATH := A_ScriptDir . "\files\download"
+DOWNLOAD_PATH := A_ScriptDir . "\files\download"
+
 ; Stores which hotkeys are enabled / disabled via the GUI.
 HOTKEY_STATE_ARRAY := "[0, 0, 0, 1, 1, 1, 0]"
 ; Just a list of all standard hotkeys.
@@ -61,7 +64,8 @@ configVariableNameArray := [
     "URL_FILE_LOCATION",
     "URL_BACKUP_FILE_LOCATION",
     "BLACKLIST_FILE_LOCATION",
-    "DEFAULT_DOWNLOAD_PATH",
+    "DOWNLOAD_LOG_FILE_LOCATION",
+    "DOWNLOAD_PATH",
     "HOTKEY_STATE_ARRAY",
     "DOWNLOAD_HK",
     "URL_COLLECT_HK",
@@ -78,6 +82,7 @@ configVariableNameArray := [
 ; IMPORTANT NOTE : Do NOT forget to add the SECTION NAME for EACH new item added in the configVariableNameArray !!!
 configSectionNameArray := [
     "DebugSettings",
+    "FileLocations",
     "FileLocations",
     "FileLocations",
     "FileLocations",

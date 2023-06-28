@@ -50,11 +50,13 @@ createDownloadOptionsGUI()
     useDefaultDownloadLocationCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+30 Checked", "Use default download path")
     customDownloadLocation := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled", "Currently downloading into default directory.")
 
-    startDownloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp+265 yp-90 w205 R5.2", "Start Downloading")
+    startDownloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp+265 yp-90 w205 R5.2", "Download Status")
 
     startDownloadButton := downloadOptionsGUI.Add("Button", "xp+10 yp+20 R1", "Start downloading...")
     cancelDownloadButton := downloadOptionsGUI.Add("Button", "xp+120 w65", "Cancel")
-    terminateScriptAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-120 yp+30", "Terminate script after downloading")
+    terminateScriptAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-119 yp+30", "Terminate script after downloading")
+    downloadStatusProgressBar := downloadOptionsGUI.Add("Progress", "yp+25 w183", 0)
+    downloadStatusText := downloadOptionsGUI.Add("Text", "yp+20 w183", "Currently not downloading.")
 
     ignoreErrorsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     abortOnErrorCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
@@ -102,9 +104,11 @@ cancelDownload()
     {
         Try
         {
-            ProcessClose(("ahk_pid " . consoleId))
-            WinClose(("ahk_pid " . consoleId))
+            ProcessClose(("ahk_pid " . consolePID))
+            WinClose(("ahk_pid " . consolePID))
         }
+        downloadStatusProgressBar.Value := 0
+        downloadStatusText.Text := "Download canceled."
     }
     Return
 }
@@ -114,6 +118,10 @@ handleGUI_Checkboxes()
 {
     global commandString
 
+    If (ignoreAllOptionsCheckbox.Value = 1)
+    {
+        Return
+    }
     Switch (ignoreErrorsCheckbox.Value)
     {
         Case 0:
@@ -277,7 +285,7 @@ handleGUI_Checkboxes()
             ; Keeps the default download directory.
             customDownloadLocation.Opt("+Disabled")
             customDownloadLocation.Value := "Currently downloading into default directory."
-            commandString .= "--paths " . readConfigFile("DEFAULT_DOWNLOAD_PATH") . " "
+            commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . " "
         }
     }
     Switch (downloadAudioOnlyCheckbox.Value)
@@ -421,7 +429,6 @@ handleGUI_Checkbox_ignoreAllOptions()
             ; Do not ignore all possible options.
             ignoreErrorsCheckbox.Opt("-Disabled")
             abortOnErrorCheckbox.Opt("-Disabled")
-            hideDownloadCommandPromptCheckbox.Opt("-Disabled")
             askForDownloadConfirmationCheckbox.Opt("-Disabled")
             enableFastDownloadModeCheckbox.Opt("-Disabled")
             limitDownloadRateEdit.Opt("-Disabled")
@@ -444,7 +451,6 @@ handleGUI_Checkbox_ignoreAllOptions()
             ; Execute a pure download with only necessary parameters while disabeling all other options.
             ignoreErrorsCheckbox.Opt("+Disabled")
             abortOnErrorCheckbox.Opt("+Disabled")
-            hideDownloadCommandPromptCheckbox.Opt("+Disabled")
             askForDownloadConfirmationCheckbox.Opt("+Disabled")
             enableFastDownloadModeCheckbox.Opt("+Disabled")
             limitDownloadRateEdit.Opt("+Disabled")
@@ -515,7 +521,7 @@ buildCommandString()
             }
             Case 1:
             {
-                commandString .= "--paths " . readConfigFile("DEFAULT_DOWNLOAD_PATH") . " "
+                commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . " "
             }
         }
         commandString .= "--ffmpeg-location " . ffmpegLocation . " "
