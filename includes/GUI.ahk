@@ -230,6 +230,10 @@ GUI_ApplyCheckmarksFromConfigFile(pMenuName)
             {
                 activeHotkeyMenu.Uncheck(A_Index . "&")
             }
+            Else
+            {
+                Throw ("No valid state in state array.")
+            }
         }
         stateArray := stringToArray(readConfigFile("HOTKEY_STATE_ARRAY"))
         toggleHotkey(stateArray)

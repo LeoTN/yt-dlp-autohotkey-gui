@@ -21,6 +21,10 @@ Hotkey to disable/enable debug mode.
         editConfigFile("booleanDebugMode", true)
         MsgBox("Debug mode has been enabled.", "DEBUG MODE", "O Icon! 262144 T1")
     }
+    Else
+    {
+        Throw ("No valid state in booleanDebugMode")
+    }
     Return
 }
 
@@ -69,45 +73,51 @@ registerHotkeys()
 ; Hotkey support function to open the script GUI.
 Hotkey_openMainGUI()
 {
-    static flipflop := true
-    If (!WinExist("ahk_id " . mainGUI.Hwnd))
+    Try
     {
-        mainGUI.Show("w300 h200")
-        flipflop := false
+        static flipflop := true
+        If (!WinExist("ahk_id " . mainGUI.Hwnd))
+        {
+            mainGUI.Show("w300 h200")
+            flipflop := false
+            Return
+        }
+        Else If (flipflop = false && WinActive("ahk_id " . mainGUI.Hwnd))
+        {
+            mainGUI.Hide()
+            flipflop := true
+        }
+        Else
+        {
+            WinActivate("ahk_id " . mainGUI.Hwnd)
+        }
         Return
     }
-    Else If (flipflop = false && WinActive("ahk_id " . mainGUI.Hwnd))
-    {
-        mainGUI.Hide()
-        flipflop := true
-    }
-    Else
-    {
-        WinActivate("ahk_id " . mainGUI.Hwnd)
-    }
-    Return
 }
 
 ; Hotkey support function to open the script download options GUI.
 Hotkey_openOptionsGUI()
 {
-    static flipflop := true
-    If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
+    Try
     {
-        downloadOptionsGUI.Show("w500 h405")
-        flipflop := false
+        static flipflop := true
+        If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
+        {
+            downloadOptionsGUI.Show("w500 h405")
+            flipflop := false
+            Return
+        }
+        Else If (flipflop = false && WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
+        {
+            downloadOptionsGUI.Hide()
+            flipflop := true
+        }
+        Else
+        {
+            WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
+        }
         Return
     }
-    Else If (flipflop = false && WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
-    {
-        downloadOptionsGUI.Hide()
-        flipflop := true
-    }
-    Else
-    {
-        WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
-    }
-    Return
 }
 
 /*
@@ -127,42 +137,54 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         ; Execute the command line command and wait for it to be finished.
         Run(A_ComSpec " /c " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , "Hide", &consolePID)
         monitorDownloadProgress(true)
-        ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-        If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+        If (downloadVideoSubtitles.Value = 1)
         {
+            ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
+            If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            {
+                Try
+                {
+                    DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    Sleep(500)
+                }
+            }
             Try
             {
-                DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
-                Sleep(500)
+                FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
             }
         }
-        Try
+        If (clearURLFileAfterDownloadCheckbox.Value = 1 && ignoreAllOptionsCheckbox.Value != 1)
         {
-            FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
-                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
+            manageURLFile(false)
         }
-        manageURLFile(false)
     }
     Else
     {
         ; Enables the user to access the command and to review potential errors thrown by yt-dlp.
         Run(A_ComSpec " /k " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , , &consolePID)
         monitorDownloadProgress(true)
-        ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-        If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+        If (downloadVideoSubtitles.Value = 1)
         {
+            ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
+            If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            {
+                Try
+                {
+                    DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    Sleep(500)
+                }
+            }
             Try
             {
-                DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
-                Sleep(500)
+                FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
             }
         }
-        Try
+        If (clearURLFileAfterDownloadCheckbox.Value = 1 && ignoreAllOptionsCheckbox.Value != 1)
         {
-            FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
-                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
+            clearURLFile()
         }
-        clearURLFile()
     }
     If (terminateScriptAfterDownloadCheckbox.Value = 1)
     {

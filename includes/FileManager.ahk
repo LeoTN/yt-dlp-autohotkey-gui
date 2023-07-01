@@ -233,7 +233,7 @@ manageURLFile(pBooleanShowPrompt := true)
             }
         }
     }
-    Else If (booleanShowPrompt = false)
+    Else
     {
         Try
         {
