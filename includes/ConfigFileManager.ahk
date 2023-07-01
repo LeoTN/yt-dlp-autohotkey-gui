@@ -30,7 +30,7 @@ URL_BACKUP_FILE_LOCATION := A_ScriptDir . "\files\YT_URLS_BACKUP.txt"
 ; Specifies path for the .txt file which stores the blacklist file.
 BLACKLIST_FILE_LOCATION := A_ScriptDir . "\files\YT_BLACKLIST.txt"
 ; Standard download log file path.
-DOWNLOAD_LOG_FILE_LOCATION := A_ScriptDir . "\files\download_log.txt"
+DOWNLOAD_LOG_FILE_LOCATION := A_ScriptDir . "\files\download\download_log.txt"
 ; Standard download path.
 DOWNLOAD_PATH := A_ScriptDir . "\files\download"
 
@@ -204,7 +204,7 @@ readConfigFile(pOptionName)
                 ; If necessary the directory read in the config file will be created.
                 ; SplitPath makes sure the last part of the whole path is removed.
                 ; For example it removes the "\YT_URLS.txt"
-                SplitPath(configFileContentArray[A_Index], , &outDir)
+                SplitPath(configFileContentArray[A_Index], &outFileName, &outDir)
                 ; Looks for one of the specified characters to identify invalid path names.
                 ; Searches for common mistakes in the path name.
                 specialChars := '<>"/|?*'
@@ -218,8 +218,17 @@ readConfigFile(pOptionName)
                         ExitApp()
                     }
                 }
+
                 If (!DirExist(outDir))
                 {
+                    ; The download log file location will be created without any prompt to avoid annoying the user e.g.
+                    ; because the download folder has changed or has been deleted.
+                    If (outFileName = "download_log.txt")
+                    {
+                        DirCreate(outDir)
+                        Sleep(500)
+                        Return configFileContentArray[A_Index]
+                    }
                     result := MsgBox("The directory :`n" . configFileContentArray[A_Index]
                     . "`ndoes not exist. `nWould you like to create it ?", "Warning !", "YN Icon! T10")
                     If (result = "Yes")
@@ -227,6 +236,7 @@ readConfigFile(pOptionName)
                         Try
                         {
                             DirCreate(outDir)
+                            Sleep(500)
                             Return configFileContentArray[A_Index]
                         }
                         Catch

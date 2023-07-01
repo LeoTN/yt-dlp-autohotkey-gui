@@ -4,6 +4,7 @@ CoordMode "Mouse", "Client"
 #Warn Unreachable, Off
 
 global commandString := ""
+global downloadTime := FormatTime(A_Now, "HH-mm-ss_dd.MM.yyyy")
 
 createDownloadOptionsGUI()
 {
@@ -79,10 +80,11 @@ createDownloadOptionsGUI()
 
     limitDownloadRateEdit.OnEvent("Change", (*) => handleGUI_InputFields())
     customURLInputEdit.OnEvent("Change", (*) => handleGUI_InputFields())
+    customDownloadLocation.OnEvent("Focus", (*) => handleGUI_InputFields())
     chooseVideoFormatDropDownList.OnEvent("Change", (*) => handleGUI_InputFields())
     chooseAudioFormatDropDownList.OnEvent("Change", (*) => handleGUI_InputFields())
 
-    startDownloadButton.OnEvent("Click", (*) => startDownload(commandString))
+    startDownloadButton.OnEvent("Click", (*) => startDownload(buildCommandString()))
     cancelDownloadButton.OnEvent("Click", (*) => cancelDownload())
 }
 
@@ -92,8 +94,6 @@ optionsGUI_onInit()
     createDownloadOptionsGUI()
     buildCommandString()
 }
-
-; Use embed options for later !!!
 
 cancelDownload()
 {
@@ -183,6 +183,7 @@ handleGUI_Checkboxes()
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-description "
+                commandString .= '--paths "description:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\description(s)" '
             }
             Else
             {
@@ -204,6 +205,9 @@ handleGUI_Checkboxes()
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-comments "
+                ; Currently not implemeted into yt-dlp.
+                ; commandString .= '--paths "comments:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\comments" '
+                ; This script contains a work arround for moving the comments to a desired folder.
             }
             Else
             {
@@ -220,12 +224,11 @@ handleGUI_Checkboxes()
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-thumbnail "
-                commandString .= "--embed-thumbnail "
+                commandString .= '--paths "thumbnail:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\thumbnail(s)" '
             }
             Else
             {
                 commandString .= "--no-write-thumbnail "
-                commandString .= "--no-embed-thumbnail "
             }
         }
     }
@@ -236,56 +239,14 @@ handleGUI_Checkboxes()
             ; Download the video's subtitles and embed tem into the downloaded video.
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
-                commandString .= "--write-description "
+                commandString .= "--write-subs "
+                commandString .= '--paths "subtitle:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\subtitle(s)" '
                 commandString .= "--embed-subs "
             }
             Else
             {
-                commandString .= "--no-write-description "
+                commandString .= "--no-write-subs "
             }
-        }
-    }
-    Switch (useTextFileForURLsCheckbox.Value)
-    {
-        Case 0:
-        {
-            ; Allow the user to download his own URL.
-            customURLInputEdit.Opt("-Disabled")
-            If (customURLInputEdit.Value = "Currently downloading collected URLs.")
-            {
-                customURLInputEdit.Value := "You can now enter your own URL."
-            }
-            commandString .= "--no-batch-file "
-            commandString .= customURLInputEdit.Value . " "
-        }
-        Case 1:
-        {
-            ; Download selected URLs form the text file.
-            customURLInputEdit.Opt("+Disabled")
-            customURLInputEdit.Value := "Currently downloading collected URLs."
-            ; Gives the .txt file with all youtube URLs to yt-dlp.
-            commandString .= "--batch-file " . readConfigFile("URL_FILE_LOCATION") . " "
-        }
-    }
-    Switch (useDefaultDownloadLocationCheckbox.Value)
-    {
-        Case 0:
-        {
-            ; Allows the user to select a custom download path.
-            customDownloadLocation.Opt("-Disabled")
-            ; Makes sure that a user input will not be overwritten.
-            If (customDownloadLocation.Value = "Currently downloading into default directory.")
-            {
-                customDownloadLocation.Value := "You can now specify your own download path."
-            }
-            commandString .= "--paths " . customDownloadLocation.Value . " "
-        }
-        Case 1:
-        {
-            ; Keeps the default download directory.
-            customDownloadLocation.Opt("+Disabled")
-            customDownloadLocation.Value := "Currently downloading into default directory."
-            commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . " "
         }
     }
     Switch (downloadAudioOnlyCheckbox.Value)
@@ -310,6 +271,7 @@ handleGUI_Checkboxes()
             }
             commandString .= "--extract-audio "
             commandString .= '--audio-format "' . downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] . '" '
+            commandString .= '--paths "audio:audio" '
         }
     }
     Switch (alwaysHighestQualityBothCheckbox.Value)
@@ -327,7 +289,7 @@ handleGUI_Checkboxes()
             prioritiseAudioQualityCheckbox.Opt("+Disabled")
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
-                commandString .= '-f "bestvideo+bestaudio" '
+                commandString .= '--format "bestvideo+bestaudio" '
             }
         }
     }
@@ -348,7 +310,7 @@ handleGUI_Checkboxes()
                 prioritiseAudioQualityCheckbox.Opt("+Disabled")
                 If (enableFastDownloadModeCheckbox.Value = 0)
                 {
-                    commandString .= '-f "bestvideo" '
+                    commandString .= '--format "bestvideo" '
                 }
             }
         }
@@ -369,10 +331,47 @@ handleGUI_Checkboxes()
                     prioritiseVideoQualityCheckbox.Opt("+Disabled")
                     If (enableFastDownloadModeCheckbox.Value = 0)
                     {
-                        commandString .= '-f "bestaudio" '
+                        commandString .= '--format "bestaudio" '
                     }
                 }
             }
+        }
+    }
+    Switch (useTextFileForURLsCheckbox.Value)
+    {
+        Case 0:
+        {
+            ; Allow the user to download his own URL.
+            customURLInputEdit.Opt("-Disabled")
+            If (customURLInputEdit.Value = "Currently downloading collected URLs.")
+            {
+                customURLInputEdit.Value := "You can now enter your own URL."
+            }
+        }
+        Case 1:
+        {
+            ; Download selected URLs form the text file.
+            customURLInputEdit.Opt("+Disabled")
+            customURLInputEdit.Value := "Currently downloading collected URLs."
+        }
+    }
+    Switch (useDefaultDownloadLocationCheckbox.Value)
+    {
+        Case 0:
+        {
+            ; Allows the user to select a custom download path.
+            customDownloadLocation.Opt("-Disabled")
+            ; Makes sure that a user input will not be overwritten.
+            If (customDownloadLocation.Value = "Currently downloading into default directory.")
+            {
+                customDownloadLocation.Value := "You can now specify your own download path."
+            }
+        }
+        Case 1:
+        {
+            ; Keeps the default download directory.
+            customDownloadLocation.Opt("+Disabled")
+            customDownloadLocation.Value := "Currently downloading into default directory."
         }
     }
 }
@@ -485,6 +484,22 @@ handleGUI_InputFields()
             commandString .= "--limit-rate " . limitDownloadRateEdit.Value . "MB "
         }
     }
+    If (customDownloadLocation.Value = "You can now specify your own download path.")
+    {
+        newDownloadFolder := DirSelect("*" . readConfigFile("DOWNLOAD_PATH"), 3, "Select download folder")
+        If (newDownloadFolder = "")
+        {
+            MsgBox("Invalid folder selection.", "Error", "O IconX T1.5")
+            ; Checks the default download location checkbox so that the user loses focus on the input field.
+            ; Therefore he can click on it again and the "focus" event will be triggered.
+            useDefaultDownloadLocationCheckbox.Value := 1
+            handleGUI_Checkboxes()
+        }
+        Else
+        {
+            customDownloadLocation.Value := newDownloadFolder
+        }
+    }
     ; Handles the desired download formats.
     If (enableFastDownloadModeCheckbox.Value != 1 && downloadAudioOnlyCheckbox.Value != 1)
     {
@@ -497,6 +512,8 @@ handleGUI_InputFields()
 ; Returns the string to it's caller.
 buildCommandString()
 {
+    ; Formats the value of A_Now to give each folder a unique time stamp.
+    global downloadTime := FormatTime(A_Now, "HH-mm-ss_dd.MM.yyyy")
     If (ignoreAllOptionsCheckbox.Value = 1)
     {
         global commandString := "yt-dlp "
@@ -517,21 +534,50 @@ buildCommandString()
         {
             Case 0:
             {
-                commandString .= "--paths " . customDownloadLocation.Value . " "
+                commandString .= "--paths " . customDownloadLocation.Value . "\" . downloadTime . "\video "
             }
             Case 1:
             {
-                commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . " "
+                commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video "
             }
         }
+        ; This makes sure that the output file does not contain any weird letters.
+        commandString .= '--output "%(title)s.%(ext)s" '
+        ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
         commandString .= "--ffmpeg-location " . ffmpegLocation . " "
         Return commandString
     }
     Else If (ignoreAllOptionsCheckbox.Value = 0)
     {
         global commandString := "yt-dlp "
+        ; Basic options such as download path and single URL or multiple URLs.
+        Switch (useTextFileForURLsCheckbox.Value)
+        {
+            Case 0:
+            {
+                commandString .= "--no-batch-file "
+                commandString .= customURLInputEdit.Value . " "
+            }
+            Case 1:
+            {
+                commandString .= "--batch-file " . readConfigFile("URL_FILE_LOCATION") . " "
+            }
+        }
+        Switch (useDefaultDownloadLocationCheckbox.Value)
+        {
+            Case 0:
+            {
+                commandString .= "--paths " . customDownloadLocation.Value . "\" . downloadTime . "\video "
+            }
+            Case 1:
+            {
+                commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video "
+            }
+        }
         handleGUI_Checkboxes()
         handleGUI_InputFields()
+        ; This makes sure that the output file does not contain any weird letters.
+        commandString .= '--output "%(title)s.%(ext)s" '
         ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
         commandString .= "--ffmpeg-location " . ffmpegLocation . " "
         Return commandString

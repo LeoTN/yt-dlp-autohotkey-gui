@@ -79,8 +79,8 @@ createMainGUI()
     optionsMenu.Add("&Active Hotkeys...", activeHotkeyMenu)
     optionsMenu.SetIcon("&Active Hotkeys...", "shell32.dll", 177)
     optionsMenu.Add()
-    optionsMenu.Add("Manage URL File", (*) => manageURLFile())
-    optionsMenu.SetIcon("Manage URL File", "shell32.dll", 43)
+    optionsMenu.Add("Clear URL File", (*) => manageURLFile())
+    optionsMenu.SetIcon("Clear URL File", "shell32.dll", 43)
     optionsMenu.Add("Open Download Options GUI", (*) => Hotkey_openOptionsGUI())
     optionsMenu.SetIcon("Open Download Options GUI", "shell32.dll", 123)
     optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
@@ -89,8 +89,11 @@ createMainGUI()
     optionsMenu.SetIcon("Reload Script", "shell32.dll", 207)
 
     helpMenu := Menu()
-    ; REMOVE
-    helpMenu.Add("GitHub", (*) => Run("https://github.com/LeoTN/youtube-downloader-using-ahk#readme"))
+    helpMenu.Add("This repository (yt-dlp-autohotkey-gui)",
+        (*) => Run("https://github.com/LeoTN/yt-dlp-autohotkey-gui#video-downloader-with-basic-autohotkey-gui"))
+    helpMenu.Add("Used repository (yt-dlp)", (*) => Run("https://github.com/yt-dlp/yt-dlp"))
+    helpMenu.Add("Original repository (youtube-downloader-using-ahk)",
+        (*) => Run("https://github.com/LeoTN/youtube-downloader-using-ahk#readme"))
 
     allMenus := MenuBar()
     allMenus.Add("&File", fileMenu)

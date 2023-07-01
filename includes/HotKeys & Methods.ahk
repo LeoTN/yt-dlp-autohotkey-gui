@@ -41,7 +41,7 @@ registerHotkeys()
     ; Beginning of all standard script hotkeys.
 
     ; Main hotkey (start download).
-    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(commandString), "On")
+    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), "On")
 
     ; Second hotkey (collect URLs).
     Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), "On")
@@ -127,7 +127,20 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         ; Execute the command line command and wait for it to be finished.
         Run(A_ComSpec " /c " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , "Hide", &consolePID)
         monitorDownloadProgress(true)
-        ProcessWaitClose(consolePID)
+        ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
+        If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+        {
+            Try
+            {
+                DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                Sleep(500)
+            }
+        }
+        Try
+        {
+            FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
+                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
+        }
         manageURLFile(false)
     }
     Else
@@ -135,7 +148,20 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         ; Enables the user to access the command and to review potential errors thrown by yt-dlp.
         Run(A_ComSpec " /k " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , , &consolePID)
         monitorDownloadProgress(true)
-        ProcessWaitClose(consolePID)
+        ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
+        If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+        {
+            Try
+            {
+                DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                Sleep(500)
+            }
+        }
+        Try
+        {
+            FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
+                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
+        }
         clearURLFile()
     }
     If (terminateScriptAfterDownloadCheckbox.Value = 1)
@@ -168,10 +194,21 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         currentBarValue := 0
         oldCurrentBarValue := 0
         partProgress := 0
+        downloadStatusProgressBar.Value := 0
         downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+        Try
+        {
+            FileDelete(readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"))
+        }
+        ; Waits for the download log file to exist again.
+        While (!FileExist(readConfigFile("DOWNLOAD_LOG_FILE_LOCATION")))
+        {
+            Sleep(1000)
+        }
     }
 
     downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
+
     Loop Read (readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"))
     {
         ; All previous lines will be skipped.
@@ -322,7 +359,7 @@ toggleHotkey(pStateArray)
     Hotkey(readConfigFile("TERMINATE_SCRIPT_HK"), (*) => terminateScriptPrompt(), onOffArray[1])
     Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), onOffArray[2])
     Hotkey(readConfigFile("PAUSE_CONTINUE_SCRIPT_HK"), (*) => MsgBox("Not implemented yet"), onOffArray[3])
-    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(commandString), onOffArray[4])
+    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray[4])
     Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray[5])
     Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray[6])
     Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), onOffArray[7])

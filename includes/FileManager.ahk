@@ -31,7 +31,7 @@ saveSearchBarContentsToFile()
     }
     Else
     {
-        FileAppend("Made by Donnerbaer" . "`n", readConfigFile("URL_FILE_LOCATION"))
+        FileAppend("#Made by Donnerbaer" . "`n", readConfigFile("URL_FILE_LOCATION"))
         writeToURLFile(clipboardContent)
     }
 }
@@ -62,7 +62,7 @@ saveVideoURLDirectlyToFile()
         }
         Else
         {
-            FileAppend("Made by Donnerbaer" . "`n", readConfigFile("URL_FILE_LOCATION"))
+            FileAppend("#Made by Donnerbaer" . "`n", readConfigFile("URL_FILE_LOCATION"))
             writeToURLFile(clipboardContent)
         }
     }
