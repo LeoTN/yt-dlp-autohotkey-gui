@@ -29,8 +29,11 @@ URL_FILE_LOCATION := A_ScriptDir . "\files\YT_URLS.txt"
 URL_BACKUP_FILE_LOCATION := A_ScriptDir . "\files\YT_URLS_BACKUP.txt"
 ; Specifies path for the .txt file which stores the blacklist file.
 BLACKLIST_FILE_LOCATION := A_ScriptDir . "\files\YT_BLACKLIST.txt"
+; Standard download log file path.
+DOWNLOAD_LOG_FILE_LOCATION := A_ScriptDir . "\files\download\download_log.txt"
 ; Standard download path.
-DEFAULT_DOWNLOAD_PATH := A_ScriptDir . "\files\download"
+DOWNLOAD_PATH := A_ScriptDir . "\files\download"
+
 ; Stores which hotkeys are enabled / disabled via the GUI.
 HOTKEY_STATE_ARRAY := "[0, 0, 0, 1, 1, 1, 0]"
 ; Just a list of all standard hotkeys.
@@ -61,7 +64,8 @@ configVariableNameArray := [
     "URL_FILE_LOCATION",
     "URL_BACKUP_FILE_LOCATION",
     "BLACKLIST_FILE_LOCATION",
-    "DEFAULT_DOWNLOAD_PATH",
+    "DOWNLOAD_LOG_FILE_LOCATION",
+    "DOWNLOAD_PATH",
     "HOTKEY_STATE_ARRAY",
     "DOWNLOAD_HK",
     "URL_COLLECT_HK",
@@ -78,6 +82,7 @@ configVariableNameArray := [
 ; IMPORTANT NOTE : Do NOT forget to add the SECTION NAME for EACH new item added in the configVariableNameArray !!!
 configSectionNameArray := [
     "DebugSettings",
+    "FileLocations",
     "FileLocations",
     "FileLocations",
     "FileLocations",
@@ -199,7 +204,7 @@ readConfigFile(pOptionName)
                 ; If necessary the directory read in the config file will be created.
                 ; SplitPath makes sure the last part of the whole path is removed.
                 ; For example it removes the "\YT_URLS.txt"
-                SplitPath(configFileContentArray[A_Index], , &outDir)
+                SplitPath(configFileContentArray[A_Index], &outFileName, &outDir)
                 ; Looks for one of the specified characters to identify invalid path names.
                 ; Searches for common mistakes in the path name.
                 specialChars := '<>"/|?*'
@@ -213,8 +218,17 @@ readConfigFile(pOptionName)
                         ExitApp()
                     }
                 }
+
                 If (!DirExist(outDir))
                 {
+                    ; The download log file location will be created without any prompt to avoid annoying the user e.g.
+                    ; because the download folder has changed or has been deleted.
+                    If (outFileName = "download_log.txt")
+                    {
+                        DirCreate(outDir)
+                        Sleep(500)
+                        Return configFileContentArray[A_Index]
+                    }
                     result := MsgBox("The directory :`n" . configFileContentArray[A_Index]
                     . "`ndoes not exist. `nWould you like to create it ?", "Warning !", "YN Icon! T10")
                     If (result = "Yes")
@@ -222,6 +236,7 @@ readConfigFile(pOptionName)
                         Try
                         {
                             DirCreate(outDir)
+                            Sleep(500)
                             Return configFileContentArray[A_Index]
                         }
                         Catch
@@ -279,7 +294,15 @@ editConfigFile(pOptionName, pData)
                     Return
                 }
             }
+            Catch
+            {
+                ; If the try statement fails the object above can not be an array.
+                IniWrite(data, configFileLocation
+                    , configSectionNameArray[A_Index]
+                    , configVariableNameArray[A_Index])
+                Return
+            }
         }
     }
-    Throw
+    Throw ("Error while editing config file")
 }

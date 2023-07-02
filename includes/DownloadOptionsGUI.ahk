@@ -4,6 +4,7 @@ CoordMode "Mouse", "Client"
 #Warn Unreachable, Off
 
 global commandString := ""
+global downloadTime := FormatTime(A_Now, "HH-mm-ss_dd.MM.yyyy")
 
 createDownloadOptionsGUI()
 {
@@ -16,7 +17,7 @@ createDownloadOptionsGUI()
     abortOnErrorCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Abort on error")
     ignoreAllOptionsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Ignore all options")
     hideDownloadCommandPromptCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+110 yp-40", "Download in a background task")
-    askForDownloadConfirmationCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Ask for download confirmation")
+    clearURLFileAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Clear the URL file after download")
     enableFastDownloadModeCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Fast download mode")
 
     downloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-120 yp+20 w394 R9.3", "Download Options")
@@ -32,11 +33,11 @@ createDownloadOptionsGUI()
     downloadVideoSubtitles := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download the video's subtitles")
 
     chooseVideoFormatText := downloadOptionsGUI.Add("Text", "xp+250 yp-155", "Desired video format")
-    downloadVideoFormatArray := ["mp4", "webm", "avi", "flv", "mkv", "mov"]
+    downloadVideoFormatArray := ["Best format for quality", "mp4", "webm", "avi", "flv", "mkv", "mov"]
     chooseVideoFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1", downloadVideoFormatArray)
 
-    downloadAudioOnlyCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5", "Download audio only")
-    downloadAudioFormatArray := ["mp3", "wav", "m4a", "flac", "aac", "alac", "opus", "vorbis"]
+    downloadAudioOnlyCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-3 yp+27.5", "Download audio only")
+    downloadAudioFormatArray := ["Best format for quality", "mp3", "wav", "m4a", "flac", "aac", "alac", "opus", "vorbis"]
     chooseAudioFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1", downloadAudioFormatArray)
 
     alwaysHighestQualityBothCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5 Checked", "Balance quality")
@@ -50,17 +51,19 @@ createDownloadOptionsGUI()
     useDefaultDownloadLocationCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+30 Checked", "Use default download path")
     customDownloadLocation := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled", "Currently downloading into default directory.")
 
-    startDownloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp+265 yp-90 w205 R5.2", "Start Downloading")
+    startDownloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp+265 yp-90 w205 R5.2", "Download Status")
 
     startDownloadButton := downloadOptionsGUI.Add("Button", "xp+10 yp+20 R1", "Start downloading...")
     cancelDownloadButton := downloadOptionsGUI.Add("Button", "xp+120 w65", "Cancel")
-    terminateScriptAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-120 yp+30", "Terminate script after downloading")
+    terminateScriptAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-119 yp+30", "Terminate script after downloading")
+    downloadStatusProgressBar := downloadOptionsGUI.Add("Progress", "yp+25 w183", 0)
+    downloadStatusText := downloadOptionsGUI.Add("Text", "yp+20 w183", "Currently not downloading.")
 
     ignoreErrorsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     abortOnErrorCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    ignoreAllOptionsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    ignoreAllOptionsCheckbox.OnEvent("Click", (*) => handleGUI_Checkbox_ignoreAllOptions())
     hideDownloadCommandPromptCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    askForDownloadConfirmationCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    clearURLFileAfterDownloadCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     enableFastDownloadModeCheckbox.OnEvent("Click", (*) => handleGUI_Checkbox_fastDownload())
     higherRetryAmountCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     downloadVideoDescriptionCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
@@ -77,10 +80,11 @@ createDownloadOptionsGUI()
 
     limitDownloadRateEdit.OnEvent("Change", (*) => handleGUI_InputFields())
     customURLInputEdit.OnEvent("Change", (*) => handleGUI_InputFields())
+    customDownloadLocation.OnEvent("Focus", (*) => handleGUI_InputFields())
     chooseVideoFormatDropDownList.OnEvent("Change", (*) => handleGUI_InputFields())
     chooseAudioFormatDropDownList.OnEvent("Change", (*) => handleGUI_InputFields())
 
-    startDownloadButton.OnEvent("Click", (*) => startDownload(commandString))
+    startDownloadButton.OnEvent("Click", (*) => startDownload(buildCommandString()))
     cancelDownloadButton.OnEvent("Click", (*) => cancelDownload())
 }
 
@@ -91,8 +95,6 @@ optionsGUI_onInit()
     buildCommandString()
 }
 
-; Use embed options for later !!!
-
 cancelDownload()
 {
     result := MsgBox("Do you really want to cancel the ongoing download process ?"
@@ -102,9 +104,11 @@ cancelDownload()
     {
         Try
         {
-            ProcessClose(("ahk_pid " . consoleId))
-            WinClose(("ahk_pid " . consoleId))
+            ProcessClose(("ahk_pid " . consolePID))
+            WinClose(("ahk_pid " . consolePID))
         }
+        downloadStatusProgressBar.Value := 0
+        downloadStatusText.Text := "Download canceled."
     }
     Return
 }
@@ -114,6 +118,48 @@ handleGUI_Checkboxes()
 {
     global commandString
 
+    Switch (useTextFileForURLsCheckbox.Value)
+    {
+        Case 0:
+        {
+            ; Allow the user to download his own URL.
+            customURLInputEdit.Opt("-Disabled")
+            If (customURLInputEdit.Value = "Currently downloading collected URLs.")
+            {
+                customURLInputEdit.Value := "You can now enter your own URL."
+            }
+        }
+        Case 1:
+        {
+            ; Download selected URLs form the text file.
+            customURLInputEdit.Opt("+Disabled")
+            customURLInputEdit.Value := "Currently downloading collected URLs."
+        }
+    }
+    Switch (useDefaultDownloadLocationCheckbox.Value)
+    {
+        Case 0:
+        {
+            ; Allows the user to select a custom download path.
+            customDownloadLocation.Opt("-Disabled")
+            ; Makes sure that a user input will not be overwritten.
+            If (customDownloadLocation.Value = "Currently downloading into default directory.")
+            {
+                customDownloadLocation.Value := "You can now specify your own download path."
+            }
+        }
+        Case 1:
+        {
+            ; Keeps the default download directory.
+            customDownloadLocation.Opt("+Disabled")
+            customDownloadLocation.Value := "Currently downloading into default directory."
+        }
+    }
+    ; Stops the script form continuing because all options are considered as ignored.
+    If (ignoreAllOptionsCheckbox.Value = 1)
+    {
+        Return
+    }
     Switch (ignoreErrorsCheckbox.Value)
     {
         Case 0:
@@ -143,28 +189,6 @@ handleGUI_Checkboxes()
             commandString .= "--abort-on-error "
         }
     }
-    Switch (ignoreAllOptionsCheckbox.Value)
-    {
-        Case 0:
-        {
-            ; Do not ignore the config file.
-        }
-        Case 1:
-        {
-            ; Do ignore the config file.
-        }
-    }
-    Switch (askForDownloadConfirmationCheckbox.Value)
-    {
-        Case 0:
-        {
-            ; Do not show a confirmation prompt before downloading.
-        }
-        Case 1:
-        {
-            ; Show a confirmation prompt before downloading.
-        }
-    }
     Switch (higherRetryAmountCheckbox.Value)
     {
         Case 1:
@@ -183,9 +207,15 @@ handleGUI_Checkboxes()
         Case 1:
         {
             ; Add the video description to a .description file.
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-description "
+                commandString .= '--paths "description:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\description(s)" '
+            }
+            Else
+            {
+                ; Do not download the video description.
+                commandString .= "--no-write-description "
             }
         }
     }
@@ -199,9 +229,17 @@ handleGUI_Checkboxes()
         Case 1:
         {
             ; Download the video 's comment section.
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-comments "
+                ; Currently not implemeted into yt-dlp.
+                ; commandString .= '--paths "comments:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\comments" '
+                ; This script contains a work arround for moving the comments to a desired folder.
+            }
+            Else
+            {
+                ; Do not download the video's comment section.
+                commandString .= "--no-write-comments "
             }
         }
     }
@@ -210,10 +248,14 @@ handleGUI_Checkboxes()
         Case 1:
         {
             ; Download the video thumbnail and add it to the downloaded video.
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-thumbnail "
-                commandString .= "--embed-thumbnail "
+                commandString .= '--paths "thumbnail:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\thumbnail(s)" '
+            }
+            Else
+            {
+                commandString .= "--no-write-thumbnail "
             }
         }
     }
@@ -222,54 +264,16 @@ handleGUI_Checkboxes()
         Case 1:
         {
             ; Download the video's subtitles and embed tem into the downloaded video.
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
-                commandString .= "--write-description "
+                commandString .= "--write-subs "
+                commandString .= '--paths "subtitle:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\subtitle(s)" '
                 commandString .= "--embed-subs "
             }
-        }
-    }
-    Switch (useTextFileForURLsCheckbox.Value)
-    {
-        Case 0:
-        {
-            ; Allow the user to download his own URL.
-            customURLInputEdit.Opt("-Disabled")
-            If (customURLInputEdit.Value = "Currently downloading collected URLs.")
+            Else
             {
-                customURLInputEdit.Value := "You can now enter your own URL."
+                commandString .= "--no-write-subs "
             }
-            commandString .= "--no-batch-file "
-            commandString .= customURLInputEdit.Value . " "
-        }
-        Case 1:
-        {
-            ; Download selected URLs form the text file.
-            customURLInputEdit.Opt("+Disabled")
-            customURLInputEdit.Value := "Currently downloading collected URLs."
-            ; Gives the .txt file with all youtube URLs to yt-dlp.
-            commandString .= "--batch-file " . readConfigFile("URL_FILE_LOCATION") . " "
-        }
-    }
-    Switch (useDefaultDownloadLocationCheckbox.Value)
-    {
-        Case 0:
-        {
-            ; Allows the user to select a custom download path.
-            customDownloadLocation.Opt("-Disabled")
-            ; Makes sure that a user input will not be overwritten.
-            If (customDownloadLocation.Value = "Currently downloading into default directory.")
-            {
-                customDownloadLocation.Value := "You can now specify your own download path."
-            }
-            commandString .= "--paths " . customDownloadLocation.Value . " "
-        }
-        Case 1:
-        {
-            ; Keeps the default download directory.
-            customDownloadLocation.Opt("+Disabled")
-            customDownloadLocation.Value := "Currently downloading into default directory."
-            commandString .= "--paths " . readConfigFile("DEFAULT_DOWNLOAD_PATH") . " "
         }
     }
     Switch (downloadAudioOnlyCheckbox.Value)
@@ -277,83 +281,117 @@ handleGUI_Checkboxes()
         Case 0:
         {
             ; Downloads the video with audio.
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 chooseVideoFormatDropDownList.Opt("-Disabled")
             }
             chooseAudioFormatDropDownList.Opt("+Disabled")
+            alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+            prioritiseVideoQualityCheckbox.Opt("-Disabled")
+            prioritiseAudioQualityCheckbox.Opt("-Disabled")
         }
         Case 1:
         {
             ; Only extracts the audio and creates the desired audio file type.
             chooseVideoFormatDropDownList.Opt("+Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
-            If (enableFastDownloadModeCheckbox.Value = 1)
+            alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+            prioritiseVideoQualityCheckbox.Opt("+Disabled")
+            prioritiseAudioQualityCheckbox.Opt("+Disabled")
+            If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 chooseAudioFormatDropDownList.Opt("-Disabled")
             }
-            commandString .= "--extract-audio "
-            commandString .= '--audio-format "' . downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] . '" '
-        }
-    }
-    Switch (alwaysHighestQualityBothCheckbox.Value)
-    {
-        Case 0:
-        {
-            ; Let the user choose a prefered option.
-            prioritiseVideoQualityCheckbox.Opt("-Disabled")
-            prioritiseAudioQualityCheckbox.Opt("-Disabled")
-        }
-        Case 1:
-        {
-            ; Try to choose the best audio quality both audio and video.
-            prioritiseVideoQualityCheckbox.Opt("+Disabled")
-            prioritiseAudioQualityCheckbox.Opt("+Disabled")
-            If (enableFastDownloadModeCheckbox.Value != 1)
+            If (downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] = "Best format for quality")
             {
-                commandString .= '-f "bestvideo+bestaudio" '
+                commandString .= "--extract-audio "
+                commandString .= '--paths "audio:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\audio" '
+            }
+            Else
+            {
+                commandString .= "--extract-audio "
+                commandString .= '--audio-format "' . downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] . '" '
+                commandString .= '--paths "audio:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\audio" '
             }
         }
     }
-    If (alwaysHighestQualityBothCheckbox.Value != 1)
+    If (downloadAudioOnlyCheckbox.Value != 1)
     {
-        Switch (prioritiseVideoQualityCheckbox.Value)
+        Switch (alwaysHighestQualityBothCheckbox.Value)
         {
             Case 0:
             {
                 ; Let the user choose a prefered option.
-                alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+                prioritiseVideoQualityCheckbox.Opt("-Disabled")
                 prioritiseAudioQualityCheckbox.Opt("-Disabled")
             }
             Case 1:
             {
                 ; Try to choose the best audio quality both audio and video.
-                alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+                prioritiseVideoQualityCheckbox.Opt("+Disabled")
                 prioritiseAudioQualityCheckbox.Opt("+Disabled")
-                If (enableFastDownloadModeCheckbox.Value != 1)
+                If (enableFastDownloadModeCheckbox.Value = 0)
                 {
-                    commandString .= '-f "bestvideo" '
+                    commandString .= '--format "bestvideo+bestaudio" '
                 }
             }
         }
-        If (prioritiseVideoQualityCheckbox.Value != 1)
+        If (alwaysHighestQualityBothCheckbox.Value != 1 && downloadAudioOnlyCheckbox.Value != 1)
         {
-            Switch (prioritiseAudioQualityCheckbox.Value)
+            Switch (prioritiseVideoQualityCheckbox.Value)
             {
                 Case 0:
                 {
                     ; Let the user choose a prefered option.
                     alwaysHighestQualityBothCheckbox.Opt("-Disabled")
-                    prioritiseVideoQualityCheckbox.Opt("-Disabled")
+                    prioritiseAudioQualityCheckbox.Opt("-Disabled")
                 }
                 Case 1:
                 {
                     ; Try to choose the best audio quality both audio and video.
                     alwaysHighestQualityBothCheckbox.Opt("+Disabled")
-                    prioritiseVideoQualityCheckbox.Opt("+Disabled")
-                    If (enableFastDownloadModeCheckbox.Value != 1)
+                    prioritiseAudioQualityCheckbox.Opt("+Disabled")
+                    If (enableFastDownloadModeCheckbox.Value = 0)
                     {
-                        commandString .= '-f "bestaudio" '
+                        If (downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] = "Best format for quality")
+                        {
+                            commandString .= '--format "bestvideo" '
+                        }
+                        Else
+                        {
+                            commandString .= '--format "bestvideo[ext=' .
+                                downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] . ']" '
+                        }
+                    }
+                }
+            }
+            If (prioritiseVideoQualityCheckbox.Value != 1 && downloadAudioOnlyCheckbox.Value != 1)
+            {
+                Switch (prioritiseAudioQualityCheckbox.Value)
+                {
+                    Case 0:
+                    {
+                        ; Let the user choose a prefered option.
+                        alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+                        prioritiseVideoQualityCheckbox.Opt("-Disabled")
+                    }
+                    Case 1:
+                    {
+                        ; Try to choose the best audio quality both audio and video.
+                        alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+                        prioritiseVideoQualityCheckbox.Opt("+Disabled")
+                        If (enableFastDownloadModeCheckbox.Value = 0)
+                        {
+                            If (downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] = "Best format for quality")
+                            {
+                                commandString .= '--format "bestaudio" '
+                            }
+                            Else
+                            {
+                                commandString .= '--format "bestaudio[ext=' .
+                                    downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] . ']" '
+                            }
+                        }
                     }
                 }
             }
@@ -379,10 +417,8 @@ handleGUI_Checkbox_fastDownload()
             prioritiseVideoQualityCheckbox.Opt("-Disabled")
             prioritiseAudioQualityCheckbox.Opt("-Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
-            If (downloadAudioOnlyCheckbox.Value = 0)
-            {
-                chooseAudioFormatDropDownList.Opt("+Disabled")
-            }
+            ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
+            handleGUI_Checkboxes()
         }
         Case 1:
         {
@@ -405,6 +441,56 @@ handleGUI_Checkbox_fastDownload()
         }
     }
 }
+
+handleGUI_Checkbox_ignoreAllOptions()
+{
+    Switch (ignoreAllOptionsCheckbox.Value)
+    {
+        Case 0:
+        {
+            ; Do not ignore all possible options.
+            ignoreErrorsCheckbox.Opt("-Disabled")
+            abortOnErrorCheckbox.Opt("-Disabled")
+            clearURLFileAfterDownloadCheckbox.Opt("-Disabled")
+            enableFastDownloadModeCheckbox.Opt("-Disabled")
+            limitDownloadRateEdit.Opt("-Disabled")
+            higherRetryAmountCheckbox.Opt("-Disabled")
+            downloadVideoDescriptionCheckbox.Opt("-Disabled")
+            downloadVideoCommentsCheckbox.Opt("-Disabled")
+            downloadVideoThumbnail.Opt("-Disabled")
+            downloadVideoSubtitles.Opt("-Disabled")
+            chooseVideoFormatDropDownList.Opt("-Disabled")
+            downloadAudioOnlyCheckbox.Opt("-Disabled")
+            alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+            prioritiseVideoQualityCheckbox.Opt("-Disabled")
+            prioritiseAudioQualityCheckbox.Opt("-Disabled")
+            chooseAudioFormatDropDownList.Opt("-Disabled")
+            ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
+            handleGUI_Checkboxes()
+        }
+        Case 1:
+        {
+            ; Execute a pure download with only necessary parameters while disabeling all other options.
+            ignoreErrorsCheckbox.Opt("+Disabled")
+            abortOnErrorCheckbox.Opt("+Disabled")
+            clearURLFileAfterDownloadCheckbox.Opt("+Disabled")
+            enableFastDownloadModeCheckbox.Opt("+Disabled")
+            limitDownloadRateEdit.Opt("+Disabled")
+            higherRetryAmountCheckbox.Opt("+Disabled")
+            downloadVideoDescriptionCheckbox.Opt("+Disabled")
+            downloadVideoCommentsCheckbox.Opt("+Disabled")
+            downloadVideoThumbnail.Opt("+Disabled")
+            downloadVideoSubtitles.Opt("+Disabled")
+            chooseVideoFormatDropDownList.Opt("+Disabled")
+            downloadAudioOnlyCheckbox.Opt("+Disabled")
+            alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+            prioritiseVideoQualityCheckbox.Opt("+Disabled")
+            prioritiseAudioQualityCheckbox.Opt("+Disabled")
+            chooseAudioFormatDropDownList.Opt("+Disabled")
+        }
+    }
+}
+
 ; Function that deals with changes made to any input field.
 handleGUI_InputFields()
 {
@@ -416,13 +502,30 @@ handleGUI_InputFields()
             limitDownloadRateEdit.Value := 100
         }
         ; Limit the download rate to a maximum value in Megabytes per second.
-        If (enableFastDownloadModeCheckbox.Value != 1)
+        If (enableFastDownloadModeCheckbox.Value = 0)
         {
             commandString .= "--limit-rate " . limitDownloadRateEdit.Value . "MB "
         }
     }
+    If (customDownloadLocation.Value = "You can now specify your own download path.")
+    {
+        newDownloadFolder := DirSelect("*" . readConfigFile("DOWNLOAD_PATH"), 3, "Select download folder")
+        If (newDownloadFolder = "")
+        {
+            MsgBox("Invalid folder selection.", "Error", "O IconX T1.5")
+            ; Checks the default download location checkbox so that the user loses focus on the input field.
+            ; Therefore he can click on it again and the "focus" event will be triggered.
+            useDefaultDownloadLocationCheckbox.Value := 1
+            handleGUI_Checkboxes()
+        }
+        Else
+        {
+            customDownloadLocation.Value := newDownloadFolder
+        }
+    }
     ; Handles the desired download formats.
-    If (enableFastDownloadModeCheckbox.Value != 1 && downloadAudioOnlyCheckbox.Value != 1)
+    If (enableFastDownloadModeCheckbox.Value != 1 && downloadAudioOnlyCheckbox.Value != 1 &&
+        downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] != "Best format for quality")
     {
         commandString .= '--remux-video "' . downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] . '" '
     }
@@ -433,10 +536,69 @@ handleGUI_InputFields()
 ; Returns the string to it's caller.
 buildCommandString()
 {
-    global commandString := "yt-dlp "
-    handleGUI_Checkboxes()
-    handleGUI_InputFields()
-    ; Adds the ffmpeg location for the script to remux / extract audio etc.
+    ; Formats the value of A_Now to give each folder a unique time stamp.
+    global downloadTime := FormatTime(A_Now, "HH-mm-ss_dd.MM.yyyy")
+    If (ignoreAllOptionsCheckbox.Value = 1)
+    {
+        global commandString := "yt-dlp "
+        ; Basic options such as download path and single URL or multiple URLs.
+        Switch (useTextFileForURLsCheckbox.Value)
+        {
+            Case 0:
+            {
+                commandString .= "--no-batch-file "
+                commandString .= customURLInputEdit.Value . " "
+            }
+            Case 1:
+            {
+                commandString .= "--batch-file " . readConfigFile("URL_FILE_LOCATION") . " "
+            }
+        }
+        Switch (useDefaultDownloadLocationCheckbox.Value)
+        {
+            Case 0:
+            {
+                commandString .= "--paths " . customDownloadLocation.Value . "\" . downloadTime . "\video "
+            }
+            Case 1:
+            {
+                commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video "
+            }
+        }
+    }
+    Else
+    {
+        global commandString := "yt-dlp "
+        ; Basic options such as download path and single URL or multiple URLs.
+        Switch (useTextFileForURLsCheckbox.Value)
+        {
+            Case 0:
+            {
+                commandString .= "--no-batch-file "
+                commandString .= customURLInputEdit.Value . " "
+            }
+            Case 1:
+            {
+                commandString .= "--batch-file " . readConfigFile("URL_FILE_LOCATION") . " "
+            }
+        }
+        Switch (useDefaultDownloadLocationCheckbox.Value)
+        {
+            Case 0:
+            {
+                commandString .= "--paths " . customDownloadLocation.Value . "\" . downloadTime . "\video "
+            }
+            Case 1:
+            {
+                commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video "
+            }
+        }
+        handleGUI_Checkboxes()
+        handleGUI_InputFields()
+    }
+    ; This makes sure that the output file does not contain any weird letters.
+    commandString .= '--output "%(title)s.%(ext)s" '
+    ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
     commandString .= "--ffmpeg-location " . ffmpegLocation . " "
     Return commandString
 }

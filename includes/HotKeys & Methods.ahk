@@ -21,6 +21,10 @@ Hotkey to disable/enable debug mode.
         editConfigFile("booleanDebugMode", true)
         MsgBox("Debug mode has been enabled.", "DEBUG MODE", "O Icon! 262144 T1")
     }
+    Else
+    {
+        Throw ("No valid state in booleanDebugMode")
+    }
     Return
 }
 
@@ -41,7 +45,7 @@ registerHotkeys()
     ; Beginning of all standard script hotkeys.
 
     ; Main hotkey (start download).
-    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(commandString), "On")
+    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), "On")
 
     ; Second hotkey (collect URLs).
     Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), "On")
@@ -69,45 +73,51 @@ registerHotkeys()
 ; Hotkey support function to open the script GUI.
 Hotkey_openMainGUI()
 {
-    static flipflop := true
-    If (!WinExist("ahk_id " . mainGUI.Hwnd))
+    Try
     {
-        mainGUI.Show("w300 h200")
-        flipflop := false
+        static flipflop := true
+        If (!WinExist("ahk_id " . mainGUI.Hwnd))
+        {
+            mainGUI.Show("w300 h200")
+            flipflop := false
+            Return
+        }
+        Else If (flipflop = false && WinActive("ahk_id " . mainGUI.Hwnd))
+        {
+            mainGUI.Hide()
+            flipflop := true
+        }
+        Else
+        {
+            WinActivate("ahk_id " . mainGUI.Hwnd)
+        }
         Return
     }
-    Else If (flipflop = false && WinActive("ahk_id " . mainGUI.Hwnd))
-    {
-        mainGUI.Hide()
-        flipflop := true
-    }
-    Else
-    {
-        WinActivate("ahk_id " . mainGUI.Hwnd)
-    }
-    Return
 }
 
 ; Hotkey support function to open the script download options GUI.
 Hotkey_openOptionsGUI()
 {
-    static flipflop := true
-    If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
+    Try
     {
-        downloadOptionsGUI.Show("w500 h405")
-        flipflop := false
+        static flipflop := true
+        If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
+        {
+            downloadOptionsGUI.Show("w500 h405")
+            flipflop := false
+            Return
+        }
+        Else If (flipflop = false && WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
+        {
+            downloadOptionsGUI.Hide()
+            flipflop := true
+        }
+        Else
+        {
+            WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
+        }
         Return
     }
-    Else If (flipflop = false && WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
-    {
-        downloadOptionsGUI.Hide()
-        flipflop := true
-    }
-    Else
-    {
-        WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
-    }
-    Return
 }
 
 /*
@@ -118,36 +128,172 @@ FUNCTION SECTION
 ; Important function which executes the built command string by pasting it into the console.
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
-    global consoleId
+    global consolePID
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
 
     If (booleanSilent = 1)
     {
         ; Execute the command line command and wait for it to be finished.
-        RunWait(A_ComSpec " /c " . stringToExecute, , "Hide")
+        Run(A_ComSpec " /c " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , "Hide", &consolePID)
+        monitorDownloadProgress(true)
+        If (downloadVideoSubtitles.Value = 1)
+        {
+            ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
+            If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            {
+                Try
+                {
+                    DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    Sleep(500)
+                }
+            }
+            Try
+            {
+                FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
+            }
+        }
+        If (clearURLFileAfterDownloadCheckbox.Value = 1 && ignoreAllOptionsCheckbox.Value != 1)
+        {
+            manageURLFile(false)
+        }
     }
     Else
     {
         ; Enables the user to access the command and to review potential errors thrown by yt-dlp.
-        Run(A_ComSpec, , , &consoleId)
-        WinWaitActive("ahk_pid " . consoleId)
-        If (WinActive("ahk_pid " . consoleId))
+        Run(A_ComSpec " /k " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , , &consolePID)
+        monitorDownloadProgress(true)
+        If (downloadVideoSubtitles.Value = 1)
         {
-            Send(stringToExecute)
-            Sleep(50)
-            Send("{Enter}")
+            ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
+            If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            {
+                Try
+                {
+                    DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    Sleep(500)
+                }
+            }
+            Try
+            {
+                FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
+            }
         }
-        Else
+        If (clearURLFileAfterDownloadCheckbox.Value = 1 && ignoreAllOptionsCheckbox.Value != 1)
         {
-            WinActivate("ahk_pid " . consoleId)
-            Sleep(100)
-            Send(stringToExecute)
-            Sleep(50)
-            Send("{Enter}")
+            clearURLFile()
         }
-        Sleep(1000)
     }
+    If (terminateScriptAfterDownloadCheckbox.Value = 1)
+    {
+        If (booleanSilent != 1)
+        {
+            MsgBox("The download has completed.`n`nTerminating script.", "Download status", "O Iconi T2")
+        }
+        ExitApp()
+        ExitApp()
+    }
+}
+
+; Checks the download log file for status updates and reacts by updating the download options GUI progress bar and text fields.
+monitorDownloadProgress(pBooleanNewDownload := false)
+{
+    booleanNewDownload := pBooleanNewDownload
+
+    static currentBarValue := 0
+    static oldCurrentBarValue := 0
+    static partProgress := 0
+    ; Remembers the amount of parsed lines to begin directly with the new generated ones.
+    static parsedLines := 0
+    If (booleanNewDownload = true)
+    {
+        global videoAmount := getCurrentURL(true, true)
+        global downloadedVideoAmount := 0
+        global maximumBarValue := videoAmount * 100
+        parsedLines := 0
+        currentBarValue := 0
+        oldCurrentBarValue := 0
+        partProgress := 0
+        downloadStatusProgressBar.Value := 0
+        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+        Try
+        {
+            FileDelete(readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"))
+        }
+        ; Waits for the download log file to exist again.
+        While (!FileExist(readConfigFile("DOWNLOAD_LOG_FILE_LOCATION")))
+        {
+            Sleep(1000)
+        }
+    }
+
+    downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
+
+    Loop Read (readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"))
+    {
+        ; All previous lines will be skipped.
+        If (parsedLines >= A_Index)
+        {
+            Continue
+        }
+        Loop Parse (A_LoopReadLine, A_Tab)
+        {
+            ; Scanns the output from the console and extracts the download progress percentage values.
+            If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0)
+            {
+                outString := outMatch[]
+                outStringReady := StrReplace(outString, "%")
+                partProgress := Number(outStringReady)
+                ; This avoids filling the progress bar to fast because of too many 100% messages from yt-dlp.
+                If (partProgress >= 99.99)
+                {
+                    Continue
+                }
+                currentBarValue := oldCurrentBarValue + partProgress
+                downloadStatusProgressBar.Value := currentBarValue
+            }
+            If (partProgress >= 100 && downloadedVideoAmount < videoAmount)
+            {
+                oldCurrentBarValue += 100
+                downloadedVideoAmount++
+                partProgress := 0
+                downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+            }
+        }
+        parsedLines++
+    }
+    ; When the loop reaches the file end it will check if the console log has reached it's end.
+    ; In other terms if the downloads have completed or not.
+
+    While (ProcessExist(consolePID) || WinExist("ahk_pid " . consolePID))
+    {
+        ; Saves the content of the download log file.
+        ; Because the console only adds content it is a reliable method to detect added data to the .txt file.
+        oldFileContent := FileRead(readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"))
+        ; Wait for the console log to be changed.
+        Sleep(1000)
+        newFileContent := FileRead(readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"))
+
+        If (oldFileContent != newFileContent)
+        {
+            ; If there is new data.
+            Return monitorDownloadProgress()
+        }
+        ; Checks if either the background process does not exist or the download console has finished executing the download.
+        Else If (!ProcessExist(consolePID) || !WinExist("ahk_pid " . consolePID) || WinGetTitle("ahk_pid " . consolePID) = A_ComSpec)
+        {
+            Break
+        }
+    }
+
+    If (hideDownloadCommandPromptCheckbox.Value != 1)
+    {
+        MsgBox("The download process has reached it's end.", "Download status", "O Iconi T2")
+    }
+    downloadStatusProgressBar.Value := maximumBarValue
+    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
 }
 
 ; Enter true for the currentArrays length or false to receive the item in the array.
@@ -235,7 +381,7 @@ toggleHotkey(pStateArray)
     Hotkey(readConfigFile("TERMINATE_SCRIPT_HK"), (*) => terminateScriptPrompt(), onOffArray[1])
     Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), onOffArray[2])
     Hotkey(readConfigFile("PAUSE_CONTINUE_SCRIPT_HK"), (*) => MsgBox("Not implemented yet"), onOffArray[3])
-    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(commandString), onOffArray[4])
+    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray[4])
     Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray[5])
     Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray[6])
     Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), onOffArray[7])
