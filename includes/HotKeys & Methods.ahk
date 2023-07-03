@@ -282,7 +282,7 @@ monitorDownloadProgress(pBooleanNewDownload := false)
             Return monitorDownloadProgress()
         }
         ; Checks if either the background process does not exist or the download console has finished executing the download.
-        Else If (!ProcessExist(consolePID) || !WinExist("ahk_pid " . consolePID) || WinGetTitle("ahk_pid " . consolePID) = A_ComSpec)
+        Else If (!ProcessExist(consolePID) || !WinExist("ahk_pid " . consolePID) || WinGetTitle("ahk_pid " . consolePID) != A_ComSpec . " - " . commandString)
         {
             Break
         }
