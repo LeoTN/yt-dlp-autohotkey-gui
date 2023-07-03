@@ -558,11 +558,11 @@ buildCommandString()
         {
             Case 0:
             {
-                commandString .= "--paths " . customDownloadLocation.Value . "\" . downloadTime . "\video "
+                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\video" '
             }
             Case 1:
             {
-                commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video "
+                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\video" '
             }
         }
     }
@@ -579,18 +579,18 @@ buildCommandString()
             }
             Case 1:
             {
-                commandString .= "--batch-file " . readConfigFile("URL_FILE_LOCATION") . " "
+                commandString .= '--batch-file "' . readConfigFile("URL_FILE_LOCATION") . '" '
             }
         }
         Switch (useDefaultDownloadLocationCheckbox.Value)
         {
             Case 0:
             {
-                commandString .= "--paths " . customDownloadLocation.Value . "\" . downloadTime . "\video "
+                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\video" '
             }
             Case 1:
             {
-                commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video "
+                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\video" '
             }
         }
         handleGUI_Checkboxes()
@@ -599,6 +599,6 @@ buildCommandString()
     ; This makes sure that the output file does not contain any weird letters.
     commandString .= '--output "%(title)s.%(ext)s" '
     ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
-    commandString .= "--ffmpeg-location " . ffmpegLocation . " "
+    commandString .= '--ffmpeg-location "' . ffmpegLocation . '" '
     Return commandString
 }

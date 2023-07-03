@@ -64,7 +64,37 @@ onInit()
                 }
         }
     }
-
+    ; To maintain ordinary functionallity the system MUST be restarted after a finished installation of this script!
+    If (FileExist(A_WorkingDir . "\NoRestartYet(do not delete!!!)"))
+    {
+        result := MsgBox("Your system has not been REBOOTED yet.`nFor further use it is mandatory`n to REBOOT your system.",
+            "Script setup status", "OC Icon! 262144")
+        Switch (result)
+        {
+            Case "OK":
+                {
+                    Try
+                    {
+                        FileDelete(A_WorkingDir . "\NoRestartYet(do not delete!!!)")
+                    }
+                    If (!FileExist(A_WorkingDir . "\NoRestartYet(do not delete!!!)"))
+                    {
+                        Run(A_ComSpec . " /c shutdown /r")
+                        ExitApp()
+                    }
+                    Else
+                    {
+                        Throw ("Could not find REBOOT file.")
+                    }
+                }
+            Default:
+                {
+                    FileAppend("Do not delete this file if you do not know what you are doing!", A_WorkingDir . "\NoRestartYet(do not delete!!!)", 1)
+                }
+        }
+        MsgBox("Terminating script.", "Script status", "O Iconi T1.5")
+        ExitApp()
+    }
     ; Only called to check the config file status.
     readConfigFile("booleanDebugMode")
     checkBlackListFile("createBlackListFile")
@@ -206,7 +236,7 @@ setUp()
                 ; Creates a blacklist file without showing a prompt to the user.
                 checkBlackListFile("createBlackListFile", false)
 
-                result := MsgBox("To finish the installation it is`nhighly recommended`n to restart your system.",
+                result := MsgBox("To finish the installation it is`nnecessary`n to REBOOT your system.",
                     "Script setup status", "OC Icon! 262144")
                 Switch (result)
                 {
@@ -214,6 +244,10 @@ setUp()
                         {
                             Run(A_ComSpec . " /c shutdown /r")
                             ExitApp()
+                        }
+                    Default:
+                        {
+                            FileAppend("Do not delete this file if you do not know what you are doing!", A_WorkingDir . "\NoRestartYet(do not delete!!!)", 1)
                         }
                 }
                 MsgBox("Terminating script.", "Script status", "O Iconi T1.5")
