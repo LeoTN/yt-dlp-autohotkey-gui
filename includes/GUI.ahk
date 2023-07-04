@@ -15,6 +15,8 @@ createMainGUI()
     fileSelectionMenuOpen.SetIcon("URL-Blacklist-File`tCTRL+F2", "shell32.dll", 110)
     fileSelectionMenuOpen.Add("Config-File`tAlt+F2", (*) => openConfigFile())
     fileSelectionMenuOpen.SetIcon("Config-File`tAlt+F2", "shell32.dll", 70)
+    fileSelectionMenuOpen.Add("Recent Downloads", (*) => GUI_openDownloadedVideoLocation())
+    fileSelectionMenuOpen.SetIcon("Recent Downloads", "shell32.dll", 116)
 
     fileSelectionMenuDelete := Menu()
     fileSelectionMenuDelete.Add("URL-File", (*) => deleteFilePrompt("URL-File"))
@@ -23,8 +25,8 @@ createMainGUI()
     fileSelectionMenuDelete.SetIcon("URL-BackUp-File", "shell32.dll", 46)
     fileSelectionMenuDelete.Add("URL-Blacklist-File", (*) => deleteFilePrompt("URL-Blacklist-File"))
     fileSelectionMenuDelete.SetIcon("URL-Blacklist-File", "shell32.dll", 110)
-    fileSelectionMenuDelete.Add("Downloaded Videos", (*) => deleteFilePrompt("Downloaded Videos"))
-    fileSelectionMenuDelete.SetIcon("Downloaded Videos", "shell32.dll", 116)
+    fileSelectionMenuDelete.Add("Recent Downloads", (*) => deleteFilePrompt("recent downloads"))
+    fileSelectionMenuDelete.SetIcon("Recent Downloads", "shell32.dll", 116)
 
     fileSelectionMenuReset := Menu()
     fileSelectionMenuReset.Add("URL-Blacklist-File", (*) => openURLBlacklistFile(true))
@@ -237,5 +239,27 @@ GUI_ApplyCheckmarksFromConfigFile(pMenuName)
         }
         stateArray := stringToArray(readConfigFile("HOTKEY_STATE_ARRAY"))
         toggleHotkey(stateArray)
+    }
+}
+
+GUI_openDownloadedVideoLocation()
+{
+    Try
+    {
+        Switch (useDefaultDownloadLocationCheckbox.Value)
+        {
+            Case 0:
+            {
+                Run(customDownloadLocation.Value . '\' . downloadTime)
+            }
+            Case 1:
+            {
+                Run(readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime)
+            }
+        }
+    }
+    Catch
+    {
+        MsgBox("No downloaded files from `ncurrent session found.", "Open videos error !", "O Icon! T1.5")
     }
 }

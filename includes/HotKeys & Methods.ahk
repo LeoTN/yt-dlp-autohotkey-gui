@@ -266,7 +266,6 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     }
     ; When the loop reaches the file end it will check if the console log has reached it's end.
     ; In other terms if the downloads have completed or not.
-
     While (ProcessExist(consolePID) || WinExist("ahk_pid " . consolePID))
     {
         ; Saves the content of the download log file.
@@ -287,7 +286,6 @@ monitorDownloadProgress(pBooleanNewDownload := false)
             Break
         }
     }
-
     If (hideDownloadCommandPromptCheckbox.Value != 1)
     {
         MsgBox("The download process has reached it's end.", "Download status", "O Iconi T2")
@@ -555,10 +553,29 @@ deleteFilePrompt(pFileName)
                         SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
                         FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
                     }
-                Case "Downloaded Videos":
+                Case "recent downloads":
                     {
                         c := 5
-                        MsgBox("Not implemented yet")
+                        Try
+                        {
+                            Switch (useDefaultDownloadLocationCheckbox.Value)
+                            {
+                                Case 0:
+                                {
+                                    FileMove(customDownloadLocation.Value . '\' . downloadTime, A_WorkingDir
+                                        . "\files\deleted\" . downloadTime)
+                                }
+                                Case 1:
+                                {
+                                    Run(readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime, A_WorkingDir
+                                        . "\files\deleted\" . downloadTime)
+                                }
+                            }
+                        }
+                        Catch
+                        {
+                            MsgBox("No downloaded files from `ncurrent session found.", "Open videos error !", "O Icon! T1.5")
+                        }
                         ; Possible in the future.
                     }
                 Default:
