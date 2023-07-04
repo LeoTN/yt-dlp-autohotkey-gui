@@ -135,16 +135,16 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     If (booleanSilent = 1)
     {
         ; Execute the command line command and wait for it to be finished.
-        Run(A_ComSpec " /c " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , "Hide", &consolePID)
+        Run(A_ComSpec ' /c ' . stringToExecute . ' > "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"', , "Hide", &consolePID)
         monitorDownloadProgress(true)
         If (downloadVideoSubtitles.Value = 1)
         {
             ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-            If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
             {
                 Try
                 {
-                    DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
                     Sleep(500)
                 }
             }
@@ -162,16 +162,16 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     Else
     {
         ; Enables the user to access the command and to review potential errors thrown by yt-dlp.
-        Run(A_ComSpec " /k " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , , &consolePID)
+        Run(A_ComSpec ' /k ' . stringToExecute . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"', , "Hide", &consolePID)
         monitorDownloadProgress(true)
         If (downloadVideoSubtitles.Value = 1)
         {
             ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-            If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
             {
                 Try
                 {
-                    DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
                     Sleep(500)
                 }
             }

@@ -38,6 +38,7 @@ F7::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below
+        A_Clipboard := A_ComSpec ' /k ' . buildCommandString() . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"'
     }
     Return
 }
@@ -48,7 +49,7 @@ onInit()
     global ffmpegLocation := A_WorkingDir . "\files\library\ffmpeg.exe"
     global youTubeBackGroundLocation := A_WorkingDir . "\files\library\YouTubeBackground.jpg"
 
-    If (!DirExist(A_WorkingDir . "\files\library"))
+    If (!FileExist(ffmpegLocation))
     {
         result := MsgBox("No library files detected.`n`nWould you like to run a complete setup?",
             "youtube-dlp-autohotkey-gui setup", "OC Icon? 4096")
@@ -65,7 +66,7 @@ onInit()
         }
     }
     ; To maintain ordinary functionallity the system MUST be restarted after a finished installation of this script!
-    If (FileExist(A_WorkingDir . "\NoRestartYet(do not delete!!!)"))
+    If (FileExist(A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt"))
     {
         result := MsgBox("Your system has not been REBOOTED yet.`nFor further use it is mandatory`n to REBOOT your system.",
             "Script setup status", "OC Icon! 262144")
@@ -75,11 +76,11 @@ onInit()
                 {
                     Try
                     {
-                        FileDelete(A_WorkingDir . "\NoRestartYet(do not delete!!!)")
+                        FileDelete(A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt")
                     }
-                    If (!FileExist(A_WorkingDir . "\NoRestartYet(do not delete!!!)"))
+                    If (!FileExist(A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt"))
                     {
-                        Run(A_ComSpec . " /c shutdown /r")
+                        Run(A_ComSpec . " /c shutdown /r /t 1")
                         ExitApp()
                     }
                     Else
@@ -89,7 +90,7 @@ onInit()
                 }
             Default:
                 {
-                    FileAppend("Do not delete this file if you do not know what you are doing!", A_WorkingDir . "\NoRestartYet(do not delete!!!)", 1)
+                    FileAppend("Do not delete this file if you do not know what you are doing!", A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt")
                 }
         }
         MsgBox("Terminating script.", "Script status", "O Iconi T1.5")
@@ -127,12 +128,12 @@ setUp()
                             Run '*RunAs "' A_AhkPath '" /restart "' A_ScriptFullPath '"'
                         }
                     }
-                    MsgBox("Could not complete setup.`n`nTerminating script.", "Error", "O IconX T1.5")
+                    MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                     ExitApp()
                 }
             Case "Cancel":
                 {
-                    MsgBox("Could not complete setup.`n`nTerminating script.", "Error", "O IconX T1.5")
+                    MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                     ExitApp()
                 }
         }
@@ -144,7 +145,7 @@ setUp()
     {
         Case "Cancel":
             {
-                MsgBox("Could not complete setup.`n`nTerminating script.", "Error", "O IconX T1.5")
+                MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                 ExitApp()
             }
     }
@@ -190,7 +191,7 @@ setUp()
                     }
                     If (maxRetries <= 0)
                     {
-                        MsgBox("Could not complete setup.`n`nTerminating script.", "Error", "O IconX T1.5")
+                        MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                         BlockInput("Off")
                         ExitApp()
                     }
@@ -201,7 +202,7 @@ setUp()
             }
             Catch
             {
-                MsgBox("Could not complete setup.`n`nTerminating script.", "Error", "O IconX T1.5")
+                MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                 ExitApp()
             }
             WinWaitClose("ahk_pid " . consolePID)
@@ -242,12 +243,12 @@ setUp()
                 {
                     Case "OK":
                         {
-                            Run(A_ComSpec . " /c shutdown /r")
+                            Run(A_ComSpec . " /c shutdown /r /t 1")
                             ExitApp()
                         }
                     Default:
                         {
-                            FileAppend("Do not delete this file if you do not know what you are doing!", A_WorkingDir . "\NoRestartYet(do not delete!!!)", 1)
+                            FileAppend("Do not delete this file if you do not know what you are doing!", A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt")
                         }
                 }
                 MsgBox("Terminating script.", "Script status", "O Iconi T1.5")
@@ -255,13 +256,13 @@ setUp()
             }
             Else
             {
-                MsgBox("Could not complete setup.`n`nTerminating script.", "Error", "O IconX T1.5")
+                MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                 ExitApp()
             }
         }
         Else
         {
-            MsgBox("Could not complete setup.`n`nTerminating script.", "Error", "O IconX T1.5")
+            MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
             ExitApp()
         }
     }
@@ -333,7 +334,7 @@ setup_installLibraryFiles()
         MsgBox("Could not install library files.`n`nTerminating script.", "Error", "O IconX T1.5")
         ExitApp()
     }
-    MsgBox("Successfully installed library contents.", "Installation status", "O Iconi T2")
+    MsgBox("Successfully installed library contents.", "Script setup status", "O Iconi T2")
     Return true
 }
 
@@ -368,14 +369,14 @@ setup_checkPythonVersion()
                     }
                     Catch
                     {
-                        MsgBox("Could not complete setup.`n`nTerminating script.", "Error", "O IconX T1.5")
+                        MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                         ExitApp()
                     }
                     Return setup_checkPythonVersion()
                 }
             Case "Cancel":
                 {
-                    MsgBox("Could not complete setup.`n`nTerminating script.", "Error", "O IconX T1.5")
+                    MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                     ExitApp()
                 }
         }
@@ -433,14 +434,14 @@ setup_checkPythonVersion()
                                 }
                                 Catch
                                 {
-                                    MsgBox("Could not complete setup.`n`nTerminating script.", "Error", "O IconX T1.5")
+                                    MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                                     ExitApp()
                                 }
                                 Return setup_checkPythonVersion()
                             }
                         Case "Cancel":
                             {
-                                MsgBox("Could not complete setup.`n`nTerminating script.", "Error", "O IconX T1.5")
+                                MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                                 ExitApp()
                             }
                     }

@@ -547,11 +547,11 @@ buildCommandString()
             Case 0:
             {
                 commandString .= "--no-batch-file "
-                commandString .= customURLInputEdit.Value . " "
+                commandString .= '"' . customURLInputEdit.Value . '" '
             }
             Case 1:
             {
-                commandString .= "--batch-file " . readConfigFile("URL_FILE_LOCATION") . " "
+                commandString .= '--batch-file "' . readConfigFile("URL_FILE_LOCATION") . '" '
             }
         }
         Switch (useDefaultDownloadLocationCheckbox.Value)
@@ -575,7 +575,7 @@ buildCommandString()
             Case 0:
             {
                 commandString .= "--no-batch-file "
-                commandString .= customURLInputEdit.Value . " "
+                commandString .= '"' . customURLInputEdit.Value . '" '
             }
             Case 1:
             {
