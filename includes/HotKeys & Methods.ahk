@@ -162,7 +162,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     Else
     {
         ; Enables the user to access the command and to review potential errors thrown by yt-dlp.
-        Run(A_ComSpec ' /k ' . stringToExecute . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"', , "Hide", &consolePID)
+        Run(A_ComSpec ' /k ' . stringToExecute . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"', , , &consolePID)
         monitorDownloadProgress(true)
         If (downloadVideoSubtitles.Value = 1)
         {
@@ -281,7 +281,7 @@ monitorDownloadProgress(pBooleanNewDownload := false)
             Return monitorDownloadProgress()
         }
         ; Checks if either the background process does not exist or the download console has finished executing the download.
-        Else If (!ProcessExist(consolePID) || !WinExist("ahk_pid " . consolePID) || WinGetTitle("ahk_pid " . consolePID) != A_ComSpec . " - " . commandString)
+        Else If (!ProcessExist(consolePID) || !WinExist("ahk_pid " . consolePID) || !InStr(WinGetTitle("ahk_pid " . consolePID), "yt-dlp"))
         {
             Break
         }
