@@ -135,16 +135,16 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     If (booleanSilent = 1)
     {
         ; Execute the command line command and wait for it to be finished.
-        Run(A_ComSpec " /c " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , "Hide", &consolePID)
+        Run(A_ComSpec ' /c ' . stringToExecute . ' > "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"', , "Hide", &consolePID)
         monitorDownloadProgress(true)
         If (downloadVideoSubtitles.Value = 1)
         {
             ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-            If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
             {
                 Try
                 {
-                    DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
                     Sleep(500)
                 }
             }
@@ -162,16 +162,16 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     Else
     {
         ; Enables the user to access the command and to review potential errors thrown by yt-dlp.
-        Run(A_ComSpec " /k " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , , &consolePID)
+        Run(A_ComSpec ' /k ' . stringToExecute . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"', , , &consolePID)
         monitorDownloadProgress(true)
         If (downloadVideoSubtitles.Value = 1)
         {
             ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-            If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
             {
                 Try
                 {
-                    DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
                     Sleep(500)
                 }
             }
@@ -266,7 +266,6 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     }
     ; When the loop reaches the file end it will check if the console log has reached it's end.
     ; In other terms if the downloads have completed or not.
-
     While (ProcessExist(consolePID) || WinExist("ahk_pid " . consolePID))
     {
         ; Saves the content of the download log file.
@@ -282,12 +281,11 @@ monitorDownloadProgress(pBooleanNewDownload := false)
             Return monitorDownloadProgress()
         }
         ; Checks if either the background process does not exist or the download console has finished executing the download.
-        Else If (!ProcessExist(consolePID) || !WinExist("ahk_pid " . consolePID) || WinGetTitle("ahk_pid " . consolePID) = A_ComSpec)
+        Else If (!ProcessExist(consolePID) || !WinExist("ahk_pid " . consolePID) || !InStr(WinGetTitle("ahk_pid " . consolePID), "yt-dlp"))
         {
             Break
         }
     }
-
     If (hideDownloadCommandPromptCheckbox.Value != 1)
     {
         MsgBox("The download process has reached it's end.", "Download status", "O Iconi T2")
@@ -555,10 +553,29 @@ deleteFilePrompt(pFileName)
                         SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
                         FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
                     }
-                Case "Downloaded Videos":
+                Case "recent downloads":
                     {
                         c := 5
-                        MsgBox("Not implemented yet")
+                        Try
+                        {
+                            Switch (useDefaultDownloadLocationCheckbox.Value)
+                            {
+                                Case 0:
+                                {
+                                    FileMove(customDownloadLocation.Value . '\' . downloadTime, A_WorkingDir
+                                        . "\files\deleted\" . downloadTime)
+                                }
+                                Case 1:
+                                {
+                                    Run(readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime, A_WorkingDir
+                                        . "\files\deleted\" . downloadTime)
+                                }
+                            }
+                        }
+                        Catch
+                        {
+                            MsgBox("No downloaded files from `ncurrent session found.", "Open videos error !", "O Icon! T1.5")
+                        }
                         ; Possible in the future.
                     }
                 Default:

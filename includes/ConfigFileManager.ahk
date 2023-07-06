@@ -35,7 +35,7 @@ DOWNLOAD_LOG_FILE_LOCATION := A_ScriptDir . "\files\download\download_log.txt"
 DOWNLOAD_PATH := A_ScriptDir . "\files\download"
 
 ; Stores which hotkeys are enabled / disabled via the GUI.
-HOTKEY_STATE_ARRAY := "[0, 0, 0, 1, 1, 1, 0]"
+HOTKEY_STATE_ARRAY := "[1, 1, 0, 1, 1, 1, 0]"
 ; Just a list of all standard hotkeys.
 DOWNLOAD_HK := "+^!D"
 URL_COLLECT_HK := "+^!S"
@@ -151,7 +151,7 @@ createDefaultConfigFile(pBooleanCreateBackUp := true, pBooleanShowPrompt := fals
             IniWrite(%configVariableNameArray[A_Index]%, configFileLocation, configSectionNameArray[A_Index],
             configVariableNameArray[A_Index])
         }
-        MsgBox("A default config file has been generated.", "Information", "O Iconi T3")
+        MsgBox("A default config file has been generated.", "Config file status", "O Iconi T3")
     }
     Return
 }
