@@ -132,7 +132,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
 
-    If (!FileExist(readConfigFile("URL_FILE_LOCATION")))
+    If (!FileExist(readConfigFile("URL_FILE_LOCATION")) && useTextFileForURLsCheckbox.Value = 1)
     {
         MsgBox("No URL file found. You can save`nURLs by clicking on a video and `npressing " .
             expandHotkey(readConfigFile("URL_COLLECT_HK")), "Download status", "O Icon! 8192")
@@ -144,7 +144,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         ; Execute the command line command and wait for it to be finished.
         Run(A_ComSpec ' /c ' . stringToExecute . ' > "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"', , "Hide", &consolePID)
         monitorDownloadProgress(true)
-        If (downloadVideoSubtitles.Value = 1)
+        If (downloadVideoSubtitlesCheckbox.Value = 1)
         {
             ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
             If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
@@ -171,7 +171,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         ; Enables the user to access the command and to review potential errors thrown by yt-dlp.
         Run(A_ComSpec ' /k ' . stringToExecute . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"', , , &consolePID)
         monitorDownloadProgress(true)
-        If (downloadVideoSubtitles.Value = 1)
+        If (downloadVideoSubtitlesCheckbox.Value = 1)
         {
             ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
             If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
