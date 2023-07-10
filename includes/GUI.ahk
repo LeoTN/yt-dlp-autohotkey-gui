@@ -15,8 +15,8 @@ createMainGUI()
     fileSelectionMenuOpen.SetIcon("URL-Blacklist-File`tCTRL+F2", "shell32.dll", 110)
     fileSelectionMenuOpen.Add("Config-File`tAlt+F2", (*) => openConfigFile())
     fileSelectionMenuOpen.SetIcon("Config-File`tAlt+F2", "shell32.dll", 70)
-    fileSelectionMenuOpen.Add("Recent Downloads", (*) => GUI_openDownloadedVideoLocation())
-    fileSelectionMenuOpen.SetIcon("Recent Downloads", "shell32.dll", 116)
+    fileSelectionMenuOpen.Add("Download destination", (*) => GUI_openDownloadLocation())
+    fileSelectionMenuOpen.SetIcon("Download destination", "shell32.dll", 116)
 
     fileSelectionMenuDelete := Menu()
     fileSelectionMenuDelete.Add("URL-File", (*) => deleteFilePrompt("URL-File"))
@@ -25,8 +25,8 @@ createMainGUI()
     fileSelectionMenuDelete.SetIcon("URL-BackUp-File", "shell32.dll", 46)
     fileSelectionMenuDelete.Add("URL-Blacklist-File", (*) => deleteFilePrompt("URL-Blacklist-File"))
     fileSelectionMenuDelete.SetIcon("URL-Blacklist-File", "shell32.dll", 110)
-    fileSelectionMenuDelete.Add("Recent Downloads", (*) => deleteFilePrompt("recent downloads"))
-    fileSelectionMenuDelete.SetIcon("Recent Downloads", "shell32.dll", 116)
+    fileSelectionMenuDelete.Add("Latest download", (*) => deleteFilePrompt("latest download"))
+    fileSelectionMenuDelete.SetIcon("Latest download", "shell32.dll", 116)
 
     fileSelectionMenuReset := Menu()
     fileSelectionMenuReset.Add("URL-Blacklist-File", (*) => openURLBlacklistFile(true))
@@ -242,7 +242,7 @@ GUI_ApplyCheckmarksFromConfigFile(pMenuName)
     }
 }
 
-GUI_openDownloadedVideoLocation()
+GUI_openDownloadLocation()
 {
     Try
     {
@@ -250,11 +250,11 @@ GUI_openDownloadedVideoLocation()
         {
             Case 0:
             {
-                Run(customDownloadLocation.Value . '\' . downloadTime)
+                Run(customDownloadLocation.Value)
             }
             Case 1:
             {
-                Run(readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime)
+                Run(readConfigFile("DOWNLOAD_PATH"))
             }
         }
     }

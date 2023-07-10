@@ -122,10 +122,12 @@ setUp()
                         If (A_IsCompiled = true)
                         {
                             Run '*RunAs "' A_ScriptFullPath '" /restart'
+                            Return
                         }
                         Else
                         {
                             Run '*RunAs "' A_AhkPath '" /restart "' A_ScriptFullPath '"'
+                            Return
                         }
                     }
                     MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")

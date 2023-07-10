@@ -132,6 +132,13 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
 
+    If (!FileExist(readConfigFile("URL_FILE_LOCATION")))
+    {
+        MsgBox("No URL file found. You can save`nURLs by clicking on a video and `npressing " .
+            expandHotkey(readConfigFile("URL_COLLECT_HK")), "Download status", "O Icon! 8192")
+        Return
+    }
+
     If (booleanSilent = 1)
     {
         ; Execute the command line command and wait for it to be finished.
@@ -553,7 +560,7 @@ deleteFilePrompt(pFileName)
                         SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
                         FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
                     }
-                Case "recent downloads":
+                Case "latest download":
                     {
                         c := 5
                         Try
@@ -574,9 +581,8 @@ deleteFilePrompt(pFileName)
                         }
                         Catch
                         {
-                            MsgBox("No downloaded files from `ncurrent session found.", "Open videos error !", "O Icon! T1.5")
+                            MsgBox("No downloaded files from `ncurrent session found.", "Delete download error !", "O Icon! T2.5")
                         }
-                        ; Possible in the future.
                     }
                 Default:
                     {

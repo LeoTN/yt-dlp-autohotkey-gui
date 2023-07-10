@@ -305,13 +305,11 @@ handleGUI_Checkboxes()
             If (downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] = "Best format for quality")
             {
                 commandString .= "--extract-audio "
-                commandString .= '--paths "audio:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\audio" '
             }
             Else
             {
                 commandString .= "--extract-audio "
                 commandString .= '--audio-format "' . downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] . '" '
-                commandString .= '--paths "audio:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\audio" '
             }
         }
     }
@@ -558,11 +556,11 @@ buildCommandString()
         {
             Case 0:
             {
-                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\video" '
+                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\media" '
             }
             Case 1:
             {
-                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\video" '
+                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\media" '
             }
         }
     }
@@ -586,11 +584,11 @@ buildCommandString()
         {
             Case 0:
             {
-                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\video" '
+                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\media" '
             }
             Case 1:
             {
-                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\video" '
+                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\media" '
             }
         }
         handleGUI_Checkboxes()
