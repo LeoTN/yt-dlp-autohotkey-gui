@@ -622,6 +622,9 @@ buildCommandString()
     }
     ; This makes sure that the output file does not contain any weird letters.
     commandString .= '--output "%(title)s.%(ext)s" '
+    ; Makes the downloading message in the console a little prettier.
+    commandString .= '--progress-template "[Downloading...] [%(progress._percent_str)s of %(progress._total_bytes_str)s ' .
+        'at %(progress._speed_str)s. Time passed : %(progress._elapsed_str)s]" '
     ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
     commandString .= '--ffmpeg-location "' . ffmpegLocation . '" '
     Return commandString
