@@ -107,9 +107,9 @@ Creates, reads and manages the script's config file.
 
 ; Creates a default config file with the standard parameters. Usually always creates
 ; a backup file to recover changes if needed.
-createDefaultConfigFile(pBooleanCreateBackUp := true, pBooleanShowPrompt := false)
+createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := false)
 {
-    booleanCreateBackUp := pBooleanCreateBackUp
+    booleanCreateBackup := pBooleanCreateBackup
     booleanShowPrompt := pBooleanShowPrompt
 
     If (booleanShowPrompt = true)
@@ -120,7 +120,7 @@ createDefaultConfigFile(pBooleanCreateBackUp := true, pBooleanShowPrompt := fals
             Return
         }
     }
-    If (booleanCreateBackUp = true)
+    If (booleanCreateBackup = true)
     {
         If (FileExist(configFileLocation))
         {
@@ -208,7 +208,7 @@ readConfigFile(pOptionName)
                 ; Looks for one of the specified characters to identify invalid path names.
                 ; Searches for common mistakes in the path name.
                 specialChars := '<>"/|?*'
-                Loop Parse, specialChars
+                Loop Parse (specialChars)
                 {
                     If (InStr(outDir, A_LoopField) || InStr(outDir, "\\") || InStr(outDir, "\\\"))
                     {
@@ -218,7 +218,6 @@ readConfigFile(pOptionName)
                         ExitApp()
                     }
                 }
-
                 If (!DirExist(outDir))
                 {
                     ; The download log file location will be created without any prompt to avoid annoying the user e.g.
