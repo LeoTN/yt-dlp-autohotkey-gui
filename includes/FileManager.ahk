@@ -241,3 +241,48 @@ manageURLFile(pBooleanShowPrompt := true)
         }
     }
 }
+
+restoreURLFile()
+{
+    If (!FileExist(readConfigFile("URL_BACKUP_FILE_LOCATION")))
+    {
+        MsgBox("The URL blacklist file does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+        Return
+    }
+    If (FileExist(readConfigFile("URL_FILE_LOCATION")))
+    {
+        result := MsgBox("The URL File already exists."
+            "`nPress YES to overwrite or NO to append the `nbackup file to the original file.", "Warning !", "YNC Icon! 4096 T10")
+        Switch (result)
+        {
+            Case "Yes":
+                {
+                    FileCopy(readConfigFile("URL_BACKUP_FILE_LOCATION"), readConfigFile("URL_FILE_LOCATION"), true)
+                }
+            Case "No":
+                {
+                    If (InStr(FileRead(readConfigFile("URL_FILE_LOCATION")), "#Made by Donnerbaer"))
+                    {
+                        ; If the original URL file already contains the line, it will remove the corresponding line
+                        ; from the backup file content.
+                        tmp := StrReplace(FileRead(readConfigFile("URL_BACKUP_FILE_LOCATION")), "#Made by Donnerbaer", "#Appended here")
+                    }
+                    Else
+                    {
+                        tmp := FileRead(readConfigFile("URL_BACKUP_FILE_LOCATION"))
+                    }
+                    ; Appends the backup file content to the original file.
+                    FileAppend(tmp, readConfigFile("URL_FILE_LOCATION"))
+                }
+            Default:
+                {
+                    ; Do nothing.
+                    Return
+                }
+        }
+    }
+    Else
+    {
+        FileCopy(readConfigFile("URL_BACKUP_FILE_LOCATION"), readConfigFile("URL_FILE_LOCATION"), true)
+    }
+}

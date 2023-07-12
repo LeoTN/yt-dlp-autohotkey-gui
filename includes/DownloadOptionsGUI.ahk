@@ -108,11 +108,10 @@ cancelDownload()
     {
         Try
         {
-            ProcessClose(("ahk_pid " . consolePID))
-            WinClose(("ahk_pid " . consolePID))
+            ProcessClose(("ahk_pid " . hiddenConsolePID))
+            WinClose(("ahk_pid " . hiddenConsolePID))
         }
-        downloadStatusProgressBar.Value := 0
-        downloadStatusText.Text := "Download canceled."
+        global booleanDownloadTerminated := true
     }
     Return
 }
