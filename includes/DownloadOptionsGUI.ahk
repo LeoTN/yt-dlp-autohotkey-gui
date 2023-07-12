@@ -20,7 +20,7 @@ createDownloadOptionsGUI()
     clearURLFileAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Clear the URL file after download")
     enableFastDownloadModeCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Fast download mode")
 
-    downloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-120 yp+20 w394 R9.3", "Download Options")
+    downloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-120 yp+20 w479 R9.3", "Download Options")
 
     limitDownloadRateText1 := downloadOptionsGUI.Add("Text", "xp+10 yp+20", "Maximum download rate `n in MB per second.")
     limitDownloadRateEdit := downloadOptionsGUI.Add("Edit", "yp+30")
@@ -29,14 +29,15 @@ createDownloadOptionsGUI()
     higherRetryAmountCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Increase retry amount")
     downloadVideoDescriptionCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video description")
     downloadVideoCommentsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download video commentary section")
-    downloadVideoThumbnail := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video thumbnail")
-    downloadVideoSubtitles := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download the video's subtitles")
+    downloadVideoThumbnailCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video thumbnail")
+    downloadVideoSubtitlesCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download the video's subtitles")
+    downloadWholePlaylistsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+160 yp-80", "Download complete playlists")
 
-    chooseVideoFormatText := downloadOptionsGUI.Add("Text", "xp+250 yp-155", "Desired video format")
+    chooseVideoFormatText := downloadOptionsGUI.Add("Text", "xp+170 yp-75", "Desired video format")
     downloadVideoFormatArray := ["Best format for quality", "mp4", "webm", "avi", "flv", "mkv", "mov"]
     chooseVideoFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1", downloadVideoFormatArray)
 
-    downloadAudioOnlyCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-3 yp+27.5", "Download audio only")
+    downloadAudioOnlyCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5", "Download audio only")
     downloadAudioFormatArray := ["Best format for quality", "mp3", "wav", "m4a", "flac", "aac", "alac", "opus", "vorbis"]
     chooseAudioFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1", downloadAudioFormatArray)
 
@@ -44,7 +45,7 @@ createDownloadOptionsGUI()
     prioritiseVideoQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Prefer video quality")
     prioritiseAudioQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Prefer audio quality")
 
-    fileSystemGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-260 yp+22.5 w260 R5.2", "File Management")
+    fileSystemGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-344 yp+22.5 w260 R5.2", "File Management")
 
     useTextFileForURLsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+10 yp+20 Checked", "Use collected URLs")
     customURLInputEdit := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled", "Currently downloading collected URLs.")
@@ -68,9 +69,12 @@ createDownloadOptionsGUI()
     higherRetryAmountCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     downloadVideoDescriptionCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     downloadVideoCommentsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    downloadVideoThumbnail.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    downloadVideoSubtitles.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    useTextFileForURLsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    downloadVideoThumbnailCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    downloadVideoSubtitlesCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    downloadWholePlaylistsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    useTextFileForURLsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes()
+        ; Most likely you dont want to download a whole playlist when entering a single URL.
+            handleGUI_Checkbox_DownloadWholePlaylist())
     useDefaultDownloadLocationCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     downloadAudioOnlyCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     alwaysHighestQualityBothCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
@@ -104,11 +108,10 @@ cancelDownload()
     {
         Try
         {
-            ProcessClose(("ahk_pid " . consolePID))
-            WinClose(("ahk_pid " . consolePID))
+            ProcessClose(("ahk_pid " . hiddenConsolePID))
+            WinClose(("ahk_pid " . hiddenConsolePID))
         }
-        downloadStatusProgressBar.Value := 0
-        downloadStatusText.Text := "Download canceled."
+        global booleanDownloadTerminated := true
     }
     Return
 }
@@ -243,7 +246,7 @@ handleGUI_Checkboxes()
             }
         }
     }
-    Switch (downloadVideoThumbnail.Value)
+    Switch (downloadVideoThumbnailCheckbox.Value)
     {
         Case 1:
         {
@@ -259,7 +262,7 @@ handleGUI_Checkboxes()
             }
         }
     }
-    Switch (downloadVideoSubtitles.Value)
+    Switch (downloadVideoSubtitlesCheckbox.Value)
     {
         Case 1:
         {
@@ -276,6 +279,18 @@ handleGUI_Checkboxes()
             }
         }
     }
+    Switch (downloadWholePlaylistsCheckbox.Value)
+    {
+        Case 0:
+        {
+            commandString .= "--no-playlist "
+        }
+        Case 1:
+        {
+            ; Usefull if you want to download a complete playlist but you only selected one video.
+            commandString .= "--yes-playlist "
+        }
+    }
     Switch (downloadAudioOnlyCheckbox.Value)
     {
         Case 0:
@@ -284,38 +299,36 @@ handleGUI_Checkboxes()
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 chooseVideoFormatDropDownList.Opt("-Disabled")
+                alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+                prioritiseVideoQualityCheckbox.Opt("-Disabled")
+                prioritiseAudioQualityCheckbox.Opt("-Disabled")
             }
             chooseAudioFormatDropDownList.Opt("+Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("-Disabled")
-            prioritiseVideoQualityCheckbox.Opt("-Disabled")
-            prioritiseAudioQualityCheckbox.Opt("-Disabled")
         }
         Case 1:
         {
             ; Only extracts the audio and creates the desired audio file type.
             chooseVideoFormatDropDownList.Opt("+Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("+Disabled")
-            prioritiseVideoQualityCheckbox.Opt("+Disabled")
-            prioritiseAudioQualityCheckbox.Opt("+Disabled")
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 chooseAudioFormatDropDownList.Opt("-Disabled")
+                alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+                prioritiseVideoQualityCheckbox.Opt("+Disabled")
+                prioritiseAudioQualityCheckbox.Opt("+Disabled")
             }
             If (downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] = "Best format for quality")
             {
                 commandString .= "--extract-audio "
-                commandString .= '--paths "audio:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\audio" '
             }
             Else
             {
                 commandString .= "--extract-audio "
                 commandString .= '--audio-format "' . downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] . '" '
-                commandString .= '--paths "audio:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\audio" '
             }
         }
     }
-    If (downloadAudioOnlyCheckbox.Value != 1)
+    If (downloadAudioOnlyCheckbox.Value != 1 && enableFastDownloadModeCheckbox.Value != 1)
     {
         Switch (alwaysHighestQualityBothCheckbox.Value)
         {
@@ -410,8 +423,8 @@ handleGUI_Checkbox_fastDownload()
             limitDownloadRateEdit.Opt("-Disabled")
             downloadVideoDescriptionCheckbox.Opt("-Disabled")
             downloadVideoCommentsCheckbox.Opt("-Disabled")
-            downloadVideoThumbnail.Opt("-Disabled")
-            downloadVideoSubtitles.Opt("-Disabled")
+            downloadVideoThumbnailCheckbox.Opt("-Disabled")
+            downloadVideoSubtitlesCheckbox.Opt("-Disabled")
             chooseVideoFormatDropDownList.Opt("-Disabled")
             alwaysHighestQualityBothCheckbox.Opt("-Disabled")
             prioritiseVideoQualityCheckbox.Opt("-Disabled")
@@ -426,8 +439,8 @@ handleGUI_Checkbox_fastDownload()
             limitDownloadRateEdit.Opt("+Disabled")
             downloadVideoDescriptionCheckbox.Opt("+Disabled")
             downloadVideoCommentsCheckbox.Opt("+Disabled")
-            downloadVideoThumbnail.Opt("+Disabled")
-            downloadVideoSubtitles.Opt("+Disabled")
+            downloadVideoThumbnailCheckbox.Opt("+Disabled")
+            downloadVideoSubtitlesCheckbox.Opt("+Disabled")
             chooseVideoFormatDropDownList.Opt("+Disabled")
             alwaysHighestQualityBothCheckbox.Opt("+Disabled")
             prioritiseVideoQualityCheckbox.Opt("+Disabled")
@@ -457,8 +470,9 @@ handleGUI_Checkbox_ignoreAllOptions()
             higherRetryAmountCheckbox.Opt("-Disabled")
             downloadVideoDescriptionCheckbox.Opt("-Disabled")
             downloadVideoCommentsCheckbox.Opt("-Disabled")
-            downloadVideoThumbnail.Opt("-Disabled")
-            downloadVideoSubtitles.Opt("-Disabled")
+            downloadVideoThumbnailCheckbox.Opt("-Disabled")
+            downloadVideoSubtitlesCheckbox.Opt("-Disabled")
+            downloadWholePlaylistsCheckbox.Opt("-Disabled")
             chooseVideoFormatDropDownList.Opt("-Disabled")
             downloadAudioOnlyCheckbox.Opt("-Disabled")
             alwaysHighestQualityBothCheckbox.Opt("-Disabled")
@@ -479,8 +493,9 @@ handleGUI_Checkbox_ignoreAllOptions()
             higherRetryAmountCheckbox.Opt("+Disabled")
             downloadVideoDescriptionCheckbox.Opt("+Disabled")
             downloadVideoCommentsCheckbox.Opt("+Disabled")
-            downloadVideoThumbnail.Opt("+Disabled")
-            downloadVideoSubtitles.Opt("+Disabled")
+            downloadVideoThumbnailCheckbox.Opt("+Disabled")
+            downloadVideoSubtitlesCheckbox.Opt("+Disabled")
+            downloadWholePlaylistsCheckbox.Opt("+Disabled")
             chooseVideoFormatDropDownList.Opt("+Disabled")
             downloadAudioOnlyCheckbox.Opt("+Disabled")
             alwaysHighestQualityBothCheckbox.Opt("+Disabled")
@@ -531,6 +546,14 @@ handleGUI_InputFields()
     }
 }
 
+handleGUI_Checkbox_DownloadWholePlaylist()
+{
+    If (useTextFileForURLsCheckbox.Value = 0)
+    {
+        downloadWholePlaylistsCheckbox.Value := 0
+    }
+}
+
 ; This function parses through all values of the GUI and builds a command string
 ; which bill be given to the yt-dlp command prompt.
 ; Returns the string to it's caller.
@@ -558,11 +581,11 @@ buildCommandString()
         {
             Case 0:
             {
-                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\video" '
+                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\media" '
             }
             Case 1:
             {
-                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\video" '
+                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\media" '
             }
         }
     }
@@ -586,11 +609,11 @@ buildCommandString()
         {
             Case 0:
             {
-                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\video" '
+                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\media" '
             }
             Case 1:
             {
-                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\video" '
+                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\media" '
             }
         }
         handleGUI_Checkboxes()
@@ -598,6 +621,9 @@ buildCommandString()
     }
     ; This makes sure that the output file does not contain any weird letters.
     commandString .= '--output "%(title)s.%(ext)s" '
+    ; Makes the downloading message in the console a little prettier.
+    commandString .= '--progress-template "[Downloading...] [%(progress._percent_str)s of %(progress._total_bytes_str)s ' .
+        'at %(progress._speed_str)s. Time passed : %(progress._elapsed_str)s]" '
     ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
     commandString .= '--ffmpeg-location "' . ffmpegLocation . '" '
     Return commandString

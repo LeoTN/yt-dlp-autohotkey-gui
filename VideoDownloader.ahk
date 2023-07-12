@@ -122,10 +122,12 @@ setUp()
                         If (A_IsCompiled = true)
                         {
                             Run '*RunAs "' A_ScriptFullPath '" /restart'
+                            Return
                         }
                         Else
                         {
                             Run '*RunAs "' A_AhkPath '" /restart "' A_ScriptFullPath '"'
+                            Return
                         }
                     }
                     MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
@@ -207,28 +209,25 @@ setUp()
             }
             WinWaitClose("ahk_pid " . consolePID)
             ; In case the executable file has not been added to the eviromental variable "PATH".
-            Loop Read (A_Temp . "\video_downloader_install_log.txt")
+            Loop Parse (FileRead((A_Temp . "\video_downloader_install_log.txt")))
             {
-                Loop Parse (A_LoopReadLine)
+                ; Scanns the output from the console and searches for the PATH error.
+                If (RegExMatch(A_LoopReadLine, "'(.+?)' which is not on PATH", &outMatch) != 0)
                 {
-                    ; Scanns the output from the console and searches for the PATH error.
-                    If (RegExMatch(A_LoopReadLine, "'(.+?)' which is not on PATH", &outMatch) != 0)
-                    {
-                        outString := outMatch[]
-                        ; Removes "'" at the beginning and at the end.
-                        ; It also deletes " which is not on PATH".
-                        outStringReady := StrReplace(StrReplace(outString, " which is not on PATH"), "'")
-                        ; Admin rights required.
-                        ; Writes the environment variable into the system (not to the local user).
-                        RunWait(A_ComSpec ' /c setx Path "%Path%;' . outStringReady . '" /M')
-                        RunWait(A_ComSpec ' /c setx Path "%Path%;' . outStringReady . '" /M')
-                        RunWait(A_ComSpec ' /c setx Path "%Path%;' . outStringReady . '" /M')
-                        MsgBox("Tried to install YT-DLP into PATH.`n`nA potential trouble shooting file`n"
-                            "has been generated on your desktop.", "Script setup status", "O Iconi 4096")
-                        setup_generatePathHelpFile(outStringReady)
-                        ; For Elias :D
-                        Break 2
-                    }
+                    outString := outMatch[]
+                    ; Removes "'" at the beginning and at the end.
+                    ; It also deletes " which is not on PATH".
+                    outStringReady := StrReplace(StrReplace(outString, " which is not on PATH"), "'")
+                    ; Admin rights required.
+                    ; Writes the environment variable into the system (not to the local user).
+                    RunWait(A_ComSpec ' /c setx Path "%Path%;' . outStringReady . '" /M')
+                    RunWait(A_ComSpec ' /c setx Path "%Path%;' . outStringReady . '" /M')
+                    RunWait(A_ComSpec ' /c setx Path "%Path%;' . outStringReady . '" /M')
+                    MsgBox("Tried to install YT-DLP into PATH.`n`nA potential trouble shooting file`n"
+                        "has been generated on your desktop.", "Script setup status", "O Iconi 4096")
+                    setup_generatePathHelpFile(outStringReady)
+                    ; For Elias :D
+                    Break
                 }
             }
             If (setup_installLibraryFiles() = true)
@@ -324,6 +323,7 @@ setup_installLibraryFiles()
     Try
     {
         FileInstall("files\library\YouTubeBackground.jpg", youTubeBackGroundLocation, 1)
+        FileInstall("files\library\MonitorHookFile.ps1", A_WorkingDir . "\files\library\MonitorHookFile.ps1")
         ; Required for yt-dlp to operate with extra functionallity.
         FileInstall("files\library\ffmpeg.exe", ffmpegLocation, 1)
         FileInstall("files\library\ffplay.exe", A_WorkingDir . "\files\library\ffplay.exe", 1)
@@ -381,79 +381,76 @@ setup_checkPythonVersion()
                 }
         }
     }
-    Loop Read (A_Temp . "\video_downloader_python_install_log.txt")
+    Loop Parse (FileRead(A_Temp . "\video_downloader_python_install_log.txt"))
     {
-        Loop Parse (A_LoopReadLine)
+        ; Scanns the output from the console and extracts the python version.
+        If (RegExMatch(A_LoopReadLine, "[0-9]+.[0-9]+.[0-9]+", &outMatch) != 0)
         {
-            ; Scanns the output from the console and extracts the python version.
-            If (RegExMatch(A_LoopReadLine, "[0-9]+.[0-9]+.[0-9]+", &outMatch) != 0)
+            outString := outMatch[]
+            ; The minimum recommended python version to run yt-dlp smooth.
+            minimumPythonVersion := "3.8.0"
+            pythonVersion := outString
+            If (VerCompare(pythonVersion, minimumPythonVersion) < 0)
             {
-                outString := outMatch[]
-                ; The minimum recommended python version to run yt-dlp smooth.
-                minimumPythonVersion := "3.8.0"
-                pythonVersion := outString
-                If (VerCompare(pythonVersion, minimumPythonVersion) < 0)
+                result := MsgBox("Outdated PYTHON installation detected.`n"
+                    "Found : (Python " . pythonVersion . ")`nRequired : (" . minimumPythonVersion . " or higher)"
+                    "`nWould you like to update it?",
+                    "Script setup status", "OC Iconi 4096")
+                Switch (result)
                 {
-                    result := MsgBox("Outdated PYTHON installation detected.`n"
-                        "Found : (Python " . pythonVersion . ")`nRequired : (" . minimumPythonVersion . " or higher)"
-                        "`nWould you like to update it?",
-                        "Script setup status", "OC Iconi 4096")
-                    Switch (result)
-                    {
-                        Case "OK":
+                    Case "OK":
+                        {
+                            /*
+                            This old code is no longer required because the setp now starts with admin permissions.
+                            ; Runs the uninstall console with admin rights.
+                            tmpString1 := RegExReplace(pythonVersion, ".[0-9]$")
+                            tmpString2 := ' /c winget uninstall "python ' . tmpString1 . '"'
+                            tmpString3 := '*RunAs "' A_ComSpec . '"' . tmpString2
+                            Try
                             {
-                                /*
-                                This old code is no longer required because the setp now starts with admin permissions.
-                                ; Runs the uninstall console with admin rights.
-                                tmpString1 := RegExReplace(pythonVersion, ".[0-9]$")
-                                tmpString2 := ' /c winget uninstall "python ' . tmpString1 . '"'
-                                tmpString3 := '*RunAs "' A_ComSpec . '"' . tmpString2
-                                Try
-                                {
-                                    RunWait(tmpString3)
-                                }
-                                Catch
-                                {
-                                    ExitApp()
-                                }
-                                */
-                                tmpString1 := RegExReplace(pythonVersion, ".[0-9]$")
-                                tmpString2 := ' /c winget uninstall "python ' . tmpString1 . '"'
-                                RunWait(A_ComSpec . tmpString2)
-                                Run(A_ComSpec ' /k winget install "python" --accept-source-agreements --accept-package-agreements || title Completed...',
-                                    , , &consolePID)
-                                Sleep(2000)
-                                Try
-                                {
-                                    while (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . ' - winget install "python" --accept-source-agreements --accept-package-agreements')
-                                    {
-                                        Sleep(500)
-                                    }
-                                    Sleep(20000)
-                                    WinClose("ahk_pid " . consolePID)
-                                }
-                                Catch
-                                {
-                                    MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
-                                    ExitApp()
-                                }
-                                Return setup_checkPythonVersion()
+                                RunWait(tmpString3)
                             }
-                        Case "Cancel":
+                            Catch
+                            {
+                                ExitApp()
+                            }
+                            */
+                            tmpString1 := RegExReplace(pythonVersion, ".[0-9]$")
+                            tmpString2 := ' /c winget uninstall "python ' . tmpString1 . '"'
+                            RunWait(A_ComSpec . tmpString2)
+                            Run(A_ComSpec ' /k winget install "python" --accept-source-agreements --accept-package-agreements || title Completed...',
+                                , , &consolePID)
+                            Sleep(2000)
+                            Try
+                            {
+                                while (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . ' - winget install "python" --accept-source-agreements --accept-package-agreements')
+                                {
+                                    Sleep(500)
+                                }
+                                Sleep(20000)
+                                WinClose("ahk_pid " . consolePID)
+                            }
+                            Catch
                             {
                                 MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                                 ExitApp()
                             }
-                    }
+                            Return setup_checkPythonVersion()
+                        }
+                    Case "Cancel":
+                        {
+                            MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
+                            ExitApp()
+                        }
                 }
-                Else If (pythonVersion != "")
-                {
-                    Return true
-                }
-                Else
-                {
-                    Return false
-                }
+            }
+            Else If (pythonVersion != "")
+            {
+                Return true
+            }
+            Else
+            {
+                Return false
             }
         }
     }

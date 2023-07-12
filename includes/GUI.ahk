@@ -9,24 +9,24 @@ createMainGUI()
     fileSelectionMenuOpen := Menu()
     fileSelectionMenuOpen.Add("URL-File`tF2", (*) => openURLFile())
     fileSelectionMenuOpen.SetIcon("URL-File`tF2", "shell32.dll", 104)
-    fileSelectionMenuOpen.Add("URL-BackUp-File`tShift+F2", (*) => openURLBackUpFile())
-    fileSelectionMenuOpen.SetIcon("URL-BackUp-File`tShift+F2", "shell32.dll", 46)
+    fileSelectionMenuOpen.Add("URL-Backup-File`tShift+F2", (*) => openURLBackupFile())
+    fileSelectionMenuOpen.SetIcon("URL-Backup-File`tShift+F2", "shell32.dll", 46)
     fileSelectionMenuOpen.Add("URL-Blacklist-File`tCTRL+F2", (*) => openURLBlacklistFile())
     fileSelectionMenuOpen.SetIcon("URL-Blacklist-File`tCTRL+F2", "shell32.dll", 110)
     fileSelectionMenuOpen.Add("Config-File`tAlt+F2", (*) => openConfigFile())
     fileSelectionMenuOpen.SetIcon("Config-File`tAlt+F2", "shell32.dll", 70)
-    fileSelectionMenuOpen.Add("Recent Downloads", (*) => GUI_openDownloadedVideoLocation())
-    fileSelectionMenuOpen.SetIcon("Recent Downloads", "shell32.dll", 116)
+    fileSelectionMenuOpen.Add("Download destination", (*) => GUI_openDownloadLocation())
+    fileSelectionMenuOpen.SetIcon("Download destination", "shell32.dll", 116)
 
     fileSelectionMenuDelete := Menu()
     fileSelectionMenuDelete.Add("URL-File", (*) => deleteFilePrompt("URL-File"))
     fileSelectionMenuDelete.SetIcon("URL-File", "shell32.dll", 104)
-    fileSelectionMenuDelete.Add("URL-BackUp-File", (*) => deleteFilePrompt("URL-BackUp-File"))
-    fileSelectionMenuDelete.SetIcon("URL-BackUp-File", "shell32.dll", 46)
+    fileSelectionMenuDelete.Add("URL-Backup-File", (*) => deleteFilePrompt("URL-Backup-File"))
+    fileSelectionMenuDelete.SetIcon("URL-Backup-File", "shell32.dll", 46)
     fileSelectionMenuDelete.Add("URL-Blacklist-File", (*) => deleteFilePrompt("URL-Blacklist-File"))
     fileSelectionMenuDelete.SetIcon("URL-Blacklist-File", "shell32.dll", 110)
-    fileSelectionMenuDelete.Add("Recent Downloads", (*) => deleteFilePrompt("recent downloads"))
-    fileSelectionMenuDelete.SetIcon("Recent Downloads", "shell32.dll", 116)
+    fileSelectionMenuDelete.Add("Latest download", (*) => deleteFilePrompt("latest download"))
+    fileSelectionMenuDelete.SetIcon("Latest download", "shell32.dll", 116)
 
     fileSelectionMenuReset := Menu()
     fileSelectionMenuReset.Add("URL-Blacklist-File", (*) => openURLBlacklistFile(true))
@@ -83,6 +83,8 @@ createMainGUI()
     optionsMenu.Add()
     optionsMenu.Add("Clear URL File", (*) => manageURLFile())
     optionsMenu.SetIcon("Clear URL File", "shell32.dll", 43)
+    optionsMenu.Add("Restore URL File from Backup", (*) => restoreURLFile())
+    optionsMenu.SetIcon("Restore URL File from Backup", "shell32.dll", 240)
     optionsMenu.Add("Open Download Options GUI", (*) => Hotkey_openOptionsGUI())
     optionsMenu.SetIcon("Open Download Options GUI", "shell32.dll", 123)
     optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
@@ -242,7 +244,7 @@ GUI_ApplyCheckmarksFromConfigFile(pMenuName)
     }
 }
 
-GUI_openDownloadedVideoLocation()
+GUI_openDownloadLocation()
 {
     Try
     {
@@ -250,11 +252,11 @@ GUI_openDownloadedVideoLocation()
         {
             Case 0:
             {
-                Run(customDownloadLocation.Value . '\' . downloadTime)
+                Run(customDownloadLocation.Value)
             }
             Case 1:
             {
-                Run(readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime)
+                Run(readConfigFile("DOWNLOAD_PATH"))
             }
         }
     }
