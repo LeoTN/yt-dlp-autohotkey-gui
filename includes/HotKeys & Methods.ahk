@@ -273,14 +273,17 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         If (partProgress >= 100 && downloadedVideoAmount <= videoAmount)
         {
             ; This message only appears when the previous video processing has been finished.
-            If (!InStr(A_LoopReadLine, "Extracting URL: https://www") && downloadedVideoAmount != videoAmount)
+            If (InStr(A_LoopReadLine, "Extracting URL: https://www") && downloadedVideoAmount != videoAmount)
             {
-                Continue
+                ; "[youtube:tab]" is considered to be ignored, as it only shows up when downloading a playlist.
+                If (!InStr(A_LoopReadLine, "[youtube:tab] Extracting URL: https://www"))
+                {
+                    oldCurrentBarValue += 100
+                    downloadedVideoAmount++
+                    partProgress := 0
+                    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+                }
             }
-            oldCurrentBarValue += 100
-            downloadedVideoAmount++
-            partProgress := 0
-            downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
         }
         parsedLines++
     }
