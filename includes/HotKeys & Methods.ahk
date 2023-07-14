@@ -130,9 +130,19 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
 {
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
-
+    static isDownloading := false
+    If (isDownloading = true)
+    {
+        Return MsgBox("There is a download process running already.`n`nPlease wait for it to finish or cancel it.",
+            "Information", "O Icon! 4096 T3")
+    }
+    Else
+    {
+        isDownloading := true
+    }
     If (!FileExist(readConfigFile("URL_FILE_LOCATION")) && useTextFileForURLsCheckbox.Value = 1)
     {
+        isDownloading := false
         MsgBox("No URL file found. You can save`nURLs by clicking on a video and `npressing " .
             expandHotkey(readConfigFile("URL_COLLECT_HK")), "Download status", "O Icon! 8192")
         Return
@@ -172,26 +182,28 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     }
     If (terminateScriptAfterDownloadCheckbox.Value = 1)
     {
+        isDownloading := false
         If (booleanSilent != 1)
         {
-            MsgBox("The download process has reached it's end.`n`nTerminating script.", "Download status", "O Iconi T2")
+            MsgBox("The download process has reached it's end.`n`nTerminating script.", "Download status", "O Iconi 262144 T2")
         }
         ExitApp()
         ExitApp()
     }
     Else
     {
-        MsgBox("The download process has reached it's end.`n`nReloading script.", "Download status", "O Iconi T2")
+        isDownloading := false
+        MsgBox("The download process has reached it's end.`n`nReloading script.", "Download status", "O Iconi 262144 T2")
         Reload()
     }
 }
 
 displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 {
-    global hiddenConsolePID
-    global visualPowershellPID
     command := pCommand
     booleanSilent := pBooleanSilent
+    global hiddenConsolePID
+    global visualPowershellPID
 
     Run(A_ComSpec . " /c " . command . " > " . A_Temp . "\yt_dlp_download_log.txt", , "Hide", &hiddenConsolePID)
     ProcessWait(hiddenConsolePID)
@@ -394,8 +406,8 @@ getCurrentURL(pBooleanGetLength := false, pBooleanCreateArray := false)
 ; Enter true, to trigger the flipflop or false to get the last state.
 getCurrentURL_DownloadSuccess(pBoolean)
 {
-    static flipflop := true
     boolean := pBoolean
+    static flipflop := true
     If (boolean = true)
     {
         flipflop := !flipflop
