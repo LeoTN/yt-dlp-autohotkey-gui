@@ -32,7 +32,7 @@ createDownloadOptionsGUI()
     downloadVideoDescriptionCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video description")
     downloadVideoCommentsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download video commentary")
     downloadVideoThumbnailCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video thumbnail")
-    downloadVideoSubtitlesCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download the video's subtitles")
+    downloadVideoSubtitlesCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download video subtitles")
     downloadWholePlaylistsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+160 yp-80", "Download complete playlists")
     useDownloadArchiveCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Use download archive file")
 
@@ -620,4 +620,41 @@ buildCommandString()
     ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
     commandString .= '--ffmpeg-location "' . ffmpegLocation . '" '
     Return commandString
+}
+
+; Saves all options from the download options GUI into a text file for future use.
+saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false)
+{
+    presetName := pPresetName
+    booleanTemporary := pBooleanTemporary
+    presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
+    If (booleanTemporary = true)
+    {
+        presetLocationComplete := presetLocation . "\" . presetName . "_(TEMP).ini"
+    }
+    Else
+    {
+        presetLocationComplete := presetLocation . "\" . presetName . ".ini"
+    }
+
+    If (FileExist(presetLocationComplete))
+    {
+        result := MsgBox("The preset name already exists. `n`nDo you want to overwrite it ?", "Warning !", "YN Icon! 4096 T10")
+        If (result != "Yes")
+        {
+            Return false
+        }
+    }
+    Try
+    {
+        FileDelete(presetLocationComplete)
+    }
+    For (GuiCtrlObj in downloadOptionsGUI)
+    {
+        ; Makes sure only checkbox values are extracted.
+        If (InStr(GuiCtrlObj.Type, "Checkbox"))
+        {
+            IniWrite(GuiCtrlObj.Value, presetLocationComplete, "Checkboxes", "[" . GuiCtrlObj.Text . "]")
+        }
+    }
 }

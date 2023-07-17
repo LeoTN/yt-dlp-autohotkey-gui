@@ -28,7 +28,7 @@ F6::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below.
-        A_Clipboard := buildCommandString()
+        A_Clipboard := A_ComSpec ' /k ' . buildCommandString() . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"'
     }
     Return
 }
@@ -38,7 +38,7 @@ F7::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below
-        A_Clipboard := A_ComSpec ' /k ' . buildCommandString() . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"'
+        saveGUISettingsAsPreset("TestPreset")
     }
     Return
 }

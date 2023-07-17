@@ -35,6 +35,8 @@ BLACKLIST_FILE_LOCATION := A_ScriptDir . "\files\YT_BLACKLIST.txt"
 DOWNLOAD_LOG_FILE_LOCATION := A_ScriptDir . "\files\download\download_log.txt"
 ; Default download archive file location.
 DOWNLOAD_ARCHIVE_LOCATION := A_ScriptDir . "\files\download\download_archive.txt"
+; Default preset storage for the download option GUI.
+DOWNLOAD_PRESET_LOCATION := A_ScriptDir . "\files\presets"
 ; Standard download path.
 DOWNLOAD_PATH := A_ScriptDir . "\files\download"
 
@@ -71,6 +73,7 @@ configVariableNameArray :=
         "BLACKLIST_FILE_LOCATION",
         "DOWNLOAD_LOG_FILE_LOCATION",
         "DOWNLOAD_ARCHIVE_LOCATION",
+        "DOWNLOAD_PRESET_LOCATION",
         "DOWNLOAD_PATH",
         "HOTKEY_STATE_ARRAY",
         "DOWNLOAD_HK",
@@ -89,6 +92,7 @@ configVariableNameArray :=
 configSectionNameArray :=
     [
         "DebugSettings",
+        "FileLocations",
         "FileLocations",
         "FileLocations",
         "FileLocations",
@@ -287,7 +291,7 @@ validatePath(pPath)
     ; If necessary the directory read in the config file will be created.
     ; SplitPath makes sure the last part of the whole path is removed.
     ; For example it removes the "\YT_URLS.txt"
-    SplitPath(path, &outFileName, &outDir)
+    SplitPath(path, &outFileName, &outDir, &outExtension)
     ; Looks for one of the specified characters to identify invalid path names.
     ; Searches for common mistakes in the path name.
     specialChars := '<>"/|?*'
@@ -298,7 +302,31 @@ validatePath(pPath)
             Return false
         }
     }
-    If (!DirExist(outDir))
+    ; This happens when there is no file name given in the config file e.g. at the preset location.
+    If (outExtension = "" && !DirExist(path))
+    {
+        result := MsgBox("The directory :`n" . path
+            . "`ndoes not exist. `nWould you like to create it ?", "Warning !", "YN Icon! T10")
+        If (result = "Yes")
+        {
+            Try
+            {
+                DirCreate(path)
+                Sleep(500)
+                Return true
+            }
+            Catch
+            {
+                Return false
+            }
+        }
+        Else If (result = "No" || "Timeout")
+        {
+            MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
+            ExitApp()
+        }
+    }
+    Else If (!DirExist(outDir))
     {
         ; The download log file location will be created without any prompt to avoid annoying the user e.g.
         ; because the download folder has changed or has been deleted.
