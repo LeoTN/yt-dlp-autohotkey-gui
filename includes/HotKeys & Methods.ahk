@@ -597,25 +597,24 @@ deleteFilePrompt(pFileName)
             {
                 Case "URL-File":
                     {
-                        c := 2
+                        c := "URL_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_FILE_LOCATION"), &outFileName)
                         FileMove(readConfigFile("URL_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
                     }
                 Case "URL-Backup-File":
                     {
-                        c := 3
+                        c := "URL_BACKUP_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_BACKUP_FILE_LOCATION"), &outFileName)
                         FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
                     }
                 Case "URL-Blacklist-File":
                     {
-                        c := 4
+                        c := "BLACKLIST_FILE_LOCATION"
                         SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
                         FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
                     }
                 Case "latest download":
                     {
-                        c := 5
                         Try
                         {
                             Switch (useDefaultDownloadLocationCheckbox.Value)
