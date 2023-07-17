@@ -31,6 +31,8 @@ URL_BACKUP_FILE_LOCATION := A_ScriptDir . "\files\YT_URLS_BACKUP.txt"
 BLACKLIST_FILE_LOCATION := A_ScriptDir . "\files\YT_BLACKLIST.txt"
 ; Standard download log file path.
 DOWNLOAD_LOG_FILE_LOCATION := A_ScriptDir . "\files\download\download_log.txt"
+; Default download archive file location.
+DOWNLOAD_ARCHIVE_LOCATION := A_ScriptDir . "\files\download\download_archive.txt"
 ; Standard download path.
 DOWNLOAD_PATH := A_ScriptDir . "\files\download"
 
@@ -59,45 +61,49 @@ global configFileContentArray := []
 ; Create an array including all settings variables names.
 ; This array makes it easier to apply certain values from the config file to the configFileContentArray.
 ; IMPORTANT NOTE : Do NOT forget to add each new config variable name into the array !!!
-configVariableNameArray := [
-    "booleanDebugMode",
-    "URL_FILE_LOCATION",
-    "URL_BACKUP_FILE_LOCATION",
-    "BLACKLIST_FILE_LOCATION",
-    "DOWNLOAD_LOG_FILE_LOCATION",
-    "DOWNLOAD_PATH",
-    "HOTKEY_STATE_ARRAY",
-    "DOWNLOAD_HK",
-    "URL_COLLECT_HK",
-    "THUMBNAIL_URL_COLLECT_HK",
-    "MAIN_GUI_HK",
-    "OPTIONS_GUI_HK",
-    "TERMINATE_SCRIPT_HK",
-    "RELOAD_SCRIPT_HK",
-    "PAUSE_CONTINUE_SCRIPT_HK",
-    "CLEAR_URL_FILE_HK"
-]
+configVariableNameArray :=
+    [
+        "booleanDebugMode",
+        "URL_FILE_LOCATION",
+        "URL_BACKUP_FILE_LOCATION",
+        "BLACKLIST_FILE_LOCATION",
+        "DOWNLOAD_LOG_FILE_LOCATION",
+        "DOWNLOAD_ARCHIVE_LOCATION",
+        "DOWNLOAD_PATH",
+        "HOTKEY_STATE_ARRAY",
+        "DOWNLOAD_HK",
+        "URL_COLLECT_HK",
+        "THUMBNAIL_URL_COLLECT_HK",
+        "MAIN_GUI_HK",
+        "OPTIONS_GUI_HK",
+        "TERMINATE_SCRIPT_HK",
+        "RELOAD_SCRIPT_HK",
+        "PAUSE_CONTINUE_SCRIPT_HK",
+        "CLEAR_URL_FILE_HK"
+    ]
 ; Create an array including the matching section name for EACH item in the configVariableNameArray.
 ; This makes it easier to read and write the config file.
 ; IMPORTANT NOTE : Do NOT forget to add the SECTION NAME for EACH new item added in the configVariableNameArray !!!
-configSectionNameArray := [
-    "DebugSettings",
-    "FileLocations",
-    "FileLocations",
-    "FileLocations",
-    "FileLocations",
-    "FileLocations",
-    "Hotkeys",
-    "Hotkeys",
-    "Hotkeys",
-    "Hotkeys",
-    "Hotkeys",
-    "Hotkeys",
-    "Hotkeys",
-    "Hotkeys",
-    "Hotkeys",
-    "Hotkeys"
-]
+configSectionNameArray :=
+    [
+        "DebugSettings",
+        "FileLocations",
+        "FileLocations",
+        "FileLocations",
+        "FileLocations",
+        "FileLocations",
+        "FileLocations",
+        "Hotkeys",
+        "Hotkeys",
+        "Hotkeys",
+        "Hotkeys",
+        "Hotkeys",
+        "Hotkeys",
+        "Hotkeys",
+        "Hotkeys",
+        "Hotkeys",
+        "Hotkeys"
+    ]
 
 /*
 CONFIG FILE SECTION
@@ -182,8 +188,8 @@ readConfigFile(pOptionName)
             If (result = "Yes")
             {
                 createDefaultConfigFile()
-                readConfigFile(optionName)
-                Return
+                ; Gives the information a part of the script asked for even if the config file had to be generated.
+                Return readConfigFile(optionName)
             }
             Else If (result = "No" || "Timeout")
             {
@@ -201,60 +207,23 @@ readConfigFile(pOptionName)
             ; Everything else should be excluded.
             If (InStr(configFileContentArray[A_Index], "\"))
             {
-                ; If necessary the directory read in the config file will be created.
-                ; SplitPath makes sure the last part of the whole path is removed.
-                ; For example it removes the "\YT_URLS.txt"
-                SplitPath(configFileContentArray[A_Index], &outFileName, &outDir)
-                ; Looks for one of the specified characters to identify invalid path names.
-                ; Searches for common mistakes in the path name.
-                specialChars := '<>"/|?*'
-                Loop Parse (specialChars)
+                If (validatePath(configFileContentArray[A_Index]) = false)
                 {
-                    If (InStr(outDir, A_LoopField) || InStr(outDir, "\\") || InStr(outDir, "\\\"))
-                    {
-                        MsgBox("Could not create directory !`nCheck the config file for a valid path at : `n "
-                            . configVariableNameArray[A_Index], "Error !", "O Icon! T10")
-                        MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
-                        ExitApp()
-                    }
-                }
-                If (!DirExist(outDir))
-                {
-                    ; The download log file location will be created without any prompt to avoid annoying the user e.g.
-                    ; because the download folder has changed or has been deleted.
-                    If (outFileName = "download_log.txt")
-                    {
-                        DirCreate(outDir)
-                        Sleep(500)
-                        Return configFileContentArray[A_Index]
-                    }
-                    result := MsgBox("The directory :`n" . configFileContentArray[A_Index]
-                    . "`ndoes not exist. `nWould you like to create it ?", "Warning !", "YN Icon! T10")
-                    If (result = "Yes")
-                    {
-                        Try
-                        {
-                            DirCreate(outDir)
-                            Sleep(500)
-                            Return configFileContentArray[A_Index]
-                        }
-                        Catch
-                        {
-                            MsgBox("Could not create directory !`nCheck the config file for a valid path at : `n "
-                                . configVariableNameArray[A_Index], "Error !", "O Icon! T10")
-                            MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
-                            ExitApp()
-                        }
-                    }
-                    Else If (result = "No" || "Timeout")
-                    {
-                        MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
-                        ExitApp()
-                    }
+                    MsgBox("Could not create directory !`nCheck the config file for a valid path at : `n "
+                        . configVariableNameArray[A_Index], "Error !", "O Icon! T10")
+                    MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
                     ExitApp()
                 }
+                Else
+                {
+                    ; This means that there was no error with the path given.
+                    Return configFileContentArray[A_Index]
+                }
             }
-            Return configFileContentArray[A_Index]
+            Else
+            {
+                Return configFileContentArray[A_Index]
+            }
         }
     }
     MsgBox("Could not find " . optionName . " in the config file.", "Script status", "O IconX T3")
@@ -304,4 +273,65 @@ editConfigFile(pOptionName, pData)
         }
     }
     Throw ("Error while editing config file")
+}
+
+; Verfies the integrity of a given path or file location.
+; It will also ask the user to create the given path if it does not exist yet.
+; Returns true if a path is valid and false otherwise.
+validatePath(pPath)
+{
+    path := pPath
+
+    ; If necessary the directory read in the config file will be created.
+    ; SplitPath makes sure the last part of the whole path is removed.
+    ; For example it removes the "\YT_URLS.txt"
+    SplitPath(path, &outFileName, &outDir)
+    ; Looks for one of the specified characters to identify invalid path names.
+    ; Searches for common mistakes in the path name.
+    specialChars := '<>"/|?*'
+    Loop Parse (specialChars)
+    {
+        If (InStr(outDir, A_LoopField) || InStr(outDir, "\\") || InStr(outDir, "\\\"))
+        {
+            Return false
+        }
+    }
+    If (!DirExist(outDir))
+    {
+        ; The download log file location will be created without any prompt to avoid annoying the user e.g.
+        ; because the download folder has changed or has been deleted.
+        If (outFileName = "download_log.txt")
+        {
+            Try
+            {
+                DirCreate(outDir)
+                Sleep(500)
+                Return true
+            }
+            Catch
+            {
+                Return false
+            }
+        }
+        result := MsgBox("The directory :`n" . path
+            . "`ndoes not exist. `nWould you like to create it ?", "Warning !", "YN Icon! T10")
+        If (result = "Yes")
+        {
+            Try
+            {
+                DirCreate(outDir)
+                Sleep(500)
+                Return true
+            }
+            Catch
+            {
+                Return false
+            }
+        }
+        Else If (result = "No" || "Timeout")
+        {
+            MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
+            ExitApp()
+        }
+    }
 }

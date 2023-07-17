@@ -246,7 +246,7 @@ restoreURLFile()
 {
     If (!FileExist(readConfigFile("URL_BACKUP_FILE_LOCATION")))
     {
-        MsgBox("The URL blacklist file does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+        MsgBox("The URL blackup file does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
         Return
     }
     If (FileExist(readConfigFile("URL_FILE_LOCATION")))

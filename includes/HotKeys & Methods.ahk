@@ -297,6 +297,14 @@ monitorDownloadProgress(pBooleanNewDownload := false)
                 }
             }
         }
+        ; The already recorded message is important because the progress bar has to move up one video to avoid issues.
+        Else If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
+        {
+            oldCurrentBarValue += 100
+            downloadedVideoAmount++
+            partProgress := 0
+            downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+        }
         parsedLines++
     }
     ; When the loop reaches the file end it will check if the console log has reached it's end.

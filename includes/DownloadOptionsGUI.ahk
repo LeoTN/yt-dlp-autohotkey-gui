@@ -28,12 +28,13 @@ createDownloadOptionsGUI()
     limitDownloadRateText2 := downloadOptionsGUI.Add("Text", "yp+25", "Enter 0 for no limitations.")
     higherRetryAmountCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Increase retry amount")
     downloadVideoDescriptionCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video description")
-    downloadVideoCommentsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download video commentary section")
+    downloadVideoCommentsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download video commentary")
     downloadVideoThumbnailCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video thumbnail")
     downloadVideoSubtitlesCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download the video's subtitles")
     downloadWholePlaylistsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+160 yp-80", "Download complete playlists")
+    useDownloadArchiveCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Use download archive file")
 
-    chooseVideoFormatText := downloadOptionsGUI.Add("Text", "xp+170 yp-75", "Desired video format")
+    chooseVideoFormatText := downloadOptionsGUI.Add("Text", "xp+174 yp-95", "Desired video format")
     downloadVideoFormatArray := ["Best format for quality", "mp4", "webm", "avi", "flv", "mkv", "mov"]
     chooseVideoFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1", downloadVideoFormatArray)
 
@@ -72,6 +73,7 @@ createDownloadOptionsGUI()
     downloadVideoThumbnailCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     downloadVideoSubtitlesCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     downloadWholePlaylistsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    useDownloadArchiveCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     useTextFileForURLsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes()
         ; Most likely you dont want to download a whole playlist when entering a single URL.
             handleGUI_Checkbox_DownloadWholePlaylist())
@@ -291,6 +293,19 @@ handleGUI_Checkboxes()
             commandString .= "--yes-playlist "
         }
     }
+    Switch (useDownloadArchiveCheckbox.Value)
+    {
+        Case 0:
+        {
+            commandString .= "--no-download-archive "
+        }
+        Case 1:
+        {
+            ; Usefull if you want to download a video once.
+            ; There is always an option to ignore the archive file.
+            commandString .= '--download-archive "' . readConfigFile("DOWNLOAD_ARCHIVE_LOCATION") . '" '
+        }
+    }
     Switch (downloadAudioOnlyCheckbox.Value)
     {
         Case 0:
@@ -473,6 +488,7 @@ handleGUI_Checkbox_ignoreAllOptions()
             downloadVideoThumbnailCheckbox.Opt("-Disabled")
             downloadVideoSubtitlesCheckbox.Opt("-Disabled")
             downloadWholePlaylistsCheckbox.Opt("-Disabled")
+            useDownloadArchiveCheckbox.Opt("-Disabled")
             chooseVideoFormatDropDownList.Opt("-Disabled")
             downloadAudioOnlyCheckbox.Opt("-Disabled")
             alwaysHighestQualityBothCheckbox.Opt("-Disabled")
@@ -496,6 +512,7 @@ handleGUI_Checkbox_ignoreAllOptions()
             downloadVideoThumbnailCheckbox.Opt("+Disabled")
             downloadVideoSubtitlesCheckbox.Opt("+Disabled")
             downloadWholePlaylistsCheckbox.Opt("+Disabled")
+            useDownloadArchiveCheckbox.Opt("+Disabled")
             chooseVideoFormatDropDownList.Opt("+Disabled")
             downloadAudioOnlyCheckbox.Opt("+Disabled")
             alwaysHighestQualityBothCheckbox.Opt("+Disabled")
@@ -561,61 +578,35 @@ buildCommandString()
 {
     ; Formats the value of A_Now to give each folder a unique time stamp.
     global downloadTime := FormatTime(A_Now, "HH-mm-ss_dd.MM.yyyy")
-    If (ignoreAllOptionsCheckbox.Value = 1)
+
+    global commandString := "yt-dlp "
+    ; Basic options such as download path and single URL or multiple URLs.
+    Switch (useTextFileForURLsCheckbox.Value)
     {
-        global commandString := "yt-dlp "
-        ; Basic options such as download path and single URL or multiple URLs.
-        Switch (useTextFileForURLsCheckbox.Value)
+        Case 0:
         {
-            Case 0:
-            {
-                commandString .= "--no-batch-file "
-                commandString .= '"' . customURLInputEdit.Value . '" '
-            }
-            Case 1:
-            {
-                commandString .= '--batch-file "' . readConfigFile("URL_FILE_LOCATION") . '" '
-            }
+            commandString .= "--no-batch-file "
+            commandString .= '"' . customURLInputEdit.Value . '" '
         }
-        Switch (useDefaultDownloadLocationCheckbox.Value)
+        Case 1:
         {
-            Case 0:
-            {
-                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\media" '
-            }
-            Case 1:
-            {
-                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\media" '
-            }
+            commandString .= '--batch-file "' . readConfigFile("URL_FILE_LOCATION") . '" '
         }
     }
-    Else
+    Switch (useDefaultDownloadLocationCheckbox.Value)
     {
-        global commandString := "yt-dlp "
-        ; Basic options such as download path and single URL or multiple URLs.
-        Switch (useTextFileForURLsCheckbox.Value)
+        Case 0:
         {
-            Case 0:
-            {
-                commandString .= "--no-batch-file "
-                commandString .= '"' . customURLInputEdit.Value . '" '
-            }
-            Case 1:
-            {
-                commandString .= '--batch-file "' . readConfigFile("URL_FILE_LOCATION") . '" '
-            }
+            commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\media" '
         }
-        Switch (useDefaultDownloadLocationCheckbox.Value)
+        Case 1:
         {
-            Case 0:
-            {
-                commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\media" '
-            }
-            Case 1:
-            {
-                commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\media" '
-            }
+            commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\media" '
         }
+    }
+    If (ignoreAllOptionsCheckbox.Value != 1)
+    {
+
         handleGUI_Checkboxes()
         handleGUI_InputFields()
     }
