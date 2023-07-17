@@ -1,7 +1,9 @@
 #SingleInstance Force
-SendMode "Input"
-CoordMode "Mouse", "Client"
+#MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
+SendMode "Input"
+SetWorkingDir A_ScriptDir
+CoordMode "Mouse", "Client"
 
 global commandString := ""
 global downloadTime := FormatTime(A_Now, "HH-mm-ss_dd.MM.yyyy")

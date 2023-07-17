@@ -1,10 +1,10 @@
 ; NOTE : This is the main .ahk file which has to be started !!!
 #SingleInstance Force
+#MaxThreadsPerHotkey 2
+#Warn Unreachable, Off
 SendMode "Input"
 SetWorkingDir A_ScriptDir
 CoordMode "Mouse", "Client"
-#MaxThreadsPerHotkey 2
-#Warn Unreachable, Off
 
 ; Imports important functions and variables
 ; Sets the directory for all following files.

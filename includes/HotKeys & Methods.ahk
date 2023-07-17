@@ -1,7 +1,9 @@
 #SingleInstance Force
-SendMode "Input"
-CoordMode "Mouse", "Client"
+#MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
+SendMode "Input"
+SetWorkingDir A_ScriptDir
+CoordMode "Mouse", "Client"
 
 /*
 DEBUG SECTION
@@ -205,7 +207,7 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
     global hiddenConsolePID
     global visualPowershellPID
 
-    Run(A_ComSpec . " /c " . command . " > " . A_Temp . "\yt_dlp_download_log.txt", , "Hide", &hiddenConsolePID)
+    Run(A_ComSpec . " /c " . command . " > " . A_Temp . "\yt_dlp_download_log.txt", , "Min", &hiddenConsolePID)
     ProcessWait(hiddenConsolePID)
 
     If (booleanSilent = false)
