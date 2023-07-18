@@ -38,7 +38,7 @@ F6::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below.
-        saveGUISettingsAsPreset("TestPreset")
+        saveGUISettingsAsPreset("TestPreset", true)
     }
     Return
 }
@@ -48,7 +48,7 @@ F7::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below
-        loadGUISettingsFromPreset("TestPreset")
+        loadGUISettingsFromPreset("TestPreset", true)
     }
     Return
 }

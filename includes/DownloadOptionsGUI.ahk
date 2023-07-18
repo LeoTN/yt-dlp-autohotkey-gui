@@ -630,7 +630,8 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false)
     presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
     If (booleanTemporary = true)
     {
-        presetLocationComplete := presetLocation . "\" . presetName . "_(TEMP).ini"
+        presetName .= "_(TEMP)"
+        presetLocationComplete := presetLocation . "\" . presetName . ".ini"
     }
     Else
     {
@@ -672,17 +673,26 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false)
     }
 }
 
-loadGUISettingsFromPreset(pPresetName)
+loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false)
 {
     presetName := pPresetName
+    booleanTemporary := pBooleanTemporary
     presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
-    presetLocationComplete := presetLocation . "\" . presetName . ".ini"
+    If (booleanTemporary = true)
+    {
+        presetName .= "_(TEMP)"
+        presetLocationComplete := presetLocation . "\" . presetName . ".ini"
+    }
+    Else
+    {
+        presetLocationComplete := presetLocation . "\" . presetName . ".ini"
+    }
     i_Input := 1
     i_DropDownList := 1
 
     If (!FileExist(presetLocationComplete))
     {
-        MsgBox("The preset : " . presetName . " does not exist.`n`nTerminating script.", "Error !", "O IconX T1.5")
+        MsgBox("The preset : " . presetName . " does not exist.`n`nTerminating script.", "Error !", "O IconX T3")
         ExitApp()
         ExitApp()
     }
@@ -699,7 +709,7 @@ loadGUISettingsFromPreset(pPresetName)
             Catch
             {
                 MsgBox("Failed to set value of : " . GuiCtrlObj.Text . "."
-                    "`n`nTerminating script.", "Error !", "O IconX T1.5")
+                    "`n`nTerminating script.", "Error !", "O IconX T3")
                 ExitApp()
                 ExitApp()
             }
@@ -715,7 +725,7 @@ loadGUISettingsFromPreset(pPresetName)
             Catch
             {
                 MsgBox("Failed to set value of : {Input_ " . i_Input . "}."
-                    "`n`nTerminating script.", "Error !", "O IconX T1.5")
+                    "`n`nTerminating script.", "Error !", "O IconX T3")
                 ExitApp()
                 ExitApp()
             }
@@ -731,10 +741,18 @@ loadGUISettingsFromPreset(pPresetName)
             Catch
             {
                 MsgBox("Failed to set value of : {DropDownList_ " . i_DropDownList . "}."
-                    "`n`nTerminating script.", "Error !", "O IconX T1.5")
+                    "`n`nTerminating script.", "Error !", "O IconX T3")
                 ExitApp()
                 ExitApp()
             }
+        }
+    }
+    ; Deletes the preset when it has been used.
+    If (booleanTemporary = true)
+    {
+        Try
+        {
+            FileDelete(presetLocationComplete)
         }
     }
     ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
