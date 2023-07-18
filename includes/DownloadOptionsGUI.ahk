@@ -636,10 +636,13 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false)
     {
         presetLocationComplete := presetLocation . "\" . presetName . ".ini"
     }
+    i_Input := 1
+    i_DropDownList := 1
 
     If (FileExist(presetLocationComplete))
     {
-        result := MsgBox("The preset name already exists. `n`nDo you want to overwrite it ?", "Warning !", "YN Icon! 4096 T10")
+        result := MsgBox("The preset name : " . presetName . " already exists."
+            " `n`nDo you want to overwrite it ?", "Warning !", "YN Icon! 4096 T10")
         If (result != "Yes")
         {
             Return false
@@ -654,7 +657,95 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false)
         ; Makes sure only checkbox values are extracted.
         If (InStr(GuiCtrlObj.Type, "Checkbox"))
         {
-            IniWrite(GuiCtrlObj.Value, presetLocationComplete, "Checkboxes", "[" . GuiCtrlObj.Text . "]")
+            IniWrite(GuiCtrlObj.Value, presetLocationComplete, "Checkboxes", "{" . GuiCtrlObj.Text . "}")
         }
+        If (InStr(GuiCtrlObj.Type, "Edit"))
+        {
+            IniWrite(GuiCtrlObj.Value, presetLocationComplete, "Edits", "{Input_" . i_Input . "}")
+            i_Input++
+        }
+        If (InStr(GuiCtrlObj.Type, "DDL"))
+        {
+            IniWrite(GuiCtrlObj.Value, presetLocationComplete, "DropDownLists", "{DropDownList_" . i_DropDownList . "}")
+            i_DropDownList++
+        }
+    }
+}
+
+loadGUISettingsFromPreset(pPresetName)
+{
+    presetName := pPresetName
+    presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
+    presetLocationComplete := presetLocation . "\" . presetName . ".ini"
+    i_Input := 1
+    i_DropDownList := 1
+
+    If (!FileExist(presetLocationComplete))
+    {
+        MsgBox("The preset : " . presetName . " does not exist.`n`nTerminating script.", "Error !", "O IconX T1.5")
+        ExitApp()
+        ExitApp()
+    }
+    For (GuiCtrlObj in downloadOptionsGUI)
+    {
+        ; Makes sure only checkbox values are extracted.
+        If (InStr(GuiCtrlObj.Type, "Checkbox"))
+        {
+            Try
+            {
+                newCheckboxValue := IniRead(presetLocationComplete, "Checkboxes", "{" . GuiCtrlObj.Text . "}")
+                GuiCtrlObj.Value := newCheckboxValue
+            }
+            Catch
+            {
+                MsgBox("Failed to set value of : " . GuiCtrlObj.Text . "."
+                    "`n`nTerminating script.", "Error !", "O IconX T1.5")
+                ExitApp()
+                ExitApp()
+            }
+        }
+        If (InStr(GuiCtrlObj.Type, "Edit"))
+        {
+            Try
+            {
+                newEditValue := IniRead(presetLocationComplete, "Edits", "{Input_" . i_Input . "}")
+                GuiCtrlObj.Value := newEditValue
+                i_Input++
+            }
+            Catch
+            {
+                MsgBox("Failed to set value of : {Input_ " . i_Input . "}."
+                    "`n`nTerminating script.", "Error !", "O IconX T1.5")
+                ExitApp()
+                ExitApp()
+            }
+        }
+        If (InStr(GuiCtrlObj.Type, "DDL"))
+        {
+            Try
+            {
+                newDropDownListValue := IniRead(presetLocationComplete, "DropDownLists", "{DropDownList_" . i_DropDownList . "}")
+                GuiCtrlObj.Value := newDropDownListValue
+                i_DropDownList++
+            }
+            Catch
+            {
+                MsgBox("Failed to set value of : {DropDownList_ " . i_DropDownList . "}."
+                    "`n`nTerminating script.", "Error !", "O IconX T1.5")
+                ExitApp()
+                ExitApp()
+            }
+        }
+    }
+    ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
+    handleGUI_Checkboxes()
+    handleGUI_InputFields()
+    If (enableFastDownloadModeCheckbox.Value = 1)
+    {
+        handleGUI_Checkbox_fastDownload()
+    }
+    Else If (ignoreAllOptionsCheckbox.Value = 1)
+    {
+        handleGUI_Checkbox_ignoreAllOptions()
     }
 }

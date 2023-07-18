@@ -23,7 +23,7 @@ Add debug hotkeys here.
 */
 
 ; Debug hotkey template.
-F6::
+F5::
 {
     If (readConfigFile("booleanDebugMode") = true)
     {
@@ -33,12 +33,22 @@ F6::
     Return
 }
 
+F6::
+{
+    If (readConfigFile("booleanDebugMode") = true)
+    {
+        ; Enter code below.
+        saveGUISettingsAsPreset("TestPreset")
+    }
+    Return
+}
+
 F7::
 {
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below
-        saveGUISettingsAsPreset("TestPreset")
+        loadGUISettingsFromPreset("TestPreset")
     }
     Return
 }
