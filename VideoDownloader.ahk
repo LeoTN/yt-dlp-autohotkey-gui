@@ -253,16 +253,6 @@ setUp()
                 MsgBox("Terminating script.", "Script status", "O Iconi T1.5")
                 ExitApp()
             }
-            Else
-            {
-                MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
-                ExitApp()
-            }
-        }
-        Else
-        {
-            MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
-            ExitApp()
         }
     }
     Else
@@ -369,14 +359,14 @@ setup_checkPythonVersion()
                     }
                     Catch
                     {
-                        MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
+                        MsgBox("Could not complete setup (Python installation).`n`nTerminating script.", "Error !", "O IconX T1.5")
                         ExitApp()
                     }
                     Return setup_checkPythonVersion()
                 }
             Case "Cancel":
                 {
-                    MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
+                    MsgBox("Could not complete setup (Python installation).`n`nTerminating script.", "Error !", "O IconX T1.5")
                     ExitApp()
                 }
         }
@@ -423,7 +413,7 @@ setup_checkPythonVersion()
                             Sleep(2000)
                             Try
                             {
-                                while (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . ' - winget install "python" --accept-source-agreements --accept-package-agreements')
+                                While (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . ' - winget install "python" --accept-source-agreements --accept-package-agreements')
                                 {
                                     Sleep(500)
                                 }
@@ -432,27 +422,24 @@ setup_checkPythonVersion()
                             }
                             Catch
                             {
-                                MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
+                                MsgBox("Could not complete setup (Python installation).`n`nTerminating script.", "Error !", "O IconX T1.5")
                                 ExitApp()
                             }
                             Return setup_checkPythonVersion()
                         }
                     Case "Cancel":
                         {
-                            MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
+                            MsgBox("Could not complete setup (Python installation).`n`nTerminating script.", "Error !", "O IconX T1.5")
                             ExitApp()
                         }
                 }
             }
-            Else If (pythonVersion != "")
-            {
-                Return true
-            }
             Else
             {
-                Return false
+                MsgBox("Could not complete setup (Python installation).`n`nTerminating script.", "Error !", "O IconX T1.5")
+                ExitApp()
             }
         }
     }
-    Return
+    Return true
 }
