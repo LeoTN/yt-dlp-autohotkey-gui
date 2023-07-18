@@ -185,6 +185,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     If (terminateScriptAfterDownloadCheckbox.Value = 1)
     {
         isDownloading := false
+        saveGUISettingsAsPreset("last_settings", true)
         If (booleanSilent != 1)
         {
             MsgBox("The download process has reached it's end.`n`nTerminating script.", "Download status", "O Iconi 262144 T2")
@@ -195,6 +196,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     Else
     {
         isDownloading := false
+        saveGUISettingsAsPreset("last_settings", true)
         MsgBox("The download process has reached it's end.`n`nReloading script.", "Download status", "O Iconi 262144 T2")
         Reload()
     }

@@ -3,4 +3,6 @@ VideoDownloader.exe
 files/config
 files/deleted
 files/download
+files/presets
 files/*.txt
+
