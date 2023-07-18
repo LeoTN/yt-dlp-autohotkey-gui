@@ -107,6 +107,20 @@ optionsGUI_onInit()
 {
     createDownloadOptionsGUI()
     buildCommandString()
+    Sleep(1000)
+    ; Checks for the last settings file to restore settings from the last download.
+    If (loadGUISettingsFromPreset("last_settings", true, true) = false)
+    {
+        ; Load the default file instead.
+        Loop Files (readConfigFile("DOWNLOAD_PRESET_LOCATION") . "\*.ini")
+        {
+            If (InStr(A_LoopFileName, "_(DEFAULT)"))
+            {
+                SplitPath(A_LoopFileName, , , , &outNameNotExt)
+                loadGUISettingsFromPreset(outNameNotExt)
+            }
+        }
+    }
 }
 
 cancelDownload()
@@ -123,7 +137,6 @@ cancelDownload()
         }
         global booleanDownloadTerminated := true
     }
-    Return
 }
 
 ; Function to react to changes made to any checkbox.
@@ -751,10 +764,13 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
     }
 }
 
-loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false)
+; Loads the saved settings from the preset files.
+; Returns true or false based on the success.
+loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupressWarning := false)
 {
     presetName := pPresetName
     booleanTemporary := pBooleanTemporary
+    booleanSupressWarning := pBooleanSupressWarning
     presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
     If (booleanTemporary = true)
     {
@@ -766,8 +782,11 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false)
 
     If (!FileExist(presetLocationComplete))
     {
-        MsgBox("The preset : " . presetName . " does not exist.", "Warning !", "O Icon! T3")
-        Return
+        If (booleanSupressWarning = false)
+        {
+            MsgBox("The preset : " . presetName . " does not exist.", "Warning !", "O Icon! T2")
+        }
+        Return false
     }
     For (GuiCtrlObj in downloadOptionsGUI)
     {
@@ -825,11 +844,21 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false)
             FileDelete(presetLocationComplete)
         }
     }
-    handleGUI_Checkbox_fastDownload()
-    handleGUI_Checkbox_ignoreAllOptions()
+    If (ignoreAllOptionsCheckbox.Value = 1)
+    {
+        handleGUI_Checkbox_ignoreAllOptions()
+    }
+    Else If (enableFastDownloadModeCheckbox.Value = 1)
+    {
+        handleGUI_Checkbox_fastDownload()
+    }
     ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
     handleGUI_Checkboxes()
     handleGUI_InputFields()
+    ; This ensures that the preset list is updated in the combo box.
+    selectAndAddPresetsComboBox.Delete()
+    selectAndAddPresetsComboBox.Add(handleGUI_refreshPresetArray())
+    Return true
 }
 
 ; Returns an array to use for the preset combo box.
