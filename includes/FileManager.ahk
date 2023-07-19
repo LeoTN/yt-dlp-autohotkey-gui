@@ -50,10 +50,14 @@ saveVideoURLDirectlyToFile()
     ; Will be language specific in the future.
     Send("k")
     Clipwait(0.35)
-    If (lastContent = A_Clipboard || A_Clipboard = "")
+    If (lastContent = A_Clipboard)
     {
-        MsgBox("No URL detected or same URL selected twice.", "Attention !", "O Icon! T1.5")
+        MsgBox("Same URL selected twice.", "Attention !", "O Icon! T1.5")
         Return
+    }
+    Else If (A_Clipboard = "")
+    {
+        MsgBox("No URL detected.", "Attention !", "O Icon! T1.5")
     }
     Else
     {
