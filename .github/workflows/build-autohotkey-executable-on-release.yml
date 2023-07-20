@@ -1,26 +1,33 @@
-name: Build and Attach Autohotkey Binary File
+name: Build and Attach Autohotkey Executable
 
 on:
   release:
     types: [created]
 
 jobs:
-  Build-and-Attach:
-    name: Start-Building
+  build:
+    name: Build and Attach Autohotkey Executable
     runs-on: windows-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+    - name: Download and Extract AutoHotkey
+      run: |
+        # Download AutoHotkey zip file.
+        Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk.zip" -OutFile "ahk.zip"
+        # Extract it.
+        Expand-Archive -Path "ahk.zip" -DestinationPath "ahk"
 
-      - name: Ahk2Exe
-        uses: nekocodeX/GitHub-Action-Ahk2Exe@main
-        with:
-          in: VideoDownloader.ahk
+    - name: Compile AutoHotkey Script
+      run: |
+        # Set the paths to execute more easy.
+        $ahk2exePath = "ahk\Compiler\Ahk2Exe.exe"
+        $scriptPath = "VideoDownloader.ahk"
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: VideoDownloader.exe
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        # Compile the script.
+        & $ahk2exePath /in $scriptPath /out VideoDownloader.exe
+
+    - name: Upload Executable
+      uses: actions/upload-artifact@v2
+      with:
+        name: VideoDownloader
+        path: VideoDownloader.exe
