@@ -1,7 +1,9 @@
 #SingleInstance Force
-SendMode "Input"
-CoordMode "Mouse", "Client"
+#MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
+SendMode "Input"
+SetWorkingDir A_ScriptDir
+CoordMode "Mouse", "Client"
 
 createMainGUI()
 {
@@ -9,22 +11,24 @@ createMainGUI()
     fileSelectionMenuOpen := Menu()
     fileSelectionMenuOpen.Add("URL-File`tF2", (*) => openURLFile())
     fileSelectionMenuOpen.SetIcon("URL-File`tF2", "shell32.dll", 104)
-    fileSelectionMenuOpen.Add("URL-BackUp-File`tShift+F2", (*) => openURLBackUpFile())
-    fileSelectionMenuOpen.SetIcon("URL-BackUp-File`tShift+F2", "shell32.dll", 46)
+    fileSelectionMenuOpen.Add("URL-Backup-File`tShift+F2", (*) => openURLBackupFile())
+    fileSelectionMenuOpen.SetIcon("URL-Backup-File`tShift+F2", "shell32.dll", 46)
     fileSelectionMenuOpen.Add("URL-Blacklist-File`tCTRL+F2", (*) => openURLBlacklistFile())
     fileSelectionMenuOpen.SetIcon("URL-Blacklist-File`tCTRL+F2", "shell32.dll", 110)
     fileSelectionMenuOpen.Add("Config-File`tAlt+F2", (*) => openConfigFile())
     fileSelectionMenuOpen.SetIcon("Config-File`tAlt+F2", "shell32.dll", 70)
+    fileSelectionMenuOpen.Add("Download destination", (*) => GUI_openDownloadLocation())
+    fileSelectionMenuOpen.SetIcon("Download destination", "shell32.dll", 116)
 
     fileSelectionMenuDelete := Menu()
     fileSelectionMenuDelete.Add("URL-File", (*) => deleteFilePrompt("URL-File"))
     fileSelectionMenuDelete.SetIcon("URL-File", "shell32.dll", 104)
-    fileSelectionMenuDelete.Add("URL-BackUp-File", (*) => deleteFilePrompt("URL-BackUp-File"))
-    fileSelectionMenuDelete.SetIcon("URL-BackUp-File", "shell32.dll", 46)
+    fileSelectionMenuDelete.Add("URL-Backup-File", (*) => deleteFilePrompt("URL-Backup-File"))
+    fileSelectionMenuDelete.SetIcon("URL-Backup-File", "shell32.dll", 46)
     fileSelectionMenuDelete.Add("URL-Blacklist-File", (*) => deleteFilePrompt("URL-Blacklist-File"))
     fileSelectionMenuDelete.SetIcon("URL-Blacklist-File", "shell32.dll", 110)
-    fileSelectionMenuDelete.Add("Downloaded Videos", (*) => deleteFilePrompt("Downloaded Videos"))
-    fileSelectionMenuDelete.SetIcon("Downloaded Videos", "shell32.dll", 116)
+    fileSelectionMenuDelete.Add("Latest download", (*) => deleteFilePrompt("latest download"))
+    fileSelectionMenuDelete.SetIcon("Latest download", "shell32.dll", 116)
 
     fileSelectionMenuReset := Menu()
     fileSelectionMenuReset.Add("URL-Blacklist-File", (*) => openURLBlacklistFile(true))
@@ -81,6 +85,8 @@ createMainGUI()
     optionsMenu.Add()
     optionsMenu.Add("Clear URL File", (*) => manageURLFile())
     optionsMenu.SetIcon("Clear URL File", "shell32.dll", 43)
+    optionsMenu.Add("Restore URL File from Backup", (*) => restoreURLFile())
+    optionsMenu.SetIcon("Restore URL File from Backup", "shell32.dll", 240)
     optionsMenu.Add("Open Download Options GUI", (*) => Hotkey_openOptionsGUI())
     optionsMenu.SetIcon("Open Download Options GUI", "shell32.dll", 123)
     optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
@@ -147,7 +153,6 @@ GUI_MenuCheckAll(pMenuName)
             GUI_MenuCheckHandler(menuName, A_Index, true)
         }
     }
-    Return
 }
 
 GUI_MenuUncheckAll(pMenuName)
@@ -163,7 +168,6 @@ GUI_MenuUncheckAll(pMenuName)
             GUI_MenuCheckHandler(menuName, A_Index, false)
         }
     }
-    Return
 }
 
 ; This function stores all menu items check states. In other words
@@ -209,7 +213,6 @@ GUI_MenuCheckHandler(pMenuName := unset, pSubMenuPosition := unset, pBooleanStat
             toggleHotkey(menuCheckArray_activeHotKeyMenu)
         }
     }
-    Return
 }
 
 ; Applies the checkmarks stored in the config file so that they become visible to the user in the GUI.
@@ -237,5 +240,27 @@ GUI_ApplyCheckmarksFromConfigFile(pMenuName)
         }
         stateArray := stringToArray(readConfigFile("HOTKEY_STATE_ARRAY"))
         toggleHotkey(stateArray)
+    }
+}
+
+GUI_openDownloadLocation()
+{
+    Try
+    {
+        Switch (useDefaultDownloadLocationCheckbox.Value)
+        {
+            Case 0:
+            {
+                Run(customDownloadLocation.Value)
+            }
+            Case 1:
+            {
+                Run(readConfigFile("DOWNLOAD_PATH"))
+            }
+        }
+    }
+    Catch
+    {
+        MsgBox("No downloaded files from `ncurrent session found.", "Open videos error !", "O Icon! T1.5")
     }
 }

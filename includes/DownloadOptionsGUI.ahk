@@ -1,7 +1,9 @@
 #SingleInstance Force
-SendMode "Input"
-CoordMode "Mouse", "Client"
+#MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
+SendMode "Input"
+SetWorkingDir A_ScriptDir
+CoordMode "Mouse", "Client"
 
 global commandString := ""
 global downloadTime := FormatTime(A_Now, "HH-mm-ss_dd.MM.yyyy")
@@ -20,7 +22,7 @@ createDownloadOptionsGUI()
     clearURLFileAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Clear the URL file after download")
     enableFastDownloadModeCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Fast download mode")
 
-    downloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-120 yp+20 w394 R9.3", "Download Options")
+    downloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-120 yp+20 w479 R9.3", "Download Options")
 
     limitDownloadRateText1 := downloadOptionsGUI.Add("Text", "xp+10 yp+20", "Maximum download rate `n in MB per second.")
     limitDownloadRateEdit := downloadOptionsGUI.Add("Edit", "yp+30")
@@ -28,15 +30,17 @@ createDownloadOptionsGUI()
     limitDownloadRateText2 := downloadOptionsGUI.Add("Text", "yp+25", "Enter 0 for no limitations.")
     higherRetryAmountCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Increase retry amount")
     downloadVideoDescriptionCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video description")
-    downloadVideoCommentsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download video commentary section")
-    downloadVideoThumbnail := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video thumbnail")
-    downloadVideoSubtitles := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download the video's subtitles")
+    downloadVideoCommentsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download video commentary")
+    downloadVideoThumbnailCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video thumbnail")
+    downloadVideoSubtitlesCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download video subtitles")
+    downloadWholePlaylistsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+160 yp-80", "Download complete playlists")
+    useDownloadArchiveCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Use download archive file")
 
-    chooseVideoFormatText := downloadOptionsGUI.Add("Text", "xp+250 yp-155", "Desired video format")
+    chooseVideoFormatText := downloadOptionsGUI.Add("Text", "xp+174 yp-95", "Desired video format")
     downloadVideoFormatArray := ["Best format for quality", "mp4", "webm", "avi", "flv", "mkv", "mov"]
     chooseVideoFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1", downloadVideoFormatArray)
 
-    downloadAudioOnlyCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-3 yp+27.5", "Download audio only")
+    downloadAudioOnlyCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5", "Download audio only")
     downloadAudioFormatArray := ["Best format for quality", "mp3", "wav", "m4a", "flac", "aac", "alac", "opus", "vorbis"]
     chooseAudioFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1", downloadAudioFormatArray)
 
@@ -44,7 +48,7 @@ createDownloadOptionsGUI()
     prioritiseVideoQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Prefer video quality")
     prioritiseAudioQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Prefer audio quality")
 
-    fileSystemGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-260 yp+22.5 w260 R5.2", "File Management")
+    fileSystemGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-344 yp+22.5 w260 R5.2", "File Management")
 
     useTextFileForURLsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+10 yp+20 Checked", "Use collected URLs")
     customURLInputEdit := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled", "Currently downloading collected URLs.")
@@ -59,6 +63,12 @@ createDownloadOptionsGUI()
     downloadStatusProgressBar := downloadOptionsGUI.Add("Progress", "yp+25 w183", 0)
     downloadStatusText := downloadOptionsGUI.Add("Text", "yp+20 w183", "Currently not downloading.")
 
+    presetSelectionGroupBox := downloadOptionsGUI.Add("GroupBox", "xp+28 yp-371 w165 R3.2", "Presets")
+
+    selectAndAddPresetsComboBox := downloadOptionsGUI.Add("ComboBox", "xp+10 yp+20 w145", handleGUI_refreshPresetArray())
+    savePresetButton := downloadOptionsGUI.Add("Button", "yp+30", "Save Preset")
+    loadPresetButton := downloadOptionsGUI.Add("Button", "xp+75", "Load Preset")
+
     ignoreErrorsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     abortOnErrorCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     ignoreAllOptionsCheckbox.OnEvent("Click", (*) => handleGUI_Checkbox_ignoreAllOptions())
@@ -68,24 +78,28 @@ createDownloadOptionsGUI()
     higherRetryAmountCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     downloadVideoDescriptionCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     downloadVideoCommentsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    downloadVideoThumbnail.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    downloadVideoSubtitles.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    useTextFileForURLsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    downloadVideoThumbnailCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    downloadVideoSubtitlesCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    downloadWholePlaylistsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    useDownloadArchiveCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
+    useTextFileForURLsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes()
+        ; Most likely you dont want to download a whole playlist when entering a single URL.
+            handleGUI_Checkbox_DownloadWholePlaylist())
     useDefaultDownloadLocationCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     downloadAudioOnlyCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     alwaysHighestQualityBothCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     prioritiseVideoQualityCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     prioritiseAudioQualityCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
     terminateScriptAfterDownloadCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-
     limitDownloadRateEdit.OnEvent("Change", (*) => handleGUI_InputFields())
     customURLInputEdit.OnEvent("Change", (*) => handleGUI_InputFields())
     customDownloadLocation.OnEvent("Focus", (*) => handleGUI_InputFields())
     chooseVideoFormatDropDownList.OnEvent("Change", (*) => handleGUI_InputFields())
     chooseAudioFormatDropDownList.OnEvent("Change", (*) => handleGUI_InputFields())
-
     startDownloadButton.OnEvent("Click", (*) => startDownload(buildCommandString()))
     cancelDownloadButton.OnEvent("Click", (*) => cancelDownload())
+    savePresetButton.OnEvent("Click", (*) => handleGUI_Button_savePreset_waitForSecondClick())
+    loadPresetButton.OnEvent("Click", (*) => loadGUISettingsFromPreset(selectAndAddPresetsComboBox.Text))
 }
 
 ; Runs a few commands when the script is executed.
@@ -93,6 +107,20 @@ optionsGUI_onInit()
 {
     createDownloadOptionsGUI()
     buildCommandString()
+    Sleep(1000)
+    ; Checks for the last settings file to restore settings from the last download.
+    If (loadGUISettingsFromPreset("last_settings", true, true) = false)
+    {
+        ; Load the default file instead.
+        Loop Files (readConfigFile("DOWNLOAD_PRESET_LOCATION") . "\*.ini")
+        {
+            If (InStr(A_LoopFileName, "_(DEFAULT)"))
+            {
+                SplitPath(A_LoopFileName, , , , &outNameNotExt)
+                loadGUISettingsFromPreset(outNameNotExt)
+            }
+        }
+    }
 }
 
 cancelDownload()
@@ -102,15 +130,13 @@ cancelDownload()
 
     If (result = "Yes")
     {
+        global booleanDownloadTerminated := true
         Try
         {
-            ProcessClose(("ahk_pid " . consolePID))
-            WinClose(("ahk_pid " . consolePID))
+            ProcessClose(("ahk_pid " . hiddenConsolePID))
+            WinClose(("ahk_pid " . hiddenConsolePID))
         }
-        downloadStatusProgressBar.Value := 0
-        downloadStatusText.Text := "Download canceled."
     }
-    Return
 }
 
 ; Function to react to changes made to any checkbox.
@@ -243,7 +269,7 @@ handleGUI_Checkboxes()
             }
         }
     }
-    Switch (downloadVideoThumbnail.Value)
+    Switch (downloadVideoThumbnailCheckbox.Value)
     {
         Case 1:
         {
@@ -259,7 +285,7 @@ handleGUI_Checkboxes()
             }
         }
     }
-    Switch (downloadVideoSubtitles.Value)
+    Switch (downloadVideoSubtitlesCheckbox.Value)
     {
         Case 1:
         {
@@ -276,6 +302,31 @@ handleGUI_Checkboxes()
             }
         }
     }
+    Switch (downloadWholePlaylistsCheckbox.Value)
+    {
+        Case 0:
+        {
+            commandString .= "--no-playlist "
+        }
+        Case 1:
+        {
+            ; Usefull if you want to download a complete playlist but you only selected one video.
+            commandString .= "--yes-playlist "
+        }
+    }
+    Switch (useDownloadArchiveCheckbox.Value)
+    {
+        Case 0:
+        {
+            commandString .= "--no-download-archive "
+        }
+        Case 1:
+        {
+            ; Usefull if you want to download a video once.
+            ; There is always an option to ignore the archive file.
+            commandString .= '--download-archive "' . readConfigFile("DOWNLOAD_ARCHIVE_LOCATION") . '" '
+        }
+    }
     Switch (downloadAudioOnlyCheckbox.Value)
     {
         Case 0:
@@ -284,38 +335,36 @@ handleGUI_Checkboxes()
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 chooseVideoFormatDropDownList.Opt("-Disabled")
+                alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+                prioritiseVideoQualityCheckbox.Opt("-Disabled")
+                prioritiseAudioQualityCheckbox.Opt("-Disabled")
             }
             chooseAudioFormatDropDownList.Opt("+Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("-Disabled")
-            prioritiseVideoQualityCheckbox.Opt("-Disabled")
-            prioritiseAudioQualityCheckbox.Opt("-Disabled")
         }
         Case 1:
         {
             ; Only extracts the audio and creates the desired audio file type.
             chooseVideoFormatDropDownList.Opt("+Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("+Disabled")
-            prioritiseVideoQualityCheckbox.Opt("+Disabled")
-            prioritiseAudioQualityCheckbox.Opt("+Disabled")
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 chooseAudioFormatDropDownList.Opt("-Disabled")
+                alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+                prioritiseVideoQualityCheckbox.Opt("+Disabled")
+                prioritiseAudioQualityCheckbox.Opt("+Disabled")
             }
             If (downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] = "Best format for quality")
             {
                 commandString .= "--extract-audio "
-                commandString .= '--paths "audio:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\audio" '
             }
             Else
             {
                 commandString .= "--extract-audio "
                 commandString .= '--audio-format "' . downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] . '" '
-                commandString .= '--paths "audio:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\audio" '
             }
         }
     }
-    If (downloadAudioOnlyCheckbox.Value != 1)
+    If (downloadAudioOnlyCheckbox.Value != 1 && enableFastDownloadModeCheckbox.Value != 1)
     {
         Switch (alwaysHighestQualityBothCheckbox.Value)
         {
@@ -410,8 +459,8 @@ handleGUI_Checkbox_fastDownload()
             limitDownloadRateEdit.Opt("-Disabled")
             downloadVideoDescriptionCheckbox.Opt("-Disabled")
             downloadVideoCommentsCheckbox.Opt("-Disabled")
-            downloadVideoThumbnail.Opt("-Disabled")
-            downloadVideoSubtitles.Opt("-Disabled")
+            downloadVideoThumbnailCheckbox.Opt("-Disabled")
+            downloadVideoSubtitlesCheckbox.Opt("-Disabled")
             chooseVideoFormatDropDownList.Opt("-Disabled")
             alwaysHighestQualityBothCheckbox.Opt("-Disabled")
             prioritiseVideoQualityCheckbox.Opt("-Disabled")
@@ -426,8 +475,8 @@ handleGUI_Checkbox_fastDownload()
             limitDownloadRateEdit.Opt("+Disabled")
             downloadVideoDescriptionCheckbox.Opt("+Disabled")
             downloadVideoCommentsCheckbox.Opt("+Disabled")
-            downloadVideoThumbnail.Opt("+Disabled")
-            downloadVideoSubtitles.Opt("+Disabled")
+            downloadVideoThumbnailCheckbox.Opt("+Disabled")
+            downloadVideoSubtitlesCheckbox.Opt("+Disabled")
             chooseVideoFormatDropDownList.Opt("+Disabled")
             alwaysHighestQualityBothCheckbox.Opt("+Disabled")
             prioritiseVideoQualityCheckbox.Opt("+Disabled")
@@ -457,8 +506,10 @@ handleGUI_Checkbox_ignoreAllOptions()
             higherRetryAmountCheckbox.Opt("-Disabled")
             downloadVideoDescriptionCheckbox.Opt("-Disabled")
             downloadVideoCommentsCheckbox.Opt("-Disabled")
-            downloadVideoThumbnail.Opt("-Disabled")
-            downloadVideoSubtitles.Opt("-Disabled")
+            downloadVideoThumbnailCheckbox.Opt("-Disabled")
+            downloadVideoSubtitlesCheckbox.Opt("-Disabled")
+            downloadWholePlaylistsCheckbox.Opt("-Disabled")
+            useDownloadArchiveCheckbox.Opt("-Disabled")
             chooseVideoFormatDropDownList.Opt("-Disabled")
             downloadAudioOnlyCheckbox.Opt("-Disabled")
             alwaysHighestQualityBothCheckbox.Opt("-Disabled")
@@ -467,6 +518,10 @@ handleGUI_Checkbox_ignoreAllOptions()
             chooseAudioFormatDropDownList.Opt("-Disabled")
             ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
             handleGUI_Checkboxes()
+            If (enableFastDownloadModeCheckbox.Value = 1)
+            {
+                handleGUI_Checkbox_fastDownload()
+            }
         }
         Case 1:
         {
@@ -479,8 +534,10 @@ handleGUI_Checkbox_ignoreAllOptions()
             higherRetryAmountCheckbox.Opt("+Disabled")
             downloadVideoDescriptionCheckbox.Opt("+Disabled")
             downloadVideoCommentsCheckbox.Opt("+Disabled")
-            downloadVideoThumbnail.Opt("+Disabled")
-            downloadVideoSubtitles.Opt("+Disabled")
+            downloadVideoThumbnailCheckbox.Opt("+Disabled")
+            downloadVideoSubtitlesCheckbox.Opt("+Disabled")
+            downloadWholePlaylistsCheckbox.Opt("+Disabled")
+            useDownloadArchiveCheckbox.Opt("+Disabled")
             chooseVideoFormatDropDownList.Opt("+Disabled")
             downloadAudioOnlyCheckbox.Opt("+Disabled")
             alwaysHighestQualityBothCheckbox.Opt("+Disabled")
@@ -531,6 +588,14 @@ handleGUI_InputFields()
     }
 }
 
+handleGUI_Checkbox_DownloadWholePlaylist()
+{
+    If (useTextFileForURLsCheckbox.Value = 0)
+    {
+        downloadWholePlaylistsCheckbox.Value := 0
+    }
+}
+
 ; This function parses through all values of the GUI and builds a command string
 ; which bill be given to the yt-dlp command prompt.
 ; Returns the string to it's caller.
@@ -538,67 +603,417 @@ buildCommandString()
 {
     ; Formats the value of A_Now to give each folder a unique time stamp.
     global downloadTime := FormatTime(A_Now, "HH-mm-ss_dd.MM.yyyy")
-    If (ignoreAllOptionsCheckbox.Value = 1)
+
+    global commandString := "yt-dlp "
+    ; Basic options such as download path and single URL or multiple URLs.
+    Switch (useTextFileForURLsCheckbox.Value)
     {
-        global commandString := "yt-dlp "
-        ; Basic options such as download path and single URL or multiple URLs.
-        Switch (useTextFileForURLsCheckbox.Value)
+        Case 0:
         {
-            Case 0:
-            {
-                commandString .= "--no-batch-file "
-                commandString .= customURLInputEdit.Value . " "
-            }
-            Case 1:
-            {
-                commandString .= "--batch-file " . readConfigFile("URL_FILE_LOCATION") . " "
-            }
+            commandString .= "--no-batch-file "
+            commandString .= '"' . customURLInputEdit.Value . '" '
         }
-        Switch (useDefaultDownloadLocationCheckbox.Value)
+        Case 1:
         {
-            Case 0:
-            {
-                commandString .= "--paths " . customDownloadLocation.Value . "\" . downloadTime . "\video "
-            }
-            Case 1:
-            {
-                commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video "
-            }
+            commandString .= '--batch-file "' . readConfigFile("URL_FILE_LOCATION") . '" '
         }
     }
-    Else
+    Switch (useDefaultDownloadLocationCheckbox.Value)
     {
-        global commandString := "yt-dlp "
-        ; Basic options such as download path and single URL or multiple URLs.
-        Switch (useTextFileForURLsCheckbox.Value)
+        Case 0:
         {
-            Case 0:
-            {
-                commandString .= "--no-batch-file "
-                commandString .= customURLInputEdit.Value . " "
-            }
-            Case 1:
-            {
-                commandString .= "--batch-file " . readConfigFile("URL_FILE_LOCATION") . " "
-            }
+            commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\media" '
         }
-        Switch (useDefaultDownloadLocationCheckbox.Value)
+        Case 1:
         {
-            Case 0:
-            {
-                commandString .= "--paths " . customDownloadLocation.Value . "\" . downloadTime . "\video "
-            }
-            Case 1:
-            {
-                commandString .= "--paths " . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video "
-            }
+            commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\media" '
         }
+    }
+    If (ignoreAllOptionsCheckbox.Value != 1)
+    {
         handleGUI_Checkboxes()
         handleGUI_InputFields()
     }
     ; This makes sure that the output file does not contain any weird letters.
     commandString .= '--output "%(title)s.%(ext)s" '
+    ; Makes the downloading message in the console a little prettier.
+    commandString .= '--progress-template "[Downloading...] [%(progress._percent_str)s of %(progress._total_bytes_str)s ' .
+        'at %(progress._speed_str)s. Time passed : %(progress._elapsed_str)s]" '
     ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
-    commandString .= "--ffmpeg-location " . ffmpegLocation . " "
+    commandString .= '--ffmpeg-location "' . ffmpegLocation . '" '
     Return commandString
+}
+
+; When called it will create and maintain several arrays in order to provide tool tip information for user.
+; Can be called with a set timer to react upon the user hovering over a GUI element.
+handleGUI_toolTipManager(pBooleanRefresh := false)
+{
+    booleanRefresh := pBooleanRefresh
+    static elementHWNDArray := []
+    ; Only refreshes if required or if the array is empty (first time call of the function).
+    If (booleanRefresh = true || !elementHWNDArray.Has(2))
+    {
+        arrayCounter := 1
+        ; Saves the HWND of all GUI elements into the HWND array.
+        For (GuiCtrlObj in downloadOptionsGUI)
+        {
+            ; This condition ignore all other GUI elements except of checkboxes, edits and lists.
+            If (InStr(GuiCtrlObj.Type, "Checkbox") || InStr(GuiCtrlObj.Type, "Edit")
+                || InStr(GuiCtrlObj.Type, "DDL") || InStr(GuiCtrlObj.Type, "Button"))
+            {
+                elementHWNDArray.InsertAt(arrayCounter, GuiCtrlObj.Hwnd)
+                arrayCounter++
+            }
+        }
+    }
+    ; Waits for the download options GUI to appear.
+    If (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 2) != 0)
+    {
+        handleGUI_toolTipLoop(elementHWNDArray)
+    }
+}
+
+; When called checks if the mouse hovers over a GUI element and shows the specific tooltip.
+handleGUI_toolTipLoop(pElementHWNDArray)
+{
+    elementHWNDArray := pElementHWNDArray
+    ; Contains an individual tool tip for every control that requires one.
+    static elementToolTipArray := []
+    If (!elementToolTipArray.Has(2))
+    {
+        tmp1 := "Ignores errors thrown by most events."
+        tmp2 := ""
+        tmp3 := "Starts the download with the required options only."
+        tmp4 := "Hides the PowerShell window."
+        tmp5 := ""
+        tmp6 := "Disables most time-consuming options to increase download and processing speed."
+        tmp7 := ""
+        tmp8 := "Useful option to try when the download fails too often."
+        tmp9 := ""
+        tmp10 := ""
+        tmp11 := ""
+        tmp12 := ""
+        tmp13 := "Forces the download of complete playlists if a URL contains a reference to it."
+        tmp14 := "Saves downloaded videos into an archive file to avoid downloading a video twice."
+        tmp15 := "Select a video format."
+        tmp16 := ""
+        tmp17 := "Select an audio format."
+        tmp18 := "Tries to find a compromise between audio and video quality."
+        tmp19 := ""
+        tmp20 := ""
+        tmp21 := "Usually, a text file will be given to yt-dlp to download, but it is also possible to select a single URL."
+        tmp22 := ""
+        tmp23 := "Saves all downloads to the default path specified in the config file."
+        tmp24 := "The current default download path is: [" . readConfigFile("DOWNLOAD_PATH") . "]."
+        tmp25 := ""
+        tmp26 := ""
+        tmp27 := "Shows no prompt when download in a background task is activated."
+        tmp28 := "Single click to save a preset or double click to save as default."
+        tmp29 := "The default preset will be loaded when no previous temporary preset is found."
+        Loop (29)
+        {
+            elementToolTipArray.InsertAt(A_Index, %"tmp" . A_Index%)
+        }
+    }
+
+    If (WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
+    {
+        MouseGetPos(, , &outWinHWND, &outControlHWND, 2)
+        Loop (elementHWNDArray.Length)
+        {
+            If (elementHWNDArray.Get(A_Index) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND)
+            {
+                ; Saves the index of the outer loop because inside the while loops the value of A_Index will be different.
+                tmpIndex := A_Index
+                i := 0
+                ; In case the cursor is above a control element it will have to stay for 2 seconds to trigger the tool tip.
+                While (elementHWNDArray.Get(tmpIndex) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND)
+                {
+                    Sleep(100)
+                    i++
+                    If (i >= 10)
+                    {
+                        Break
+                    }
+                    Else If (!(elementHWNDArray.Get(tmpIndex) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND))
+                    {
+                        Return
+                    }
+                }
+                ToolTip(elementToolTipArray.Get(A_Index))
+                ; Waits for the user to read the tool tip as he stays above the control element with the cursor.
+                While (elementHWNDArray.Get(tmpIndex) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND)
+                {
+                    MouseGetPos(, , &outWinHWND, &outControlHWND, 2)
+                    Sleep(100)
+                }
+                ToolTip()
+                Break
+            }
+        }
+    }
+}
+
+; Saves all options from the download options GUI into a text file for future use.
+; Returns true when the file has been saved successfully.
+saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault := false)
+{
+    presetName := pPresetName
+    booleanTemporary := pBooleanTemporary
+    booleanDefault := pBooleanDefault
+    presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
+    presetFileArray := handleGUI_refreshPresetArray()
+    Loop (presetFileArray.Length)
+    {
+        ; Searches for an existing default file.
+        If (InStr(presetFileArray[A_Index], "_(DEFAULT)", true))
+        {
+            booleanDefaultPresetExist := true
+            defaultPresetOld := presetFileArray[A_Index]
+            Break
+        }
+        Else
+        {
+            booleanDefaultPresetExist := false
+        }
+    }
+    If (booleanTemporary = true)
+    {
+        If (!InStr(presetName, "_(TEMP)", true))
+        {
+            presetName .= "_(TEMP)"
+        }
+    }
+    Else If (booleanDefault = true)
+    {
+        ; This avoids double "_(DEFAULT)" pieces.
+        If (!InStr(presetName, "_(DEFAULT)", true))
+        {
+            presetName .= "_(DEFAULT)"
+        }
+    }
+    presetLocationComplete := presetLocation . "\" . presetName . ".ini"
+    i_Input := 1
+    i_DropDownList := 1
+
+    If (FileExist(presetLocationComplete))
+    {
+        result := MsgBox("The preset name : " . presetName . " already exists."
+            "`n`nDo you want to overwrite it ?", "Warning !", "YN Icon! 4096 T10")
+        If (result != "Yes")
+        {
+            Return false
+        }
+        Try
+        {
+            FileDelete(presetLocationComplete)
+        }
+        Return saveGUISettingsAsPreset(presetName, booleanTemporary, booleanDefault)
+    }
+    Else
+    {
+        If (booleanDefaultPresetExist = true && booleanDefault = true)
+        {
+            result := MsgBox("An existing default file has been found."
+                "`n`nReplace " . defaultPresetOld . " with " . presetName . " ?", "Warning !",
+                "YN Icon! 4096 T10")
+            If (result != "Yes")
+            {
+                Return false
+            }
+            ; Removes the "_(DEFAULT)" part from the old default preset file.
+            tmp1 := presetLocation . "\" . defaultPresetOld . ".ini"
+            tmp2 := presetLocation . "\" . StrReplace(defaultPresetOld, "_(DEFAULT)", "", true) . ".ini"
+            FileMove(tmp1, tmp2, true)
+            ; Important because this means that an existing file will be used.
+            If (FileExist(presetLocation . "\" . pPresetName . ".ini"))
+            {
+                tmp1 := presetLocation . "\" . pPresetName . ".ini"
+                tmp2 := presetLocationComplete
+                FileMove(tmp1, tmp2, true)
+            }
+            Else
+            {
+                Return saveGUISettingsAsPreset(presetName, booleanTemporary, booleanDefault)
+            }
+        }
+        Else If (FileExist(presetLocation . "\" . pPresetName . ".ini"))
+        {
+            tmp1 := presetLocation . "\" . pPresetName . ".ini"
+            tmp2 := presetLocationComplete
+            FileMove(tmp1, tmp2, true)
+        }
+        Else
+        {
+            ; Creates a new preset file.
+            For (GuiCtrlObj in downloadOptionsGUI)
+            {
+                ; Makes sure only checkbox values are extracted.
+                If (InStr(GuiCtrlObj.Type, "Checkbox"))
+                {
+                    IniWrite(GuiCtrlObj.Value, presetLocationComplete, "Checkboxes", "{" . GuiCtrlObj.Text . "}")
+                }
+                If (InStr(GuiCtrlObj.Type, "Edit"))
+                {
+                    IniWrite(GuiCtrlObj.Value, presetLocationComplete, "Edits", "{Input_" . i_Input . "}")
+                    i_Input++
+                }
+                If (InStr(GuiCtrlObj.Type, "DDL"))
+                {
+                    IniWrite(GuiCtrlObj.Value, presetLocationComplete, "DropDownLists", "{DropDownList_" . i_DropDownList . "}")
+                    i_DropDownList++
+                }
+                ; Counts the number of elements parsed. When it reaches 37 this means that all relevant settings have been saved.
+                ; All remaining GUI elements belong to the preset section and are not meant to be saved.
+                If (A_Index >= 37)
+                {
+                    Break
+                }
+            }
+        }
+        ; This ensures that the new added preset is visible in the combo box.
+        selectAndAddPresetsComboBox.Delete()
+        selectAndAddPresetsComboBox.Add(handleGUI_refreshPresetArray())
+        Return true
+    }
+}
+
+; Loads the saved settings from the preset files.
+; Returns true or false based on the success.
+loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupressWarning := false)
+{
+    presetName := pPresetName
+    booleanTemporary := pBooleanTemporary
+    booleanSupressWarning := pBooleanSupressWarning
+    presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
+    If (booleanTemporary = true)
+    {
+        presetName .= "_(TEMP)"
+    }
+    presetLocationComplete := presetLocation . "\" . presetName . ".ini"
+    i_Input := 1
+    i_DropDownList := 1
+
+    If (!FileExist(presetLocationComplete))
+    {
+        If (booleanSupressWarning = false)
+        {
+            MsgBox("The preset : " . presetName . " does not exist.", "Warning !", "O Icon! T2")
+        }
+        Return false
+    }
+    For (GuiCtrlObj in downloadOptionsGUI)
+    {
+        ; Makes sure only checkbox values are extracted.
+        If (InStr(GuiCtrlObj.Type, "Checkbox"))
+        {
+            Try
+            {
+                newCheckboxValue := IniRead(presetLocationComplete, "Checkboxes", "{" . GuiCtrlObj.Text . "}")
+                GuiCtrlObj.Value := newCheckboxValue
+            }
+            Catch
+            {
+                MsgBox("Failed to set value of : " . GuiCtrlObj.Text . ".", "Warning !", "O Icon! T3")
+            }
+        }
+        If (InStr(GuiCtrlObj.Type, "Edit"))
+        {
+            Try
+            {
+                newEditValue := IniRead(presetLocationComplete, "Edits", "{Input_" . i_Input . "}")
+                GuiCtrlObj.Value := newEditValue
+                i_Input++
+            }
+            Catch
+            {
+                MsgBox("Failed to set value of : {Input_ " . i_Input . "}.", "Warning !", "O Icon! T3")
+            }
+        }
+        If (InStr(GuiCtrlObj.Type, "DDL"))
+        {
+            Try
+            {
+                newDropDownListValue := IniRead(presetLocationComplete, "DropDownLists", "{DropDownList_" . i_DropDownList . "}")
+                GuiCtrlObj.Value := newDropDownListValue
+                i_DropDownList++
+            }
+            Catch
+            {
+                MsgBox("Failed to set value of : {DropDownList_ " . i_DropDownList . "}.", "Warning !", "O Icon! T3")
+            }
+        }
+        ; Counts the number of elements parsed. When it reaches 37 this means that all relevant settings have been loaded.
+        ; All remaining GUI elements belong to the preset section and are not meant to be loaded.
+        If (A_Index >= 37)
+        {
+            Break
+        }
+    }
+    ; Deletes the preset when it has been used.
+    If (booleanTemporary = true)
+    {
+        Try
+        {
+            FileDelete(presetLocationComplete)
+        }
+    }
+    If (ignoreAllOptionsCheckbox.Value = 1)
+    {
+        handleGUI_Checkbox_ignoreAllOptions()
+    }
+    Else If (enableFastDownloadModeCheckbox.Value = 1)
+    {
+        handleGUI_Checkbox_fastDownload()
+    }
+    ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
+    handleGUI_Checkboxes()
+    handleGUI_InputFields()
+    ; This ensures that the preset list is updated in the combo box.
+    selectAndAddPresetsComboBox.Delete()
+    selectAndAddPresetsComboBox.Add(handleGUI_refreshPresetArray())
+    Return true
+}
+
+; Returns an array to use for the preset combo box.
+handleGUI_refreshPresetArray()
+{
+    presetArray := []
+    ; Scanns all preset files and fills the array with the file names.
+    Loop Files (readConfigFile("DOWNLOAD_PRESET_LOCATION") . "\*.ini")
+    {
+        SplitPath(A_LoopFilePath, , , , &outNameNoExt)
+        presetArray.InsertAt(A_Index, outNameNoExt)
+    }
+    Else
+    {
+        presetArray.InsertAt(1, "No presets found.")
+    }
+    Return presetArray
+}
+
+handleGUI_Button_savePreset_waitForSecondClick()
+{
+    static click_amount := 0
+    If (click_amount > 0)
+    {
+        click_amount += 1
+        Return
+    }
+
+    click_amount := 1
+    SetTimer(After500, -500)
+
+    After500()
+    {
+        If (click_amount = 1)
+        {
+            saveGUISettingsAsPreset(selectAndAddPresetsComboBox.Text)
+        }
+        Else If (click_amount = 2)
+        {
+            saveGUISettingsAsPreset(selectAndAddPresetsComboBox.Text, , true)
+        }
+        click_amount := 0
+    }
 }

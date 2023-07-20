@@ -1,7 +1,9 @@
 #SingleInstance Force
-SendMode "Input"
-CoordMode "Mouse", "Client"
+#MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
+SendMode "Input"
+SetWorkingDir A_ScriptDir
+CoordMode "Mouse", "Client"
 
 /*
 DEBUG SECTION
@@ -25,7 +27,6 @@ Hotkey to disable/enable debug mode.
     {
         Throw ("No valid state in booleanDebugMode")
     }
-    Return
 }
 
 Hotkey_onInit()
@@ -80,7 +81,6 @@ Hotkey_openMainGUI()
         {
             mainGUI.Show("w300 h200")
             flipflop := false
-            Return
         }
         Else If (flipflop = false && WinActive("ahk_id " . mainGUI.Hwnd))
         {
@@ -91,7 +91,6 @@ Hotkey_openMainGUI()
         {
             WinActivate("ahk_id " . mainGUI.Hwnd)
         }
-        Return
     }
 }
 
@@ -105,18 +104,20 @@ Hotkey_openOptionsGUI()
         {
             downloadOptionsGUI.Show("w500 h405")
             flipflop := false
-            Return
+            ; Starts the tool tip timer to react upon the user hovering over gui elements.
+            SetTimer(handleGUI_toolTipManager, 1000)
         }
         Else If (flipflop = false && WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
         {
             downloadOptionsGUI.Hide()
             flipflop := true
+            ; Stops the tool tip timer.
+            SetTimer(handleGUI_toolTipManager, 0)
         }
         Else
         {
             WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
         }
-        Return
     }
 }
 
@@ -128,72 +129,94 @@ FUNCTION SECTION
 ; Important function which executes the built command string by pasting it into the console.
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
-    global consolePID
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
-
+    static isDownloading := false
+    If (isDownloading = true)
+    {
+        Return MsgBox("There is a download process running already.`n`nPlease wait for it to finish or cancel it.",
+            "Information", "O Icon! 4096 T3")
+    }
+    Else
+    {
+        isDownloading := true
+    }
+    If (!FileExist(readConfigFile("URL_FILE_LOCATION")) && useTextFileForURLsCheckbox.Value = 1)
+    {
+        isDownloading := false
+        MsgBox("No URL file found. You can save`nURLs by clicking on a video and `npressing " .
+            expandHotkey(readConfigFile("URL_COLLECT_HK")), "Download status", "O Icon! 8192")
+        Return
+    }
     If (booleanSilent = 1)
     {
         ; Execute the command line command and wait for it to be finished.
-        Run(A_ComSpec " /c " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , "Hide", &consolePID)
+        displayAndLogConsoleCommand(stringToExecute, true)
         monitorDownloadProgress(true)
-        If (downloadVideoSubtitles.Value = 1)
-        {
-            ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-            If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
-            {
-                Try
-                {
-                    DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
-                    Sleep(500)
-                }
-            }
-            Try
-            {
-                FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
-            }
-        }
-        If (clearURLFileAfterDownloadCheckbox.Value = 1 && ignoreAllOptionsCheckbox.Value != 1)
-        {
-            manageURLFile(false)
-        }
     }
     Else
     {
         ; Enables the user to access the command and to review potential errors thrown by yt-dlp.
-        Run(A_ComSpec " /k " . stringToExecute . " > " . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), , , &consolePID)
+        displayAndLogConsoleCommand(stringToExecute, false)
         monitorDownloadProgress(true)
-        If (downloadVideoSubtitles.Value = 1)
+    }
+    If (downloadVideoSubtitlesCheckbox.Value = 1)
+    {
+        ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
+        If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
         {
-            ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-            If (!DirExist("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
-            {
-                Try
-                {
-                    DirCreate("" . readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
-                    Sleep(500)
-                }
-            }
             Try
             {
-                FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
+                DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                Sleep(500)
             }
         }
-        If (clearURLFileAfterDownloadCheckbox.Value = 1 && ignoreAllOptionsCheckbox.Value != 1)
+        Try
         {
-            clearURLFile()
+            FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
+                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
         }
+    }
+    If (clearURLFileAfterDownloadCheckbox.Value = 1 && ignoreAllOptionsCheckbox.Value != 1)
+    {
+        manageURLFile(false)
     }
     If (terminateScriptAfterDownloadCheckbox.Value = 1)
     {
+        isDownloading := false
+        saveGUISettingsAsPreset("last_settings", true)
         If (booleanSilent != 1)
         {
-            MsgBox("The download has completed.`n`nTerminating script.", "Download status", "O Iconi T2")
+            MsgBox("The download process has reached it's end.`n`nTerminating script.", "Download status", "O Iconi 262144 T2")
         }
         ExitApp()
         ExitApp()
+    }
+    Else
+    {
+        isDownloading := false
+        saveGUISettingsAsPreset("last_settings", true)
+        MsgBox("The download process has reached it's end.`n`nReloading script.", "Download status", "O Iconi 262144 T2")
+        Reload()
+    }
+}
+
+displayAndLogConsoleCommand(pCommand, pBooleanSilent)
+{
+    command := pCommand
+    booleanSilent := pBooleanSilent
+    global hiddenConsolePID
+    global visualPowershellPID
+
+    Run(A_ComSpec . " /c " . command . " > " . A_Temp . "\yt_dlp_download_log.txt", , "Min", &hiddenConsolePID)
+    ProcessWait(hiddenConsolePID)
+
+    If (booleanSilent = false)
+    {
+        Run("powershell.exe -noExit -ExecutionPolicy Bypass -file " . A_WorkingDir . "\files\library\MonitorHookFile.ps1"
+            , , "Min", &visualPowershellPID)
+        WinWait("ahk_pid " . visualPowershellPID)
+        WinActivate("ahk_pid " . visualPowershellPID)
     }
 }
 
@@ -202,6 +225,8 @@ monitorDownloadProgress(pBooleanNewDownload := false)
 {
     booleanNewDownload := pBooleanNewDownload
 
+    global booleanDownloadTerminated := false
+
     static currentBarValue := 0
     static oldCurrentBarValue := 0
     static partProgress := 0
@@ -209,9 +234,9 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     static parsedLines := 0
     If (booleanNewDownload = true)
     {
-        global videoAmount := getCurrentURL(true, true)
-        global downloadedVideoAmount := 0
-        global maximumBarValue := videoAmount * 100
+        static videoAmount := getCurrentURL(true, true)
+        static downloadedVideoAmount := 0
+        static maximumBarValue := videoAmount * 100
         parsedLines := 0
         currentBarValue := 0
         oldCurrentBarValue := 0
@@ -220,80 +245,124 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
         Try
         {
-            FileDelete(readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"))
+            FileDelete(A_Temp . "\yt_dlp_download_log.txt")
         }
         ; Waits for the download log file to exist again.
-        While (!FileExist(readConfigFile("DOWNLOAD_LOG_FILE_LOCATION")))
+        maxRetries := 10
+        While (!FileExist(A_Temp . "\yt_dlp_download_log.txt"))
         {
             Sleep(1000)
+            If (maxRetries <= 0)
+            {
+                MsgBox("Could not find hook file to track progress.`n`nTerminating script.", "Error !", "O IconX T1.5")
+                ExitApp()
+                ExitApp()
+            }
+            maxRetries--
         }
     }
 
     downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
 
-    Loop Read (readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"))
+    Loop Read (A_Temp . "\yt_dlp_download_log.txt")
     {
         ; All previous lines will be skipped.
         If (parsedLines >= A_Index)
         {
             Continue
         }
-        Loop Parse (A_LoopReadLine, A_Tab)
+        ; Scanns the output from the console and extracts the download progress percentage values.
+        If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0)
         {
-            ; Scanns the output from the console and extracts the download progress percentage values.
-            If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0)
+            outString := outMatch[]
+            outStringReady := StrReplace(outString, "%")
+            partProgress := Number(outStringReady)
+            ; This avoids filling the progress bar to fast because of too many 100% messages from yt-dlp.
+            If (partProgress >= 99.99)
             {
-                outString := outMatch[]
-                outStringReady := StrReplace(outString, "%")
-                partProgress := Number(outStringReady)
-                ; This avoids filling the progress bar to fast because of too many 100% messages from yt-dlp.
-                If (partProgress >= 99.99)
+                Continue
+            }
+            currentBarValue := oldCurrentBarValue + partProgress
+            downloadStatusProgressBar.Value := currentBarValue
+        }
+        If (partProgress >= 100 && downloadedVideoAmount <= videoAmount)
+        {
+            ; This message only appears when the previous video processing has been finished.
+            If (InStr(A_LoopReadLine, "Extracting URL: https://www") && downloadedVideoAmount != videoAmount)
+            {
+                ; "[youtube:tab]" is considered to be ignored, as it only shows up when downloading a playlist.
+                If (!InStr(A_LoopReadLine, "[youtube:tab] Extracting URL: https://www"))
                 {
-                    Continue
+                    oldCurrentBarValue += 100
+                    downloadedVideoAmount++
+                    partProgress := 0
+                    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
                 }
-                currentBarValue := oldCurrentBarValue + partProgress
-                downloadStatusProgressBar.Value := currentBarValue
             }
-            If (partProgress >= 100 && downloadedVideoAmount < videoAmount)
-            {
-                oldCurrentBarValue += 100
-                downloadedVideoAmount++
-                partProgress := 0
-                downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
-            }
+        }
+        ; The already recorded message is important because the progress bar has to move up one video to avoid issues.
+        Else If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
+        {
+            oldCurrentBarValue += 100
+            downloadedVideoAmount++
+            partProgress := 0
+            downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
         }
         parsedLines++
     }
     ; When the loop reaches the file end it will check if the console log has reached it's end.
     ; In other terms if the downloads have completed or not.
-
-    While (ProcessExist(consolePID) || WinExist("ahk_pid " . consolePID))
+    While (ProcessExist(hiddenConsolePID))
     {
         ; Saves the content of the download log file.
         ; Because the console only adds content it is a reliable method to detect added data to the .txt file.
-        oldFileContent := FileRead(readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"))
+        oldFileContent := FileRead(A_Temp . "\yt_dlp_download_log.txt")
         ; Wait for the console log to be changed.
-        Sleep(1000)
-        newFileContent := FileRead(readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"))
+        Sleep(5000)
+        newFileContent := FileRead(A_Temp . "\yt_dlp_download_log.txt")
 
-        If (oldFileContent != newFileContent)
+        If (oldFileContent != newFileContent && booleanDownloadTerminated = false)
         {
             ; If there is new data.
             Return monitorDownloadProgress()
         }
-        ; Checks if either the background process does not exist or the download console has finished executing the download.
-        Else If (!ProcessExist(consolePID) || !WinExist("ahk_pid " . consolePID) || WinGetTitle("ahk_pid " . consolePID) = A_ComSpec)
+        ; Checks if the background process does not exist to determine the end of the download.
+        Else If (!ProcessExist(hiddenConsolePID))
         {
             Break
         }
     }
-
-    If (hideDownloadCommandPromptCheckbox.Value != 1)
+    Try
     {
-        MsgBox("The download process has reached it's end.", "Download status", "O Iconi T2")
+        FileCopy(A_Temp . "\yt_dlp_download_log.txt", readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), true)
     }
-    downloadStatusProgressBar.Value := maximumBarValue
-    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+    Catch
+    {
+        MsgBox("Could not write downloag log file.", "Error !", "O IconX T1.5")
+    }
+    ; When the loop reaches the final video this function is not called again to add +1 to the downloaded video amount.
+    ; If all videos are downloaded, the following conditon is therefore true.
+    If (downloadedVideoAmount + 1 = videoAmount)
+    {
+        downloadedVideoAmount := videoAmount
+    }
+    ; Makes sure the log powershell windows is closed as well.
+    Try
+    {
+        WinClose("ahk_pid " . visualPowershellPID)
+    }
+    Sleep(500)
+    If (booleanDownloadTerminated = true)
+    {
+        downloadStatusProgressBar.Value := 0
+        downloadStatusText.Text := "Download canceled."
+        Return
+    }
+    Else
+    {
+        downloadStatusProgressBar.Value := maximumBarValue
+        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+    }
 }
 
 ; Enter true for the currentArrays length or false to receive the item in the array.
@@ -348,8 +417,8 @@ getCurrentURL(pBooleanGetLength := false, pBooleanCreateArray := false)
 ; Enter true, to trigger the flipflop or false to get the last state.
 getCurrentURL_DownloadSuccess(pBoolean)
 {
-    static flipflop := true
     boolean := pBoolean
+    static flipflop := true
     If (boolean = true)
     {
         flipflop := !flipflop
@@ -397,7 +466,6 @@ clearURLFile()
     {
         MsgBox("The  URL file does not exist !	`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
     }
-    Return
 }
 
 ; Opens only one instance each
@@ -417,10 +485,9 @@ openURLFile()
     {
         MsgBox("The URL file does not exist !	`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
     }
-    Return
 }
 
-openURLBackUpFile()
+openURLBackupFile()
 {
     Try
     {
@@ -436,7 +503,6 @@ openURLBackUpFile()
     {
         MsgBox("The URL backup file does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
     }
-    Return
 }
 
 openURLBlacklistFile(pBooleanShowPrompt := false)
@@ -493,7 +559,6 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
     {
         MsgBox("The URL blacklist file does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
     }
-    Return
 }
 
 openConfigFile()
@@ -519,7 +584,6 @@ openConfigFile()
     {
         MsgBox("The script's config file does not exist !	`n`nA fatal error has occured.", "Error !", "O Icon! T3")
     }
-    Return
 }
 
 ; Saves a lot of coding by using a switch to determine which MsgBox has to be shown.
@@ -539,27 +603,44 @@ deleteFilePrompt(pFileName)
             {
                 Case "URL-File":
                     {
-                        c := 2
+                        c := "URL_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_FILE_LOCATION"), &outFileName)
                         FileMove(readConfigFile("URL_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
                     }
-                Case "URL-BackUp-File":
+                Case "URL-Backup-File":
                     {
-                        c := 3
+                        c := "URL_BACKUP_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_BACKUP_FILE_LOCATION"), &outFileName)
                         FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
                     }
                 Case "URL-Blacklist-File":
                     {
-                        c := 4
+                        c := "BLACKLIST_FILE_LOCATION"
                         SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
                         FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
                     }
-                Case "Downloaded Videos":
+                Case "latest download":
                     {
-                        c := 5
-                        MsgBox("Not implemented yet")
-                        ; Possible in the future.
+                        Try
+                        {
+                            Switch (useDefaultDownloadLocationCheckbox.Value)
+                            {
+                                Case 0:
+                                {
+                                    FileMove(customDownloadLocation.Value . '\' . downloadTime, A_WorkingDir
+                                        . "\files\deleted\" . downloadTime)
+                                }
+                                Case 1:
+                                {
+                                    Run(readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime, A_WorkingDir
+                                        . "\files\deleted\" . downloadTime)
+                                }
+                            }
+                        }
+                        Catch
+                        {
+                            MsgBox("No downloaded files from `ncurrent session found.", "Delete download error !", "O Icon! T2.5")
+                        }
                     }
                 Default:
                     {
@@ -586,7 +667,6 @@ deleteFilePrompt(pFileName)
             }
         }
     }
-    Return
 }
 
 reloadScriptPrompt()
@@ -632,11 +712,6 @@ reloadScriptPrompt()
         textField.Text := "The script has been reloaded."
         Sleep(100)
         Reload()
-        Return
-    }
-    Catch
-    {
-        Return
     }
 }
 
@@ -684,11 +759,6 @@ terminateScriptPrompt()
         Sleep(100)
         ExitApp()
         ExitApp()
-        Return
-    }
-    Catch
-    {
-        Return
     }
 }
 

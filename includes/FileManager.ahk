@@ -1,7 +1,9 @@
 #SingleInstance Force
-SendMode "Input"
-CoordMode "Mouse", "Client"
+#MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
+SendMode "Input"
+SetWorkingDir A_ScriptDir
+CoordMode "Mouse", "Client"
 
 ; Beginning of the file manager functions.
 
@@ -48,10 +50,14 @@ saveVideoURLDirectlyToFile()
     ; Will be language specific in the future.
     Send("k")
     Clipwait(0.35)
-    If (lastContent = A_Clipboard || A_Clipboard = "")
+    If (lastContent = A_Clipboard)
     {
-        MsgBox("No URL detected or same URL selected twice.", "Attention !", "O Icon! T1.5")
+        MsgBox("Same URL selected twice.", "Attention !", "O Icon! T1.5")
         Return
+    }
+    Else If (A_Clipboard = "")
+    {
+        MsgBox("No URL detected.", "Attention !", "O Icon! T1.5")
     }
     Else
     {
@@ -66,7 +72,6 @@ saveVideoURLDirectlyToFile()
             writeToURLFile(clipboardContent)
         }
     }
-    Return
 }
 
 writeToURLFile(pContent)
@@ -193,7 +198,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
             }
             Catch
             {
-                MsgBox("Could not create file !	`n`nNo one knows why.", "Error !", "O Icon! T3")
+                MsgBox("Could not create blacklist file !	`n`nNo one knows why.", "Error !", "O Icon! T3")
                 Reload()
             }
         }
@@ -239,5 +244,49 @@ manageURLFile(pBooleanShowPrompt := true)
         {
             FileMove(readConfigFile("URL_FILE_LOCATION"), readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
         }
+    }
+}
+
+restoreURLFile()
+{
+    If (!FileExist(readConfigFile("URL_BACKUP_FILE_LOCATION")))
+    {
+        MsgBox("The URL blackup file does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+        Return
+    }
+    If (FileExist(readConfigFile("URL_FILE_LOCATION")))
+    {
+        result := MsgBox("The URL File already exists."
+            "`nPress YES to overwrite or NO to append the `nbackup file to the original file.", "Warning !", "YNC Icon! 4096 T10")
+        Switch (result)
+        {
+            Case "Yes":
+                {
+                    FileCopy(readConfigFile("URL_BACKUP_FILE_LOCATION"), readConfigFile("URL_FILE_LOCATION"), true)
+                }
+            Case "No":
+                {
+                    If (InStr(FileRead(readConfigFile("URL_FILE_LOCATION")), "#Made by Donnerbaer"))
+                    {
+                        ; If the original URL file already contains the line, it will remove the corresponding line
+                        ; from the backup file content.
+                        tmp := StrReplace(FileRead(readConfigFile("URL_BACKUP_FILE_LOCATION")), "#Made by Donnerbaer", "#Appended here")
+                    }
+                    Else
+                    {
+                        tmp := FileRead(readConfigFile("URL_BACKUP_FILE_LOCATION"))
+                    }
+                    ; Appends the backup file content to the original file.
+                    FileAppend(tmp, readConfigFile("URL_FILE_LOCATION"))
+                }
+            Default:
+                {
+                    ; Do nothing.
+                }
+        }
+    }
+    Else
+    {
+        FileCopy(readConfigFile("URL_BACKUP_FILE_LOCATION"), readConfigFile("URL_FILE_LOCATION"), true)
     }
 }
