@@ -165,7 +165,6 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
         }
         MsgBox("A default config file has been generated.", "Config file status", "O Iconi T3")
     }
-    Return
 }
 
 ; Reads the config file and extracts it's values.

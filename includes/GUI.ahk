@@ -153,7 +153,6 @@ GUI_MenuCheckAll(pMenuName)
             GUI_MenuCheckHandler(menuName, A_Index, true)
         }
     }
-    Return
 }
 
 GUI_MenuUncheckAll(pMenuName)
@@ -169,7 +168,6 @@ GUI_MenuUncheckAll(pMenuName)
             GUI_MenuCheckHandler(menuName, A_Index, false)
         }
     }
-    Return
 }
 
 ; This function stores all menu items check states. In other words
@@ -215,7 +213,6 @@ GUI_MenuCheckHandler(pMenuName := unset, pSubMenuPosition := unset, pBooleanStat
             toggleHotkey(menuCheckArray_activeHotKeyMenu)
         }
     }
-    Return
 }
 
 ; Applies the checkmarks stored in the config file so that they become visible to the user in the GUI.

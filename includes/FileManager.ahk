@@ -72,7 +72,6 @@ saveVideoURLDirectlyToFile()
             writeToURLFile(clipboardContent)
         }
     }
-    Return
 }
 
 writeToURLFile(pContent)
@@ -283,7 +282,6 @@ restoreURLFile()
             Default:
                 {
                     ; Do nothing.
-                    Return
                 }
         }
     }

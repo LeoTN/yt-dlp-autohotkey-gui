@@ -27,7 +27,6 @@ Hotkey to disable/enable debug mode.
     {
         Throw ("No valid state in booleanDebugMode")
     }
-    Return
 }
 
 Hotkey_onInit()
@@ -82,7 +81,6 @@ Hotkey_openMainGUI()
         {
             mainGUI.Show("w300 h200")
             flipflop := false
-            Return
         }
         Else If (flipflop = false && WinActive("ahk_id " . mainGUI.Hwnd))
         {
@@ -93,7 +91,6 @@ Hotkey_openMainGUI()
         {
             WinActivate("ahk_id " . mainGUI.Hwnd)
         }
-        Return
     }
 }
 
@@ -107,18 +104,20 @@ Hotkey_openOptionsGUI()
         {
             downloadOptionsGUI.Show("w500 h405")
             flipflop := false
-            Return
+            ; Starts the tool tip timer to react upon the user hovering over gui elements.
+            SetTimer(handleGUI_toolTipManager, 1000)
         }
         Else If (flipflop = false && WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
         {
             downloadOptionsGUI.Hide()
             flipflop := true
+            ; Stops the tool tip timer.
+            SetTimer(handleGUI_toolTipManager, 0)
         }
         Else
         {
             WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
         }
-        Return
     }
 }
 
@@ -322,7 +321,7 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         Sleep(5000)
         newFileContent := FileRead(A_Temp . "\yt_dlp_download_log.txt")
 
-        If (oldFileContent != newFileContent)
+        If (oldFileContent != newFileContent && booleanDownloadTerminated = false)
         {
             ; If there is new data.
             Return monitorDownloadProgress()
@@ -467,7 +466,6 @@ clearURLFile()
     {
         MsgBox("The  URL file does not exist !	`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
     }
-    Return
 }
 
 ; Opens only one instance each
@@ -487,7 +485,6 @@ openURLFile()
     {
         MsgBox("The URL file does not exist !	`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
     }
-    Return
 }
 
 openURLBackupFile()
@@ -506,7 +503,6 @@ openURLBackupFile()
     {
         MsgBox("The URL backup file does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
     }
-    Return
 }
 
 openURLBlacklistFile(pBooleanShowPrompt := false)
@@ -563,7 +559,6 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
     {
         MsgBox("The URL blacklist file does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
     }
-    Return
 }
 
 openConfigFile()
@@ -589,7 +584,6 @@ openConfigFile()
     {
         MsgBox("The script's config file does not exist !	`n`nA fatal error has occured.", "Error !", "O Icon! T3")
     }
-    Return
 }
 
 ; Saves a lot of coding by using a switch to determine which MsgBox has to be shown.
@@ -673,7 +667,6 @@ deleteFilePrompt(pFileName)
             }
         }
     }
-    Return
 }
 
 reloadScriptPrompt()
@@ -719,11 +712,6 @@ reloadScriptPrompt()
         textField.Text := "The script has been reloaded."
         Sleep(100)
         Reload()
-        Return
-    }
-    Catch
-    {
-        Return
     }
 }
 
@@ -771,11 +759,6 @@ terminateScriptPrompt()
         Sleep(100)
         ExitApp()
         ExitApp()
-        Return
-    }
-    Catch
-    {
-        Return
     }
 }
 

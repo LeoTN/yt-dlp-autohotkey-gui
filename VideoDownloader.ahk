@@ -30,7 +30,6 @@ F5::
         ; Enter code below.
         A_Clipboard := A_ComSpec ' /k ' . buildCommandString() . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"'
     }
-    Return
 }
 
 F6::
@@ -38,9 +37,8 @@ F6::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below.
-        saveGUISettingsAsPreset("TestPreset", true)
+        handleGUI_toolTipManager()
     }
-    Return
 }
 
 F7::
@@ -48,9 +46,7 @@ F7::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below
-        loadGUISettingsFromPreset("TestPreset", true)
     }
-    Return
 }
 
 ; Runs a list of commands when the script is launched.

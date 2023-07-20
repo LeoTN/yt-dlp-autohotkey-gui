@@ -130,12 +130,12 @@ cancelDownload()
 
     If (result = "Yes")
     {
+        global booleanDownloadTerminated := true
         Try
         {
             ProcessClose(("ahk_pid " . hiddenConsolePID))
             WinClose(("ahk_pid " . hiddenConsolePID))
         }
-        global booleanDownloadTerminated := true
     }
 }
 
@@ -518,6 +518,10 @@ handleGUI_Checkbox_ignoreAllOptions()
             chooseAudioFormatDropDownList.Opt("-Disabled")
             ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
             handleGUI_Checkboxes()
+            If (enableFastDownloadModeCheckbox.Value = 1)
+            {
+                handleGUI_Checkbox_fastDownload()
+            }
         }
         Case 1:
         {
@@ -638,6 +642,116 @@ buildCommandString()
     ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
     commandString .= '--ffmpeg-location "' . ffmpegLocation . '" '
     Return commandString
+}
+
+; When called it will create and maintain several arrays in order to provide tool tip information for user.
+; Can be called with a set timer to react upon the user hovering over a GUI element.
+handleGUI_toolTipManager(pBooleanRefresh := false)
+{
+    booleanRefresh := pBooleanRefresh
+    static elementHWNDArray := []
+    ; Only refreshes if required or if the array is empty (first time call of the function).
+    If (booleanRefresh = true || !elementHWNDArray.Has(2))
+    {
+        arrayCounter := 1
+        ; Saves the HWND of all GUI elements into the HWND array.
+        For (GuiCtrlObj in downloadOptionsGUI)
+        {
+            ; This condition ignore all other GUI elements except of checkboxes, edits and lists.
+            If (InStr(GuiCtrlObj.Type, "Checkbox") || InStr(GuiCtrlObj.Type, "Edit")
+                || InStr(GuiCtrlObj.Type, "DDL") || InStr(GuiCtrlObj.Type, "Button"))
+            {
+                elementHWNDArray.InsertAt(arrayCounter, GuiCtrlObj.Hwnd)
+                arrayCounter++
+            }
+        }
+    }
+    ; Waits for the download options GUI to appear.
+    If (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 2) != 0)
+    {
+        handleGUI_toolTipLoop(elementHWNDArray)
+    }
+}
+
+; When called checks if the mouse hovers over a GUI element and shows the specific tooltip.
+handleGUI_toolTipLoop(pElementHWNDArray)
+{
+    elementHWNDArray := pElementHWNDArray
+    ; Contains an individual tool tip for every control that requires one.
+    static elementToolTipArray := []
+    If (!elementToolTipArray.Has(2))
+    {
+        tmp1 := "Ignores errors thrown by most events."
+        tmp2 := ""
+        tmp3 := "Starts the download with the required options only."
+        tmp4 := "Hides the PowerShell window."
+        tmp5 := ""
+        tmp6 := "Disables most time-consuming options to increase download and processing speed."
+        tmp7 := ""
+        tmp8 := "Useful option to try when the download fails too often."
+        tmp9 := ""
+        tmp10 := ""
+        tmp11 := ""
+        tmp12 := ""
+        tmp13 := "Forces the download of complete playlists if a URL contains a reference to it."
+        tmp14 := "Saves downloaded videos into an archive file to avoid downloading a video twice."
+        tmp15 := "Select a video format."
+        tmp16 := ""
+        tmp17 := "Select an audio format."
+        tmp18 := "Tries to find a compromise between audio and video quality."
+        tmp19 := ""
+        tmp20 := ""
+        tmp21 := "Usually, a text file will be given to yt-dlp to download, but it is also possible to select a single URL."
+        tmp22 := ""
+        tmp23 := "Saves all downloads to the default path specified in the config file."
+        tmp24 := "The current default download path is: [" . readConfigFile("DOWNLOAD_PATH") . "]."
+        tmp25 := ""
+        tmp26 := ""
+        tmp27 := "Shows no prompt when download in a background task is activated."
+        tmp28 := "Single click to save a preset or double click to save as default."
+        tmp29 := "The default preset will be loaded when no previous temporary preset is found."
+        Loop (29)
+        {
+            elementToolTipArray.InsertAt(A_Index, %"tmp" . A_Index%)
+        }
+    }
+
+    If (WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
+    {
+        MouseGetPos(, , &outWinHWND, &outControlHWND, 2)
+        Loop (elementHWNDArray.Length)
+        {
+            If (elementHWNDArray.Get(A_Index) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND)
+            {
+                ; Saves the index of the outer loop because inside the while loops the value of A_Index will be different.
+                tmpIndex := A_Index
+                i := 0
+                ; In case the cursor is above a control element it will have to stay for 2 seconds to trigger the tool tip.
+                While (elementHWNDArray.Get(tmpIndex) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND)
+                {
+                    Sleep(100)
+                    i++
+                    If (i >= 10)
+                    {
+                        Break
+                    }
+                    Else If (!(elementHWNDArray.Get(tmpIndex) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND))
+                    {
+                        Return
+                    }
+                }
+                ToolTip(elementToolTipArray.Get(A_Index))
+                ; Waits for the user to read the tool tip as he stays above the control element with the cursor.
+                While (elementHWNDArray.Get(tmpIndex) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND)
+                {
+                    MouseGetPos(, , &outWinHWND, &outControlHWND, 2)
+                    Sleep(100)
+                }
+                ToolTip()
+                Break
+            }
+        }
+    }
 }
 
 ; Saves all options from the download options GUI into a text file for future use.
