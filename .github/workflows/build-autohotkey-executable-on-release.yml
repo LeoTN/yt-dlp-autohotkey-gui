@@ -27,7 +27,7 @@ jobs:
         $scriptPathOut = "VideoDownloader.exe"
 
         # Compile the script.
-        & ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /silent
+        & ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk\Compiler\Unicode 32-bit.bin" /silent
 
     - name: Commit and Push Executable
       run: |
