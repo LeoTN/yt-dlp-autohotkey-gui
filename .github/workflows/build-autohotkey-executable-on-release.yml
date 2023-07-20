@@ -42,11 +42,40 @@ jobs:
         name: VideoDownloader
         path: VideoDownloader.exe
 
-    - name: Attach Executable to Release
-      uses: actions/upload-release-asset@v1
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./VideoDownloader.exe
-        asset_name: VideoDownloader.exe
-        asset_content_type: application/octet-stream
-        token: ${{ secrets.WORKFLOW_TOKEN_AHK }}
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Get Asset ID
+      id: get_asset_id
+      run: |
+        asset_id=$(curl -s -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets" \
+          | jq -r '.[] | select(.name == "VideoDownloader.exe") | .id')
+        echo "Asset ID: $asset_id"
+        echo "::set-output name=asset_id::$asset_id"
+
+    - name: Upload Asset with Specific Token
+      run: |
+        asset_url="https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=VideoDownloader.exe"
+        curl -X POST -H "Authorization: token ${{ secrets.WORKFLOW_TOKEN_AHK }}" \
+          -H "Content-Type: $(file -b --mime-type VideoDownloader.exe)" \
+          --data-binary @VideoDownloader.exe "$asset_url"
+
+    - name: Publish Release
+      run: |
+        curl -X PATCH -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}" \
+          -d '{"draft": false}'
+
+    - name: Cleanup
+      run: |
+        rm VideoDownloader.exe
