@@ -10,6 +10,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
     - name: Download and Extract AutoHotkey
       run: |
         # Download AutoHotkey zip file.
@@ -19,12 +22,21 @@ jobs:
 
     - name: Compile AutoHotkey Script
       run: |
-        # Set the paths to execute more easy.
+        # Set the paths to execute more easily.
         $scriptPathIn = "VideoDownloader.ahk"
         $scriptPathOut = "VideoDownloader.exe"
 
         # Compile the script.
         & ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /silent
+
+    - name: Commit and Push Executable
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        git add VideoDownloader.exe
+        git commit -m "Add VideoDownloader.exe"
+        git push
 
     - name: Upload Executable
       uses: actions/upload-artifact@v2
