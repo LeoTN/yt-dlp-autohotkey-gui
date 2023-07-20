@@ -1,4 +1,4 @@
-name: Build and Attach Autohotkey Executable
+name: Build and Attach Autohotkey Executable to Release
 
 on:
   release:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Build and Attach Autohotkey Executable
+    name: Build and Attach Autohotkey Executable to Release
     runs-on: windows-latest
 
     steps:
@@ -35,15 +35,6 @@ jobs:
         
         # Compile the script.
         & ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey32.exe" /silent
-
-    - name: Commit and Push Executable
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-
-        git add VideoDownloader.exe
-        git commit -m "Add VideoDownloader.exe"
-        git push
 
     - name: Upload Executable
       uses: actions/upload-artifact@v2
