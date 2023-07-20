@@ -1,0 +1,26 @@
+name: Build and Attach Autohotkey Executable
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    name: Build and Attach Executable
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Install AutoHotkey
+      run: sudo apt-get update && sudo apt-get install -y autohotkey
+
+    - name: Compile AutoHotkey Script
+      run: autohotkey /in VideoDownloader.ahk /out VideoDownloader.exe
+
+    - name: Upload Executable
+      uses: actions/upload-artifact@v2
+      with:
+        name: VideoDownloader
+        path: VideoDownloader.exe
