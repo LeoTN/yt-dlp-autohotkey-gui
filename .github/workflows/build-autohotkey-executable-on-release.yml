@@ -1,26 +1,26 @@
-name: Build and Attach Autohotkey Executable
+name: Build and Attach Autohotkey Binary File
 
 on:
   release:
     types: [created]
 
 jobs:
-  build:
-    name: Build and Attach Autohotkey Executable
-    runs-on: ubuntu-latest
-
+  Build-and-Attach:
+    name: Start-Building
+    runs-on: windows-latest
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Install AutoHotkey
-      run: sudo apt-get update && sudo apt-get install -y autohotkey
+      - name: Ahk2Exe
+        uses: nekocodeX/GitHub-Action-Ahk2Exe@main
+        with:
+          in: VideoDownloader.ahk
 
-    - name: Compile AutoHotkey Script
-      run: autohotkey /in VideoDownloader.ahk /out VideoDownloader.exe
-
-    - name: Upload Executable
-      uses: actions/upload-artifact@v2
-      with:
-        name: VideoDownloader
-        path: VideoDownloader.exe
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: VideoDownloader.exe
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
