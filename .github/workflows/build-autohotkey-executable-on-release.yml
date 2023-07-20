@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Build and Attach Executable
+    name: Build and Attach Autohotkey Executable
     runs-on: ubuntu-latest
 
     steps:
