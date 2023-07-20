@@ -23,7 +23,7 @@ jobs:
     - name: Download and Extract Autohotkey v2 Binary File
       run: |
         # Download AutoHotkey zip file.
-        Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk-v2.zip" -OutFile ahk-v2.zip"
+        Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk-v2.zip" -OutFile "ahk-v2.zip"
         # Extract it.
         Expand-Archive -Path "ahk-v2.zip" -DestinationPath "ahk-v2"
         
