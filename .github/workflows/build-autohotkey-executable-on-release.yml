@@ -20,11 +20,11 @@ jobs:
     - name: Compile AutoHotkey Script
       run: |
         # Set the paths to execute more easy.
-        $ahk2exePath = "ahk\Compiler\Ahk2Exe.exe"
-        $scriptPath = "VideoDownloader.ahk"
+        $scriptPathIn = "VideoDownloader.ahk"
+        $scriptPathOut = "VideoDownloader.exe"
 
         # Compile the script.
-        & $ahk2exePath /in $scriptPath /out VideoDownloader.exe
+        & ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut
 
     - name: Upload Executable
       uses: actions/upload-artifact@v2
