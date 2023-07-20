@@ -24,7 +24,7 @@ jobs:
         $scriptPathOut = "VideoDownloader.exe"
 
         # Compile the script.
-        & ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut
+        & ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /silent
 
     - name: Upload Executable
       uses: actions/upload-artifact@v2
