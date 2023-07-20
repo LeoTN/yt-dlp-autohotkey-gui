@@ -5,7 +5,7 @@ on:
     types: [created]
 
 jobs:
-  build:
+  build_and_attach:
     name: Build and Attach Autohotkey Executable to Release
     runs-on: windows-latest
 
@@ -27,7 +27,7 @@ jobs:
         # Extract it.
         Expand-Archive -Path "ahk-v2.zip" -DestinationPath "ahk-v2"
         
-    - name: Compile Autohotkey Script
+    - name: Compile Autohotkey Script and Create Release
       run: |
         # Set the paths to execute more easily.
         $scriptPathIn = "VideoDownloader.ahk"
@@ -36,21 +36,28 @@ jobs:
         # Compile the script.
         & ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey32.exe" /silent
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN_AHK }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
+        # Create the release
+        tag_name="${{ github.ref }}"
+        release_response=$(curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                          -H "Content-Type: application/json" \
+                          -d "{\"tag_name\": \"$tag_name\",\"name\": \"Release $tag_name\",\"draft\": false,\"prerelease\": false}" \
+                          "https://api.github.com/repos/${{ github.repository }}/releases")
+        
+        echo "Release created successfully."
+        release_id=$(echo "$release_response" | jq -r '.id')
+        echo "Release ID: $release_id"
 
-    - name: Upload Executable
-      uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./VideoDownloader.exe
-        asset_name: VideoDownloader.exe
-        asset_content_type: application/octet-stream
+    - name: Upload Executable to Release
+      run: |
+        # Set the paths.
+        $scriptPathOut = "VideoDownloader.exe"
+        upload_url="https://uploads.github.com/repos/${{ github.repository }}/releases/$release_id/assets?name=VideoDownloader.exe"
+
+        # Upload the executable to the release.
+        curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: $(file -b --mime-type VideoDownloader.exe)" \
+          --data-binary @VideoDownloader.exe "$upload_url"
+
+    - name: Cleanup
+      run: |
+        rm VideoDownloader.exe
