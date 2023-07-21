@@ -1,8 +1,9 @@
 name: Build and Attach Autohotkey Executable to Release
 
 on:
-  release:
-    types: [created]
+  create:
+    tags:
+      - 'v*' # Der Workflow wird nur bei Tags ausgelöst, die mit 'v' beginnen, z.B. v1.0.3
 
 jobs:
   build:
@@ -42,38 +43,20 @@ jobs:
         name: VideoDownloader
         path: VideoDownloader.exe
 
-  upload:
-    name: Upload Executable to Release
-    needs: build
+  create_release:
+    name: Create Release
     runs-on: ubuntu-latest
+    needs: build
     steps:
-    
-    - name: Get Release
-      id: create_or_get_release
+    - name: Get Tag Name
+      id: get_tag_name
+      run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+    - name: Create Release
+      id: create_release
       uses: marvinpinto/action-automatic-releases@latest
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        automatic_release_tag: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-
-    - name: Get Upload URL
-      id: get_upload_url
-      run: |
-        echo "::set-output name=upload_url::$(curl --request POST --header 'Authorization: Bearer $GITHUB_TOKEN' --header 'Content-Type: application/octet-stream' 'https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=myasset.txt' | jq -r '.upload_url')"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        RELEASE_ID: ${{ steps.create_or_get_release.outputs.release_id }}
-
-    - name: Upload Executable to Release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.get_upload_url.outputs.upload_url }}
-        asset_path: VideoDownloader.exe
-        asset_name: VideoDownloader.exe
-        asset_content_type: application/executable
+        automatic_release_tag: ${{ steps.get_tag_name.outputs.TAG_NAME }}
+        files: ./VideoDownloader.exe
