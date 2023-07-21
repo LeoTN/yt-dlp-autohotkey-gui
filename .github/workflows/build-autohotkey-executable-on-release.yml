@@ -47,13 +47,15 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+    
     - name: Get Release
       id: create_or_get_release
       uses: marvinpinto/action-automatic-releases@latest
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        automatic_release_tag: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
