@@ -51,6 +51,8 @@ jobs:
   create_release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Download Executable Artifact
@@ -58,21 +60,17 @@ jobs:
       with:
         filename: VideoDownloader.exe
 
-    - name: Create new GitHub Release
-      id: create_release_id
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create Release
+      uses: actions/checkout@v3
+      uses: ncipollo/release-action@v1
       with:
-        tag_name: Pre-${{ github.run_number }}
-        release_name: Pre-release ${{ github.run_number }}
-
-    - name: Upload Executable Artifact as Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release_id.outputs.upload_url }}
-        asset_path: ./VideoDownloader.exe
-        asset_name: VideoDownloader(v${{ github.run_number }}).exe
-        asset_content_type: application/executable
+        allowUpdates: true
+        artifacts: ./VideoDownloader.exe
+        artifactContentType: application/executable
+        body: "This is the latest beta pre release. May be changed in the future."
+        generateReleaseNotes: true
+        makeLatest: false
+        prerelease: true
+        removeArtifacts: true
+        name: "latest-development-beta-pre-release ${{ github.run_number }}"
+        tag: "latest-development-beta"
