@@ -56,7 +56,7 @@ jobs:
       id: create_release_id
       uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN_AHK }}
       with:
         tag_name: Pre-${{ github.run_number }}
         release_name: Pre-release ${{ github.run_number }}
@@ -69,7 +69,7 @@ jobs:
     - name: Upload Executable Artifact as Asset
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN_AHK }}
       with:
         upload_url: ${{ steps.create_release_id.outputs.upload_url }}
         asset_path: ./VideoDownloader.exe
