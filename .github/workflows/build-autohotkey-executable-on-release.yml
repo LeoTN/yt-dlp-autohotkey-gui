@@ -1,12 +1,12 @@
-name: Create new Release and Attach Autohotkey Executable
+name: Create new Pre-release and Attach Autohotkey Executable
 
 on:
   push:
     branches:
-      - new-release
+      - development
   pull_request:
     branches:
-      - new-release
+      - development
 
 jobs:
   build:
@@ -57,8 +57,13 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.run_number }}
-        release_name: Release ${{ github.run_number }}
+        tag_name: Pre-${{ github.run_number }}
+        release_name: Pre-release ${{ github.run_number }}
+
+    - name: Download Executable Artifact
+      uses: actions/download-artifact@v3
+      with:
+        filename: VideoDownloader.exe
 
     - name: Upload Executable Artifact as Asset
       uses: actions/upload-release-asset@v1
@@ -66,6 +71,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release_id.outputs.upload_url }}
-        asset_path: VideoDownloader.exe
+        asset_path: ./VideoDownloader.exe
         asset_name: VideoDownloader (v${{ github.run_number }})
         asset_content_type: application/executable
