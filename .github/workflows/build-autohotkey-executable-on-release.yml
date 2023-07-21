@@ -1,13 +1,13 @@
-name: Build and Attach Autohotkey Executable to Release
+name: Create new Release and Attach Autohotkey Execuable
 
 on:
   create:
     tags:
-      - 'v*' # Der Workflow wird nur bei Tags ausgelöst, die mit 'v' beginnen, z.B. v1.0.3
+      - 'v*' # Triggers only if the tag name begins with a v.
 
 jobs:
   build:
-    name: Build and Attach Autohotkey Executable to Release
+    name: Build and Upload Executable Artifact
     runs-on: windows-latest
 
     steps:
@@ -44,19 +44,29 @@ jobs:
         path: VideoDownloader.exe
 
   create_release:
-    name: Create Release
-    runs-on: ubuntu-latest
+  - name: Create new Release
     needs: build
     steps:
-    - name: Get Tag Name
-      id: get_tag_name
+    - name: Release Creation
       run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
-    - name: Create Release
+      id: get_tag_name
+      uses: actions/create-release@v1
       id: create_release
-      uses: marvinpinto/action-automatic-releases@latest
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        automatic_release_tag: ${{ steps.get_tag_name.outputs.TAG_NAME }}
-        files: ./VideoDownloader.exe
+        draft: false
+        prerelease: false
+        release_name: ${{ steps.version.outputs.version }}
+        tag_name: ${{ github.ref }}
+        body_path: "Empty"
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Upload Executable Artifact
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: VideoDownloader.exe
+        asset_name: VideoDownloader.exe
+        asset_content_type: application/executable
