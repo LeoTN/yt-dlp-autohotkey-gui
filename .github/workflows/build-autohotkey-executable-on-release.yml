@@ -1,9 +1,10 @@
 name: Create new Release and Attach Autohotkey Execuable
 
 on:
-  create:
-    tags:
-      - 'v*' # Triggers only if the tag name begins with a v.
+  push:
+    branches: "new-release"
+  pull_rquest:
+    branches: "new-release"
 
 jobs:
   build:
@@ -44,29 +45,25 @@ jobs:
         path: VideoDownloader.exe
 
   create_release:
-  - name: Create new Release
     needs: build
+  - name: Create new Release
+    
     steps:
     - name: Release Creation
-      run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-      id: get_tag_name
-      uses: actions/create-release@v1
-      id: create_release
-      with:
-        draft: false
-        prerelease: false
-        release_name: ${{ steps.version.outputs.version }}
-        tag_name: ${{ github.ref }}
-        body_path: "Empty"
+      id: create_release_id
+      uses: action/create-release@v1
       env:
         GITHUB_TOKEN: ${{ github.token }}
+      with:
+        tag_name: ${{ github.run_number}}
+        release_name: Release ${{ github.run_number}} 
 
-    - name: Upload Executable Artifact
+    - name: Upload Executable Artifact as Asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ steps.create_release_id.outputs.upload_url }}
         asset_path: VideoDownloader.exe
-        asset_name: VideoDownloader.exe
+        asset_name: VideoDownloader (v ${{ github.run_number}})
         asset_content_type: application/executable
