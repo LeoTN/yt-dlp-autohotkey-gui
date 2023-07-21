@@ -13,16 +13,19 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Download and Install Autohotkey v2 for Linux
+    - name: Download and Extract Ahk2Exe Binary File
       run: |
-        # Install dependencies required for running AutoHotkey v2 on Linux
-        sudo apt-get update
-        sudo apt-get install -y libc6-dev libx11-dev
+        # Download AutoHotkey zip file.
+        wget "https://www.autohotkey.com/download/ahk.zip"
+        # Extract it.
+        unzip ahk.zip -d ahk
         
-        # Download AutoHotkey v2 binary for Linux
+    - name: Download and Extract Autohotkey v2 Binary File
+      run: |
+        # Download AutoHotkey zip file.
         wget "https://www.autohotkey.com/download/ahk-v2.zip"
-        unzip ahk-v2.zip
-        chmod +x ahk-v2/Compiler/Ahk2Exe
+        # Extract it.
+        unzip ahk-v2.zip -d ahk-v2
         
     - name: Compile Autohotkey Script
       run: |
@@ -30,8 +33,8 @@ jobs:
         scriptPathIn="VideoDownloader.ahk"
         scriptPathOut="VideoDownloader.exe"
         
-        # Compile the script using AutoHotkey v2
-        ./ahk-v2/Compiler/Ahk2Exe /in "$scriptPathIn" /out "$scriptPathOut" /silent
+        # Compile the script.
+        ./ahk/Compiler/Ahk2Exe /in "$scriptPathIn" /out "$scriptPathOut" /base "ahk-v2/AutoHotkey32.exe" /silent
 
     - name: Set environment for github-release
       run: |
