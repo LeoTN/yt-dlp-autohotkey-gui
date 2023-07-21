@@ -1,12 +1,14 @@
-name: Create new Pre-release and Attach Autohotkey Executable
+name: Create new GitHub Pre-release and Attach Autohotkey Executable
 
 on:
   push:
     branches:
       - development
+        tags: 'v*'
   pull_request:
     branches:
       - development
+        tags: 'v*'
 
 jobs:
   build:
@@ -38,7 +40,7 @@ jobs:
         $scriptPathOut = "VideoDownloader.exe"
 
         # Compile the script.
-        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey32.exe" /silent
+        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
 
     - name: Upload Executable as Artifact
       uses: actions/upload-artifact@v2
@@ -47,12 +49,16 @@ jobs:
         path: VideoDownloader.exe
 
   create_release:
-    name: Create new Release
     needs: build
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Create new Release
+    - name: Download Executable Artifact
+      uses: actions/download-artifact@v3
+      with:
+        filename: VideoDownloader.exe
+
+    - name: Create new GitHub Release
       id: create_release_id
       uses: actions/create-release@v1
       env:
@@ -61,11 +67,6 @@ jobs:
         tag_name: Pre-${{ github.run_number }}
         release_name: Pre-release ${{ github.run_number }}
 
-    - name: Download Executable Artifact
-      uses: actions/download-artifact@v3
-      with:
-        filename: VideoDownloader.exe
-
     - name: Upload Executable Artifact as Asset
       uses: actions/upload-release-asset@v1
       env:
@@ -73,5 +74,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release_id.outputs.upload_url }}
         asset_path: ./VideoDownloader.exe
-        asset_name: VideoDownloader (v${{ github.run_number }})
+        asset_name: VideoDownloader(v${{ github.run_number }}).exe
         asset_content_type: application/executable
