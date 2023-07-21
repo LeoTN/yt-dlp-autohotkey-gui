@@ -1,4 +1,4 @@
-name: Create new Release and Attach Autohotkey Execuable
+name: Create new Release and Attach Autohotkey Executable
 
 on:
   create:
@@ -43,28 +43,30 @@ jobs:
         name: VideoDownloader
         path: VideoDownloader.exe
 
-  create_release:
-  - name: Create new Release
+  generate_release:
+    name: Create new Release
     needs: build
+    runs-on: ubuntu-latest
     steps:
-    - name: Release Creation
-      run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+    - name: Get Tag Name
       id: get_tag_name
-      uses: actions/create-release@v1
+      run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+    - name: Create Release
       id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
+        tag_name: ${{ steps.get_tag_name.outputs.TAG_NAME }}
+        release_name: Release ${{ steps.get_tag_name.outputs.TAG_NAME }}
         draft: false
         prerelease: false
-        release_name: ${{ steps.version.outputs.version }}
-        tag_name: ${{ github.ref }}
-        body_path: "Empty"
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
 
     - name: Upload Executable Artifact
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: VideoDownloader.exe
