@@ -7,38 +7,43 @@ on:
 jobs:
   build_and_attach:
     name: Build and Attach Autohotkey Executable to Release
+
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Install Wine
-      run: sudo apt-get update && sudo apt-get install -y wine
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
 
-    - name: Download and Extract Ahk2Exe Binary File
+    - name: Install AutoHotkey
       run: |
-        # Download AutoHotkey zip file.
-        wget "https://www.autohotkey.com/download/ahk.zip"
-        # Extract it.
+        wget https://www.autohotkey.com/download/ahk.zip
         unzip ahk.zip -d ahk
-        
-    - name: Download and Extract Autohotkey v2 Binary File
+        chmod +x ahk/AutoHotkeyU64.exe
+        echo 'wine ahk/AutoHotkeyU64.exe %*' > ahk/AutoHotkeyU64
+        chmod +x ahk/AutoHotkeyU64
+        sudo mv ahk/AutoHotkeyU64 /usr/local/bin
+
+    - name: Install Ahk2Exe
       run: |
-        # Download AutoHotkey zip file.
-        wget "https://www.autohotkey.com/download/ahk-v2.zip"
-        # Extract it.
+        wget https://www.autohotkey.com/download/ahk-v2.zip
         unzip ahk-v2.zip -d ahk-v2
-        
+        chmod +x ahk-v2/Compiler/Ahk2Exe.exe
+        echo 'wine ahk-v2/Compiler/Ahk2Exe.exe $*' > ahk-v2/Compiler/Ahk2Exe
+        chmod +x ahk-v2/Compiler/Ahk2Exe
+        sudo mv ahk-v2/Compiler/Ahk2Exe /usr/local/bin
+
     - name: Compile Autohotkey Script
       run: |
-        # Set the paths to execute more easily.
         scriptPathIn="VideoDownloader.ahk"
         scriptPathOut="VideoDownloader.exe"
         
-        # Compile the script using AutoHotkey v2 through Wine
-        wine ahk/Compiler/Ahk2Exe.exe /in "$scriptPathIn" /out "$scriptPathOut" /base "ahk-v2/AutoHotkey32.exe" /silent
-
+        AutoHotkeyU32 $scriptPathIn
+        
     - name: Set environment for github-release
       run: |
         echo ::set-env name=RELEASE_TAG::"${{ github.ref }}"
