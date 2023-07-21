@@ -34,18 +34,11 @@ jobs:
         $scriptPathOut = "VideoDownloader.exe"
         
         # Compile the script.
-        & ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey32.exe" /silent
+        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey32.exe" /silent
 
     - name: Upload Executable
-      uses: actions/upload-artifact@v2
-      with:
-        name: VideoDownloader
-        path: VideoDownloader.exe
-        
-    - name: Upload Executable to Release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ env.RELEASE_TAG }}
-        name: ${{ env.RELEASE_NAME }}
-        file: "VideoDownloader.exe"
+        file: VideoDownloader.exe
+        tag: ${{ github.ref }}
