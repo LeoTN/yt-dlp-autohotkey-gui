@@ -36,9 +36,14 @@ jobs:
         # Compile the script.
         ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey32.exe" /silent
 
+    - name: Move Executable to Workspace
+      run: |
+        # Move the compiled executable to the workspace directory.
+        mv "VideoDownloader.exe" $GITHUB_WORKSPACE
+
     - name: Upload Executable
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: VideoDownloader.exe
+        file: ${{ github.workspace }}/VideoDownloader.exe
         tag: ${{ github.ref }}
