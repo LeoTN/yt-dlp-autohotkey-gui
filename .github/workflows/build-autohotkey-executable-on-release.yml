@@ -36,7 +36,6 @@ jobs:
         # Compile the script.
         ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey32.exe" /silent
 
-  upload:
     - name: Upload Executable as Artifact
       uses: actions/upload-artifact@v2
       with:
