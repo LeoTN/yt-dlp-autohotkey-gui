@@ -7,34 +7,31 @@ on:
 jobs:
   build_and_attach:
     name: Build and Attach Autohotkey Executable to Release
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Download and Extract Ahk2Exe Binary File
+    - name: Download and Install Autohotkey v2 for Linux
       run: |
-        # Download AutoHotkey zip file.
-        Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk.zip" -OutFile "ahk.zip"
-        # Extract it.
-        Expand-Archive -Path "ahk.zip" -DestinationPath "ahk"
+        # Install dependencies required for running AutoHotkey v2 on Linux
+        sudo apt-get update
+        sudo apt-get install -y libc6-dev libx11-dev
         
-    - name: Download and Extract Autohotkey v2 Binary File
-      run: |
-        # Download AutoHotkey zip file.
-        Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk-v2.zip" -OutFile "ahk-v2.zip"
-        # Extract it.
-        Expand-Archive -Path "ahk-v2.zip" -DestinationPath "ahk-v2"
+        # Download AutoHotkey v2 binary for Linux
+        wget "https://www.autohotkey.com/download/ahk-v2.zip"
+        unzip ahk-v2.zip
+        chmod +x ahk-v2/Compiler/Ahk2Exe
         
     - name: Compile Autohotkey Script
       run: |
         # Set the paths to execute more easily.
-        $scriptPathIn = "VideoDownloader.ahk"
-        $scriptPathOut = "VideoDownloader.exe"
+        scriptPathIn="VideoDownloader.ahk"
+        scriptPathOut="VideoDownloader.exe"
         
-        # Compile the script.
-        & ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey32.exe" /silent
+        # Compile the script using AutoHotkey v2
+        ./ahk-v2/Compiler/Ahk2Exe /in "$scriptPathIn" /out "$scriptPathOut" /silent
 
     - name: Set environment for github-release
       run: |
