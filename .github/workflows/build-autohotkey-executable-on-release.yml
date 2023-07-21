@@ -41,37 +41,37 @@ jobs:
       with:
         name: VideoDownloader
         path: VideoDownloader.exe
-        
-  build:
+
+  upload:
     - name: Get Release Upload URL
       runs-on: ubuntu-latest
 
-    - name: Get Release
-      id: create_or_get_release
-      uses: marvinpinto/action-automatic-releases@latest
+    steps: 
+     - name: Get Release
+       id: create_or_get_release
+       uses: marvinpinto/action-automatic-releases@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Get Upload URL
+        id: get_upload_url
+        run: |
+          echo "::set-output name=upload_url::$(curl --request POST --header 'Authorization: Bearer $GITHUB_TOKEN' --header 'Content-Type: application/octet-stream' 'https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=myasset.txt' | jq -r '.upload_url')"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ steps.create_or_get_release.outputs.release_id }}
+
+      - name: Upload Executable to Release
+      uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-
-    - name: Get Upload URL
-      id: get_upload_url
-      run: |
-        echo "::set-output name=upload_url::$(curl --request POST --header 'Authorization: Bearer $GITHUB_TOKEN' --header 'Content-Type: application/octet-stream' 'https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=myasset.txt' | jq -r '.upload_url')"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        RELEASE_ID: ${{ steps.create_or_get_release.outputs.release_id }}
-
-
-    - name: Upload Executable to Release
-    uses: actions/upload-release-asset@v1
-    env:
-      GITHUB_TOKEN: ${{ github.token }}
-    with:
-      upload_url: ${{ steps.create_or_get_release.outputs.release_id }}
-      asset_path: VideoDownloader.exe
-      asset_name: VideoDownloader.exe
-      asset_content_type: application/executable
+        upload_url: $RELEASE_ID
+        asset_path: VideoDownloader.exe
+        asset_name: VideoDownloader.exe
+        asset_content_type: application/executable
