@@ -3,7 +3,7 @@ name: Create new Release and Attach Autohotkey Executable
 on:
   push:
     branches: "new-release"
-  pull_rquest:
+  pull_request:
     branches: "new-release"
 
 jobs:
@@ -46,8 +46,9 @@ jobs:
 
   create_release:
     needs: build
-  - name: Create new Release
-    
+    name: Create new Release
+    runs-on: windows-latest
+  
     steps:
     - name: Release Creation
       id: create_release_id
