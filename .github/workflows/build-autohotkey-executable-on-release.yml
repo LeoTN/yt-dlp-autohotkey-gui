@@ -41,7 +41,8 @@ jobs:
       with:
         name: VideoDownloader
         path: VideoDownloader.exe
-
+        
+  build:
     - name: Get Release Upload URL
       runs-on: ubuntu-latest
 
