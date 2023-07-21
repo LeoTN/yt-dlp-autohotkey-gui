@@ -47,9 +47,10 @@ jobs:
         path: VideoDownloader.exe
 
   create_release:
+    name: Create new Release
     needs: build
     runs-on: ubuntu-latest
-
+    
     steps:
     - name: Create new Release
       id: create_release_id
