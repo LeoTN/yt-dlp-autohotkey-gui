@@ -49,7 +49,7 @@ jobs:
         path: VideoDownloader.exe
 
   create_release:
-    name: Build and Upload Executable Artifact
+    name: Download Executable Artifact and Create Pre-release
     needs: build
     runs-on: ubuntu-latest
     permissions:
