@@ -62,14 +62,18 @@ jobs:
     - name: Download Executable Artifact
       uses: actions/download-artifact@v3
       with:
-        name: VideoDownloader.exe
-        path: VideoDownloader.exe
+        name: VideoDownloaderArtifact
+        path: executables
+
+    - name: Display structure of downloaded files
+      run: ls -R
+      working-directory: executables
 
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        artifacts: "VideoDownloader.exe"
+        artifacts: "VideoDownloader.exe, executables, executables\VideoDownloader.exe, executables/VideoDownloader.exe, executables/, executables\ "
         artifactContentType: application/gzip
         body: "This is the latest beta pre release. May be changed in the future."
         generateReleaseNotes: true
