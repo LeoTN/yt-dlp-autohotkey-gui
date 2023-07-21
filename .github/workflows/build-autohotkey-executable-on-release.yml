@@ -1,0 +1,77 @@
+name: Create new Pre-release and Attach Autohotkey Executable
+
+on:
+  push:
+    branches:
+      - development
+  pull_request:
+    branches:
+      - development
+
+jobs:
+  build:
+    name: Build and Upload Executable Artifact
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Download and Extract Ahk2Exe Binary File
+      run: |
+        # Download AutoHotkey zip file.
+        Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk.zip" -OutFile "ahk.zip"
+        # Extract it.
+        Expand-Archive -Path "ahk.zip" -DestinationPath "ahk"
+
+    - name: Download and Extract Autohotkey v2 Binary File
+      run: |
+        # Download AutoHotkey zip file.
+        Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk-v2.zip" -OutFile "ahk-v2.zip"
+        # Extract it.
+        Expand-Archive -Path "ahk-v2.zip" -DestinationPath "ahk-v2"
+
+    - name: Compile Autohotkey Script
+      run: |
+        # Set the paths to execute more easily.
+        $scriptPathIn = "VideoDownloader.ahk"
+        $scriptPathOut = "VideoDownloader.exe"
+
+        # Compile the script.
+        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey32.exe" /silent
+
+    - name: Upload Executable as Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: VideoDownloader
+        path: VideoDownloader.exe
+
+  create_release:
+    name: Create new Release
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Create new Release
+      id: create_release_id
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: Pre-${{ github.run_number }}
+        release_name: Pre-release ${{ github.run_number }}
+
+    - name: Download Executable Artifact
+      uses: actions/download-artifact@v3
+      with:
+        filename: VideoDownloader.exe
+
+    - name: Upload Executable Artifact as Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release_id.outputs.upload_url }}
+        asset_path: ./VideoDownloader.exe
+        asset_name: VideoDownloader (v${{ github.run_number }})
+        asset_content_type: application/executable
