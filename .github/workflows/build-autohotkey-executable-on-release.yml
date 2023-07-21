@@ -5,58 +5,47 @@ on:
     types: [created]
 
 jobs:
-  build_and_attach:
+  build:
     name: Build and Attach Autohotkey Executable to Release
-
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.x
-
-    - name: Install AutoHotkey
+    - name: Download and Extract Ahk2Exe Binary File
       run: |
-        wget https://www.autohotkey.com/download/ahk.zip
-        unzip ahk.zip -d ahk
-        chmod +x ahk/AutoHotkeyU64.exe
-        echo 'wine ahk/AutoHotkeyU64.exe %*' > ahk/AutoHotkeyU64
-        chmod +x ahk/AutoHotkeyU64
-        sudo mv ahk/AutoHotkeyU64 /usr/local/bin
-
-    - name: Install Ahk2Exe
+        # Download AutoHotkey zip file.
+        Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk.zip" -OutFile "ahk.zip"
+        # Extract it.
+        Expand-Archive -Path "ahk.zip" -DestinationPath "ahk"
+        
+    - name: Download and Extract Autohotkey v2 Binary File
       run: |
-        wget https://www.autohotkey.com/download/ahk-v2.zip
-        unzip ahk-v2.zip -d ahk-v2
-        chmod +x ahk-v2/Compiler/Ahk2Exe.exe
-        echo 'wine ahk-v2/Compiler/Ahk2Exe.exe $*' > ahk-v2/Compiler/Ahk2Exe
-        chmod +x ahk-v2/Compiler/Ahk2Exe
-        sudo mv ahk-v2/Compiler/Ahk2Exe /usr/local/bin
-
+        # Download AutoHotkey zip file.
+        Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk-v2.zip" -OutFile "ahk-v2.zip"
+        # Extract it.
+        Expand-Archive -Path "ahk-v2.zip" -DestinationPath "ahk-v2"
+        
     - name: Compile Autohotkey Script
       run: |
-        scriptPathIn="VideoDownloader.ahk"
-        scriptPathOut="VideoDownloader.exe"
+        # Set the paths to execute more easily.
+        $scriptPathIn = "VideoDownloader.ahk"
+        $scriptPathOut = "VideoDownloader.exe"
         
-        AutoHotkeyU32 $scriptPathIn
-        
-    - name: Set environment for github-release
-      run: |
-        echo ::set-env name=RELEASE_TAG::"${{ github.ref }}"
-        echo ::set-env name=RELEASE_NAME::"Release ${{ github.ref }}"
+        # Compile the script.
+        & ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey32.exe" /silent
 
-    - name: Upload Executable to Release
-      uses: meeDamian/github-release@2.0
+    - name: Upload Executable
+      uses: actions/upload-artifact@v2
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        name: VideoDownloader
+        path: VideoDownloader.exe
+        
+    - name: Upload Executable to Release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ env.RELEASE_TAG }}
         name: ${{ env.RELEASE_NAME }}
-        files: "VideoDownloader.exe"
-
-    - name: Cleanup
-      run: |
-        rm VideoDownloader.exe
+        file: "VideoDownloader.exe"
