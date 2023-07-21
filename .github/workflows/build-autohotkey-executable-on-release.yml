@@ -1,4 +1,4 @@
-name: Create new Release and Attach Autohotkey Execuable
+name: Create new Release and Attach Autohotkey Executable
 
 on:
   push:
@@ -61,7 +61,7 @@ jobs:
     - name: Upload Executable Artifact as Asset
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release_id.outputs.upload_url }}
         asset_path: VideoDownloader.exe
