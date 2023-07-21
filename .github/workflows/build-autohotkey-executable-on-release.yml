@@ -1,10 +1,14 @@
-name: Create new Release and Attach Autohotkey Executable
+name: Create new GitHub Pre-release and Attach Autohotkey Executable
 
 on:
   push:
-    branches: "new-release"
+    branches:
+      - development
+        tags: 'v*'
   pull_request:
-    branches: "new-release"
+    branches:
+      - development
+        tags: 'v*'
 
 jobs:
   build:
@@ -21,22 +25,22 @@ jobs:
         Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk.zip" -OutFile "ahk.zip"
         # Extract it.
         Expand-Archive -Path "ahk.zip" -DestinationPath "ahk"
-        
+
     - name: Download and Extract Autohotkey v2 Binary File
       run: |
         # Download AutoHotkey zip file.
         Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk-v2.zip" -OutFile "ahk-v2.zip"
         # Extract it.
         Expand-Archive -Path "ahk-v2.zip" -DestinationPath "ahk-v2"
-        
+
     - name: Compile Autohotkey Script
       run: |
         # Set the paths to execute more easily.
         $scriptPathIn = "VideoDownloader.ahk"
         $scriptPathOut = "VideoDownloader.exe"
-        
+
         # Compile the script.
-        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey32.exe" /silent
+        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
 
     - name: Upload Executable as Artifact
       uses: actions/upload-artifact@v2
@@ -46,18 +50,22 @@ jobs:
 
   create_release:
     needs: build
-    name: Create new Release
-    runs-on: windows-latest
-  
+    runs-on: ubuntu-latest
+
     steps:
-    - name: Release Creation
-      id: create_release_id
-      uses: action/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
+    - name: Download Executable Artifact
+      uses: actions/download-artifact@v3
       with:
-        tag_name: ${{ github.run_number}}
-        release_name: Release ${{ github.run_number}} 
+        filename: VideoDownloader.exe
+
+    - name: Create new GitHub Release
+      id: create_release_id
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: Pre-${{ github.run_number }}
+        release_name: Pre-release ${{ github.run_number }}
 
     - name: Upload Executable Artifact as Asset
       uses: actions/upload-release-asset@v1
@@ -65,6 +73,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release_id.outputs.upload_url }}
-        asset_path: VideoDownloader.exe
-        asset_name: VideoDownloader (v ${{ github.run_number}})
+        asset_path: ./VideoDownloader.exe
+        asset_name: VideoDownloader(v${{ github.run_number }}).exe
         asset_content_type: application/executable
