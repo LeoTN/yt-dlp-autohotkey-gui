@@ -11,7 +11,7 @@ on:
       - development
 
 env:
-  FinalExecutableName: VideoDownloader(development-beta ${{ github.run_number }}).exe
+  FINAL_EXECUTABLE_NAME: VideoDownloader(development-beta ${{ github.run_number }}).exe
 
 jobs:
   build:
@@ -40,16 +40,17 @@ jobs:
       run: |
         # Set the paths to execute more easily.
         $scriptPathIn = "VideoDownloader.ahk"
-        $scriptPathOut = $FinalExecutableName
+        $scriptPathOut = $FINAL_EXECUTABLE_NAME
 
         # Compile the script.
         ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
+        echo The executable will be called $FINAL_EXECUTABLE_NAME
 
     - name: Upload Executable as Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: $FinalExecutableName
-        path: $FinalExecutableName
+        name: $FINAL_EXECUTABLE_NAME
+        path: $FINAL_EXECUTABLE_NAME
 
   create_release:
     name: Download Executable Artifact and Create Pre-release
@@ -65,20 +66,20 @@ jobs:
     - name: Download Executable Artifact
       uses: actions/download-artifact@v3
       with:
-        name: $FinalExecutableName
-        path: $FinalExecutableName
+        name: $FINAL_EXECUTABLE_NAME
+        path: $FINAL_EXECUTABLE_NAME
 
     - name: Upload Renamed Executable as Artifact for Release
       uses: actions/upload-artifact@v2
       with:
-        name: $FinalExecutableName
-        path: $FinalExecutableName
+        name: $FINAL_EXECUTABLE_NAME
+        path: $FINAL_EXECUTABLE_NAME
 
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        artifacts: $FinalExecutableName
+        artifacts: $FINAL_EXECUTABLE_NAME
         artifactContentType: application/executable
         body: "This is the latest beta pre release. May be changed in the future."
         generateReleaseNotes: true
