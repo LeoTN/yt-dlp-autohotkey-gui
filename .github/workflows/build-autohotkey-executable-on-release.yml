@@ -11,7 +11,7 @@ on:
       - 'development'
 
 env:
-  FINAL_EXECUTABLE_NAME: VideoDownloader(development-${{ github.run_number }}).exe
+  FINAL_EXECUTABLE_NAME: VideoDownloader[development-build-${{ github.run_number }}].exe
 
 jobs:
   build:
