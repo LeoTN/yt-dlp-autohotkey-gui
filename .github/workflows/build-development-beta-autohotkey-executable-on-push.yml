@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - 'development'
-  pull_request:
-    branches:
-      - 'development'
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader[development-build-${{ github.run_number }}].exe
