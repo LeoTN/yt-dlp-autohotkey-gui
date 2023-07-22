@@ -69,11 +69,14 @@ jobs:
       id: "rename_executable_id"
       run: |
         # Set the old and new file names.
-        $oldName = "VideoDownloader(development-beta).exe"
-        $newName = "VideoDownloader(development-beta ${{ github.run_number }}).exe"
+        oldFileName = "VideoDownloader(development-beta).exe"
+        newFileName = "VideoDownloader(development-beta ${{ github.run_number }}).exe"
 
         # Rename the file.
-        Rename-Item -Path $oldName -NewName $newName
+        mv "$oldFileName" "$newFileName"
+
+        # Export the new file name to be used in the next step.
+        echo "::set-output name=newFileName::$newFileName"
 
     - name: Upload Renamed Executable as Artifact for Release
       uses: actions/upload-artifact@v2
