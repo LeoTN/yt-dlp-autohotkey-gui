@@ -71,12 +71,6 @@ jobs:
       with:
         name: ${{ env.FINAL_EXECUTABLE_NAME }}
 
-    - name: Upload Renamed Executable as Artifact for Release
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{ env.FINAL_EXECUTABLE_NAME }}
-        path: ${{steps.download_artifact_id.outputs.download-path}}/${{ env.FINAL_EXECUTABLE_NAME }}
-
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
