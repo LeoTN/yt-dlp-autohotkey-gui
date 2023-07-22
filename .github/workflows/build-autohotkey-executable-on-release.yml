@@ -70,7 +70,6 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ${{ env.FINAL_EXECUTABLE_NAME }}
-        path: ${{ env.FINAL_EXECUTABLE_NAME }}
 
     - name: Upload Renamed Executable as Artifact for Release
       uses: actions/upload-artifact@v2
