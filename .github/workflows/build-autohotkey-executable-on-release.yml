@@ -11,7 +11,7 @@ on:
       - development
 
 env:
-  FINAL_EXECUTABLE_NAME: VideoDownloader(development-${{ github.ref }}).exe
+  FINAL_EXECUTABLE_NAME: VideoDownloader(development-${{ github.run_number }}).exe
 
 jobs:
   build:
@@ -88,5 +88,5 @@ jobs:
         makeLatest: false
         prerelease: true
         removeArtifacts: true
-        name: "latest-development-beta-pre-release[${{ github.ref }}]"
+        name: "latest-development-beta-pre-release[${{ github.run_number }}]"
         tag: "latest-development-beta"
