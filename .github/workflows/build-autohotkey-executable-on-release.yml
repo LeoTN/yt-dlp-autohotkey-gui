@@ -70,10 +70,6 @@ jobs:
         name: VideoDownloader.exe
         path: VideoDownloader.exe
 
-    - name: Display structure of downloaded files
-      run: ls -R
-      working-directory: executables
-
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
