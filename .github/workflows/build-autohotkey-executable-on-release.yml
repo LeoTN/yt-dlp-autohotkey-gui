@@ -5,13 +5,10 @@ on:
     branches:
       - development
     tags:
-      - "v*"
+      - 'v*'
   pull_request:
     branches:
       - development
-
-env:
-  FINAL_EXECUTABLE_NAME: VideoDownloader(development-${{ GITHUB_REF }}).exe
 
 jobs:
   build:
@@ -22,7 +19,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Download and Extract Autohotkey Compiler
+    - name: Download and Extract Ahk2Exe Binary File
       run: |
         # Set variables
         $ahkZipURL = "https://www.autohotkey.com/download/ahk.zip"
@@ -42,17 +39,16 @@ jobs:
       run: |
         # Set the paths to execute more easily.
         $scriptPathIn = "VideoDownloader.ahk"
-        $scriptPathOut = $env:FINAL_EXECUTABLE_NAME
+        $scriptPathOut = "VideoDownloader(development-beta).exe"
 
         # Compile the script.
-        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
-        echo The executable will be called $env:FINAL_EXECUTABLE_NAME
+        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "$env:GITHUB_WORKSPACE\$ahkV2Folder\AutoHotkey64.exe" /silent
 
     - name: Upload Executable as Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: $env:FINAL_EXECUTABLE_NAME
-        path: $env:FINAL_EXECUTABLE_NAME
+        name: VideoDownloader(development-beta).exe"
+        path: VideoDownloader(development-beta).exe"
 
   create_release:
     name: Download Executable Artifact and Create Pre-release
@@ -68,21 +64,20 @@ jobs:
     - name: Download Executable Artifact
       uses: actions/download-artifact@v3
       with:
-        name: $FINAL_EXECUTABLE_NAME
-        path: $FINAL_EXECUTABLE_NAME
+        name: VideoDownloader(development-beta).exe"
 
-    - name: Upload Renamed Executable as Artifact for Release
+    - name: Upload Executable as Artifact for Release
       uses: actions/upload-artifact@v2
       with:
-        name: $FINAL_EXECUTABLE_NAME
-        path: $FINAL_EXECUTABLE_NAME
+        name: VideoDownloader(development-beta).exe"
+        path: VideoDownloader(development-beta).exe"
 
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        artifacts: $FINAL_EXECUTABLE_NAME
-        artifactContentType: application/executable
+        artifacts: "VideoDownloader.exe"
+        artifactContentType: application/gzip
         body: "This is the latest beta pre release. May be changed in the future."
         generateReleaseNotes: true
         makeLatest: false
