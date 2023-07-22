@@ -3,12 +3,12 @@ name: Create new GitHub Pre-release and Attach Autohotkey Executable
 on:
   push:
     branches:
-      - development
+      - 'development'
     tags:
-      - "v*"
+      - 'v**'
   pull_request:
     branches:
-      - development
+      - 'development'
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader(development-${{ github.run_number }}).exe
