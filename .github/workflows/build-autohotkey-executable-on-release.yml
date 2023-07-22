@@ -12,7 +12,6 @@ on:
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader(development-${{ github.run_number }}).exe
-  WORKSPACE_PATH: $GITHUB_WORKSPACE
 
 jobs:
   build:
@@ -53,7 +52,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: ${{ env.FINAL_EXECUTABLE_NAME }}
-        path: ${{ env.WORKSPACE_PATH }}/${{ env.FINAL_EXECUTABLE_NAME }}
+        path: ${{ env.FINAL_EXECUTABLE_NAME }}
 
   create_release:
     name: Download Executable Artifact and Create Pre-release
@@ -65,12 +64,25 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
-    
+     
+    - name: Download Executable Artifact
+      id: download_artifact_id
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.FINAL_EXECUTABLE_NAME }}
+        path: ${{ env.FINAL_EXECUTABLE_NAME }}
+
+    - name: Upload Renamed Executable as Artifact for Release
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.FINAL_EXECUTABLE_NAME }}
+        path: ${{steps.download_artifact_id.outputs.download-path}}/${{ env.FINAL_EXECUTABLE_NAME }}
+
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        artifacts: ${{ env.WORKSPACE_PATH }}/${{ env.FINAL_EXECUTABLE_NAME }}
+        artifacts: ${{steps.download_artifact_id.outputs.download-path}}/${{ env.FINAL_EXECUTABLE_NAME }}
         artifactContentType: application/executable
         body: "This is the latest beta pre release. May be changed in the future."
         generateReleaseNotes: true
