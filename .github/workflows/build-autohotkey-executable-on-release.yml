@@ -65,17 +65,27 @@ jobs:
         name: VideoDownloaderExecutable
         path: VideoDownloader(development-beta).exe
 
-    - name: Preparing Artifact for Release
+    - name: Rename Executable
+      id: "rename_executable_id"
+      run: |
+        # Set the old and new file names.
+        $oldName = "VideoDownloader(development-beta).exe"
+        $newName = "VideoDownloader(development-beta ${{ github.run_number }}).exe"
+
+        # Rename the file.
+        Rename-Item -Path $oldName -NewName $newName
+
+    - name: Upload Renamed Executable as Artifact for Release
       uses: actions/upload-artifact@v2
       with:
-        name: VideoDownloaderExecutable
-        path: VideoDownloader(development-beta).exe
+        name: ${{ steps.rename_executable_id.outputs.newFileName }}
+        path: ${{ steps.rename_executable_id.outputs.newFileName }}
 
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        artifacts: "VideoDownloader(development-beta).exe"
+        artifacts: ${{ steps.rename_executable_id.outputs.newFileName }}
         artifactContentType: application/executable
         body: "This is the latest beta pre release. May be changed in the future."
         generateReleaseNotes: true
