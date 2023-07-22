@@ -19,6 +19,7 @@ jobs:
     - name: Set Global Variable
       run: |
         echo "FinaleExecutableName=VideoDownloader(development-beta ${{ github.run_number }}).exe" >> $GITHUB_ENV
+        echo The file will be called : $FinaleExecutableName
 
   build:
     name: Build and Upload Executable Artifact
@@ -55,7 +56,7 @@ jobs:
     - name: Upload Executable as Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: VideoDownloaderExecutable
+        name: $FinaleExecutableName
         path: $FinaleExecutableName
 
   create_release:
@@ -72,13 +73,13 @@ jobs:
     - name: Download Executable Artifact
       uses: actions/download-artifact@v3
       with:
-        name: VideoDownloaderExecutable
+        name: $FinaleExecutableName
         path: $FinaleExecutableName
 
     - name: Upload Renamed Executable as Artifact for Release
       uses: actions/upload-artifact@v2
       with:
-        name: VideoDownloaderExecutable
+        name: $FinaleExecutableName
         path: $FinaleExecutableName
 
     - name: Create Release
