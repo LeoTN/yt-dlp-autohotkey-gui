@@ -45,7 +45,7 @@ jobs:
     - name: Upload Executable as Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: VideoDownloader.exe
+        name: VideoDownloaderExecutable
         path: VideoDownloader.exe
 
   create_release:
@@ -62,14 +62,21 @@ jobs:
     - name: Download Executable Artifact
       uses: actions/download-artifact@v3
       with:
-        name: VideoDownloader.exe
+        name: VideoDownloaderExecutable
+        path: VideoDownloader(development-beta).exe
+
+    - name: Preparing Artifact for Release
+      uses: actions/upload-artifact@v2
+      with:
+        name: VideoDownloaderExecutable
+        path: VideoDownloader(development-beta).exe
 
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        artifacts: "${RUNNER_TEMP}/_github_home/_workspace/${GITHUB_RUN_ID}/VideoDownloader.exe"
-        artifactContentType: application/gzip
+        artifacts: "VideoDownloader(development-beta).exe"
+        artifactContentType: application/executable
         body: "This is the latest beta pre release. May be changed in the future."
         generateReleaseNotes: true
         makeLatest: false
