@@ -82,4 +82,4 @@ jobs:
         removeArtifacts: true
         draft: true
         name: "latest-main-release[${{ github.run_number }}]"
-        tag: "latest-main-release[${{ github.run_number }}]"
+        tag: "latest-main-release-${{ github.run_number }}]"
