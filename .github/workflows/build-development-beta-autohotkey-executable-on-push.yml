@@ -1,0 +1,84 @@
+name: Create new GitHub Pre-release and Attach Autohotkey Executable
+
+on:
+  push:
+    branches:
+      - 'development'
+  pull_request:
+    branches:
+      - 'development'
+
+env:
+  FINAL_EXECUTABLE_NAME: VideoDownloader[development-build-${{ github.run_number }}].exe
+
+jobs:
+  build:
+    name: Build and Upload Executable Artifact
+    runs-on: windows-2019
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Download and Extract Autohotkey Compiler
+      run: |
+        # Set variables
+        $ahkZipURL = "https://www.autohotkey.com/download/ahk.zip"
+        $ahkV2ZipURL = "https://www.autohotkey.com/download/ahk-v2.zip"
+        $ahkFolder = "ahk"
+        $ahkV2Folder = "ahk-v2"
+
+        # Download AutoHotkey zip files.
+        Invoke-WebRequest -Uri $ahkZipURL -OutFile "ahk.zip"
+        Invoke-WebRequest -Uri $ahkV2ZipURL -OutFile "ahk-v2.zip"
+
+        # Extract the files.
+        Expand-Archive -Path "ahk.zip" -DestinationPath $ahkFolder
+        Expand-Archive -Path "ahk-v2.zip" -DestinationPath $ahkV2Folder
+
+    - name: Compile Autohotkey Script
+      run: |
+        # Set the paths to execute more easily.
+        $scriptPathIn = "VideoDownloader.ahk"
+        $scriptPathOut = $env:FINAL_EXECUTABLE_NAME
+
+        # Compile the script.
+        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
+        echo The executable will be called $env:FINAL_EXECUTABLE_NAME
+
+    - name: Upload Executable as Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.FINAL_EXECUTABLE_NAME }}
+        path: ${{ env.FINAL_EXECUTABLE_NAME }}
+
+  create_release:
+    name: Download Executable Artifact and Create Pre-release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+     
+    - name: Download Executable Artifact
+      id: download_artifact_id
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.FINAL_EXECUTABLE_NAME }}
+
+    - name: Create Pre-release
+      uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        artifacts: ${{steps.download_artifact_id.outputs.download-path}}/${{ env.FINAL_EXECUTABLE_NAME }}
+        artifactContentType: application/executable
+        body: "This is the latest beta pre release. May be changed in the future."
+        generateReleaseNotes: true
+        makeLatest: false
+        prerelease: true
+        removeArtifacts: true
+        name: "latest-development-beta-pre-release[${{ github.run_number }}]"
+        tag: "latest-development-beta"
