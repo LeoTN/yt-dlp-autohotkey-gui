@@ -64,17 +64,11 @@ jobs:
       with:
         name: VideoDownloader.exe
 
-    - name: Upload Executable as Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: VideoDownloader.exe
-        path: VideoDownloader.exe
-
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        artifacts: "VideoDownloader.exe"
+        artifacts: "home/runner/work/yt-dlp-autohotkey-gui/yt-dlp-autohotkey-gui/VideoDownloader.exe"
         artifactContentType: application/gzip
         body: "This is the latest beta pre release. May be changed in the future."
         generateReleaseNotes: true
