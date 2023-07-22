@@ -11,7 +11,7 @@ on:
       - development
 
 env:
-  FINAL_EXECUTABLE_NAME: VideoDownloader(development-beta-${{ github.run_number }}).exe
+  FINAL_EXECUTABLE_NAME: VideoDownloader(development-${{ GITHUB_REF }}).exe
 
 jobs:
   build:
