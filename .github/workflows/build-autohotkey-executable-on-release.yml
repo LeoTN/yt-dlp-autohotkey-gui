@@ -69,8 +69,8 @@ jobs:
       id: "rename_executable_id"
       run: |
         # Set the old and new file names.
-        oldFileName = "VideoDownloader(development-beta).exe"
-        newFileName = "VideoDownloader(development-beta ${{ github.run_number }}).exe"
+        oldFileName="VideoDownloader(development-beta).exe"
+        newFileName="VideoDownloader(development-beta ${{ github.run_number }}).exe"
 
         # Rename the file.
         mv "$oldFileName" "$newFileName"
