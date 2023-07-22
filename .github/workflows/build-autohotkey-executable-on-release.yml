@@ -11,8 +11,18 @@ on:
       - development
 
 jobs:
+  set_global_variables:
+    name: Set Global Variable(s)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set Global Variable
+      run: |
+        echo "FinaleExecutableName=VideoDownloader(development-beta ${{ github.run_number }}).exe" >> $GITHUB_ENV
+
   build:
     name: Build and Upload Executable Artifact
+    needs: set_global_variables
     runs-on: windows-latest
 
     steps:
@@ -37,7 +47,7 @@ jobs:
       run: |
         # Set the paths to execute more easily.
         $scriptPathIn = "VideoDownloader.ahk"
-        $scriptPathOut = "VideoDownloader.exe"
+        $scriptPathOut = $FinaleExecutableName
 
         # Compile the script.
         ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
@@ -46,7 +56,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: VideoDownloaderExecutable
-        path: VideoDownloader.exe
+        path: $FinaleExecutableName
 
   create_release:
     name: Download Executable Artifact and Create Pre-release
@@ -63,32 +73,19 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: VideoDownloaderExecutable
-        path: VideoDownloader(development-beta).exe
-
-    - name: Rename Executable
-      id: "rename_executable_id"
-      run: |
-        # Set the old and new file names.
-        oldFileName="VideoDownloader(development-beta).exe"
-        newFileName="VideoDownloader(development-beta ${{ github.run_number }}).exe"
-
-        # Rename the file.
-        mv "$oldFileName" "$newFileName"
-
-        # Export the new file name to be used in the next step.
-        echo "::set-output name=newFileName::$newFileName"
+        path: $FinaleExecutableName
 
     - name: Upload Renamed Executable as Artifact for Release
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ steps.rename_executable_id.outputs.newFileName }}
-        path: ${{ steps.rename_executable_id.outputs.newFileName }}
+        name: VideoDownloaderExecutable
+        path: $FinaleExecutableName
 
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        artifacts: ${{ steps.rename_executable_id.outputs.newFileName }}
+        artifacts: $FinaleExecutableName
         artifactContentType: application/executable
         body: "This is the latest beta pre release. May be changed in the future."
         generateReleaseNotes: true
