@@ -51,8 +51,8 @@ jobs:
     - name: Upload Executable as Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: $env:FINAL_EXECUTABLE_NAME
-        path: $env:FINAL_EXECUTABLE_NAME
+        name: $FINAL_EXECUTABLE_NAME
+        path: $FINAL_EXECUTABLE_NAME
 
   create_release:
     name: Download Executable Artifact and Create Pre-release
