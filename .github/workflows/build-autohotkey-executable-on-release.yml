@@ -52,7 +52,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: ${{ env.FINAL_EXECUTABLE_NAME }}
-        path: ${{ env.FINAL_EXECUTABLE_NAME }}
+        path: $GITHUB_WORKSPACE/${{ env.FINAL_EXECUTABLE_NAME }}
 
   create_release:
     name: Download Executable Artifact and Create Pre-release
@@ -64,24 +64,12 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
-      
-    - name: Download Executable Artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: ${{ env.FINAL_EXECUTABLE_NAME }}
-        path: ${{ env.FINAL_EXECUTABLE_NAME }}
-
-    - name: Upload Renamed Executable as Artifact for Release
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{ env.FINAL_EXECUTABLE_NAME }}
-        path: ${{ env.FINAL_EXECUTABLE_NAME }}
-
+    
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        artifacts: ${{ env.FINAL_EXECUTABLE_NAME }}
+        artifacts: $GITHUB_WORKSPACE/${{ env.FINAL_EXECUTABLE_NAME }}
         artifactContentType: application/executable
         body: "This is the latest beta pre release. May be changed in the future."
         generateReleaseNotes: true
