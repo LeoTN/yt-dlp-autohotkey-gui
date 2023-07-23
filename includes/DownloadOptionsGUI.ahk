@@ -763,6 +763,12 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
     booleanDefault := pBooleanDefault
     presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
     presetFileArray := handleGUI_refreshPresetArray()
+
+    ; In case the user wants to accidentally create a preset with an empty name.
+    If (presetName = "")
+    {
+        Return MsgBox("Please provide a name for your preset.", "Warning !", "O Icon! T2")
+    }
     Loop (presetFileArray.Length)
     {
         ; Searches for an existing default file.
