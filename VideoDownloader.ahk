@@ -37,7 +37,7 @@ F6::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below.
-        handleGUI_toolTipManager()
+        uninstallGUI.Show("w400 h200")
     }
 }
 
@@ -107,6 +107,7 @@ onInit()
     checkBlackListFile("createBlackListFile")
     Hotkey_onInit()
     mainGUI_onInit()
+    uninstallGUI_onInit()
     optionsGUI_onInit()
 }
 
