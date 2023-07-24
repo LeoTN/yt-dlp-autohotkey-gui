@@ -94,6 +94,26 @@ Hotkey_openMainGUI()
     }
 }
 
+; Hotkey support function to open the script uninstall GUI.
+Hotkey_openUninstallGUI()
+{
+    static flipflop := true
+    If (!WinExist("ahk_id " . uninstallGUI.Hwnd))
+    {
+        uninstallGUI.Show("w400 h200")
+        flipflop := false
+    }
+    Else If (flipflop = false && WinActive("ahk_id " . uninstallGUI.Hwnd))
+    {
+        uninstallGUI.Hide()
+        flipflop := true
+    }
+    Else
+    {
+        WinActivate("ahk_id " . uninstallGUI.Hwnd)
+    }
+}
+
 ; Hotkey support function to open the script download options GUI.
 Hotkey_openOptionsGUI()
 {

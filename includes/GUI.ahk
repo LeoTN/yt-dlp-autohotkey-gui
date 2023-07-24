@@ -93,6 +93,9 @@ createMainGUI()
     optionsMenu.SetIcon("Terminate Script", "shell32.dll", 28)
     optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())
     optionsMenu.SetIcon("Reload Script", "shell32.dll", 207)
+    optionsMenu.Add()
+    optionsMenu.Add("Uninstall script", (*) => Hotkey_openUninstallGUI())
+    optionsMenu.SetIcon("Uninstall script", "shell32.dll", 245)
 
     helpMenu := Menu()
     helpMenu.Add("This repository (yt-dlp-autohotkey-gui)",
@@ -121,21 +124,23 @@ createUninstallGUI()
     uninstallUntilNextTimeText := uninstallGUI.Add("Text", "xp+10 yp+10 ", "Please select your uninstall options below.")
     uninstallEverythingCheckbox := uninstallGUI.Add("Checkbox", "yp+20 Checked", "Remove everything")
     uninstallPythonCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Uninstall python")
-    uninstallYTDLPCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Uninstall yt-lp")
+    uninstallYTDLPCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Uninstall yt-dlp")
     uninstallAllCreatedFilesCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Delete all script files")
     uninstallAllDownloadedFilesCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Delete all downloaded files")
 
     uninstallStartButton := uninstallGUI.Add("Button", "yp+30 w60", "Uninstall")
-    uninstallCancelButton := uninstallGUI.Add("Button", "xp+65 w60", "Cancel")
-    uninstalOpenGitHubIssuesButton := uninstallGUI.Add("Button", "xp+65", "Open GitHub issues")
+    uninstallCancelButton := uninstallGUI.Add("Button", "xp+65 w60 Default", "Cancel")
+    uninstallOpenGitHubIssuesButton := uninstallGUI.Add("Button", "xp+65", "Open GitHub issues")
     uninstallProgressBar := uninstallGUI.Add("Progress", "xp+120 yp+3")
     uninstallStatusBar := uninstallGUI.Add("StatusBar", , "Until next time :')")
 
     uninstallProvideReasonEdit := uninstallGUI.Add("Edit", "xp-41 yp-130 r8 w160",
         "Provide feedback (optional)")
 
-    uninstallCancelButton.OnEvent("Click", (*) => uninstallGUI.Hide())
     uninstallEverythingCheckbox.OnEvent("Click", (*) => handleUninstallGUI_Checkboxes())
+    uninstallStartButton.OnEvent("Click", (*) =>) ; Uninstall function in the future.
+    uninstallCancelButton.OnEvent("Click", (*) => uninstallGUI.Hide())
+    uninstallOpenGitHubIssuesButton.OnEvent("Click", (*) => Run("https://github.com/LeoTN/yt-dlp-autohotkey-gui/issues"))
 }
 
 /*
@@ -295,6 +300,7 @@ handleMainGUI_openDownloadLocation()
     }
 }
 
+; Disables all other options and marks them as true.
 handleUninstallGUI_Checkboxes()
 {
     If (uninstallEverythingCheckbox.Value = 1)

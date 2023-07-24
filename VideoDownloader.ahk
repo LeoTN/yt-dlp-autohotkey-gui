@@ -37,7 +37,6 @@ F6::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below.
-        uninstallGUI.Show("w400 h200")
     }
 }
 
