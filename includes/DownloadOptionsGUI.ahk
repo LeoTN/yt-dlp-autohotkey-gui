@@ -65,40 +65,40 @@ createDownloadOptionsGUI()
 
     presetSelectionGroupBox := downloadOptionsGUI.Add("GroupBox", "xp+28 yp-371 w165 R3.2", "Presets")
 
-    selectAndAddPresetsComboBox := downloadOptionsGUI.Add("ComboBox", "xp+10 yp+20 w145", handleGUI_refreshPresetArray())
+    selectAndAddPresetsComboBox := downloadOptionsGUI.Add("ComboBox", "xp+10 yp+20 w145", handleDownloadOptionsGUI_refreshPresetArray())
     savePresetButton := downloadOptionsGUI.Add("Button", "yp+30", "Save Preset")
     loadPresetButton := downloadOptionsGUI.Add("Button", "xp+75", "Load Preset")
 
-    ignoreErrorsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    abortOnErrorCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    ignoreAllOptionsCheckbox.OnEvent("Click", (*) => handleGUI_Checkbox_ignoreAllOptions())
-    hideDownloadCommandPromptCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    clearURLFileAfterDownloadCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    enableFastDownloadModeCheckbox.OnEvent("Click", (*) => handleGUI_Checkbox_fastDownload())
-    higherRetryAmountCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    downloadVideoDescriptionCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    downloadVideoCommentsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    downloadVideoThumbnailCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    downloadVideoSubtitlesCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    downloadWholePlaylistsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    useDownloadArchiveCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    useTextFileForURLsCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes()
+    ignoreErrorsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    abortOnErrorCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    ignoreAllOptionsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkbox_ignoreAllOptions())
+    hideDownloadCommandPromptCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    clearURLFileAfterDownloadCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    enableFastDownloadModeCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkbox_fastDownload())
+    higherRetryAmountCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    downloadVideoDescriptionCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    downloadVideoCommentsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    downloadVideoThumbnailCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    downloadVideoSubtitlesCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    downloadWholePlaylistsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    useDownloadArchiveCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    useTextFileForURLsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes()
         ; Most likely you dont want to download a whole playlist when entering a single URL.
-            handleGUI_Checkbox_DownloadWholePlaylist())
-    useDefaultDownloadLocationCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    downloadAudioOnlyCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    alwaysHighestQualityBothCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    prioritiseVideoQualityCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    prioritiseAudioQualityCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    terminateScriptAfterDownloadCheckbox.OnEvent("Click", (*) => handleGUI_Checkboxes())
-    limitDownloadRateEdit.OnEvent("Change", (*) => handleGUI_InputFields())
-    customURLInputEdit.OnEvent("Change", (*) => handleGUI_InputFields())
-    customDownloadLocation.OnEvent("Focus", (*) => handleGUI_InputFields())
-    chooseVideoFormatDropDownList.OnEvent("Change", (*) => handleGUI_InputFields())
-    chooseAudioFormatDropDownList.OnEvent("Change", (*) => handleGUI_InputFields())
+            handleDownloadOptionsGUI_Checkbox_DownloadWholePlaylist())
+    useDefaultDownloadLocationCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    downloadAudioOnlyCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    alwaysHighestQualityBothCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    prioritiseVideoQualityCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    prioritiseAudioQualityCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    terminateScriptAfterDownloadCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    limitDownloadRateEdit.OnEvent("Change", (*) => handleDownloadOptionsGUI_InputFields())
+    customURLInputEdit.OnEvent("Change", (*) => handleDownloadOptionsGUI_InputFields())
+    customDownloadLocation.OnEvent("Focus", (*) => handleDownloadOptionsGUI_InputFields())
+    chooseVideoFormatDropDownList.OnEvent("Change", (*) => handleDownloadOptionsGUI_InputFields())
+    chooseAudioFormatDropDownList.OnEvent("Change", (*) => handleDownloadOptionsGUI_InputFields())
     startDownloadButton.OnEvent("Click", (*) => startDownload(buildCommandString()))
     cancelDownloadButton.OnEvent("Click", (*) => cancelDownload())
-    savePresetButton.OnEvent("Click", (*) => handleGUI_Button_savePreset_waitForSecondClick())
+    savePresetButton.OnEvent("Click", (*) => handleDownloadOptionsGUI_Button_savePreset_waitForSecondClick())
     loadPresetButton.OnEvent("Click", (*) => loadGUISettingsFromPreset(selectAndAddPresetsComboBox.Text))
 }
 
@@ -140,7 +140,7 @@ cancelDownload()
 }
 
 ; Function to react to changes made to any checkbox.
-handleGUI_Checkboxes()
+handleDownloadOptionsGUI_Checkboxes()
 {
     global commandString
 
@@ -448,8 +448,8 @@ handleGUI_Checkboxes()
     }
 }
 
-; Has to be excluded to avoid disabeling options everytime handleGUI_Checkboxes() is called.
-handleGUI_Checkbox_fastDownload()
+; Has to be excluded to avoid disabeling options everytime handleDownloadOptionsGUI_Checkboxes() is called.
+handleDownloadOptionsGUI_Checkbox_fastDownload()
 {
     Switch (enableFastDownloadModeCheckbox.Value)
     {
@@ -467,7 +467,7 @@ handleGUI_Checkbox_fastDownload()
             prioritiseAudioQualityCheckbox.Opt("-Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
             ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
-            handleGUI_Checkboxes()
+            handleDownloadOptionsGUI_Checkboxes()
         }
         Case 1:
         {
@@ -491,7 +491,7 @@ handleGUI_Checkbox_fastDownload()
     }
 }
 
-handleGUI_Checkbox_ignoreAllOptions()
+handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
 {
     Switch (ignoreAllOptionsCheckbox.Value)
     {
@@ -517,10 +517,10 @@ handleGUI_Checkbox_ignoreAllOptions()
             prioritiseAudioQualityCheckbox.Opt("-Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
             ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
-            handleGUI_Checkboxes()
+            handleDownloadOptionsGUI_Checkboxes()
             If (enableFastDownloadModeCheckbox.Value = 1)
             {
-                handleGUI_Checkbox_fastDownload()
+                handleDownloadOptionsGUI_Checkbox_fastDownload()
             }
         }
         Case 1:
@@ -549,7 +549,7 @@ handleGUI_Checkbox_ignoreAllOptions()
 }
 
 ; Function that deals with changes made to any input field.
-handleGUI_InputFields()
+handleDownloadOptionsGUI_InputFields()
 {
     global commandString
     If (limitDownloadRateEdit.Value != 0)
@@ -573,7 +573,7 @@ handleGUI_InputFields()
             ; Checks the default download location checkbox so that the user loses focus on the input field.
             ; Therefore he can click on it again and the "focus" event will be triggered.
             useDefaultDownloadLocationCheckbox.Value := 1
-            handleGUI_Checkboxes()
+            handleDownloadOptionsGUI_Checkboxes()
         }
         Else
         {
@@ -588,7 +588,7 @@ handleGUI_InputFields()
     }
 }
 
-handleGUI_Checkbox_DownloadWholePlaylist()
+handleDownloadOptionsGUI_Checkbox_DownloadWholePlaylist()
 {
     If (useTextFileForURLsCheckbox.Value = 0)
     {
@@ -631,8 +631,8 @@ buildCommandString()
     }
     If (ignoreAllOptionsCheckbox.Value != 1)
     {
-        handleGUI_Checkboxes()
-        handleGUI_InputFields()
+        handleDownloadOptionsGUI_Checkboxes()
+        handleDownloadOptionsGUI_InputFields()
     }
     ; This makes sure that the output file does not contain any weird letters.
     commandString .= '--output "%(title)s.%(ext)s" '
@@ -646,7 +646,7 @@ buildCommandString()
 
 ; When called it will create and maintain several arrays in order to provide tool tip information for user.
 ; Can be called with a set timer to react upon the user hovering over a GUI element.
-handleGUI_toolTipManager(pBooleanRefresh := false)
+handleDownloadOptionsGUI_toolTipManager(pBooleanRefresh := false)
 {
     booleanRefresh := pBooleanRefresh
     static elementHWNDArray := []
@@ -669,12 +669,12 @@ handleGUI_toolTipManager(pBooleanRefresh := false)
     ; Waits for the download options GUI to appear.
     If (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 2) != 0)
     {
-        handleGUI_toolTipLoop(elementHWNDArray)
+        handleDownloadOptionsGUI_toolTipLoop(elementHWNDArray)
     }
 }
 
 ; When called checks if the mouse hovers over a GUI element and shows the specific tooltip.
-handleGUI_toolTipLoop(pElementHWNDArray)
+handleDownloadOptionsGUI_toolTipLoop(pElementHWNDArray)
 {
     elementHWNDArray := pElementHWNDArray
     ; Contains an individual tool tip for every control that requires one.
@@ -762,7 +762,13 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
     booleanTemporary := pBooleanTemporary
     booleanDefault := pBooleanDefault
     presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
-    presetFileArray := handleGUI_refreshPresetArray()
+    presetFileArray := handleDownloadOptionsGUI_refreshPresetArray()
+
+    ; In case the user wants to accidentally create a preset with an empty name.
+    If (presetName = "")
+    {
+        Return MsgBox("Please provide a name for your preset.", "Warning !", "O Icon! T2")
+    }
     Loop (presetFileArray.Length)
     {
         ; Searches for an existing default file.
@@ -873,7 +879,7 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
         }
         ; This ensures that the new added preset is visible in the combo box.
         selectAndAddPresetsComboBox.Delete()
-        selectAndAddPresetsComboBox.Add(handleGUI_refreshPresetArray())
+        selectAndAddPresetsComboBox.Add(handleDownloadOptionsGUI_refreshPresetArray())
         Return true
     }
 }
@@ -960,23 +966,23 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
     }
     If (ignoreAllOptionsCheckbox.Value = 1)
     {
-        handleGUI_Checkbox_ignoreAllOptions()
+        handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
     }
     Else If (enableFastDownloadModeCheckbox.Value = 1)
     {
-        handleGUI_Checkbox_fastDownload()
+        handleDownloadOptionsGUI_Checkbox_fastDownload()
     }
     ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
-    handleGUI_Checkboxes()
-    handleGUI_InputFields()
+    handleDownloadOptionsGUI_Checkboxes()
+    handleDownloadOptionsGUI_InputFields()
     ; This ensures that the preset list is updated in the combo box.
     selectAndAddPresetsComboBox.Delete()
-    selectAndAddPresetsComboBox.Add(handleGUI_refreshPresetArray())
+    selectAndAddPresetsComboBox.Add(handleDownloadOptionsGUI_refreshPresetArray())
     Return true
 }
 
 ; Returns an array to use for the preset combo box.
-handleGUI_refreshPresetArray()
+handleDownloadOptionsGUI_refreshPresetArray()
 {
     presetArray := []
     ; Scanns all preset files and fills the array with the file names.
@@ -992,7 +998,7 @@ handleGUI_refreshPresetArray()
     Return presetArray
 }
 
-handleGUI_Button_savePreset_waitForSecondClick()
+handleDownloadOptionsGUI_Button_savePreset_waitForSecondClick()
 {
     static click_amount := 0
     If (click_amount > 0)
