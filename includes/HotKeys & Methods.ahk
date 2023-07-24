@@ -862,7 +862,7 @@ uninstallScript()
         {
             Try
             {
-                FileMove(A_ScriptDir . "\files\download", A_ScriptDir . "\downloads_after_uninstall")
+                DirMove(A_ScriptDir . "\files\download", A_ScriptDir . "\downloads_after_uninstall", 1)
                 FileRecycle(A_ScriptDir . "\files")
             }
         }
