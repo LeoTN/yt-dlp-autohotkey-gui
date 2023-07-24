@@ -51,6 +51,9 @@ F7::
 ; Runs a list of commands when the script is launched.
 onInit()
 {
+    ; Checks the system for other already running instances of this script.
+    findProcessWithWildcard("VideoDownloader.exe")
+
     global ffmpegLocation := A_WorkingDir . "\files\library\ffmpeg.exe"
     global youTubeBackGroundLocation := A_WorkingDir . "\files\library\YouTubeBackground.jpg"
 

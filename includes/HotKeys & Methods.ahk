@@ -809,6 +809,70 @@ terminateScriptPrompt()
     }
 }
 
+; Tries to find an existing process via a wildcard.
+; Note : Currently only supports wildcards containing the
+; beginning of the wanted process.
+findProcessWithWildcard(pWildcard)
+{
+    wildcard := pWildcard
+    SplitPath(wildcard, , , &outExtension, &outNameNoExt)
+    allRunningProcessesNameArray := []
+    allRunningProcessesPathArray := []
+    ; Filles the array with all existing process names.
+    For Process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
+    {
+        allRunningProcessesNameArray.InsertAt(A_Index, Process.Name)
+        allRunningProcessesPathArray.InsertAt(A_Index, Process.CommandLine)
+    }
+    ; Traveres through every object to compare it with the wildcard.
+    For v in allRunningProcessesNameArray
+    {
+        ; For example if you are process called "VideoDownloader.development-build-6.exe" it
+        ; would be sufficient to search for "VideoDownloader.exe" as the [*]+ part allows an
+        ; undefined amount of characters to appear between the wildcard name and it's extension.
+        ; The condition below makes sure that it does not find the current instance of this script as a proces.
+        If (RegExMatch(v, outNameNoExt . ".*." . outExtension) != 0 && v != A_ScriptName)
+        {
+            tmp := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
+            result := MsgBox("There is currently another instance of this script running."
+                "`nName : [" . v . "]`nPath : [" . tmp . "]`nContinue at your own risk !"
+                "`nPress Try Again to terminate the other instance.", "Attention !", "CTC Icon! 262144 T15")
+
+            Switch (result)
+            {
+                Case "Continue":
+                    {
+                        ; Do nothing.
+                    }
+                Case "TryAgain":
+                    {
+                        Try
+                        {
+                            ProcessClose(v)
+                            If (ProcessWaitClose(v, 5) != 0)
+                            {
+                                Throw ("Could not close the other process")
+                            }
+                        }
+                        Catch
+                        {
+                            MsgBox("Could not close process :`n"
+                                v . "`nTerminating script.", "Error !", "O IconX T1.5")
+                            ExitApp()
+                        }
+                    }
+                Default:
+                    {
+                        MsgBox("Terminating script.", "Script status", "O Iconi T1.5")
+                        ExitApp()
+                    }
+                    ; Stops after the first match.
+                    Break
+            }
+        }
+    }
+}
+
 ; Steps to uninstall the script.
 uninstallScript()
 {
