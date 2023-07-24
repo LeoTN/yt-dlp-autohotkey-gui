@@ -56,7 +56,15 @@ onInit()
 
     If (!FileExist(ffmpegLocation))
     {
-        result := MsgBox("No library files detected.`n`nWould you like to run a complete setup?",
+        ; When these files are missing and the script is not compiled there is no option to install the files because they
+        ; are only stored in the script binary file.
+        If (A_IsCompiled = false)
+        {
+            MsgBox("You are using the a non compiled version of this script."
+                "`n`nPlease continue by using a compiled version to install.", "Warning !", "O Icon! 262144 T5")
+            ExitApp()
+        }
+        result := MsgBox("No library files detected.`n`nWould you like to run a complete setup ?",
             "youtube-dlp-autohotkey-gui setup", "OC Icon? 4096")
         Switch (result)
         {
@@ -108,6 +116,15 @@ onInit()
     mainGUI_onInit()
     uninstallGUI_onInit()
     optionsGUI_onInit()
+    ; Makes sure the script opens the uninstall GUI after restarting with admin rights.
+    If (FileExist(A_WorkingDir . "\NoPermissionsForUninstall.txt"))
+    {
+        Try
+        {
+            FileDelete(A_WorkingDir . "\NoPermissionsForUninstall.txt")
+        }
+        Hotkey_openUninstallGUI()
+    }
 }
 
 ; Guides the user through a bunch of prompts and helps to install the script.
@@ -125,16 +142,8 @@ setUp()
                 {
                     Try
                     {
-                        If (A_IsCompiled = true)
-                        {
-                            Run '*RunAs "' A_ScriptFullPath '" /restart'
-                            Return
-                        }
-                        Else
-                        {
-                            Run '*RunAs "' A_AhkPath '" /restart "' A_ScriptFullPath '"'
-                            Return
-                        }
+                        Run '*RunAs "' A_ScriptFullPath '" /restart'
+                        ExitApp()
                     }
                     MsgBox("Could not complete setup.`n`nTerminating script.", "Error !", "O IconX T1.5")
                     ExitApp()
@@ -345,7 +354,7 @@ setup_checkPythonVersion()
     ; This occures when the command does not achieve anything => python is not installed.
     If (FileRead(A_Temp . "\video_downloader_python_install_log.txt") = "")
     {
-        result := MsgBox("No valid PYTHON installation found.`n`nWould you like to install PYTHON now?",
+        result := MsgBox("No valid PYTHON installation found.`n`nWould you like to install PYTHON now ?",
             "Script setup status", "OC Iconi 4096")
         Switch (result)
         {
@@ -390,7 +399,7 @@ setup_checkPythonVersion()
             {
                 result := MsgBox("Outdated PYTHON installation detected.`n"
                     "Found : (Python " . pythonVersion . ")`nRequired : (" . minimumPythonVersion . " or higher)"
-                    "`nWould you like to update it?",
+                    "`nWould you like to update it ?",
                     "Script setup status", "OC Iconi 4096")
                 Switch (result)
                 {

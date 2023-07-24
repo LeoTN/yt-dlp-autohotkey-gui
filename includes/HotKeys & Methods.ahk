@@ -97,20 +97,38 @@ Hotkey_openMainGUI()
 ; Hotkey support function to open the script uninstall GUI.
 Hotkey_openUninstallGUI()
 {
-    static flipflop := true
-    If (!WinExist("ahk_id " . uninstallGUI.Hwnd))
+    If (A_IsCompiled = true)
     {
-        uninstallGUI.Show("w400 h200")
-        flipflop := false
-    }
-    Else If (flipflop = false && WinActive("ahk_id " . uninstallGUI.Hwnd))
-    {
-        uninstallGUI.Hide()
-        flipflop := true
+        ; Asks for administrative permissions to complete without interruption.
+        fullCommandLine := DllCall("GetCommandLine", "str")
+        If not (A_IsAdmin || RegExMatch(fullCommandLine, " /restart(?!\S)"))
+        {
+            FileAppend("Uninstall process", A_WorkingDir . "\NoPermissionsForUninstall.txt")
+            Run '*RunAs "' A_ScriptFullPath '" /restart'
+            ExitApp()
+            ExitApp()
+        }
+
+        static flipflop := true
+        If (!WinExist("ahk_id " . uninstallGUI.Hwnd))
+        {
+            uninstallGUI.Show("w400 h200")
+            flipflop := false
+        }
+        Else If (flipflop = false && WinActive("ahk_id " . uninstallGUI.Hwnd))
+        {
+            uninstallGUI.Hide()
+            flipflop := true
+        }
+        Else
+        {
+            WinActivate("ahk_id " . uninstallGUI.Hwnd)
+        }
     }
     Else
     {
-        WinActivate("ahk_id " . uninstallGUI.Hwnd)
+        MsgBox("You can only uninstall the script if"
+            "`n`nyou are using the compiled version.", "Error !", "O IconX T3")
     }
 }
 
@@ -732,6 +750,8 @@ reloadScriptPrompt()
         textField.Text := "The script has been reloaded."
         Sleep(100)
         Reload()
+        ExitApp()
+        ExitApp()
     }
 }
 
@@ -780,6 +800,90 @@ terminateScriptPrompt()
         ExitApp()
         ExitApp()
     }
+}
+
+; Steps to uninstall the script.
+uninstallScript()
+{
+    tmp1 := uninstallYTDLPCheckbox.Value
+    tmp2 := uninstallPythonCheckbox.Value
+    tmp3 := uninstallAllDownloadedFilesCheckbox.Value
+    tmp4 := uninstallAllCreatedFilesCheckbox.Value
+    uninstallProgressBarMaxValue := 0
+
+    result := MsgBox("Are you sure that you want to continue`n`nthe script removal process ?",
+        "Warning !", "YN Icon! 262144 T10")
+    If (result != "Yes")
+    {
+        Return
+    }
+    ; Sets the uninstall progress bar max value according to the select uninstall steps.
+    Loop (4)
+    {
+        uninstallProgressBarMaxValue += %"tmp" . A_Index% * 100
+    }
+    uninstallProgressBar.Opt("Range0-" . uninstallProgressBarMaxValue)
+    uninstallStartButton.Opt("+Disabled")
+    uninstallCancelButton.Opt("+Disabled")
+
+    ; Uninstalls dependencies and other stuff.
+    If (tmp1 = 1)
+    {
+        RunWait(A_ComSpec " /c pip uninstall yt-dlp")
+        uninstallProgressBar.Value += 100
+        uninstallStatusBar.SetText("Currently uninstalling yt-dlp...")
+    }
+    If (tmp2 = 1)
+    {
+        RunWait(A_ComSpec " /c winget uninstall python")
+        uninstallProgressBar.Value += 100
+        uninstallStatusBar.SetText("Currently uninstalling python...")
+    }
+    If (tmp3 = 1)
+    {
+        Try
+        {
+            FileRecycle(A_ScriptDir . "\files\download")
+            FileRecycle(readConfigFile("DOWNLOAD_PATH"))
+        }
+        uninstallProgressBar.Value += 100
+        uninstallStatusBar.SetText("Deleting downloaded files...")
+    }
+    If (tmp4 = 1)
+    {
+        If (tmp3 = true)
+        {
+            Try
+            {
+                FileRecycle(A_ScriptDir . "\files\download")
+            }
+        }
+        Else
+        {
+            Try
+            {
+                FileMove(A_ScriptDir . "\files\download", A_ScriptDir . "\downloads_after_uninstall")
+                FileRecycle(A_ScriptDir . "\files")
+            }
+        }
+        uninstallProgressBar.Value += 100
+        uninstallStatusBar.SetText("Deleting script files...")
+    }
+    Sleep(3000)
+    uninstallStatusBar.SetText("Finishing removal process...")
+    Sleep(2000)
+    If (!WinExist("ahk_id " . uninstallGUI.Hwnd))
+    {
+        Hotkey_openUninstallGUI()
+    }
+    Else
+    {
+        WinActivate("ahk_id " . uninstallGUI.Hwnd)
+    }
+    uninstallStatusBar.SetText("Successfully uninstalled script. Until next time :')")
+    Sleep(5000)
+    ExitApp()
+    ExitApp()
 }
 
 arrayToString(pArray)

@@ -147,7 +147,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
     {
         If (booleanShowPrompt = true)
         {
-            result := MsgBox("Could not find blacklist file.`n`nDo you want to create one?", "Warning !", "YN Icon! T10")
+            result := MsgBox("Could not find blacklist file.`n`nDo you want to create one ?", "Warning !", "YN Icon! T10")
         }
         ; Only so that the if condition down under does not throw an error.
         If (IsSet(result) = false)
@@ -224,7 +224,7 @@ manageURLFile(pBooleanShowPrompt := true)
 
     If (booleanShowPrompt = true)
     {
-        result := MsgBox("Do you want to clear the URL file?`n`nA backup will be created anyways.", "Manage URL File", "4164 T10")
+        result := MsgBox("Do you want to clear the URL file ?`n`nA backup will be created anyways.", "Manage URL File", "4164 T10")
 
         If (result = "Yes")
         {

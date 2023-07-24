@@ -138,7 +138,7 @@ createUninstallGUI()
         "Provide feedback (optional)")
 
     uninstallEverythingCheckbox.OnEvent("Click", (*) => handleUninstallGUI_Checkboxes())
-    uninstallStartButton.OnEvent("Click", (*) =>) ; Uninstall function in the future.
+    uninstallStartButton.OnEvent("Click", (*) => uninstallScript())
     uninstallCancelButton.OnEvent("Click", (*) => uninstallGUI.Hide())
     uninstallOpenGitHubIssuesButton.OnEvent("Click", (*) => Run("https://github.com/LeoTN/yt-dlp-autohotkey-gui/issues"))
 }
