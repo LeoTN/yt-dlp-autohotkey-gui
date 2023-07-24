@@ -111,6 +111,12 @@ onInit()
     }
     ; Only called to check the config file status.
     readConfigFile("booleanDebugMode")
+    ; Copies the installed python version to the config location for uninstall purposes.
+    Try
+    {
+        FileCopy(A_Temp . "\video_downloader_python_install_log.txt",
+            A_WorkingDir . "\files\config\video_downloader_python_install_log.txt")
+    }
     checkBlackListFile("createBlackListFile")
     Hotkey_onInit()
     mainGUI_onInit()

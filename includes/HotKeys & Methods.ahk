@@ -104,7 +104,14 @@ Hotkey_openUninstallGUI()
         If not (A_IsAdmin || RegExMatch(fullCommandLine, " /restart(?!\S)"))
         {
             FileAppend("Uninstall process", A_WorkingDir . "\NoPermissionsForUninstall.txt")
-            Run '*RunAs "' A_ScriptFullPath '" /restart'
+            Try
+            {
+                Run '*RunAs "' A_ScriptFullPath '" /restart'
+            }
+            Catch
+            {
+                Return
+            }
             ExitApp()
             ExitApp()
         }
@@ -829,41 +836,71 @@ uninstallScript()
     ; Uninstalls dependencies and other stuff.
     If (tmp1 = 1)
     {
-        RunWait(A_ComSpec " /c pip uninstall yt-dlp")
+        RunWait(A_ComSpec " /c pip uninstall yt-dlp --no-input")
         uninstallProgressBar.Value += 100
         uninstallStatusBar.SetText("Currently uninstalling yt-dlp...")
     }
     If (tmp2 = 1)
     {
-        RunWait(A_ComSpec " /c winget uninstall python")
-        uninstallProgressBar.Value += 100
-        uninstallStatusBar.SetText("Currently uninstalling python...")
+        If (FileExist(A_WorkingDir . "\files\config\video_downloader_python_install_log.txt"))
+        {
+            Loop Read (A_WorkingDir . "\files\config\video_downloader_python_install_log.txt")
+            {
+                If (InStr(A_LoopReadLine, "Python"))
+                {
+                    ; Removes the minor version digit.
+                    tmp_fileRead := RegExReplace(A_LoopReadLine, ".[0-9]$")
+                    Break
+                }
+            }
+            RunWait(A_ComSpec ' /c winget uninstall "' . tmp_fileRead . '"')
+            uninstallProgressBar.Value += 100
+            uninstallStatusBar.SetText("Currently uninstalling python...")
+        }
+        Else
+        {
+            If (!WinExist("ahk_id " . uninstallGUI.Hwnd))
+            {
+                Hotkey_openUninstallGUI()
+            }
+            Else
+            {
+                WinActivate("ahk_id " . uninstallGUI.Hwnd)
+            }
+            uninstallStatusBar.SetText("Warning ! Could not uninstall python !")
+            Sleep(2500)
+            uninstallStatusBar.SetText("You may uninstall it manually.")
+            Sleep(2500)
+        }
     }
     If (tmp3 = 1)
     {
         Try
         {
-            FileRecycle(A_ScriptDir . "\files\download")
-            FileRecycle(readConfigFile("DOWNLOAD_PATH"))
+            FileRecycle(A_WorkingDir . "\files\download")
+        }
+        Try
+        {
+            FileRecycle(readConfigFile("DOWNLOAD_PATH", false))
         }
         uninstallProgressBar.Value += 100
         uninstallStatusBar.SetText("Deleting downloaded files...")
     }
     If (tmp4 = 1)
     {
-        If (tmp3 = true)
+        ; This means that the remaining download files have to be evacuated.
+        If (tmp3 = false)
         {
             Try
             {
-                FileRecycle(A_ScriptDir . "\files\download")
+                DirMove(A_WorkingDir . "\files\download", A_WorkingDir . "\downloads_after_uninstall", 1)
             }
         }
         Else
         {
             Try
             {
-                DirMove(A_ScriptDir . "\files\download", A_ScriptDir . "\downloads_after_uninstall", 1)
-                FileRecycle(A_ScriptDir . "\files")
+                FileRecycle(A_WorkingDir . "\files")
             }
         }
         uninstallProgressBar.Value += 100
