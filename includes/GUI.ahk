@@ -17,7 +17,7 @@ createMainGUI()
     fileSelectionMenuOpen.SetIcon("URL-Blacklist-File`tCTRL+F2", "shell32.dll", 110)
     fileSelectionMenuOpen.Add("Config-File`tAlt+F2", (*) => openConfigFile())
     fileSelectionMenuOpen.SetIcon("Config-File`tAlt+F2", "shell32.dll", 70)
-    fileSelectionMenuOpen.Add("Download destination", (*) => GUI_openDownloadLocation())
+    fileSelectionMenuOpen.Add("Download destination", (*) => handleMainGUI_openDownloadLocation())
     fileSelectionMenuOpen.SetIcon("Download destination", "shell32.dll", 116)
 
     fileSelectionMenuDelete := Menu()
@@ -46,37 +46,37 @@ createMainGUI()
 
     activeHotkeyMenu := Menu()
     activeHotkeyMenu.Add("Terminate Script → " . expandHotkey(readConfigFile("TERMINATE_SCRIPT_HK")),
-        (*) => GUI_ToggleCheck("activeHotkeyMenu", "Terminate Script → " .
+        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Terminate Script → " .
             expandHotkey(readConfigFile("TERMINATE_SCRIPT_HK")), 1), "+Radio")
 
     activeHotkeyMenu.Add("Reload Script → " . expandHotkey(readConfigFile("RELOAD_SCRIPT_HK")),
-        (*) => GUI_ToggleCheck("activeHotkeyMenu", "Reload Script → " .
+        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Reload Script → " .
             expandHotkey(readConfigFile("RELOAD_SCRIPT_HK")), 2), "+Radio")
 
     activeHotkeyMenu.Add("Pause / Continue Script → " . expandHotkey(readConfigFile("PAUSE_CONTINUE_SCRIPT_HK")),
-        (*) => GUI_ToggleCheck("activeHotkeyMenu", "Pause / Continue Script → " .
+        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Pause / Continue Script → " .
             expandHotkey(readConfigFile("PAUSE_CONTINUE_SCRIPT_HK")), 3), "+Radio")
 
     activeHotkeyMenu.Add("Start Download → " . expandHotkey(readConfigFile("DOWNLOAD_HK")),
-        (*) => GUI_ToggleCheck("activeHotkeyMenu", "Start Download → " .
+        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Start Download → " .
             expandHotkey(readConfigFile("DOWNLOAD_HK")), 4), "+Radio")
 
     activeHotkeyMenu.Add("Collect URL Searchbar → " . expandHotkey(readConfigFile("URL_COLLECT_HK")),
-        (*) => GUI_ToggleCheck("activeHotkeyMenu", "Collect URL Searchbar → " .
+        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Collect URL Searchbar → " .
             expandHotkey(readConfigFile("URL_COLLECT_HK")), 5), "+Radio")
 
     activeHotkeyMenu.Add("Collect URL Thumbnail → " . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")),
-        (*) => GUI_ToggleCheck("activeHotkeyMenu", "Collect URL Thumbnail → " .
+        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Collect URL Thumbnail → " .
             expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")), 6), "+Radio")
 
     activeHotkeyMenu.Add("Clear URL File → " . expandHotkey(readConfigFile("CLEAR_URL_FILE_HK")),
-        (*) => GUI_ToggleCheck("activeHotkeyMenu", "Clear URL File → " .
+        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Clear URL File → " .
             expandHotkey(readConfigFile("CLEAR_URL_FILE_HK")), 7), "+Radio")
 
     activeHotkeyMenu.Add()
-    activeHotkeyMenu.Add("Enable All", (*) => GUI_MenuCheckAll("activeHotkeyMenu"))
+    activeHotkeyMenu.Add("Enable All", (*) => handleMainGUI_MenuCheckAll("activeHotkeyMenu"))
     activeHotkeyMenu.SetIcon("Enable All", "shell32.dll", 297)
-    activeHotkeyMenu.Add("Disable All", (*) => GUI_MenuUncheckAll("activeHotkeyMenu"))
+    activeHotkeyMenu.Add("Disable All", (*) => handleMainGUI_MenuUncheckAll("activeHotkeyMenu"))
     activeHotkeyMenu.SetIcon("Disable All", "shell32.dll", 132)
 
     optionsMenu := Menu()
@@ -93,6 +93,9 @@ createMainGUI()
     optionsMenu.SetIcon("Terminate Script", "shell32.dll", 28)
     optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())
     optionsMenu.SetIcon("Reload Script", "shell32.dll", 207)
+    optionsMenu.Add()
+    optionsMenu.Add("Uninstall script", (*) => Hotkey_openUninstallGUI())
+    optionsMenu.SetIcon("Uninstall script", "shell32.dll", 245)
 
     helpMenu := Menu()
     helpMenu.Add("This repository (yt-dlp-autohotkey-gui)",
@@ -114,6 +117,32 @@ createMainGUI()
     mainGUI.MenuBar := allMenus
 }
 
+createUninstallGUI()
+{
+    Global
+    uninstallGUI := Gui(, "Uninstall yt-dlp-autohotkey-gui")
+    uninstallUntilNextTimeText := uninstallGUI.Add("Text", "xp+10 yp+10 ", "Please select your uninstall options below.")
+    uninstallEverythingCheckbox := uninstallGUI.Add("Checkbox", "yp+20 Checked", "Remove everything")
+    uninstallPythonCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Uninstall python")
+    uninstallYTDLPCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Uninstall yt-dlp")
+    uninstallAllCreatedFilesCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Delete all script files")
+    uninstallAllDownloadedFilesCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Delete all downloaded files")
+
+    uninstallStartButton := uninstallGUI.Add("Button", "yp+30 w60", "Uninstall")
+    uninstallCancelButton := uninstallGUI.Add("Button", "xp+65 w60 Default", "Cancel")
+    uninstallOpenGitHubIssuesButton := uninstallGUI.Add("Button", "xp+65", "Open GitHub issues")
+    uninstallProgressBar := uninstallGUI.Add("Progress", "xp+120 yp+3")
+    uninstallStatusBar := uninstallGUI.Add("StatusBar", , "Until next time :')")
+
+    uninstallProvideReasonEdit := uninstallGUI.Add("Edit", "xp-41 yp-130 r8 w160",
+        "Provide feedback (optional)")
+
+    uninstallEverythingCheckbox.OnEvent("Click", (*) => handleUninstallGUI_Checkboxes())
+    uninstallStartButton.OnEvent("Click", (*) => uninstallScript())
+    uninstallCancelButton.OnEvent("Click", (*) => uninstallGUI.Hide())
+    uninstallOpenGitHubIssuesButton.OnEvent("Click", (*) => Run("https://github.com/LeoTN/yt-dlp-autohotkey-gui/issues"))
+}
+
 /*
 GUI SUPPORT FUNCTIONS
 -------------------------------------------------
@@ -123,12 +152,18 @@ GUI SUPPORT FUNCTIONS
 mainGUI_onInit()
 {
     createMainGUI()
-    GUI_ApplyCheckmarksFromConfigFile("activeHotkeyMenu")
+    handleMainGUI_ApplyCheckmarksFromConfigFile("activeHotkeyMenu")
+}
+
+uninstallGUI_onInit()
+{
+    createUninstallGUI()
+    handleUninstallGUI_Checkboxes()
 }
 
 ; Necessary in place for the normal way of toggeling the checkmark.
 ; This function also flips the checkMarkArrays values to keep track of the checkmarks.
-GUI_ToggleCheck(pMenuName, pMenuItemName, pMenuItemPosition)
+handleMainGUI_ToggleCheck(pMenuName, pMenuItemName, pMenuItemPosition)
 {
     menuName := pMenuName
     menuItemName := pMenuItemName
@@ -137,10 +172,10 @@ GUI_ToggleCheck(pMenuName, pMenuItemName, pMenuItemPosition)
     ; Executes the command so that the checkmark becomes visible for the user.
     %menuName%.ToggleCheck(menuItemName)
     ; Registers the change in the matching array.
-    GUI_MenuCheckHandler(menuName, menuItemPosition, "toggle")
+    handleMainGUI_MenuCheckHandler(menuName, menuItemPosition, "toggle")
 }
 
-GUI_MenuCheckAll(pMenuName)
+handleMainGUI_MenuCheckAll(pMenuName)
 {
     menuName := pMenuName
     menuItemCount := DllCall("GetMenuItemCount", "ptr", %menuName%.Handle)
@@ -150,12 +185,12 @@ GUI_MenuCheckAll(pMenuName)
         ; Protects the code from the invalid index error caused by the check array further on.
         Try
         {
-            GUI_MenuCheckHandler(menuName, A_Index, true)
+            handleMainGUI_MenuCheckHandler(menuName, A_Index, true)
         }
     }
 }
 
-GUI_MenuUncheckAll(pMenuName)
+handleMainGUI_MenuUncheckAll(pMenuName)
 {
     menuName := pMenuName
     menuItemCount := DllCall("GetMenuItemCount", "ptr", %menuName%.Handle)
@@ -165,7 +200,7 @@ GUI_MenuUncheckAll(pMenuName)
         ; Protects the code from the invalid index error caused by the check array further on.
         Try
         {
-            GUI_MenuCheckHandler(menuName, A_Index, false)
+            handleMainGUI_MenuCheckHandler(menuName, A_Index, false)
         }
     }
 }
@@ -176,7 +211,7 @@ GUI_MenuUncheckAll(pMenuName)
 ; Enter "toggle" as pBooleanState to toggle a menu option's boolean value.
 ; Leave only booleanState ommited to receive the current value of a submenu item or
 ; every parameter to receive the complete array.
-GUI_MenuCheckHandler(pMenuName := unset, pSubMenuPosition := unset, pBooleanState := unset)
+handleMainGUI_MenuCheckHandler(pMenuName := unset, pSubMenuPosition := unset, pBooleanState := unset)
 {
     menuCheckArray_activeHotKeyMenu := stringToArray(readConfigFile("HOTKEY_STATE_ARRAY"))
     Try
@@ -216,7 +251,7 @@ GUI_MenuCheckHandler(pMenuName := unset, pSubMenuPosition := unset, pBooleanStat
 }
 
 ; Applies the checkmarks stored in the config file so that they become visible to the user in the GUI.
-GUI_ApplyCheckmarksFromConfigFile(pMenuName)
+handleMainGUI_ApplyCheckmarksFromConfigFile(pMenuName)
 {
     menuName := pMenuName
     stateArray := stringToArray(readConfigFile("HOTKEY_STATE_ARRAY"))
@@ -243,7 +278,7 @@ GUI_ApplyCheckmarksFromConfigFile(pMenuName)
     }
 }
 
-GUI_openDownloadLocation()
+handleMainGUI_openDownloadLocation()
 {
     Try
     {
@@ -262,5 +297,34 @@ GUI_openDownloadLocation()
     Catch
     {
         MsgBox("No downloaded files from `ncurrent session found.", "Open videos error !", "O Icon! T1.5")
+    }
+}
+
+; Disables all other options and marks them as true.
+handleUninstallGUI_Checkboxes()
+{
+    If (uninstallEverythingCheckbox.Value = 1)
+    {
+        uninstallPythonCheckbox.Value := 1
+        uninstallYTDLPCheckbox.Value := 1
+        uninstallAllCreatedFilesCheckbox.Value := 1
+        uninstallAllDownloadedFilesCheckbox.Value := 1
+
+        uninstallPythonCheckbox.Opt("+Disabled")
+        uninstallYTDLPCheckbox.Opt("+Disabled")
+        uninstallAllCreatedFilesCheckbox.Opt("+Disabled")
+        uninstallAllDownloadedFilesCheckbox.Opt("+Disabled")
+    }
+    Else
+    {
+        uninstallPythonCheckbox.Value := 0
+        uninstallYTDLPCheckbox.Value := 0
+        uninstallAllCreatedFilesCheckbox.Value := 0
+        uninstallAllDownloadedFilesCheckbox.Value := 0
+
+        uninstallPythonCheckbox.Opt("-Disabled")
+        uninstallYTDLPCheckbox.Opt("-Disabled")
+        uninstallAllCreatedFilesCheckbox.Opt("-Disabled")
+        uninstallAllDownloadedFilesCheckbox.Opt("-Disabled")
     }
 }

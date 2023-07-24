@@ -26,19 +26,19 @@ Otherwise this can lead to fatal erros and failures !
 ; Determines the location of the script's configuration file.
 global configFileLocation := A_WorkingDir . "\files\config\ytdownloader.ini"
 ; Specifies path for the .txt file which stores the URLs.
-URL_FILE_LOCATION := A_ScriptDir . "\files\YT_URLS.txt"
+URL_FILE_LOCATION := A_WorkingDir . "\files\YT_URLS.txt"
 ; Specifies path for the .txt file which stores the URL backup.
-URL_BACKUP_FILE_LOCATION := A_ScriptDir . "\files\YT_URLS_BACKUP.txt"
+URL_BACKUP_FILE_LOCATION := A_WorkingDir . "\files\YT_URLS_BACKUP.txt"
 ; Specifies path for the .txt file which stores the blacklist file.
-BLACKLIST_FILE_LOCATION := A_ScriptDir . "\files\YT_BLACKLIST.txt"
+BLACKLIST_FILE_LOCATION := A_WorkingDir . "\files\YT_BLACKLIST.txt"
 ; Standard download log file path.
-DOWNLOAD_LOG_FILE_LOCATION := A_ScriptDir . "\files\download\download_log.txt"
+DOWNLOAD_LOG_FILE_LOCATION := A_WorkingDir . "\files\download\download_log.txt"
 ; Default download archive file location.
-DOWNLOAD_ARCHIVE_LOCATION := A_ScriptDir . "\files\download\download_archive.txt"
+DOWNLOAD_ARCHIVE_LOCATION := A_WorkingDir . "\files\download\download_archive.txt"
 ; Default preset storage for the download option GUI.
-DOWNLOAD_PRESET_LOCATION := A_ScriptDir . "\files\presets"
+DOWNLOAD_PRESET_LOCATION := A_WorkingDir . "\files\presets"
 ; Standard download path.
-DOWNLOAD_PATH := A_ScriptDir . "\files\download"
+DOWNLOAD_PATH := A_WorkingDir . "\files\download"
 
 ; Stores which hotkeys are enabled / disabled via the GUI.
 HOTKEY_STATE_ARRAY := "[1, 1, 0, 1, 1, 1, 0]"
@@ -56,8 +56,8 @@ OPTIONS_GUI_HK := "+^!A"
 
 ; Will contain all config values matching with each variable name in the array below.
 ; For example configVariableNameArray[2] = "URL_FILE_LOCATION"
-; and configFileContentArray[2] = "A_ScriptDir . "\files\YT_URLS.txt""
-; so basically URL_FILE_LOCATION = "A_ScriptDir . "\files\YT_URLS.txt"".
+; and configFileContentArray[2] = "A_WorkingDir . "\files\YT_URLS.txt""
+; so basically URL_FILE_LOCATION = "A_WorkingDir . "\files\YT_URLS.txt"".
 ; NOTE : This had to be done because changing a global variable using a dynamic
 ; expression like global %myGlobalVarName% := "newValue" won't work.
 global configFileContentArray := []
@@ -171,11 +171,14 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
 ; The parameter optionName specifies a specific
 ; variable's content which you want to return.
 ; For example '"URL_FILE_LOCATION"' to return URL_FILE_LOCATION's content
-; which is 'A_ScriptDir . "\files\YT_URLS.txt"' by default.
+; which is 'A_WorkingDir . "\files\YT_URLS.txt"' by default.
 ; Returns the value out of the config file.
-readConfigFile(pOptionName)
+; The booleanAskForPathCreation should be used with caution because
+; it can have unseen consequences if a directory is not created.
+readConfigFile(pOptionName, pBooleanAskForPathCreation := true)
 {
     optionName := pOptionName
+    booleanAskForPathCreation := pBooleanAskForPathCreation
 
     Loop (configVariableNameArray.Length)
     {
@@ -212,7 +215,7 @@ readConfigFile(pOptionName)
             ; Everything else should be excluded.
             If (InStr(configFileContentArray[A_Index], "\"))
             {
-                If (validatePath(configFileContentArray[A_Index]) = false)
+                If (validatePath(configFileContentArray[A_Index], booleanAskForPathCreation) = false)
                 {
                     MsgBox("Could not create directory !`nCheck the config file for a valid path at : `n "
                         . configVariableNameArray[A_Index], "Error !", "O Icon! T10")
@@ -283,9 +286,10 @@ editConfigFile(pOptionName, pData)
 ; Verfies the integrity of a given path or file location.
 ; It will also ask the user to create the given path if it does not exist yet.
 ; Returns true if a path is valid and false otherwise.
-validatePath(pPath)
+validatePath(pPath, pBooleanAskForPathCreation := true)
 {
     path := pPath
+    booleanAskForPathCreation := pBooleanAskForPathCreation
 
     ; If necessary the directory read in the config file will be created.
     ; SplitPath makes sure the last part of the whole path is removed.
@@ -302,7 +306,7 @@ validatePath(pPath)
         }
     }
     ; This happens when there is no file name given in the config file e.g. at the preset location.
-    If (outExtension = "" && !DirExist(path))
+    If (outExtension = "" && !DirExist(path) && booleanAskForPathCreation = true)
     {
         result := MsgBox("The directory :`n" . path
             . "`ndoes not exist. `nWould you like to create it ?", "Warning !", "YN Icon! T10")
