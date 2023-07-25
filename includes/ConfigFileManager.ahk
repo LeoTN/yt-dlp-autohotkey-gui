@@ -24,21 +24,21 @@ Otherwise this can lead to fatal erros and failures !
 */
 
 ; Determines the location of the script's configuration file.
-global configFileLocation := A_WorkingDir . "\files\config\ytdownloader.ini"
+global configFileLocation := baseFilesLocation . "\config\ytdownloader.ini"
 ; Specifies path for the .txt file which stores the URLs.
-URL_FILE_LOCATION := A_WorkingDir . "\files\YT_URLS.txt"
+URL_FILE_LOCATION := baseFilesLocation . "\YT_URLS.txt"
 ; Specifies path for the .txt file which stores the URL backup.
-URL_BACKUP_FILE_LOCATION := A_WorkingDir . "\files\YT_URLS_BACKUP.txt"
+URL_BACKUP_FILE_LOCATION := baseFilesLocation . "\YT_URLS_BACKUP.txt"
 ; Specifies path for the .txt file which stores the blacklist file.
-BLACKLIST_FILE_LOCATION := A_WorkingDir . "\files\YT_BLACKLIST.txt"
+BLACKLIST_FILE_LOCATION := baseFilesLocation . "\YT_BLACKLIST.txt"
 ; Standard download log file path.
-DOWNLOAD_LOG_FILE_LOCATION := A_WorkingDir . "\files\download\download_log.txt"
+DOWNLOAD_LOG_FILE_LOCATION := baseFilesLocation . "\download\download_log.txt"
 ; Default download archive file location.
-DOWNLOAD_ARCHIVE_LOCATION := A_WorkingDir . "\files\download\download_archive.txt"
+DOWNLOAD_ARCHIVE_LOCATION := baseFilesLocation . "\download\download_archive.txt"
 ; Default preset storage for the download option GUI.
-DOWNLOAD_PRESET_LOCATION := A_WorkingDir . "\files\presets"
+DOWNLOAD_PRESET_LOCATION := baseFilesLocation . "\presets"
 ; Standard download path.
-DOWNLOAD_PATH := A_WorkingDir . "\files\download"
+DOWNLOAD_PATH := baseFilesLocation . "\download"
 
 ; Stores which hotkeys are enabled / disabled via the GUI.
 HOTKEY_STATE_ARRAY := "[1, 1, 0, 1, 1, 1, 0]"
@@ -56,8 +56,8 @@ OPTIONS_GUI_HK := "+^!A"
 
 ; Will contain all config values matching with each variable name in the array below.
 ; For example configVariableNameArray[2] = "URL_FILE_LOCATION"
-; and configFileContentArray[2] = "A_WorkingDir . "\files\YT_URLS.txt""
-; so basically URL_FILE_LOCATION = "A_WorkingDir . "\files\YT_URLS.txt"".
+; and configFileContentArray[2] = "baseFilesLocation . "\YT_URLS.txt""
+; so basically URL_FILE_LOCATION = "baseFilesLocation . "\YT_URLS.txt"".
 ; NOTE : This had to be done because changing a global variable using a dynamic
 ; expression like global %myGlobalVarName% := "newValue" won't work.
 global configFileContentArray := []
@@ -171,7 +171,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
 ; The parameter optionName specifies a specific
 ; variable's content which you want to return.
 ; For example '"URL_FILE_LOCATION"' to return URL_FILE_LOCATION's content
-; which is 'A_WorkingDir . "\files\YT_URLS.txt"' by default.
+; which is 'baseFilesLocation . "\YT_URLS.txt"' by default.
 ; Returns the value out of the config file.
 ; The booleanAskForPathCreation should be used with caution because
 ; it can have unseen consequences if a directory is not created.

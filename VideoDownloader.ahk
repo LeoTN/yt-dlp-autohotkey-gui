@@ -5,7 +5,8 @@
 SendMode "Input"
 SetWorkingDir A_ScriptDir
 CoordMode "Mouse", "Client"
-
+; Very important, basically sets the script working directory !!!
+global baseFilesLocation := detectIfWorkingDirIsDrive(A_WorkingDir)
 ; Imports important functions and variables
 ; Sets the directory for all following files.
 #Include "includes\"
@@ -54,8 +55,8 @@ onInit()
     ; Checks the system for other already running instances of this script.
     findProcessWithWildcard("VideoDownloader.exe")
 
-    global ffmpegLocation := A_WorkingDir . "\files\library\ffmpeg.exe"
-    global youTubeBackGroundLocation := A_WorkingDir . "\files\library\YouTubeBackground.jpg"
+    global ffmpegLocation := baseFilesLocation . "\library\ffmpeg.exe"
+    global youTubeBackGroundLocation := baseFilesLocation . "\library\YouTubeBackground.jpg"
 
     If (!FileExist(ffmpegLocation))
     {
@@ -82,7 +83,7 @@ onInit()
         }
     }
     ; To maintain ordinary functionallity the system MUST be restarted after a finished installation of this script!
-    If (FileExist(A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt"))
+    If (FileExist(baseFilesLocation . "\NotRestartedYet(do not delete!!!).txt"))
     {
         result := MsgBox("Your system has not been REBOOTED yet.`nFor further use it is mandatory`n to REBOOT your system.",
             "Script setup status", "OC Icon! 262144")
@@ -92,9 +93,9 @@ onInit()
                 {
                     Try
                     {
-                        FileDelete(A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt")
+                        FileDelete(baseFilesLocation . "\NotRestartedYet(do not delete!!!).txt")
                     }
-                    If (!FileExist(A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt"))
+                    If (!FileExist(baseFilesLocation . "\NotRestartedYet(do not delete!!!).txt"))
                     {
                         Run(A_ComSpec . " /c shutdown /r /t 1")
                         ExitApp()
@@ -106,7 +107,7 @@ onInit()
                 }
             Default:
                 {
-                    FileAppend("Do not delete this file if you do not know what you are doing!", A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt")
+                    FileAppend("Do not delete this file if you do not know what you are doing!", baseFilesLocation . "\NotRestartedYet(do not delete!!!).txt")
                 }
         }
         MsgBox("Terminating script.", "Script status", "O Iconi T1.5")
@@ -118,7 +119,7 @@ onInit()
     Try
     {
         FileCopy(A_Temp . "\video_downloader_python_install_log.txt",
-            A_WorkingDir . "\files\config\video_downloader_python_install_log.txt")
+            baseFilesLocation . "\config\video_downloader_python_install_log.txt")
     }
     checkBlackListFile("createBlackListFile")
     Hotkey_onInit()
@@ -126,11 +127,11 @@ onInit()
     uninstallGUI_onInit()
     optionsGUI_onInit()
     ; Makes sure the script opens the uninstall GUI after restarting with admin rights.
-    If (FileExist(A_WorkingDir . "\NoPermissionsForUninstall.txt"))
+    If (FileExist(baseFilesLocation . "\NoPermissionsForUninstall.txt"))
     {
         Try
         {
-            FileDelete(A_WorkingDir . "\NoPermissionsForUninstall.txt")
+            FileDelete(baseFilesLocation . "\NoPermissionsForUninstall.txt")
         }
         Hotkey_openUninstallGUI()
     }
@@ -271,7 +272,8 @@ setUp()
                         }
                     Default:
                         {
-                            FileAppend("Do not delete this file if you do not know what you are doing!", A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt")
+                            FileAppend("Do not delete this file if you do not know what you are doing!", baseFilesLocation
+                                . "\NotRestartedYet(do not delete!!!).txt")
                         }
                 }
                 MsgBox("Terminating script.", "Script status", "O Iconi T1.5")
@@ -327,21 +329,21 @@ setup_generatePathHelpFile(pOutStringReady)
 
 setup_installLibraryFiles()
 {
-    If (!DirExist(A_WorkingDir . "\files\library"))
+    If (!DirExist(baseFilesLocation . "\library"))
     {
         Try
         {
-            DirCreate(A_WorkingDir . "\files\library")
+            DirCreate(baseFilesLocation . "\library")
         }
     }
     Try
     {
         FileInstall("files\library\YouTubeBackground.jpg", youTubeBackGroundLocation, 1)
-        FileInstall("files\library\MonitorHookFile.ps1", A_WorkingDir . "\files\library\MonitorHookFile.ps1")
+        FileInstall("files\library\MonitorHookFile.ps1", baseFilesLocation . "\library\MonitorHookFile.ps1")
         ; Required for yt-dlp to operate with extra functionallity.
         FileInstall("files\library\ffmpeg.exe", ffmpegLocation, 1)
-        FileInstall("files\library\ffplay.exe", A_WorkingDir . "\files\library\ffplay.exe", 1)
-        FileInstall("files\library\ffprobe.exe", A_WorkingDir . "\files\library\ffprobe.exe", 1)
+        FileInstall("files\library\ffplay.exe", baseFilesLocation . "\library\ffplay.exe", 1)
+        FileInstall("files\library\ffprobe.exe", baseFilesLocation . "\library\ffprobe.exe", 1)
     }
     Catch
     {

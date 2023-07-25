@@ -103,7 +103,7 @@ Hotkey_openUninstallGUI()
         fullCommandLine := DllCall("GetCommandLine", "str")
         If not (A_IsAdmin || RegExMatch(fullCommandLine, " /restart(?!\S)"))
         {
-            FileAppend("Uninstall process", A_WorkingDir . "\NoPermissionsForUninstall.txt")
+            FileAppend("Uninstall process", baseFilesLocation . "\NoPermissionsForUninstall.txt")
             Try
             {
                 Run '*RunAs "' A_ScriptFullPath '" /restart'
@@ -272,7 +272,7 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
             FileDelete(A_Temp . "\yt_dlp_download_log.txt")
         }
         ; The powershell script now waits for the hook file.
-        Run("powershell.exe -noExit -ExecutionPolicy Bypass -file " . A_WorkingDir . "\files\library\MonitorHookFile.ps1"
+        Run("powershell.exe -noExit -ExecutionPolicy Bypass -file " . baseFilesLocation . "\library\MonitorHookFile.ps1"
             , , "Min", &visualPowershellPID)
         WinWait("ahk_pid " . visualPowershellPID)
         WinActivate("ahk_pid " . visualPowershellPID)
@@ -572,12 +572,12 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
         {
             Try
             {
-                If (!DirExist(A_WorkingDir . "\files\deleted"))
+                If (!DirExist(baseFilesLocation . "\deleted"))
                 {
-                    DirCreate(A_WorkingDir . "\files\deleted")
+                    DirCreate(baseFilesLocation . "\deleted")
                 }
                 SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
-                FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName, true)
+                FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName, true)
                 ; Calls checkBlackListFile() in order to create a new blacklist file.
                 checkBlackListFile("generateFile", false)
                 Return
@@ -650,9 +650,9 @@ deleteFilePrompt(pFileName)
     result := MsgBox("Would you like to delete the " . fileName . " ?", "Delete " . fileName, "YN Icon! 8192 T10")
     If (result = "Yes")
     {
-        If (!DirExist(A_WorkingDir . "\files\deleted"))
+        If (!DirExist(baseFilesLocation . "\deleted"))
         {
-            DirCreate(A_WorkingDir . "\files\deleted")
+            DirCreate(baseFilesLocation . "\deleted")
         }
         Try
         {
@@ -662,19 +662,19 @@ deleteFilePrompt(pFileName)
                     {
                         c := "URL_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("URL_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
+                        FileMove(readConfigFile("URL_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName)
                     }
                 Case "URL-Backup-File":
                     {
                         c := "URL_BACKUP_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_BACKUP_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
+                        FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName)
                     }
                 Case "URL-Blacklist-File":
                     {
                         c := "BLACKLIST_FILE_LOCATION"
                         SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), A_WorkingDir . "\files\deleted\" . outFileName)
+                        FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName)
                     }
                 Case "latest download":
                     {
@@ -684,13 +684,13 @@ deleteFilePrompt(pFileName)
                             {
                                 Case 0:
                                 {
-                                    FileMove(customDownloadLocation.Value . '\' . downloadTime, A_WorkingDir
-                                        . "\files\deleted\" . downloadTime)
+                                    FileMove(customDownloadLocation.Value . '\' . downloadTime, baseFilesLocation
+                                        . "\deleted\" . downloadTime)
                                 }
                                 Case 1:
                                 {
-                                    Run(readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime, A_WorkingDir
-                                        . "\files\deleted\" . downloadTime)
+                                    Run(readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime, baseFilesLocation
+                                        . "\deleted\" . downloadTime)
                                 }
                             }
                         }
@@ -708,14 +708,14 @@ deleteFilePrompt(pFileName)
         ; In case something goes wrong this will try to resolve the issue.
         Catch
         {
-            If (FileExist(A_WorkingDir . "\files\deleted\" . outFileName) && FileExist(A_WorkingDir . "\files\" . outFileName))
+            If (FileExist(baseFilesLocation . "\deleted\" . outFileName) && FileExist(baseFilesLocation . "\" . outFileName))
             {
                 result := MsgBox("The " . fileName . " was found in the deleted directory."
                     "`n`nDo you want to overwrite it ?", "Warning !", "YN Icon! T10")
                 If (result = "Yes")
                 {
-                    FileDelete(A_WorkingDir . "\files\deleted\" . outFileName)
-                    FileMove(readConfigFile(c), A_WorkingDir . "\files\deleted\" . outFileName)
+                    FileDelete(baseFilesLocation . "\deleted\" . outFileName)
+                    FileMove(readConfigFile(c), baseFilesLocation . "\deleted\" . outFileName)
                 }
             }
             Else
@@ -912,15 +912,16 @@ uninstallScript()
     ; Uninstalls dependencies and other stuff.
     If (tmp1 = 1)
     {
+        uninstallStatusBar.SetText("Currently uninstalling yt-dlp...")
         RunWait(A_ComSpec " /c pip uninstall yt-dlp --no-input")
         uninstallProgressBar.Value += 100
-        uninstallStatusBar.SetText("Currently uninstalling yt-dlp...")
     }
     If (tmp2 = 1)
     {
-        If (FileExist(A_WorkingDir . "\files\config\video_downloader_python_install_log.txt"))
+        If (FileExist(baseFilesLocation . "\config\video_downloader_python_install_log.txt"))
         {
-            Loop Read (A_WorkingDir . "\files\config\video_downloader_python_install_log.txt")
+            uninstallStatusBar.SetText("Currently uninstalling python...")
+            Loop Read (baseFilesLocation . "\config\video_downloader_python_install_log.txt")
             {
                 If (InStr(A_LoopReadLine, "Python"))
                 {
@@ -931,7 +932,6 @@ uninstallScript()
             }
             RunWait(A_ComSpec ' /c winget uninstall "' . tmp_fileRead . '"')
             uninstallProgressBar.Value += 100
-            uninstallStatusBar.SetText("Currently uninstalling python...")
         }
         Else
         {
@@ -947,40 +947,72 @@ uninstallScript()
             Sleep(2500)
             uninstallStatusBar.SetText("You may uninstall it manually.")
             Sleep(2500)
+            uninstallProgressBar.Value += 100
         }
     }
     If (tmp3 = 1)
     {
+        uninstallStatusBar.SetText("Deleting downloaded files...")
         Try
         {
-            FileRecycle(A_WorkingDir . "\files\download")
+            FileRecycle(baseFilesLocation . "\download")
         }
         Try
         {
             FileRecycle(readConfigFile("DOWNLOAD_PATH", false))
         }
+        Catch
+        {
+            uninstallStatusBar.SetText("Warning ! Could not delete downloaded files !")
+            Sleep(2500)
+            uninstallStatusBar.SetText("You may delete them manually.")
+            Sleep(2500)
+        }
         uninstallProgressBar.Value += 100
-        uninstallStatusBar.SetText("Deleting downloaded files...")
     }
     If (tmp4 = 1)
     {
+        evacuationError := false
+        uninstallStatusBar.SetText("Deleting script files...")
         ; This means that the remaining download files have to be evacuated.
         If (tmp3 = false)
         {
             Try
             {
-                DirMove(A_WorkingDir . "\files\download", A_WorkingDir . "\downloads_after_uninstall", 1)
+                DirMove(baseFilesLocation . "\download", A_Desktop . "\yt_dlp_autohotkey_gui_downloads_after_uninstall", 1)
             }
+            Catch
+            {
+                evacuationError := true
+                uninstallStatusBar.SetText("Warning ! Could not save downloaded files !")
+                Sleep(2500)
+                uninstallStatusBar.SetText("The script file deletion process will be skipped.")
+                Sleep(2500)
+            }
+            Try
+            {
+                If (evacuationError = false)
+                {
+                    FileRecycle(baseFilesLocation)
+                }
+            }
+            uninstallProgressBar.Value += 100
         }
         Else
         {
             Try
             {
-                FileRecycle(A_WorkingDir . "\files")
+                FileRecycle(baseFilesLocation)
+            }
+            Catch
+            {
+                uninstallStatusBar.SetText("Warning ! Could not delete script files !")
+                Sleep(2500)
+                uninstallStatusBar.SetText("The script file deletion process will be skipped.")
+                Sleep(2500)
             }
         }
         uninstallProgressBar.Value += 100
-        uninstallStatusBar.SetText("Deleting script files...")
     }
     Sleep(3000)
     uninstallStatusBar.SetText("Finishing removal process...")
@@ -997,6 +1029,24 @@ uninstallScript()
     Sleep(5000)
     ExitApp()
     ExitApp()
+}
+
+; Usefull to avoid invalid file names in the config file.
+detectIfWorkingDirIsDrive(pInput)
+{
+    input := pInput
+
+    SplitPath(input, , &outDir, , , &outDrive)
+    ; This means the script working directory is only a drive name.
+    If (outDrive = outDir)
+    {
+        newPath := outDrive . "\yt_dlp_autohotkey_gui_files"
+    }
+    Else
+    {
+        newPath := input . "\yt_dlp_autohotkey_gui_files"
+    }
+    Return newPath
 }
 
 arrayToString(pArray)
