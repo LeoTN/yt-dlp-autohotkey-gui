@@ -53,9 +53,9 @@ createMainGUI()
         (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Reload Script → " .
             expandHotkey(readConfigFile("RELOAD_SCRIPT_HK")), 2), "+Radio")
 
-    activeHotkeyMenu.Add("Pause / Continue Script → " . expandHotkey(readConfigFile("PAUSE_CONTINUE_SCRIPT_HK")),
-        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Pause / Continue Script → " .
-            expandHotkey(readConfigFile("PAUSE_CONTINUE_SCRIPT_HK")), 3), "+Radio")
+    activeHotkeyMenu.Add("Currently not used → " . expandHotkey(readConfigFile("NOT_USED_HK")),
+        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Currently not used → " .
+            expandHotkey(readConfigFile("NOT_USED_HK")), 3), "+Radio")
 
     activeHotkeyMenu.Add("Start Download → " . expandHotkey(readConfigFile("DOWNLOAD_HK")),
         (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Start Download → " .

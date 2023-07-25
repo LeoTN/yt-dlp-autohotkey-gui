@@ -49,7 +49,7 @@ THUMBNAIL_URL_COLLECT_HK := "+^!F"
 MAIN_GUI_HK := "+^!G"
 TERMINATE_SCRIPT_HK := "+^!T"
 RELOAD_SCRIPT_HK := "+^!R"
-PAUSE_CONTINUE_SCRIPT_HK := "+^!P"
+NOT_USED_HK := "+^!P"
 CLEAR_URL_FILE_HK := "!F1"
 OPTIONS_GUI_HK := "+^!A"
 ;------------------------------------------------
@@ -83,7 +83,7 @@ configVariableNameArray :=
         "OPTIONS_GUI_HK",
         "TERMINATE_SCRIPT_HK",
         "RELOAD_SCRIPT_HK",
-        "PAUSE_CONTINUE_SCRIPT_HK",
+        "NOT_USED_HK",
         "CLEAR_URL_FILE_HK"
     ]
 ; Create an array including the matching section name for EACH item in the configVariableNameArray.

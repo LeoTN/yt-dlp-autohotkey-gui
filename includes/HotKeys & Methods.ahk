@@ -64,8 +64,8 @@ registerHotkeys()
     ; Hotkey to reload the script.
     Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), "Off")
 
-    ; Hotkey to pause / continue the execution of the script.
-    Hotkey(readConfigFile("PAUSE_CONTINUE_SCRIPT_HK"), (*) => MsgBox("Not implemented yet"), "Off")
+    ; Hotkey that is currently not used.
+    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet"), "Off")
 
     ; Hotkey for clearing the URL file.
     Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), "Off")
@@ -351,7 +351,8 @@ monitorDownloadProgress(pBooleanNewDownload := false)
             oldCurrentBarValue += 100
             downloadedVideoAmount++
             partProgress := 0
-            downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+            downloadStatusText.Text := "One video has already been recorded in the archive file."
+            Sleep(2500)
         }
         parsedLines++
     }
@@ -390,6 +391,8 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     If (downloadedVideoAmount + 1 = videoAmount)
     {
         downloadedVideoAmount := videoAmount
+        downloadStatusText.Text := "Final video processing..."
+        Sleep(2000)
     }
     ; Makes sure the log powershell windows is closed as well.
     Try
@@ -401,7 +404,6 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     {
         downloadStatusProgressBar.Value := 0
         downloadStatusText.Text := "Download canceled."
-        Return
     }
     Else
     {
@@ -494,7 +496,7 @@ toggleHotkey(pStateArray)
 
     Hotkey(readConfigFile("TERMINATE_SCRIPT_HK"), (*) => terminateScriptPrompt(), onOffArray[1])
     Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), onOffArray[2])
-    Hotkey(readConfigFile("PAUSE_CONTINUE_SCRIPT_HK"), (*) => MsgBox("Not implemented yet"), onOffArray[3])
+    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet"), onOffArray[3])
     Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray[4])
     Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray[5])
     Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray[6])
