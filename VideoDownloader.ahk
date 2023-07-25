@@ -338,12 +338,12 @@ setup_installLibraryFiles()
     }
     Try
     {
-        FileInstall("files\library\YouTubeBackground.jpg", youTubeBackGroundLocation, 1)
-        FileInstall("files\library\MonitorHookFile.ps1", baseFilesLocation . "\library\MonitorHookFile.ps1")
+        FileInstall("yt_dlp_autohotkey_gui_files\library\YouTubeBackground.jpg", youTubeBackGroundLocation, 1)
+        FileInstall("yt_dlp_autohotkey_gui_files\library\MonitorHookFile.ps1", baseFilesLocation . "\library\MonitorHookFile.ps1")
         ; Required for yt-dlp to operate with extra functionallity.
-        FileInstall("files\library\ffmpeg.exe", ffmpegLocation, 1)
-        FileInstall("files\library\ffplay.exe", baseFilesLocation . "\library\ffplay.exe", 1)
-        FileInstall("files\library\ffprobe.exe", baseFilesLocation . "\library\ffprobe.exe", 1)
+        FileInstall("yt_dlp_autohotkey_gui_files\library\ffmpeg.exe", ffmpegLocation, 1)
+        FileInstall("yt_dlp_autohotkey_gui_files\library\ffplay.exe", baseFilesLocation . "\library\ffplay.exe", 1)
+        FileInstall("yt_dlp_autohotkey_gui_files\library\ffprobe.exe", baseFilesLocation . "\library\ffprobe.exe", 1)
     }
     Catch
     {
