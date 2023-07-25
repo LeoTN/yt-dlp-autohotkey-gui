@@ -4,7 +4,15 @@ Clear-Host
 $logfile = $env:temp + "\yt_dlp_download_log.txt"
 Write-Host "Terminal ready..."
 
-$currentLineCount = (Get-Content -Path $logfile).Count
+# Wait for the hook file.
+$result = Test-Path $logfile
+while (-not($result)) {
+    Write-Host "Waiting for hook file..."
+    Start-Sleep -Seconds 3
+    $result = Test-Path -Path $logfile
+}
+
+$currentLineCount = 0
 
 # Creates an infinite loop to display new text file content.
 While ($true) {

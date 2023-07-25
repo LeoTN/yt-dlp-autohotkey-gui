@@ -174,6 +174,14 @@ FUNCTION SECTION
 ; Important function which executes the built command string by pasting it into the console.
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
+    If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
+    {
+        Hotkey_openOptionsGUI()
+    }
+    Else
+    {
+        WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
+    }
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
     static isDownloading := false
@@ -258,6 +266,12 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 
     If (booleanSilent = false)
     {
+        ; Deletes the old log file.
+        Try
+        {
+            FileDelete(A_Temp . "\yt_dlp_download_log.txt")
+        }
+        ; The powershell script now waits for the hook file.
         Run("powershell.exe -noExit -ExecutionPolicy Bypass -file " . A_WorkingDir . "\files\library\MonitorHookFile.ps1"
             , , "Min", &visualPowershellPID)
         WinWait("ahk_pid " . visualPowershellPID)
@@ -288,18 +302,14 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         partProgress := 0
         downloadStatusProgressBar.Value := 0
         downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
-        Try
-        {
-            FileDelete(A_Temp . "\yt_dlp_download_log.txt")
-        }
-        ; Waits for the download log file to exist again.
+        ; Waits for the download log file to exist.
         maxRetries := 10
         While (!FileExist(A_Temp . "\yt_dlp_download_log.txt"))
         {
             Sleep(1000)
             If (maxRetries <= 0)
             {
-                MsgBox("Could not find hook file to track progress.`n`nTerminating script.", "Error !", "O IconX T1.5")
+                MsgBox("Could not find hook file to track progress.`n`nTerminating script.", "Error !", "O IconX T2")
                 ExitApp()
                 ExitApp()
             }
