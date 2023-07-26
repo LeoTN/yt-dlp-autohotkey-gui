@@ -622,7 +622,7 @@ buildCommandString()
     {
         Case 0:
         {
-            commandString .= '--paths "' . customDownloadLocation.Value . '\' . downloadTime . '\media" '
+            commandString .= '--paths "' . customDownloadLocation.Value . '\media" '
         }
         Case 1:
         {
@@ -702,9 +702,10 @@ handleDownloadOptionsGUI_toolTipLoop(pElementHWNDArray)
         tmp19 := ""
         tmp20 := ""
         tmp21 := "Usually, a text file will be given to yt-dlp to download, but it is also possible to select a single URL."
-        tmp22 := ""
+        tmp22 := "The current location of the URL file is : [" . readConfigFile("URL_FILE_LOCATION") . "]."
         tmp23 := "Saves all downloads to the default path specified in the config file."
-        tmp24 := "The current default download path is: [" . readConfigFile("DOWNLOAD_PATH") . "]."
+        tmp24 := "The current default download path is: [" . readConfigFile("DOWNLOAD_PATH") . "]." .
+            "`nKeep in mind, that selecting a folder will actually download straight into it without any timestamp subfolders."
         tmp25 := ""
         tmp26 := ""
         tmp27 := "Shows no prompt when download in a background task is activated."
