@@ -249,8 +249,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         isDownloading := false
         saveGUISettingsAsPreset("last_settings", true)
-        MsgBox("The download process has reached it's end.`n`nReloading script.", "Download status", "O Iconi 262144 T2")
-        Reload()
+        MsgBox("The download process has reached it's end.", "Download status", "O Iconi 262144 T2")
     }
 }
 
@@ -393,7 +392,7 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     }
     Catch
     {
-        MsgBox("Could not write downloag log file.", "Error !", "O IconX T1.5")
+        MsgBox("Could not write downloag log file.", "Warning !", "O IconX T1.5")
     }
     ; When the loop reaches the final video this function is not called again to add +1 to the downloaded video amount.
     ; If all videos are downloaded, the following conditon is therefore true.
@@ -705,6 +704,7 @@ reloadScriptPrompt()
             i--
         }
         textField.Text := "The script has been reloaded."
+        saveGUISettingsAsPreset("last_settings", true)
         Sleep(100)
         Reload()
         ExitApp()
