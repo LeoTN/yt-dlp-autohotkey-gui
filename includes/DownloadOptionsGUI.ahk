@@ -6,7 +6,7 @@ SetWorkingDir A_ScriptDir
 CoordMode "Mouse", "Client"
 
 global commandString := ""
-global downloadTime := FormatTime(A_Now, "HH-mm-ss_dd.MM.yyyy")
+global downloadTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
 
 createDownloadOptionsGUI()
 {
@@ -675,8 +675,8 @@ handleDownloadOptionsGUI_toolTipManager(pBooleanRefresh := false)
             }
         }
     }
-    ; Waits for the download options GUI to appear.
-    If (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 2) != 0)
+    ; Checks if the download GUI exists.
+    If (WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
     {
         handleDownloadOptionsGUI_toolTipLoop(elementHWNDArray)
     }
