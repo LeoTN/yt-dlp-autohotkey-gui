@@ -293,7 +293,7 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     static parsedLines := 0
     If (booleanNewDownload = true)
     {
-        static videoAmount := getCurrentURL(true, true)
+        static videoAmount := readFile(readConfigFile("URL_FILE_LOCATION"), true).Length
         static downloadedVideoAmount := 0
         static maximumBarValue := videoAmount * 100
         parsedLines := 0
@@ -419,67 +419,6 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         downloadStatusProgressBar.Value := maximumBarValue
         downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
     }
-}
-
-; Enter true for the currentArrays length or false to receive the item in the array.
-; The second optional boolean defines wether you want to create the currentURL_Array or not.
-getCurrentURL(pBooleanGetLength := false, pBooleanCreateArray := false)
-{
-    booleanGetLength := pBooleanGetLength
-    booleanCreateArray := pBooleanCreateArray
-    static tmpArray := [""]
-    static currentURL_Array := [""]
-    If (booleanCreateArray = true)
-    {
-        currentURL_Array := readFile(readConfigFile("URL_FILE_LOCATION"), true)
-    }
-    If (booleanGetLength = true)
-    {
-        Return currentURL_Array.Length
-    }
-    Else If (getCurrentURL_DownloadSuccess(false) = true)
-    {
-        If (currentURL_Array.Length >= 1 && booleanGetLength = false)
-        {
-            tmpArray[1] := currentURL_Array.Pop()
-            ; Checks if the item is empty inside the URLarray.
-            If (tmpArray[1] = "")
-            {
-                tmpArray[1] := currentURL_Array.Pop()
-                Return tmpArray[1]
-            }
-            Else
-            {
-                Return tmpArray[1]
-            }
-        }
-        Else
-        {
-            Return
-        }
-    }
-    ; Returns the last content of the tmpArray (most likely because download failed).
-    Else If (getCurrentURL_DownloadSuccess(false) = false)
-    {
-        getCurrentURL_DownloadSuccess(true)
-        Return tmpArray[1]
-    }
-}
-
-; getCurrentURL() support function.
-; If the download fails, you have to call the getCurrentURL function again, but it would have deleted one link even
-; though it was never downloaded.
-; This function prevents this error from happening, so that the seemingly deleted link will be reatached to the currentURL_Array.
-; Enter true, to trigger the flipflop or false to get the last state.
-getCurrentURL_DownloadSuccess(pBoolean)
-{
-    boolean := pBoolean
-    static flipflop := true
-    If (boolean = true)
-    {
-        flipflop := !flipflop
-    }
-    Return flipflop
 }
 
 ; Works together with handleMainGUI_MenuCheckHandler() to enable / disable certain hotkeys depending on
@@ -830,13 +769,13 @@ findProcessWithWildcard(pWildcard)
     allRunningProcessesNameArray := []
     allRunningProcessesPathArray := []
     ; Filles the array with all existing process names.
-    For Process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
+    For (Process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process"))
     {
         allRunningProcessesNameArray.InsertAt(A_Index, Process.Name)
         allRunningProcessesPathArray.InsertAt(A_Index, Process.CommandLine)
     }
     ; Traveres through every object to compare it with the wildcard.
-    For v in allRunningProcessesNameArray
+    For (v in allRunningProcessesNameArray)
     {
         ; For example if you are process called "VideoDownloader.development-build-6.exe" it
         ; would be sufficient to search for "VideoDownloader.exe" as the [*]+ part allows an

@@ -79,8 +79,8 @@ writeToURLFile(pContent)
     content := pContent
     tmp := readFile(readConfigFile("URL_FILE_LOCATION"), true)
     ; Check if the URL already exists in the file.
-    i := getCurrentURL(true, true)
-    ; Content check loop
+    i := tmp.Length
+    ; Content check loop.
     Loop (i)
     {
         If (content = tmp[A_Index])
