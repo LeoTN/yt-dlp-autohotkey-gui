@@ -329,18 +329,17 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         ; Scanns the output from the console and extracts the download progress percentage values.
         If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0)
         {
-            outString := outMatch[]
-            outStringReady := StrReplace(outString, "%")
-            partProgress := Number(outStringReady)
             ; This avoids filling the progress bar to fast because of too many 100% messages from yt-dlp.
-            If (partProgress >= 99.99)
+            If (partProgress <= 99.99)
             {
-                Continue
+                outString := outMatch[]
+                outStringReady := StrReplace(outString, "%")
+                partProgress := Number(outStringReady)
+                currentBarValue := oldCurrentBarValue + partProgress
+                downloadStatusProgressBar.Value := currentBarValue
             }
-            currentBarValue := oldCurrentBarValue + partProgress
-            downloadStatusProgressBar.Value := currentBarValue
         }
-        If (partProgress >= 100 && downloadedVideoAmount <= videoAmount)
+        If (partProgress >= 99.99 && downloadedVideoAmount <= videoAmount)
         {
             ; This message only appears when the previous video processing has been finished.
             If (InStr(A_LoopReadLine, "Extracting URL: https://www") && downloadedVideoAmount != videoAmount)
