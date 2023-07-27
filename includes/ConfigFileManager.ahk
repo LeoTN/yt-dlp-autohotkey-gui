@@ -19,8 +19,8 @@ global booleanDebugMode := false
 CONFIG VARIABLE TEMPLATE SECTION
 -------------------------------------------------
 These default variables are used to generate the config file template.
-***IMPORTANT NOTE*** : Do NOT change the order of these variables !
-Otherwise this can lead to fatal erros and failures !
+***IMPORTANT NOTE*** : Do NOT change the name of these variables !
+Otherwise this can lead to fatal errors and failures !
 */
 
 ; Determines the location of the script's configuration file.
@@ -39,6 +39,9 @@ DOWNLOAD_ARCHIVE_LOCATION := baseFilesLocation . "\download\download_archive.txt
 DOWNLOAD_PRESET_LOCATION := baseFilesLocation . "\presets"
 ; Standard download path.
 DOWNLOAD_PATH := baseFilesLocation . "\download"
+
+; Defines if the script should ask the user for a brief explaination of it's core functions.
+ASK_FOR_TUTORIAL := true
 
 ; Stores which hotkeys are enabled / disabled via the GUI.
 HOTKEY_STATE_ARRAY := "[1, 1, 0, 1, 1, 1, 0]"
@@ -75,6 +78,7 @@ configVariableNameArray :=
         "DOWNLOAD_ARCHIVE_LOCATION",
         "DOWNLOAD_PRESET_LOCATION",
         "DOWNLOAD_PATH",
+        "ASK_FOR_TUTORIAL",
         "HOTKEY_STATE_ARRAY",
         "DOWNLOAD_HK",
         "URL_COLLECT_HK",
@@ -99,6 +103,7 @@ configSectionNameArray :=
         "FileLocations",
         "FileLocations",
         "FileLocations",
+        "GeneralSettings",
         "Hotkeys",
         "Hotkeys",
         "Hotkeys",

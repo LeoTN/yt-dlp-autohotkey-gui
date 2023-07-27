@@ -7,7 +7,7 @@ SetWorkingDir A_ScriptDir
 CoordMode "Mouse", "Client"
 ; Very important, basically sets the script working directory !!!
 global baseFilesLocation := detectIfWorkingDirIsDrive(A_WorkingDir)
-; Imports important functions and variables
+; Imports important functions and variables.
 ; Sets the directory for all following files.
 #Include "includes\"
 #Include "ConfigFileManager.ahk"
@@ -38,6 +38,7 @@ F6::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below.
+        scriptTutorial()
     }
 }
 
@@ -134,6 +135,14 @@ onInit()
             FileDelete(baseFilesLocation . "\NoPermissionsForUninstall.txt")
         }
         Hotkey_openUninstallGUI()
+    }
+    Else
+    {
+        ; Shows a small tutorial to guide the user.
+        If (readConfigFile("ASK_FOR_TUTORIAL") = true)
+        {
+            scriptTutorial()
+        }
     }
 }
 
