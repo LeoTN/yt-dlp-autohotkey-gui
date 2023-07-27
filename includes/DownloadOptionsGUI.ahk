@@ -552,6 +552,8 @@ handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
 handleDownloadOptionsGUI_InputFields()
 {
     global commandString
+    static newDownloadFolder := ""
+
     If (limitDownloadRateEdit.Value != 0)
     {
         If (limitDownloadRateEdit.Value > 100)
@@ -566,7 +568,14 @@ handleDownloadOptionsGUI_InputFields()
     }
     If (customDownloadLocation.Value = "You can now specify your own download path.")
     {
-        newDownloadFolder := DirSelect("*" . readConfigFile("DOWNLOAD_PATH"), 3, "Select download folder")
+        If (newDownloadFolder = "")
+        {
+            newDownloadFolder := DirSelect("*" . readConfigFile("DOWNLOAD_PATH"), 3, "Select download folder")
+        }
+        Else
+        {
+            newDownloadFolder := DirSelect("*" . newDownloadFolder, 3, "Select download folder")
+        }
         If (newDownloadFolder = "")
         {
             MsgBox("Invalid folder selection.", "Error", "O IconX T1.5")
