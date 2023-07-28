@@ -574,10 +574,7 @@ handleDownloadOptionsGUI_InputFields()
     If (maxDownloadSizeEdit.Value != 0)
     {
         ; Limit the download file size to a maximum value in Megabytes.
-        If (enableFastDownloadModeCheckbox.Value = 0)
-        {
-            commandString .= "--max-filesize " . maxDownloadSizeEdit.Value . "M "
-        }
+        commandString .= "--max-filesize " . maxDownloadSizeEdit.Value . "M "
     }
     If (customDownloadLocation.Value = "You can now specify your own download path.")
     {
@@ -658,8 +655,10 @@ buildCommandString()
     }
     ; This makes sure that the output file does not contain any weird letters.
     commandString .= '--output "%(title)s.%(ext)s" '
+    ; Sets the temporary directory for yt-dlp.
+    commandString .= '--paths "temp:' . readConfigFile("DOWNLOAD_PATH") . '\temporaryStorage" '
     ; Might help to enforce the max-filesize option.
-    ; commandString .= "--no-part "
+    commandString .= "--no-part "
     ; Makes the downloading message in the console a little prettier.
     commandString .= '--progress-template "[Downloading...] [%(progress._percent_str)s of %(progress._total_bytes_str)s ' .
         'at %(progress._speed_str)s. Time passed : %(progress._elapsed_str)s]" '

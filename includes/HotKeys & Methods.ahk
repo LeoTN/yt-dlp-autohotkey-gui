@@ -285,6 +285,8 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     static videoAmount := readFile(readConfigFile("URL_FILE_LOCATION"), true).Length
     static downloadedVideoAmount := 0
     static skippedVideoAmount := 0
+    static skippedVideoArchiveAmount := 0
+    static skippedVideoMaxSizeAmount := 0
     static maximumBarValue := videoAmount * 100
     static currentBarValue := 0
     static oldCurrentBarValue := 0
@@ -301,6 +303,8 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         videoAmount := readFile(readConfigFile("URL_FILE_LOCATION"), true).Length
         downloadedVideoAmount := 0
         skippedVideoAmount := 0
+        skippedVideoArchiveAmount := 0
+        skippedVideoMaxSizeAmount := 0
         maximumBarValue := videoAmount * 100
         currentBarValue := 0
         oldCurrentBarValue := 0
@@ -309,8 +313,7 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         booleanVideoSkippedLock := false
         downloadStatusProgressBar.Value := 0
         downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
-        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount - skippedVideoAmount .
-            " out of " . videoAmount . " videos."
+        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
         ; Waits for the download log file to exist.
         maxRetries := 10
         While (!FileExist(A_Temp . "\yt_dlp_download_log.txt"))
@@ -338,15 +341,16 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         {
             outString := outMatch[]
             outStringReady := StrReplace(outString, "%")
-            partProgress := Number(outStringReady)
+            outNumberReady := Number(outStringReady)
             ; This avoids filling the progress bar to fast because of too many 100% messages from yt-dlp.
-            If (partProgress <= 100)
+            If (partProgress <= 100 && outNumberReady <= 100)
             {
+                partProgress := outNumberReady
                 currentBarValue := oldCurrentBarValue + partProgress
                 downloadStatusProgressBar.Value := currentBarValue
             }
         }
-        If (partProgress >= 100 && downloadedVideoAmount <= videoAmount)
+        If (partProgress >= 100)
         {
             ; This message only appears when the previous video processing has been finished.
             If (InStr(A_LoopReadLine, "Extracting URL: https://www") && downloadedVideoAmount != videoAmount)
@@ -359,15 +363,20 @@ monitorDownloadProgress(pBooleanNewDownload := false)
                     oldCurrentBarValue += 100
                     downloadedVideoAmount++
                     partProgress := 0
-                    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount - skippedVideoAmount .
+                    tmp_result := downloadedVideoAmount - skippedVideoAmount
+                    ; Avoids negative numbers.
+                    If (tmp_result < 0)
+                    {
+                        tmp_result := 0
+                    }
+                    downloadStatusText.Text := "Downloaded " . tmp_result .
                         " out of " . videoAmount . " videos."
                 }
             }
         }
         ; The already recorded message is important because the progress bar has to move up one video to avoid issues.
-        Else If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
+        If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
         {
-            static skippedVideoArchiveAmount := 0
             If (booleanVideoSkippedLock = false)
             {
                 booleanVideoSkippedLock := true
@@ -381,7 +390,6 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         ; This message indicates that the video will be skipped because it is larger than the selected filesize.
         Else If (InStr(A_LoopReadLine, "File is larger than max-filesize"))
         {
-            static skippedVideoMaxSizeAmount := 0
             If (booleanVideoSkippedLock = false)
             {
                 booleanVideoSkippedLock := true
@@ -411,6 +419,7 @@ monitorDownloadProgress(pBooleanNewDownload := false)
             Return monitorDownloadProgress()
         }
     }
+    ; Download finish section.
     Try
     {
         FileCopy(A_Temp . "\yt_dlp_download_log.txt", readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), true)
@@ -419,18 +428,21 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     {
         MsgBox("Could not write downloag log file.", "Warning !", "O IconX T1.5")
     }
-    ; When the loop reaches the final video this function is not called again to add +1 to the downloaded video amount.
-    ; If all videos are downloaded, the following conditon is therefore true.
-    If (downloadedVideoAmount - skippedVideoAmount + 1 = videoAmount)
+    ; This might happen if the previous video has been skipped and the last video is a success but it
+    ; is not counted towards the downloadedVideoAmount.
+    If (downloadedVideoAmount + 1 = videoAmount - skippedVideoAmount)
     {
-        downloadedVideoAmount := videoAmount
+        downloadedVideoAmount++
+        tmp_result := downloadedVideoAmount
     }
-    Else
+    ; This means the last video has been skipped and counted as a skipped video.
+    Else If (videoAmount - skippedVideoAmount = downloadedVideoAmount)
     {
-        MsgBox(downloadedVideoAmount)
-        MsgBox(skippedVideoAmount)
-        MsgBox("Potential error with video amount detected", , "Icon! T3")
+        tmp_result := downloadedVideoAmount
     }
+    downloadStatusText.Text := "Downloaded " . tmp_result .
+        " out of " . videoAmount . " videos."
+    Sleep(2000)
     downloadStatusText.Text := "Final video processing..."
     Sleep(2000)
     ; Makes sure the log powershell windows is closed as well.
@@ -447,7 +459,7 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     Else
     {
         downloadStatusProgressBar.Value := maximumBarValue
-        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount - skippedVideoAmount .
+        downloadStatusText.Text := "Downloaded " . tmp_result .
             " out of " . videoAmount . " videos."
     }
 }
