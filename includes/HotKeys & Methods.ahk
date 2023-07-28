@@ -150,7 +150,7 @@ Hotkey_openOptionsGUI()
             downloadOptionsGUI.Show("w500 h405")
             flipflop := false
             ; Starts the tool tip timer to react upon the user hovering over gui elements.
-            ; SetTimer(handleDownloadOptionsGUI_toolTipManager, 1000) ; REMOVE
+            SetTimer(handleDownloadOptionsGUI_toolTipManager, 1000)
         }
         Else If (flipflop = false && WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
         {
@@ -440,6 +440,11 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     {
         tmp_result := downloadedVideoAmount
     }
+    If (IsSet(tmp_result) = true)
+    {
+        tmp_result := "N/A"
+    }
+
     downloadStatusText.Text := "Downloaded " . tmp_result .
         " out of " . videoAmount . " videos."
     Sleep(2000)
@@ -461,6 +466,11 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         downloadStatusProgressBar.Value := maximumBarValue
         downloadStatusText.Text := "Downloaded " . tmp_result .
             " out of " . videoAmount . " videos."
+        If (hideDownloadCommandPromptCheckbox.Value != 1)
+        {
+            MsgBox("Downloaded Amount : " . downloadedVideoAmount .
+                "`nSkipped Amount : " . skippedVideoAmount . "`nNetto : " . tmp_result, "Download summary", "O Iconi T5")
+        }
     }
 }
 

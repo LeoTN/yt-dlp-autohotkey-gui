@@ -711,7 +711,7 @@ handleDownloadOptionsGUI_toolTipLoop(pElementHWNDArray)
         tmp5 := ""
         tmp6 := "Disables most time-consuming options to increase download and processing speed."
         tmp7 := ""
-        tmp8 := ""
+        tmp8 := "This option is still experimental and might cause weird results."
         tmp9 := "Useful option to try when the download fails too often."
         tmp10 := ""
         tmp11 := ""
