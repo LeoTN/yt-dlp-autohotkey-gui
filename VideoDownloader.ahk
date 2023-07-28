@@ -144,6 +144,17 @@ onInit()
         {
             scriptTutorial()
         }
+        If (readConfigFile("SHOW_MAIN_GUI_ON_LAUNCH") = true)
+        {
+            If (!WinExist("ahk_id " . mainGUI.Hwnd))
+            {
+                Hotkey_openMainGUI()
+            }
+            Else
+            {
+                WinActivate("ahk_id " . mainGUI.Hwnd)
+            }
+        }
     }
 }
 

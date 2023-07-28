@@ -103,6 +103,8 @@ createMainGUI()
     helpMenu.Add("Used repository (yt-dlp)", (*) => Run("https://github.com/yt-dlp/yt-dlp"))
     helpMenu.Add("Original repository (youtube-downloader-using-ahk)",
         (*) => Run("https://github.com/LeoTN/youtube-downloader-using-ahk#readme"))
+    helpMenu.Add("Built in Tutorial", (*) => scriptTutorial())
+    helpMenu.SetIcon("Built in Tutorial", "shell32.dll", 24)
 
     allMenus := MenuBar()
     allMenus.Add("&File", fileMenu)

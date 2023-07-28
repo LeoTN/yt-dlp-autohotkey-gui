@@ -42,6 +42,8 @@ DOWNLOAD_PATH := baseFilesLocation . "\download"
 
 ; Defines if the script should ask the user for a brief explaination of it's core functions.
 ASK_FOR_TUTORIAL := true
+; Toggle if the main GUI should be shown on launch.
+SHOW_MAIN_GUI_ON_LAUNCH := true
 
 ; Stores which hotkeys are enabled / disabled via the GUI.
 HOTKEY_STATE_ARRAY := "[1, 1, 0, 1, 1, 1, 0]"
@@ -79,6 +81,7 @@ configVariableNameArray :=
         "DOWNLOAD_PRESET_LOCATION",
         "DOWNLOAD_PATH",
         "ASK_FOR_TUTORIAL",
+        "SHOW_MAIN_GUI_ON_LAUNCH",
         "HOTKEY_STATE_ARRAY",
         "DOWNLOAD_HK",
         "URL_COLLECT_HK",
@@ -103,6 +106,7 @@ configSectionNameArray :=
         "FileLocations",
         "FileLocations",
         "FileLocations",
+        "GeneralSettings",
         "GeneralSettings",
         "Hotkeys",
         "Hotkeys",
