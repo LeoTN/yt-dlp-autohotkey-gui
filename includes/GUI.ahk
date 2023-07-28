@@ -296,7 +296,7 @@ handleMainGUI_openDownloadLocation()
     }
     Catch
     {
-        MsgBox("No downloaded files from `ncurrent session found.", "Open videos error !", "O Icon! T1.5")
+        MsgBox("No downloaded files from`ncurrent session found.", "Open videos error !", "O Icon! T1.5")
     }
 }
 

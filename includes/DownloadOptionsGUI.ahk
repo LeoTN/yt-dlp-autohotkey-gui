@@ -24,11 +24,14 @@ createDownloadOptionsGUI()
 
     downloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-120 yp+20 w479 R9.3", "Download Options")
 
-    limitDownloadRateText1 := downloadOptionsGUI.Add("Text", "xp+10 yp+20", "Maximum download rate `n in MB per second.")
-    limitDownloadRateEdit := downloadOptionsGUI.Add("Edit", "yp+30")
+    limitDownloadRateText1 := downloadOptionsGUI.Add("Text", "xp+10 yp+20", "Maximum download rate`nin MB per second.")
+    limitDownloadRateEdit := downloadOptionsGUI.Add("Edit", "yp+30 Number")
     limitDownloadRateUpDown := downloadOptionsGUI.Add("UpDown")
-    limitDownloadRateText2 := downloadOptionsGUI.Add("Text", "yp+25", "Enter 0 for no limitations.")
-    higherRetryAmountCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Increase retry amount")
+    limitDownloadRateText2 := downloadOptionsGUI.Add("Text", "yp+25", "Enter 0 for no limitations. Applies to both input fields.")
+    maxDownloadSizeText1 := downloadOptionsGUI.Add("Text", "xp+200 yp-55", "Maximum download`nfile size in MB.")
+    maxDownloadSizeEdit := downloadOptionsGUI.Add("Edit", "yp+30 Number")
+    maxDownloadSizeUpDown := downloadOptionsGUI.Add("UpDown")
+    higherRetryAmountCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-200 yp+45", "Increase retry amount")
     downloadVideoDescriptionCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video description")
     downloadVideoCommentsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download video commentary")
     downloadVideoThumbnailCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video thumbnail")
@@ -503,6 +506,7 @@ handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
             clearURLFileAfterDownloadCheckbox.Opt("-Disabled")
             enableFastDownloadModeCheckbox.Opt("-Disabled")
             limitDownloadRateEdit.Opt("-Disabled")
+            maxDownloadSizeEdit.Opt("-Disabled")
             higherRetryAmountCheckbox.Opt("-Disabled")
             downloadVideoDescriptionCheckbox.Opt("-Disabled")
             downloadVideoCommentsCheckbox.Opt("-Disabled")
@@ -531,6 +535,7 @@ handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
             clearURLFileAfterDownloadCheckbox.Opt("+Disabled")
             enableFastDownloadModeCheckbox.Opt("+Disabled")
             limitDownloadRateEdit.Opt("+Disabled")
+            maxDownloadSizeEdit.Opt("+Disabled")
             higherRetryAmountCheckbox.Opt("+Disabled")
             downloadVideoDescriptionCheckbox.Opt("+Disabled")
             downloadVideoCommentsCheckbox.Opt("+Disabled")
@@ -564,6 +569,14 @@ handleDownloadOptionsGUI_InputFields()
         If (enableFastDownloadModeCheckbox.Value = 0)
         {
             commandString .= "--limit-rate " . limitDownloadRateEdit.Value . "MB "
+        }
+    }
+    If (maxDownloadSizeEdit.Value != 0)
+    {
+        ; Limit the download file size to a maximum value in Megabytes.
+        If (enableFastDownloadModeCheckbox.Value = 0)
+        {
+            commandString .= "--max-filesize " . maxDownloadSizeEdit.Value . "M "
         }
     }
     If (customDownloadLocation.Value = "You can now specify your own download path.")
@@ -611,7 +624,7 @@ handleDownloadOptionsGUI_Checkbox_DownloadWholePlaylist()
 buildCommandString()
 {
     ; Formats the value of A_Now to give each folder a unique time stamp.
-    global downloadTime := FormatTime(A_Now, "HH-mm-ss_dd.MM.yyyy")
+    global downloadTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
 
     global commandString := "yt-dlp "
     ; Basic options such as download path and single URL or multiple URLs.
@@ -645,6 +658,8 @@ buildCommandString()
     }
     ; This makes sure that the output file does not contain any weird letters.
     commandString .= '--output "%(title)s.%(ext)s" '
+    ; Might help to enforce the max-filesize option.
+    ; commandString .= "--no-part "
     ; Makes the downloading message in the console a little prettier.
     commandString .= '--progress-template "[Downloading...] [%(progress._percent_str)s of %(progress._total_bytes_str)s ' .
         'at %(progress._speed_str)s. Time passed : %(progress._elapsed_str)s]" '
@@ -697,30 +712,31 @@ handleDownloadOptionsGUI_toolTipLoop(pElementHWNDArray)
         tmp5 := ""
         tmp6 := "Disables most time-consuming options to increase download and processing speed."
         tmp7 := ""
-        tmp8 := "Useful option to try when the download fails too often."
-        tmp9 := ""
+        tmp8 := ""
+        tmp9 := "Useful option to try when the download fails too often."
         tmp10 := ""
         tmp11 := ""
         tmp12 := ""
-        tmp13 := "Forces the download of complete playlists if a URL contains a reference to it."
-        tmp14 := "Saves downloaded videos into an archive file to avoid downloading a video twice."
-        tmp15 := "Select a video format."
-        tmp16 := ""
-        tmp17 := "Select an audio format."
-        tmp18 := "Tries to find a compromise between audio and video quality."
-        tmp19 := ""
+        tmp13 := ""
+        tmp14 := "Forces the download of complete playlists if a URL contains a reference to it."
+        tmp15 := "Saves downloaded videos into an archive file to avoid downloading a video twice."
+        tmp16 := "Select a video format."
+        tmp17 := ""
+        tmp18 := "Select an audio format."
+        tmp19 := "Tries to find a compromise between audio and video quality."
         tmp20 := ""
-        tmp21 := "Usually, a text file will be given to yt-dlp to download, but it is also possible to select a single URL."
-        tmp22 := "The current location of the URL file is : [" . readConfigFile("URL_FILE_LOCATION") . "]."
-        tmp23 := "Saves all downloads to the default path specified in the config file."
-        tmp24 := "The current default download path is: [" . readConfigFile("DOWNLOAD_PATH") . "]." .
+        tmp21 := ""
+        tmp22 := "Usually, a text file will be given to yt-dlp to download, but it is also possible to select a single URL."
+        tmp23 := "The current location of the URL file is : [" . readConfigFile("URL_FILE_LOCATION") . "]."
+        tmp24 := "Saves all downloads to the default path specified in the config file."
+        tmp25 := "The current default download path is: [" . readConfigFile("DOWNLOAD_PATH") . "]." .
             "`nKeep in mind, that selecting a folder will actually download straight into it without any timestamp subfolders."
-        tmp25 := ""
         tmp26 := ""
-        tmp27 := "Shows no prompt when download in a background task is activated."
-        tmp28 := "Single click to save a preset or double click to save as default."
-        tmp29 := "The default preset will be loaded when no previous temporary preset is found."
-        Loop (29)
+        tmp27 := ""
+        tmp28 := "Shows no prompt when download in a background task is activated."
+        tmp29 := "Single click to save a preset or double click to save as default."
+        tmp30 := "The default preset will be loaded when no previous temporary preset is found."
+        Loop (30)
         {
             elementToolTipArray.InsertAt(A_Index, %"tmp" . A_Index%)
         }
@@ -814,11 +830,15 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
 
     If (FileExist(presetLocationComplete))
     {
-        result := MsgBox("The preset name : " . presetName . " already exists."
-            "`n`nDo you want to overwrite it ?", "Warning !", "YN Icon! 4096 T10")
-        If (result != "Yes")
+        ; This avoids showing the overwrite prompt for _(TEMP) presets.
+        If (booleanTemporary = false)
         {
-            Return false
+            result := MsgBox("The preset name : " . presetName . " already exists."
+                "`n`nDo you want to overwrite it ?", "Warning !", "YN Icon! 4096 T10")
+            If (result != "Yes")
+            {
+                Return false
+            }
         }
         Try
         {
@@ -879,9 +899,9 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
                     IniWrite(GuiCtrlObj.Value, presetLocationComplete, "DropDownLists", "{DropDownList_" . i_DropDownList . "}")
                     i_DropDownList++
                 }
-                ; Counts the number of elements parsed. When it reaches 37 this means that all relevant settings have been saved.
+                ; Counts the number of elements parsed. When it reaches 38 this means that all relevant settings have been saved.
                 ; All remaining GUI elements belong to the preset section and are not meant to be saved.
-                If (A_Index >= 37)
+                If (A_Index >= 38)
                 {
                     Break
                 }
