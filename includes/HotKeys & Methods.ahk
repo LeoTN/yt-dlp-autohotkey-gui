@@ -1,5 +1,5 @@
 #SingleInstance Force
-#MaxThreadsPerHotkey 2
+#MaxThreadsPerHotkey 1
 #Warn Unreachable, Off
 SendMode "Input"
 SetWorkingDir A_ScriptDir
@@ -174,6 +174,7 @@ FUNCTION SECTION
 ; Important function which executes the built command string by pasting it into the console.
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
+    Critical("On")
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
     static isDownloading := false
@@ -189,7 +190,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     If (isDownloading = true)
     {
         Return MsgBox("There is a download process running already.`n`nPlease wait for it to finish or cancel it.",
-            "Information", "O Icon! 4096 T3")
+            "Information", "O Icon! 4096 T2")
     }
     Else
     {
@@ -197,9 +198,9 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     }
     If (!FileExist(readConfigFile("URL_FILE_LOCATION")) && useTextFileForURLsCheckbox.Value = 1)
     {
+        MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing : [" .
+            expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download status", "O Icon! 8192")
         isDownloading := false
-        MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing " .
-            expandHotkey(readConfigFile("URL_COLLECT_HK")), "Download status", "O Icon! 8192")
         Return
     }
     If (booleanSilent = 1)

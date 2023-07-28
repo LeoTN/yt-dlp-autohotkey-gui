@@ -1,5 +1,5 @@
 #SingleInstance Force
-#MaxThreadsPerHotkey 2
+#MaxThreadsPerHotkey 1
 #Warn Unreachable, Off
 SendMode "Input"
 SetWorkingDir A_ScriptDir
