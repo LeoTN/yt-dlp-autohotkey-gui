@@ -222,7 +222,7 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true)
             {
                 If (validatePath(configFileContentArray[A_Index], booleanAskForPathCreation) = false)
                 {
-                    MsgBox("Could not create directory !`nCheck the config file for a valid path at : `n "
+                    MsgBox("Could not create directory !`nCheck the config file for a valid path at :`n "
                         . configVariableNameArray[A_Index], "Error !", "O Icon! T10")
                     MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
                     ExitApp()
@@ -314,7 +314,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true)
     If (outExtension = "" && !DirExist(path) && booleanAskForPathCreation = true)
     {
         result := MsgBox("The directory :`n" . path
-            . "`ndoes not exist. `nWould you like to create it ?", "Warning !", "YN Icon! T10")
+            . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
         If (result = "Yes")
         {
             Try
@@ -352,7 +352,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true)
             }
         }
         result := MsgBox("The directory :`n" . path
-            . "`ndoes not exist. `nWould you like to create it ?", "Warning !", "YN Icon! T10")
+            . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
         If (result = "Yes")
         {
             Try

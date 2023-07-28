@@ -174,6 +174,10 @@ FUNCTION SECTION
 ; Important function which executes the built command string by pasting it into the console.
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
+    stringToExecute := pCommandString
+    booleanSilent := pBooleanSilent
+    static isDownloading := false
+
     If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
     {
         Hotkey_openOptionsGUI()
@@ -182,9 +186,6 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
     }
-    stringToExecute := pCommandString
-    booleanSilent := pBooleanSilent
-    static isDownloading := false
     If (isDownloading = true)
     {
         Return MsgBox("There is a download process running already.`n`nPlease wait for it to finish or cancel it.",
@@ -197,7 +198,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     If (!FileExist(readConfigFile("URL_FILE_LOCATION")) && useTextFileForURLsCheckbox.Value = 1)
     {
         isDownloading := false
-        MsgBox("No URL file found. You can save`nURLs by clicking on a video and `npressing " .
+        MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing " .
             expandHotkey(readConfigFile("URL_COLLECT_HK")), "Download status", "O Icon! 8192")
         Return
     }
@@ -281,22 +282,37 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     booleanNewDownload := pBooleanNewDownload
 
     global booleanDownloadTerminated := false
-
+    static videoAmount := readFile(readConfigFile("URL_FILE_LOCATION"), true).Length
+    static downloadedVideoAmount := 0
+    static skippedVideoAmount := 0
+    static skippedVideoArchiveAmount := 0
+    static skippedVideoMaxSizeAmount := 0
+    static maximumBarValue := videoAmount * 100
     static currentBarValue := 0
     static oldCurrentBarValue := 0
     static partProgress := 0
     ; Remembers the amount of parsed lines to begin directly with the new generated ones.
     static parsedLines := 0
+    ; This variable stores if a video has been skipped for various reasons to avoid multiple video skips.
+    ; See below for more information.
+    static booleanVideoSkippedLock := false
+
     If (booleanNewDownload = true)
     {
-        static videoAmount := readFile(readConfigFile("URL_FILE_LOCATION"), true).Length
-        static downloadedVideoAmount := 0
-        static maximumBarValue := videoAmount * 100
-        parsedLines := 0
+        ; Resets all static variables when a new download process is started.
+        videoAmount := readFile(readConfigFile("URL_FILE_LOCATION"), true).Length
+        downloadedVideoAmount := 0
+        skippedVideoAmount := 0
+        skippedVideoArchiveAmount := 0
+        skippedVideoMaxSizeAmount := 0
+        maximumBarValue := videoAmount * 100
         currentBarValue := 0
         oldCurrentBarValue := 0
         partProgress := 0
+        parsedLines := 0
+        booleanVideoSkippedLock := false
         downloadStatusProgressBar.Value := 0
+        downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
         downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
         ; Waits for the download log file to exist.
         maxRetries := 10
@@ -313,8 +329,6 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         }
     }
 
-    downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
-
     Loop Read (A_Temp . "\yt_dlp_download_log.txt")
     {
         ; All previous lines will be skipped.
@@ -325,17 +339,18 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         ; Scanns the output from the console and extracts the download progress percentage values.
         If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0)
         {
+            outString := outMatch[]
+            outStringReady := StrReplace(outString, "%")
+            outNumberReady := Number(outStringReady)
             ; This avoids filling the progress bar to fast because of too many 100% messages from yt-dlp.
-            If (partProgress <= 99.99)
+            If (partProgress <= 100 && outNumberReady <= 100)
             {
-                outString := outMatch[]
-                outStringReady := StrReplace(outString, "%")
-                partProgress := Number(outStringReady)
+                partProgress := outNumberReady
                 currentBarValue := oldCurrentBarValue + partProgress
                 downloadStatusProgressBar.Value := currentBarValue
             }
         }
-        If (partProgress >= 99.99 && downloadedVideoAmount <= videoAmount)
+        If (partProgress >= 100)
         {
             ; This message only appears when the previous video processing has been finished.
             If (InStr(A_LoopReadLine, "Extracting URL: https://www") && downloadedVideoAmount != videoAmount)
@@ -343,21 +358,47 @@ monitorDownloadProgress(pBooleanNewDownload := false)
                 ; "[youtube:tab]" is considered to be ignored, as it only shows up when downloading a playlist.
                 If (!InStr(A_LoopReadLine, "[youtube:tab] Extracting URL: https://www"))
                 {
+                    ; Unlocks the skip function because a new video is beeing processed.
+                    booleanVideoSkippedLock := false
                     oldCurrentBarValue += 100
                     downloadedVideoAmount++
                     partProgress := 0
-                    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+                    tmp_result := downloadedVideoAmount - skippedVideoAmount
+                    ; Avoids negative numbers.
+                    If (tmp_result < 0)
+                    {
+                        tmp_result := 0
+                    }
+                    downloadStatusText.Text := "Downloaded " . tmp_result .
+                        " out of " . videoAmount . " videos."
                 }
             }
         }
         ; The already recorded message is important because the progress bar has to move up one video to avoid issues.
-        Else If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
+        If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
         {
-            oldCurrentBarValue += 100
-            downloadedVideoAmount++
-            partProgress := 0
-            downloadStatusText.Text := "One video has already been recorded in the archive file."
-            Sleep(2500)
+            If (booleanVideoSkippedLock = false)
+            {
+                booleanVideoSkippedLock := true
+                skippedVideoAmount++
+                skippedVideoArchiveAmount++
+                partProgress := 100
+                downloadStatusText.Text := skippedVideoArchiveAmount . " video(s) already in archive file."
+                Sleep(2000)
+            }
+        }
+        ; This message indicates that the video will be skipped because it is larger than the selected filesize.
+        Else If (InStr(A_LoopReadLine, "File is larger than max-filesize"))
+        {
+            If (booleanVideoSkippedLock = false)
+            {
+                booleanVideoSkippedLock := true
+                skippedVideoAmount++
+                skippedVideoMaxSizeAmount++
+                partProgress := 100
+                downloadStatusText.Text := skippedVideoMaxSizeAmount . " video(s) larger than maximum filesize."
+                Sleep(2000)
+            }
         }
         parsedLines++
     }
@@ -377,12 +418,8 @@ monitorDownloadProgress(pBooleanNewDownload := false)
             ; If there is new data.
             Return monitorDownloadProgress()
         }
-        ; Checks if the background process does not exist to determine the end of the download.
-        Else If (!ProcessExist(hiddenConsolePID))
-        {
-            Break
-        }
     }
+    ; Download finish section.
     Try
     {
         FileCopy(A_Temp . "\yt_dlp_download_log.txt", readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), true)
@@ -391,14 +428,28 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     {
         MsgBox("Could not write downloag log file.", "Warning !", "O IconX T1.5")
     }
-    ; When the loop reaches the final video this function is not called again to add +1 to the downloaded video amount.
-    ; If all videos are downloaded, the following conditon is therefore true.
-    If (downloadedVideoAmount + 1 = videoAmount)
+    ; This might happen if the previous video has been skipped and the last video is a success but it
+    ; is not counted towards the downloadedVideoAmount.
+    If (downloadedVideoAmount + 1 = videoAmount - skippedVideoAmount)
     {
-        downloadedVideoAmount := videoAmount
-        downloadStatusText.Text := "Final video processing..."
-        Sleep(2000)
+        downloadedVideoAmount++
+        tmp_result := downloadedVideoAmount
     }
+    ; This means the last video has been skipped and counted as a skipped video.
+    Else If (videoAmount - skippedVideoAmount = downloadedVideoAmount)
+    {
+        tmp_result := downloadedVideoAmount
+    }
+    If (IsSet(tmp_result) = true)
+    {
+        tmp_result := "N/A"
+    }
+
+    downloadStatusText.Text := "Downloaded " . tmp_result .
+        " out of " . videoAmount . " videos."
+    Sleep(2000)
+    downloadStatusText.Text := "Final video processing..."
+    Sleep(2000)
     ; Makes sure the log powershell windows is closed as well.
     Try
     {
@@ -413,7 +464,13 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     Else
     {
         downloadStatusProgressBar.Value := maximumBarValue
-        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+        downloadStatusText.Text := "Downloaded " . tmp_result .
+            " out of " . videoAmount . " videos."
+        If (hideDownloadCommandPromptCheckbox.Value != 1)
+        {
+            MsgBox("Downloaded Amount : " . downloadedVideoAmount .
+                "`nSkipped Amount : " . skippedVideoAmount . "`nNetto : " . tmp_result, "Download summary", "O Iconi T5")
+        }
     }
 }
 
@@ -455,7 +512,7 @@ clearURLFile()
     }
     Else
     {
-        MsgBox("The  URL file does not exist !	`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
+        MsgBox("The  URL file does not exist !`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
     }
 }
 
@@ -474,7 +531,7 @@ openURLFile()
     }
     Catch
     {
-        MsgBox("The URL file does not exist !	`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
+        MsgBox("The URL file does not exist !`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
     }
 }
 
@@ -492,7 +549,7 @@ openURLBackupFile()
     }
     Catch
     {
-        MsgBox("The URL backup file does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+        MsgBox("The URL backup file does not exist !`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
     }
 }
 
@@ -548,7 +605,7 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
     }
     Catch
     {
-        MsgBox("The URL blacklist file does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+        MsgBox("The URL blacklist file does not exist !`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
     }
 }
 
@@ -573,7 +630,7 @@ openConfigFile()
     }
     Catch
     {
-        MsgBox("The script's config file does not exist !	`n`nA fatal error has occured.", "Error !", "O Icon! T3")
+        MsgBox("The script's config file does not exist !`n`nA fatal error has occured.", "Error !", "O Icon! T3")
     }
 }
 
@@ -630,7 +687,7 @@ deleteFilePrompt(pFileName)
                         }
                         Catch
                         {
-                            MsgBox("No downloaded files from `ncurrent session found.", "Delete download error !", "O Icon! T2.5")
+                            MsgBox("No downloaded files from`ncurrent session found.", "Delete download error !", "O Icon! T2.5")
                         }
                     }
                 Default:
@@ -654,7 +711,7 @@ deleteFilePrompt(pFileName)
             }
             Else
             {
-                MsgBox("The " . fileName . " does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+                MsgBox("The " . fileName . " does not exist !`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
             }
         }
     }
@@ -878,14 +935,14 @@ scriptTutorial()
     MsgBox("If you see the download options GUI for the very first time,`nit might be a bit overwhelming but once you have"
         "`nused this script a few times it will become more familiar.`n`nQuick tip : "
         "`nHover over an option with the mouse cursor`nin order to gain extra information."
-        "`nNote : `nThis does only work if there is `nno download process running at the moment.",
+        "`nNote :`nThis does only work if there is`nno download process running at the moment.",
         "Video Downloader Tutorial - Use Download Options GUI", "O Iconi")
     MsgBox("Take a look at the top right corner of the download options GUI."
-        "`nPresets can be used to store the current configuration `nand load it later on."
+        "`nPresets can be used to store the current configuration`nand load it later on."
         "`n`nPressing the save button twice will store the current preset"
         "`nas the default one which will be loaded at the beginning.",
         "Video Downloader Tutorial - Use Download Options GUI", "O Iconi")
-    MsgBox("Depending on your selected options the script will `nclear the URL file and save the content to a backup"
+    MsgBox("Depending on your selected options the script will`nclear the URL file and save the content to a backup"
         "`nfile to possibly restore it.", "Video Downloader Tutorial - After the Finished Download", "O Iconi T10")
     MsgBox("To change the script hotkeys and script file paths`nyou can use the config file to do so."
         "`n`nThe location of the config file is always :`n[" . configFileLocation . "]",

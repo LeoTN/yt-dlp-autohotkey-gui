@@ -251,13 +251,13 @@ restoreURLFile()
 {
     If (!FileExist(readConfigFile("URL_BACKUP_FILE_LOCATION")))
     {
-        MsgBox("The URL blackup file does not exist !	`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+        MsgBox("The URL blackup file does not exist !`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
         Return
     }
     If (FileExist(readConfigFile("URL_FILE_LOCATION")))
     {
         result := MsgBox("The URL File already exists."
-            "`nPress YES to overwrite or NO to append the `nbackup file to the original file.", "Warning !", "YNC Icon! 4096 T10")
+            "`nPress YES to overwrite or NO to append the`nbackup file to the original file.", "Warning !", "YNC Icon! 4096 T10")
         Switch (result)
         {
             Case "Yes":
