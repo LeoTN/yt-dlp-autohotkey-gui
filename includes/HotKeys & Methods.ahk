@@ -174,6 +174,7 @@ FUNCTION SECTION
 ; Important function which executes the built command string by pasting it into the console.
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
+    Critical("On")
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
     static isDownloading := false
@@ -189,7 +190,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     If (isDownloading = true)
     {
         Return MsgBox("There is a download process running already.`n`nPlease wait for it to finish or cancel it.",
-            "Information", "O Icon! 4096 T3")
+            "Information", "O Icon! 4096 T2")
     }
     Else
     {
@@ -197,22 +198,22 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     }
     If (!FileExist(readConfigFile("URL_FILE_LOCATION")) && useTextFileForURLsCheckbox.Value = 1)
     {
+        MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing : [" .
+            expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download status", "O Icon! 8192")
         isDownloading := false
-        MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing " .
-            expandHotkey(readConfigFile("URL_COLLECT_HK")), "Download status", "O Icon! 8192")
         Return
     }
     If (booleanSilent = 1)
     {
         ; Execute the command line command and wait for it to be finished.
         displayAndLogConsoleCommand(stringToExecute, true)
-        monitorDownloadProgress(true)
+        monitorDownloadProgress()
     }
     Else
     {
         ; Enables the user to access the command and to review potential errors thrown by yt-dlp.
         displayAndLogConsoleCommand(stringToExecute, false)
-        monitorDownloadProgress(true)
+        monitorDownloadProgress()
     }
     If (downloadVideoSubtitlesCheckbox.Value = 1)
     {
@@ -239,7 +240,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         isDownloading := false
         saveGUISettingsAsPreset("last_settings", true)
-        MsgBox("The download process has reached it's end.`n`nTerminating script.", "Download status", "O Iconi 262144 T2")
+        MsgBox("The download process has reached the end.`n`nTerminating script.", "Download status", "O Iconi 262144 T2")
         ExitApp()
         ExitApp()
     }
@@ -277,58 +278,39 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 }
 
 ; Checks the download log file for status updates and reacts by updating the download options GUI progress bar and text fields.
-monitorDownloadProgress(pBooleanNewDownload := false)
+monitorDownloadProgress()
 {
-    booleanNewDownload := pBooleanNewDownload
-
     global booleanDownloadTerminated := false
-    static videoAmount := readFile(readConfigFile("URL_FILE_LOCATION"), true).Length
-    static downloadedVideoAmount := 0
-    static skippedVideoAmount := 0
-    static skippedVideoArchiveAmount := 0
-    static skippedVideoMaxSizeAmount := 0
-    static maximumBarValue := videoAmount * 100
-    static currentBarValue := 0
-    static oldCurrentBarValue := 0
-    static partProgress := 0
-    ; Remembers the amount of parsed lines to begin directly with the new generated ones.
-    static parsedLines := 0
-    ; This variable stores if a video has been skipped for various reasons to avoid multiple video skips.
-    ; See below for more information.
-    static booleanVideoSkippedLock := false
+    urlArray := readFile(readConfigFile("URL_FILE_LOCATION"), true)
+    videoAmount := urlArray.Length
+    downloadedVideoAmount := 0
+    skippedVideoArchiveAmount := 0
+    skippedVideoMaxSizeAmount := 0
+    maximumBarValue := videoAmount * 100
+    currentBarValue := 0
+    partProgress := 0
+    ; This variable needs to exist because yt-dlp spams the file to large message which causes a lot of trouble.
+    booleanSkippingLocked := false
+    parsedLines := 0
+    ; Prepares the download options GUI.
+    downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
+    downloadStatusProgressBar.Value := 0
+    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
 
-    If (booleanNewDownload = true)
+    ; Waits for the download log file to exist.
+    maxRetries := 10
+    While (!FileExist(A_Temp . "\yt_dlp_download_log.txt"))
     {
-        ; Resets all static variables when a new download process is started.
-        videoAmount := readFile(readConfigFile("URL_FILE_LOCATION"), true).Length
-        downloadedVideoAmount := 0
-        skippedVideoAmount := 0
-        skippedVideoArchiveAmount := 0
-        skippedVideoMaxSizeAmount := 0
-        maximumBarValue := videoAmount * 100
-        currentBarValue := 0
-        oldCurrentBarValue := 0
-        partProgress := 0
-        parsedLines := 0
-        booleanVideoSkippedLock := false
-        downloadStatusProgressBar.Value := 0
-        downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
-        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
-        ; Waits for the download log file to exist.
-        maxRetries := 10
-        While (!FileExist(A_Temp . "\yt_dlp_download_log.txt"))
+        Sleep(1000)
+        If (maxRetries <= 0)
         {
-            Sleep(1000)
-            If (maxRetries <= 0)
-            {
-                MsgBox("Could not find hook file to track progress.`n`nTerminating script.", "Error !", "O IconX T2")
-                ExitApp()
-                ExitApp()
-            }
-            maxRetries--
+            MsgBox("Could not find hook file to track progress.`n`nTerminating script.", "Error !", "O IconX T2")
+            ExitApp()
+            ExitApp()
         }
+        maxRetries--
     }
-
+startOfFileReadLoop:
     Loop Read (A_Temp . "\yt_dlp_download_log.txt")
     {
         ; All previous lines will be skipped.
@@ -337,69 +319,82 @@ monitorDownloadProgress(pBooleanNewDownload := false)
             Continue
         }
         ; Scanns the output from the console and extracts the download progress percentage values.
-        If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0)
+        If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0 && partProgress < 100)
         {
             outString := outMatch[]
             outStringReady := StrReplace(outString, "%")
             outNumberReady := Number(outStringReady)
             ; This avoids filling the progress bar to fast because of too many 100% messages from yt-dlp.
-            If (partProgress <= 100 && outNumberReady <= 100)
+            If (outNumberReady < 100)
             {
                 partProgress := outNumberReady
-                currentBarValue := oldCurrentBarValue + partProgress
-                downloadStatusProgressBar.Value := currentBarValue
             }
-        }
-        If (partProgress >= 100)
-        {
-            ; This message only appears when the previous video processing has been finished.
-            If (InStr(A_LoopReadLine, "Extracting URL: https://www") && downloadedVideoAmount != videoAmount)
+            ; This marks the end of the download process of the video.
+            ; It also deactivates the second if condition above.
+            Else If (outNumberReady = 100)
             {
-                ; "[youtube:tab]" is considered to be ignored, as it only shows up when downloading a playlist.
-                If (!InStr(A_LoopReadLine, "[youtube:tab] Extracting URL: https://www"))
-                {
-                    ; Unlocks the skip function because a new video is beeing processed.
-                    booleanVideoSkippedLock := false
-                    oldCurrentBarValue += 100
-                    downloadedVideoAmount++
-                    partProgress := 0
-                    tmp_result := downloadedVideoAmount - skippedVideoAmount
-                    ; Avoids negative numbers.
-                    If (tmp_result < 0)
-                    {
-                        tmp_result := 0
-                    }
-                    downloadStatusText.Text := "Downloaded " . tmp_result .
-                        " out of " . videoAmount . " videos."
-                }
+                partProgress := 100
             }
         }
         ; The already recorded message is important because the progress bar has to move up one video to avoid issues.
-        If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
+        Else If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
         {
-            If (booleanVideoSkippedLock = false)
-            {
-                booleanVideoSkippedLock := true
-                skippedVideoAmount++
-                skippedVideoArchiveAmount++
-                partProgress := 100
-                downloadStatusText.Text := skippedVideoArchiveAmount . " video(s) already in archive file."
-                Sleep(2000)
-            }
+            skippedVideoArchiveAmount++
+            partProgress := 0
+            downloadStatusText.Text := skippedVideoArchiveAmount . " video(s) already in archive file."
+            ; Calculates the progress bar value with all videos processed.
+            tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
+            currentBarValue := tmp_result * 100 + partProgress
+            ; Applies the changes to the GUI progress bar.
+            downloadStatusProgressBar.Value := currentBarValue
+            Sleep(2000)
         }
         ; This message indicates that the video will be skipped because it is larger than the selected filesize.
         Else If (InStr(A_LoopReadLine, "File is larger than max-filesize"))
         {
-            If (booleanVideoSkippedLock = false)
+            If (booleanSkippingLocked = false)
             {
-                booleanVideoSkippedLock := true
-                skippedVideoAmount++
+                booleanSkippingLocked := true
                 skippedVideoMaxSizeAmount++
-                partProgress := 100
+                partProgress := 0
                 downloadStatusText.Text := skippedVideoMaxSizeAmount . " video(s) larger than maximum filesize."
+                ; Calculates the progress bar value with all videos processed.
+                tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
+                currentBarValue := tmp_result * 100 + partProgress
+                ; Applies the changes to the GUI progress bar.
+                downloadStatusProgressBar.Value := currentBarValue
                 Sleep(2000)
             }
         }
+        ; This message only appears when the previous video processing has been finished.
+        Else If (InStr(A_LoopReadLine, "[MoveFiles] Moving file"))
+        {
+            If (partProgress = 100)
+            {
+                downloadedVideoAmount++
+                partProgress := 0
+                downloadStatusText.Text := "Downloaded " . downloadedVideoAmount .
+                    " out of " . videoAmount . " videos."
+            }
+        }
+        Else If (booleanSkippingLocked = true)
+        {
+            ; When a video is skipped this method is used to detect if a new video es beeing processed.
+            If (InStr(A_LoopReadLine, "Extracting URL: https://www"))
+            {
+                ; "[youtube:tab]" is considered to be ignored, as it only shows up when downloading a playlist.
+                If (!InStr(A_LoopReadLine, "[youtube:tab] Extracting URL: https://www"))
+                {
+                    ; When a new video is beeing processed, skipping it will be unlocked.
+                    booleanSkippingLocked := false
+                }
+            }
+        }
+        ; Calculates the progress bar value with all videos processed.
+        tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
+        currentBarValue := tmp_result * 100 + partProgress
+        ; Applies the changes to the GUI progress bar.
+        downloadStatusProgressBar.Value := currentBarValue
         parsedLines++
     }
     ; When the loop reaches the file end it will check if the console log has reached it's end.
@@ -416,7 +411,7 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         If (oldFileContent != newFileContent && booleanDownloadTerminated = false)
         {
             ; If there is new data.
-            Return monitorDownloadProgress()
+            goto startOfFileReadLoop
         }
     }
     ; Download finish section.
@@ -428,26 +423,6 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     {
         MsgBox("Could not write downloag log file.", "Warning !", "O IconX T1.5")
     }
-    ; This might happen if the previous video has been skipped and the last video is a success but it
-    ; is not counted towards the downloadedVideoAmount.
-    If (downloadedVideoAmount + 1 = videoAmount - skippedVideoAmount)
-    {
-        downloadedVideoAmount++
-        tmp_result := downloadedVideoAmount
-    }
-    ; This means the last video has been skipped and counted as a skipped video.
-    Else If (videoAmount - skippedVideoAmount = downloadedVideoAmount)
-    {
-        tmp_result := downloadedVideoAmount
-    }
-    If (IsSet(tmp_result) = true)
-    {
-        tmp_result := "N/A"
-    }
-
-    downloadStatusText.Text := "Downloaded " . tmp_result .
-        " out of " . videoAmount . " videos."
-    Sleep(2000)
     downloadStatusText.Text := "Final video processing..."
     Sleep(2000)
     ; Makes sure the log powershell windows is closed as well.
@@ -464,13 +439,15 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     Else
     {
         downloadStatusProgressBar.Value := maximumBarValue
-        downloadStatusText.Text := "Downloaded " . tmp_result .
+        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount .
             " out of " . videoAmount . " videos."
-        If (hideDownloadCommandPromptCheckbox.Value != 1)
-        {
-            MsgBox("Downloaded Amount : " . downloadedVideoAmount .
-                "`nSkipped Amount : " . skippedVideoAmount . "`nNetto : " . tmp_result, "Download summary", "O Iconi T5")
-        }
+    }
+    If (hideDownloadCommandPromptCheckbox.Value != 1)
+    {
+        MsgBox("Total video amount : " . videoAmount .
+            "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
+            "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount
+            "`nDownloaded Videos : " . downloadedVideoAmount, "Download summary", "O Iconi T5")
     }
 }
 
@@ -881,11 +858,11 @@ findProcessWithWildcard(pWildcard)
 scriptTutorial()
 {
     result := MsgBox("Would you like to have a short tutorial on how to select videos and some basic functionality?",
-        "Video Downloader Tutorial", "YN Iconi 8192")
+        "Video Downloader Tutorial", "YN Iconi 262144")
     If (result = "No")
     {
         result := MsgBox("Press YES if you want to disable the tutorial`nfor the next time you run this script.",
-            "Video Downloader Tutorial", "YN Iconi 8192")
+            "Video Downloader Tutorial", "YN Iconi 262144")
         If (result = "Yes")
         {
             editConfigFile("ASK_FOR_TUTORIAL", false)
@@ -893,16 +870,26 @@ scriptTutorial()
         Return
     }
 
+    MsgBox("Hello there... General Kenobi!`nWelcome to the tutorial."
+        "`nIt will try to teach you the basic functionallity of this script but keep thisin mind : "
+        "`nAt first this script is still in development phase so bugs are to be expected."
+        "`nSecondly PLEASE be patient and do not spamm buttons like a maniac. Wait for the script to process and if"
+        "`nnothing happens even after 3-5 seconds you may try pressing the button or hotkey again."
+        "`nWith that beeing said, let's begin with the tutorial."
+        "`n`nPress Okay to continue.",
+        "Video Downloader Tutorial - Important", "O Iconi 262144")
+
     MsgBox("This script acts as a simple GUI for yt-dlp.`n`nYou can open the main GUI by pressing : "
-        "`n" . expandHotkey(readConfigFile("MAIN_GUI_HK")), "Video Downloader Tutorial - Open Main GUI", "O Iconi 8192 T10")
+        "`n" . expandHotkey(readConfigFile("MAIN_GUI_HK"))
+        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Open Main GUI", "O Iconi 262144")
     If (WinWaitActive("ahk_id " . mainGUI.Hwnd, , 5) = 0)
     {
         Hotkey_openMainGUI()
         MsgBox("The script opened the main GUI for you.`n`nNo worries, you will get the hang of it soon :)",
-            "Video Downloader Tutorial - Open Main GUI", "O Iconi T3")
+            "Video Downloader Tutorial - Open Main GUI", "O Iconi 262144 T3")
     }
     MsgBox("The main GUI contains a lot of features and menus.`nYou may take some time to explore them by yourself."
-        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Main GUI", "O Iconi")
+        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Main GUI", "O Iconi 262144")
     If (!WinExist("ahk_id " . mainGUI.Hwnd))
     {
         Hotkey_openMainGUI()
@@ -913,52 +900,48 @@ scriptTutorial()
     }
     MsgBox("As you may have noticed, there is a submenu called`n[Active Hotkeys...] when you expand the [Options] menu."
         "`n`nOn the one hand, it provides a useful list`nof most available hotkeys"
-        "`nand on the other hand, it enables you to select which hotkeys you want to activate or deactivate.",
-        "Video Downloader Tutorial - Use Main GUI", "O Iconi")
+        "`nand on the other hand, it enables you to select which hotkeys you want to activate or deactivate."
+        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Main GUI", "O Iconi 262144")
     MsgBox("If you want to select a video there are multiple options.`nYou either open the video and press : "
         "`n[" . expandHotkey(readConfigFile("URL_COLLECT_HK")) . "].`n`nAlternatively hover over the video thumbnail and press : "
-        "`n[" . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")) . "].",
-        "Video Downloader Tutorial - Select Video(s)", "O Iconi")
+        "`n[" . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")) . "]."
+        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Select Video(s)", "O Iconi 262144")
     MsgBox("It is possible to manually open the URL file`n(with the main GUI) and edit the saved URLs."
-        "`n`nThe current location of the URL file is : [" . readConfigFile("URL_FILE_LOCATION") . "].",
-        "Video Downloader Tutorial - Find Selected Video(s)", "O Iconi")
+        "`n`nThe current location of the URL file is : [" . readConfigFile("URL_FILE_LOCATION") . "]."
+        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Find Selected Video(s)", "O Iconi 262144")
     MsgBox("To download the URLs saved in the file this script uses`na python command line application called yt-dlp."
         "`nThe download options GUI is used to pass the parameters`nto the console and specify various download options."
-        "`n`nPress [" . expandHotkey(readConfigFile("OPTIONS_GUI_HK")) . "] to open the download options GUI.",
-        "Video Downloader Tutorial - Download Selected Video(s)", "O Iconi T25")
+        "`n`nPress [" . expandHotkey(readConfigFile("OPTIONS_GUI_HK")) . "] to open the download options GUI."
+        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Download Selected Video(s)", "O Iconi 262144")
     If (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 5) = 0)
     {
         Hotkey_openOptionsGUI()
         MsgBox("The script opened the download options GUI for you.`n`nNo worries, you will get the hang of it soon :)",
-            "Video Downloader Tutorial - Open Download Options GUI", "O Iconi T3")
+            "Video Downloader Tutorial - Open Download Options GUI", "O Iconi 262144 T3")
     }
     MsgBox("If you see the download options GUI for the very first time,`nit might be a bit overwhelming but once you have"
         "`nused this script a few times it will become more familiar.`n`nQuick tip : "
         "`nHover over an option with the mouse cursor`nin order to gain extra information."
-        "`nNote :`nThis does only work if there is`nno download process running at the moment.",
-        "Video Downloader Tutorial - Use Download Options GUI", "O Iconi")
+        "`nNote :`nThis does only work if there is`nno download process running at the moment."
+        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Download Options GUI", "O Iconi 262144")
     MsgBox("Take a look at the top right corner of the download options GUI."
         "`nPresets can be used to store the current configuration`nand load it later on."
         "`n`nPressing the save button twice will store the current preset"
-        "`nas the default one which will be loaded at the beginning.",
-        "Video Downloader Tutorial - Use Download Options GUI", "O Iconi")
+        "`nas the default one which will be loaded at the beginning."
+        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Download Options GUI", "O Iconi 262144")
     MsgBox("Depending on your selected options the script will`nclear the URL file and save the content to a backup"
-        "`nfile to possibly restore it.", "Video Downloader Tutorial - After the Finished Download", "O Iconi T10")
+        "`nfile to possibly restore it."
+        "`n`nPress Okay to continue.", "Video Downloader Tutorial - After the Finished Download", "O Iconi 262144")
     MsgBox("To change the script hotkeys and script file paths`nyou can use the config file to do so."
-        "`n`nThe location of the config file is always :`n[" . configFileLocation . "]",
-        "Video Downloader Tutorial - Using the Config File", "O Iconi")
-
+        "`n`nThe location of the config file is always :`n[" . configFileLocation . "]"
+        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Using the Config File", "O Iconi 262144")
     result := MsgBox("You have reached the end of the tutorial.`n`nRemember that you can access all important files"
         "`nfrom the main GUI window.`n`nWould you like to disable this tutorial for the`nnext time you run this script ?"
-        "`n`nPress Cancel to start the tutorial again.", "Video Downloader Tutorial - End", "YNC Iconi")
-
-
-    If (result = "Yes")
-    {
+        "`n`nPress Cancel to start the tutorial again.", "Video Downloader Tutorial - End", "YNC Iconi 262144")
+    If (result = "Yes") {
         editConfigFile("ASK_FOR_TUTORIAL", false)
     }
-    Else If (result = "Cancel")
-    {
+    Else If (result = "Cancel") {
         scriptTutorial()
     }
 }
