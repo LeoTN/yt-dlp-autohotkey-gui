@@ -270,7 +270,7 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
             FileDelete(A_Temp . "\yt_dlp_download_log.txt")
         }
         ; The powershell script now waits for the hook file.
-        Run("powershell.exe -noExit -ExecutionPolicy Bypass -file " . baseFilesLocation . "\library\MonitorHookFile.ps1"
+        Run('powershell.exe -noExit -ExecutionPolicy Bypass -file "' . baseFilesLocation . '\library\MonitorHookFile.ps1"'
             , , "Min", &visualPowershellPID)
         WinWait("ahk_pid " . visualPowershellPID)
         WinActivate("ahk_pid " . visualPowershellPID)
