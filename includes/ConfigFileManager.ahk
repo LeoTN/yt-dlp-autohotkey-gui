@@ -44,7 +44,8 @@ DOWNLOAD_PATH := baseFilesLocation . "\download"
 ASK_FOR_TUTORIAL := true
 ; Toggle if the main GUI should be shown on launch.
 SHOW_MAIN_GUI_ON_LAUNCH := true
-
+; Toggle if the downnload options GUI should be shown on launch.
+SHOW_OPTIONS_GUI_ON_LAUNCH := true
 ; Stores which hotkeys are enabled / disabled via the GUI.
 HOTKEY_STATE_ARRAY := "[1, 1, 0, 1, 1, 1, 0]"
 ; Just a list of all standard hotkeys.
@@ -82,6 +83,7 @@ configVariableNameArray :=
         "DOWNLOAD_PATH",
         "ASK_FOR_TUTORIAL",
         "SHOW_MAIN_GUI_ON_LAUNCH",
+        "SHOW_OPTIONS_GUI_ON_LAUNCH",
         "HOTKEY_STATE_ARRAY",
         "DOWNLOAD_HK",
         "URL_COLLECT_HK",
@@ -106,6 +108,7 @@ configSectionNameArray :=
         "FileLocations",
         "FileLocations",
         "FileLocations",
+        "GeneralSettings",
         "GeneralSettings",
         "GeneralSettings",
         "Hotkeys",

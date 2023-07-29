@@ -142,7 +142,7 @@ onInit()
         ; Shows a small tutorial to guide the user.
         If (readConfigFile("ASK_FOR_TUTORIAL") = true)
         {
-            scriptTutorial()
+            Return scriptTutorial()
         }
         If (readConfigFile("SHOW_MAIN_GUI_ON_LAUNCH") = true)
         {
@@ -153,6 +153,17 @@ onInit()
             Else
             {
                 WinActivate("ahk_id " . mainGUI.Hwnd)
+            }
+        }
+        If (readConfigFile("SHOW_OPTIONS_GUI_ON_LAUNCH") = true)
+        {
+            If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
+            {
+                Hotkey_openOptionsGUI()
+            }
+            Else
+            {
+                WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
             }
         }
     }
