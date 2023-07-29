@@ -441,11 +441,11 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     {
         tmp_result := downloadedVideoAmount
     }
-    If (IsSet(tmp_result) = true)
+    ; Fail safe for tmp_result.
+    If (IsSet(tmp_result) = false)
     {
         tmp_result := "N/A"
     }
-
     downloadStatusText.Text := "Downloaded " . tmp_result .
         " out of " . videoAmount . " videos."
     Sleep(2000)
