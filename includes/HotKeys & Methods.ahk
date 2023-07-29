@@ -207,13 +207,13 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         ; Execute the command line command and wait for it to be finished.
         displayAndLogConsoleCommand(stringToExecute, true)
-        monitorDownloadProgress(true)
+        monitorDownloadProgress()
     }
     Else
     {
         ; Enables the user to access the command and to review potential errors thrown by yt-dlp.
         displayAndLogConsoleCommand(stringToExecute, false)
-        monitorDownloadProgress(true)
+        monitorDownloadProgress()
     }
     If (downloadVideoSubtitlesCheckbox.Value = 1)
     {
@@ -240,7 +240,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         isDownloading := false
         saveGUISettingsAsPreset("last_settings", true)
-        MsgBox("The download process has reached it's end.`n`nTerminating script.", "Download status", "O Iconi 262144 T2")
+        MsgBox("The download process has reached the end.`n`nTerminating script.", "Download status", "O Iconi 262144 T2")
         ExitApp()
         ExitApp()
     }
@@ -278,58 +278,39 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 }
 
 ; Checks the download log file for status updates and reacts by updating the download options GUI progress bar and text fields.
-monitorDownloadProgress(pBooleanNewDownload := false)
+monitorDownloadProgress()
 {
-    booleanNewDownload := pBooleanNewDownload
-
     global booleanDownloadTerminated := false
-    static videoAmount := readFile(readConfigFile("URL_FILE_LOCATION"), true).Length
-    static downloadedVideoAmount := 0
-    static skippedVideoAmount := 0
-    static skippedVideoArchiveAmount := 0
-    static skippedVideoMaxSizeAmount := 0
-    static maximumBarValue := videoAmount * 100
-    static currentBarValue := 0
-    static oldCurrentBarValue := 0
-    static partProgress := 0
-    ; Remembers the amount of parsed lines to begin directly with the new generated ones.
-    static parsedLines := 0
-    ; This variable stores if a video has been skipped for various reasons to avoid multiple video skips.
-    ; See below for more information.
-    static booleanVideoSkippedLock := false
+    urlArray := readFile(readConfigFile("URL_FILE_LOCATION"), true)
+    videoAmount := urlArray.Length
+    downloadedVideoAmount := 0
+    skippedVideoArchiveAmount := 0
+    skippedVideoMaxSizeAmount := 0
+    maximumBarValue := videoAmount * 100
+    currentBarValue := 0
+    partProgress := 0
+    ; This variable needs to exist because yt-dlp spams the file to large message which causes a lot of trouble.
+    booleanSkippingLocked := false
+    parsedLines := 0
+    ; Prepares the download options GUI.
+    downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
+    downloadStatusProgressBar.Value := 0
+    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
 
-    If (booleanNewDownload = true)
+    ; Waits for the download log file to exist.
+    maxRetries := 10
+    While (!FileExist(A_Temp . "\yt_dlp_download_log.txt"))
     {
-        ; Resets all static variables when a new download process is started.
-        videoAmount := readFile(readConfigFile("URL_FILE_LOCATION"), true).Length
-        downloadedVideoAmount := 0
-        skippedVideoAmount := 0
-        skippedVideoArchiveAmount := 0
-        skippedVideoMaxSizeAmount := 0
-        maximumBarValue := videoAmount * 100
-        currentBarValue := 0
-        oldCurrentBarValue := 0
-        partProgress := 0
-        parsedLines := 0
-        booleanVideoSkippedLock := false
-        downloadStatusProgressBar.Value := 0
-        downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
-        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
-        ; Waits for the download log file to exist.
-        maxRetries := 10
-        While (!FileExist(A_Temp . "\yt_dlp_download_log.txt"))
+        Sleep(1000)
+        If (maxRetries <= 0)
         {
-            Sleep(1000)
-            If (maxRetries <= 0)
-            {
-                MsgBox("Could not find hook file to track progress.`n`nTerminating script.", "Error !", "O IconX T2")
-                ExitApp()
-                ExitApp()
-            }
-            maxRetries--
+            MsgBox("Could not find hook file to track progress.`n`nTerminating script.", "Error !", "O IconX T2")
+            ExitApp()
+            ExitApp()
         }
+        maxRetries--
     }
-
+startOfFileReadLoop:
     Loop Read (A_Temp . "\yt_dlp_download_log.txt")
     {
         ; All previous lines will be skipped.
@@ -338,69 +319,82 @@ monitorDownloadProgress(pBooleanNewDownload := false)
             Continue
         }
         ; Scanns the output from the console and extracts the download progress percentage values.
-        If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0)
+        If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0 && partProgress < 100)
         {
             outString := outMatch[]
             outStringReady := StrReplace(outString, "%")
             outNumberReady := Number(outStringReady)
             ; This avoids filling the progress bar to fast because of too many 100% messages from yt-dlp.
-            If (partProgress <= 100 && outNumberReady <= 100)
+            If (outNumberReady < 100)
             {
                 partProgress := outNumberReady
-                currentBarValue := oldCurrentBarValue + partProgress
-                downloadStatusProgressBar.Value := currentBarValue
             }
-        }
-        If (partProgress >= 100)
-        {
-            ; This message only appears when the previous video processing has been finished.
-            If (InStr(A_LoopReadLine, "Extracting URL: https://www") && downloadedVideoAmount != videoAmount)
+            ; This marks the end of the download process of the video.
+            ; It also deactivates the second if condition above.
+            Else If (outNumberReady = 100)
             {
-                ; "[youtube:tab]" is considered to be ignored, as it only shows up when downloading a playlist.
-                If (!InStr(A_LoopReadLine, "[youtube:tab] Extracting URL: https://www"))
-                {
-                    ; Unlocks the skip function because a new video is beeing processed.
-                    booleanVideoSkippedLock := false
-                    oldCurrentBarValue += 100
-                    downloadedVideoAmount++
-                    partProgress := 0
-                    tmp_result := downloadedVideoAmount - skippedVideoAmount
-                    ; Avoids negative numbers.
-                    If (tmp_result < 0)
-                    {
-                        tmp_result := 0
-                    }
-                    downloadStatusText.Text := "Downloaded " . tmp_result .
-                        " out of " . videoAmount . " videos."
-                }
+                partProgress := 100
             }
         }
         ; The already recorded message is important because the progress bar has to move up one video to avoid issues.
-        If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
+        Else If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
         {
-            If (booleanVideoSkippedLock = false)
-            {
-                booleanVideoSkippedLock := true
-                skippedVideoAmount++
-                skippedVideoArchiveAmount++
-                partProgress := 100
-                downloadStatusText.Text := skippedVideoArchiveAmount . " video(s) already in archive file."
-                Sleep(2000)
-            }
+            skippedVideoArchiveAmount++
+            partProgress := 0
+            downloadStatusText.Text := skippedVideoArchiveAmount . " video(s) already in archive file."
+            ; Calculates the progress bar value with all videos processed.
+            tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
+            currentBarValue := tmp_result * 100 + partProgress
+            ; Applies the changes to the GUI progress bar.
+            downloadStatusProgressBar.Value := currentBarValue
+            Sleep(2000)
         }
         ; This message indicates that the video will be skipped because it is larger than the selected filesize.
         Else If (InStr(A_LoopReadLine, "File is larger than max-filesize"))
         {
-            If (booleanVideoSkippedLock = false)
+            If (booleanSkippingLocked = false)
             {
-                booleanVideoSkippedLock := true
-                skippedVideoAmount++
+                booleanSkippingLocked := true
                 skippedVideoMaxSizeAmount++
-                partProgress := 100
+                partProgress := 0
                 downloadStatusText.Text := skippedVideoMaxSizeAmount . " video(s) larger than maximum filesize."
+                ; Calculates the progress bar value with all videos processed.
+                tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
+                currentBarValue := tmp_result * 100 + partProgress
+                ; Applies the changes to the GUI progress bar.
+                downloadStatusProgressBar.Value := currentBarValue
                 Sleep(2000)
             }
         }
+        ; This message only appears when the previous video processing has been finished.
+        Else If (InStr(A_LoopReadLine, "[MoveFiles] Moving file"))
+        {
+            If (partProgress = 100)
+            {
+                downloadedVideoAmount++
+                partProgress := 0
+                downloadStatusText.Text := "Downloaded " . downloadedVideoAmount .
+                    " out of " . videoAmount . " videos."
+            }
+        }
+        Else If (booleanSkippingLocked = true)
+        {
+            ; When a video is skipped this method is used to detect if a new video es beeing processed.
+            If (InStr(A_LoopReadLine, "Extracting URL: https://www"))
+            {
+                ; "[youtube:tab]" is considered to be ignored, as it only shows up when downloading a playlist.
+                If (!InStr(A_LoopReadLine, "[youtube:tab] Extracting URL: https://www"))
+                {
+                    ; When a new video is beeing processed, skipping it will be unlocked.
+                    booleanSkippingLocked := false
+                }
+            }
+        }
+        ; Calculates the progress bar value with all videos processed.
+        tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
+        currentBarValue := tmp_result * 100 + partProgress
+        ; Applies the changes to the GUI progress bar.
+        downloadStatusProgressBar.Value := currentBarValue
         parsedLines++
     }
     ; When the loop reaches the file end it will check if the console log has reached it's end.
@@ -417,7 +411,7 @@ monitorDownloadProgress(pBooleanNewDownload := false)
         If (oldFileContent != newFileContent && booleanDownloadTerminated = false)
         {
             ; If there is new data.
-            Return monitorDownloadProgress()
+            goto startOfFileReadLoop
         }
     }
     ; Download finish section.
@@ -429,26 +423,6 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     {
         MsgBox("Could not write downloag log file.", "Warning !", "O IconX T1.5")
     }
-    ; This might happen if the previous video has been skipped and the last video is a success but it
-    ; is not counted towards the downloadedVideoAmount.
-    If (downloadedVideoAmount + 1 = videoAmount - skippedVideoAmount)
-    {
-        downloadedVideoAmount++
-        tmp_result := downloadedVideoAmount
-    }
-    ; This means the last video has been skipped and counted as a skipped video.
-    Else If (videoAmount - skippedVideoAmount = downloadedVideoAmount)
-    {
-        tmp_result := downloadedVideoAmount
-    }
-    ; Fail safe for tmp_result.
-    If (IsSet(tmp_result) = false)
-    {
-        tmp_result := "N/A"
-    }
-    downloadStatusText.Text := "Downloaded " . tmp_result .
-        " out of " . videoAmount . " videos."
-    Sleep(2000)
     downloadStatusText.Text := "Final video processing..."
     Sleep(2000)
     ; Makes sure the log powershell windows is closed as well.
@@ -465,13 +439,15 @@ monitorDownloadProgress(pBooleanNewDownload := false)
     Else
     {
         downloadStatusProgressBar.Value := maximumBarValue
-        downloadStatusText.Text := "Downloaded " . tmp_result .
+        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount .
             " out of " . videoAmount . " videos."
-        If (hideDownloadCommandPromptCheckbox.Value != 1)
-        {
-            MsgBox("Downloaded Amount : " . downloadedVideoAmount .
-                "`nSkipped Amount : " . skippedVideoAmount . "`nNetto : " . tmp_result, "Download summary", "O Iconi T5")
-        }
+    }
+    If (hideDownloadCommandPromptCheckbox.Value != 1)
+    {
+        MsgBox("Total video amount : " . videoAmount .
+            "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
+            "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount
+            "`nDownloaded Videos : " . downloadedVideoAmount, "Download summary", "O Iconi T5")
     }
 }
 
