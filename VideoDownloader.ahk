@@ -1,6 +1,6 @@
 ; NOTE : This is the main .ahk file which has to be started !!!
 #SingleInstance Force
-#MaxThreadsPerHotkey 1
+#MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
 SendMode "Input"
 SetWorkingDir A_ScriptDir
