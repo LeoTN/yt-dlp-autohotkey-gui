@@ -973,7 +973,7 @@ uninstallScript()
     If (tmp1 = 1)
     {
         uninstallStatusBar.SetText("Currently uninstalling yt-dlp...")
-        RunWait(A_ComSpec " /c pip uninstall yt-dlp --no-input")
+        RunWait(A_ComSpec ' /c python -m pip uninstall -y "yt-dlp"')
         uninstallProgressBar.Value += 100
     }
     If (tmp2 = 1)
@@ -1021,7 +1021,7 @@ uninstallScript()
         {
             FileRecycle(readConfigFile("DOWNLOAD_PATH", false))
         }
-        Catch
+        If (FileExist(baseFilesLocation . "\download") || FileExist(readConfigFile("DOWNLOAD_PATH", false)))
         {
             uninstallStatusBar.SetText("Warning ! Could not delete downloaded files !")
             Sleep(2500)
@@ -1039,15 +1039,19 @@ uninstallScript()
         {
             Try
             {
+                uninstallStatusBar.SetText("Moving downloaded files to desktop...")
                 DirMove(baseFilesLocation . "\download", A_Desktop . "\yt_dlp_autohotkey_gui_downloads_after_uninstall", 1)
             }
             Catch
             {
-                evacuationError := true
-                uninstallStatusBar.SetText("Warning ! Could not save downloaded files !")
-                Sleep(2500)
-                uninstallStatusBar.SetText("The script file deletion process will be skipped.")
-                Sleep(2500)
+                If (FileExist(baseFilesLocation . "\download"))
+                {
+                    evacuationError := true
+                    uninstallStatusBar.SetText("Warning ! Could not save downloaded files !")
+                    Sleep(2500)
+                    uninstallStatusBar.SetText("The script file deletion process will be skipped.")
+                    Sleep(2500)
+                }
             }
             Try
             {

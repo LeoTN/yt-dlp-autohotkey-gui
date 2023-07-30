@@ -408,11 +408,11 @@ setup_checkPythonVersion()
                     Sleep(1500)
                     Try
                     {
-                        While (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . ' - winget install "python" --accept-source-agreements --accept-package-agreements')
+                        While (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . ' - winget  install "python" --accept-source-agreements --accept-package-agreements')
                         {
                             Sleep(500)
                         }
-                        Sleep(20000)
+                        Sleep(10000)
                         WinClose("ahk_pid " . consolePID)
                     }
                     Catch
