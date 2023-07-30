@@ -240,7 +240,6 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         isDownloading := false
         saveGUISettingsAsPreset("last_settings", true)
-        MsgBox("The download process has reached the end.`n`nTerminating script.", "Download status", "O Iconi 262144 T2")
         ExitApp()
         ExitApp()
     }
@@ -248,7 +247,6 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         isDownloading := false
         saveGUISettingsAsPreset("last_settings", true)
-        MsgBox("The download process has reached it's end.", "Download status", "O Iconi 262144 T2")
     }
 }
 
