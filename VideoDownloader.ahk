@@ -466,7 +466,7 @@ setup_checkPythonVersion()
                             tmpString1 := RegExReplace(pythonVersion, ".[0-9]$")
                             tmpString2 := ' /c winget uninstall "python ' . tmpString1 . '"'
                             RunWait(A_ComSpec . tmpString2)
-                            Run(A_ComSpec ' /k winget install "python" --accept-source-agreements --accept-package-agreements || title Completed...',
+                            Run(A_ComSpec ' /k winget install "python" --accept-source-agreements --accept-package-agreements',
                                 , , &consolePID)
                             Sleep(2000)
                             Try
