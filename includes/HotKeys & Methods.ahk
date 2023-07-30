@@ -259,7 +259,7 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
     global hiddenConsolePID
     global visualPowershellPID
 
-    Run(A_ComSpec . " /c " . command . " > " . A_Temp . "\yt_dlp_download_log.txt", , "Min", &hiddenConsolePID)
+    Run(A_ComSpec . ' /c ' . command . ' > "' . A_Temp . '\yt_dlp_download_log.txt"', , "Min", &hiddenConsolePID)
     ProcessWait(hiddenConsolePID)
 
     If (booleanSilent = false)

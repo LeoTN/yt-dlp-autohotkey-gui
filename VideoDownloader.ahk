@@ -219,12 +219,12 @@ setUp()
             ; Will install the latest version of yt-dlp from GitHub.
             ; This was the old way but it would not receive that many updates.
             ; Run(A_ComSpec " /k pip install yt-dlp", , , &consolePID)
-            Run(A_ComSpec " /k python -m pip install --force-reinstall https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz",
+            Run(A_ComSpec ' /k python -m pip install --force-reinstall "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
                 , , &consolePID)
             Sleep(1500)
             Try
             {
-                While (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . " - python  -m pip install --force-reinstall https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz")
+                While (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . ' - python  -m pip install --force-reinstall "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"')
                 {
                     Sleep(500)
                 }
@@ -392,7 +392,7 @@ setup_checkPythonVersion()
     {
         FileDelete(A_Temp . "\video_downloader_python_install_log.txt")
     }
-    RunWait(A_ComSpec " /c python --version > " . A_Temp . "\video_downloader_python_install_log.txt")
+    RunWait(A_ComSpec ' /c python --version > "' . A_Temp . '\video_downloader_python_install_log.txt"')
     Sleep(500)
     ; This occures when the command does not achieve anything => python is not installed.
     If (FileRead(A_Temp . "\video_downloader_python_install_log.txt") = "")
