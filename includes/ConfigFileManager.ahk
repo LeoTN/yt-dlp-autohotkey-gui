@@ -187,10 +187,12 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
 ; Returns the value out of the config file.
 ; The booleanAskForPathCreation should be used with caution because
 ; it can have unseen consequences if a directory is not created.
-readConfigFile(pOptionName, pBooleanAskForPathCreation := true)
+readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckConfigFileStatus := true)
 {
+    ; Thanks to my buddy Elias for testing and helping me debugging this script :)
     optionName := pOptionName
     booleanAskForPathCreation := pBooleanAskForPathCreation
+    booleanCheckConfigFileStatus := pBooleanCheckConfigFileStatus
 
     Loop (configVariableNameArray.Length)
     {
@@ -202,19 +204,26 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true)
         }
         Catch
         {
-            result := MsgBox("The script's config file seems to be corrupted or unavailable !"
-                "`n`nDo you want to create a new one using the template ?"
-                , "Error !", "YN IconX 8192 T10")
-            If (result = "Yes")
+            If (booleanCheckConfigFileStatus = true)
             {
-                createDefaultConfigFile()
-                ; Gives the information a part of the script asked for even if the config file had to be generated.
-                Return readConfigFile(optionName)
+                result := MsgBox("The script's config file seems to be corrupted or unavailable !"
+                    "`n`nDo you want to create a new one using the template ?"
+                    , "Error !", "YN IconX 8192 T10")
+                If (result = "Yes")
+                {
+                    createDefaultConfigFile()
+                    ; Gives the information a part of the script asked for even if the config file had to be generated.
+                    Return readConfigFile(optionName)
+                }
+                Else If (result = "No" || "Timeout")
+                {
+                    MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
+                    ExitApp()
+                }
             }
-            Else If (result = "No" || "Timeout")
+            Else
             {
-                MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
-                ExitApp()
+                Return
             }
         }
     }

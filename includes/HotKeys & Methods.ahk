@@ -1019,9 +1019,9 @@ uninstallScript()
         }
         Try
         {
-            FileRecycle(readConfigFile("DOWNLOAD_PATH", false))
+            FileRecycle(readConfigFile("DOWNLOAD_PATH", false, false))
         }
-        If (FileExist(baseFilesLocation . "\download") || FileExist(readConfigFile("DOWNLOAD_PATH", false)))
+        If (DirExist(baseFilesLocation . "\download") || DirExist(readConfigFile("DOWNLOAD_PATH", false, false)))
         {
             uninstallStatusBar.SetText("Warning ! Could not delete downloaded files !")
             Sleep(2500)
@@ -1044,7 +1044,7 @@ uninstallScript()
             }
             Catch
             {
-                If (FileExist(baseFilesLocation . "\download"))
+                If (DirExist(baseFilesLocation . "\download"))
                 {
                     evacuationError := true
                     uninstallStatusBar.SetText("Warning ! Could not save downloaded files !")
