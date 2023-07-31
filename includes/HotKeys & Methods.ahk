@@ -870,11 +870,11 @@ scriptTutorial()
     }
 
     MsgBox("Hello there... General Kenobi!`nWelcome to the tutorial."
-        "`nIt will try to teach you the basic functionallity of this script but keep thisin mind : "
-        "`nAt first this script is still in development phase so bugs are to be expected."
-        "`nSecondly PLEASE be patient and do not spamm buttons like a maniac. Wait for the script to process and if"
-        "`nnothing happens even after 3-5 seconds you may try pressing the button or hotkey again."
-        "`nWith that beeing said, let's begin with the tutorial."
+        "`nIt will try to teach you the basic functionallity of this script but keep this in mind : "
+        "`nFirstly this script is still in development phase so bugs are to be expected."
+        "`nSecondly PLEASE be patient and do not spam buttons like a maniac. Wait for the script to process and if"
+        "`nnothing happens even after 3-5 seconds you could try pressing the button or hotkey again."
+        "`nWith that being said, let's begin with the tutorial."
         "`n`nPress Okay to continue.",
         "Video Downloader Tutorial - Important", "O Iconi 262144")
 
@@ -887,7 +887,7 @@ scriptTutorial()
         MsgBox("The script opened the main GUI for you.`n`nNo worries, you will get the hang of it soon :)",
             "Video Downloader Tutorial - Open Main GUI", "O Iconi 262144 T3")
     }
-    MsgBox("The main GUI contains a lot of features and menus.`nYou may take some time to explore them by yourself."
+    MsgBox("The main GUI contains a lot of features and menus.`nYou can take some time to explore them by yourself."
         "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Main GUI", "O Iconi 262144")
     If (!WinExist("ahk_id " . mainGUI.Hwnd))
     {
@@ -918,7 +918,7 @@ scriptTutorial()
         MsgBox("The script opened the download options GUI for you.`n`nNo worries, you will get the hang of it soon :)",
             "Video Downloader Tutorial - Open Download Options GUI", "O Iconi 262144 T3")
     }
-    MsgBox("If you see the download options GUI for the very first time,`nit might be a bit overwhelming but once you have"
+    MsgBox("If you see the download options GUI for the very first time,`nit might be a bit overwhelming, but once you have"
         "`nused this script a few times it will become more familiar.`n`nQuick tip : "
         "`nHover over an option with the mouse cursor`nin order to gain extra information."
         "`nNote :`nThis does only work if there is`nno download process running at the moment."
