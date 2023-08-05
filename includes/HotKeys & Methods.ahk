@@ -284,6 +284,7 @@ monitorDownloadProgress()
     videoAmount := urlArray.Length
     downloadedVideoAmount := 0
     skippedVideoArchiveAmount := 0
+    skippedVideoPresentAmount := 0
     skippedVideoMaxSizeAmount := 0
     maximumBarValue := videoAmount * 100
     currentBarValue := 0
@@ -342,8 +343,21 @@ startOfFileReadLoop:
             partProgress := 0
             downloadStatusText.Text := skippedVideoArchiveAmount . " video(s) already in archive file."
             ; Calculates the progress bar value with all videos processed.
-            tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
-            currentBarValue := tmp_result * 100 + partProgress
+            tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+            currentBarValue := tmp_result * 100
+            ; Applies the changes to the GUI progress bar.
+            downloadStatusProgressBar.Value := currentBarValue
+            Sleep(2000)
+        }
+        ; Same thing as above.
+        Else If (InStr(A_LoopReadLine, "has already been downloaded"))
+        {
+            skippedVideoPresentAmount++
+            partProgress := 0
+            downloadStatusText.Text := skippedVideoPresentAmount . " video(s) already present."
+            ; Calculates the progress bar value with all videos processed.
+            tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+            currentBarValue := tmp_result * 100
             ; Applies the changes to the GUI progress bar.
             downloadStatusProgressBar.Value := currentBarValue
             Sleep(2000)
@@ -358,8 +372,8 @@ startOfFileReadLoop:
                 partProgress := 0
                 downloadStatusText.Text := skippedVideoMaxSizeAmount . " video(s) larger than maximum filesize."
                 ; Calculates the progress bar value with all videos processed.
-                tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
-                currentBarValue := tmp_result * 100 + partProgress
+                tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+                currentBarValue := tmp_result * 100
                 ; Applies the changes to the GUI progress bar.
                 downloadStatusProgressBar.Value := currentBarValue
                 Sleep(2000)
@@ -390,7 +404,7 @@ startOfFileReadLoop:
             }
         }
         ; Calculates the progress bar value with all videos processed.
-        tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
+        tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
         currentBarValue := tmp_result * 100 + partProgress
         ; Applies the changes to the GUI progress bar.
         downloadStatusProgressBar.Value := currentBarValue
@@ -445,7 +459,8 @@ startOfFileReadLoop:
     {
         MsgBox("Total video amount : " . videoAmount .
             "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
-            "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount
+            "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
+            "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
             "`nDownloaded Videos : " . downloadedVideoAmount, "Download summary", "O Iconi T5")
     }
 }
