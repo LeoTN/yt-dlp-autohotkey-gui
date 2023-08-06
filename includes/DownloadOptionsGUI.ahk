@@ -56,7 +56,7 @@ createDownloadOptionsGUI()
     useTextFileForURLsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+10 yp+20 Checked", "Use collected URLs")
     customURLInputEdit := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled", "Currently downloading collected URLs.")
     useDefaultDownloadLocationCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+30 Checked", "Use default download path")
-    customDownloadLocation := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled", "Currently downloading into default directory.")
+    customDownloadLocationEdit := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled", "Currently downloading into default directory.")
 
     startDownloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp+265 yp-90 w205 R5.2", "Download Status")
 
@@ -96,7 +96,7 @@ createDownloadOptionsGUI()
     terminateScriptAfterDownloadCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     limitDownloadRateEdit.OnEvent("Change", (*) => handleDownloadOptionsGUI_InputFields())
     customURLInputEdit.OnEvent("Change", (*) => handleDownloadOptionsGUI_InputFields())
-    customDownloadLocation.OnEvent("Focus", (*) => handleDownloadOptionsGUI_InputFields())
+    customDownloadLocationEdit.OnEvent("Focus", (*) => handleDownloadOptionsGUI_InputFields())
     chooseVideoFormatDropDownList.OnEvent("Change", (*) => handleDownloadOptionsGUI_InputFields())
     chooseAudioFormatDropDownList.OnEvent("Change", (*) => handleDownloadOptionsGUI_InputFields())
     startDownloadButton.OnEvent("Click", (*) => startDownload(buildCommandString()))
@@ -170,18 +170,18 @@ handleDownloadOptionsGUI_Checkboxes()
         Case 0:
         {
             ; Allows the user to select a custom download path.
-            customDownloadLocation.Opt("-Disabled")
+            customDownloadLocationEdit.Opt("-Disabled")
             ; Makes sure that a user input will not be overwritten.
-            If (customDownloadLocation.Value = "Currently downloading into default directory.")
+            If (customDownloadLocationEdit.Value = "Currently downloading into default directory.")
             {
-                customDownloadLocation.Value := "You can now specify your own download path."
+                customDownloadLocationEdit.Value := "You can now specify your own download path."
             }
         }
         Case 1:
         {
             ; Keeps the default download directory.
-            customDownloadLocation.Opt("+Disabled")
-            customDownloadLocation.Value := "Currently downloading into default directory."
+            customDownloadLocationEdit.Opt("+Disabled")
+            customDownloadLocationEdit.Value := "Currently downloading into default directory."
         }
     }
     ; Stops the script form continuing because all options are considered as ignored.
@@ -239,7 +239,16 @@ handleDownloadOptionsGUI_Checkboxes()
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-description "
-                commandString .= '--paths "description:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\description(s)" '
+                If (useDefaultDownloadLocationCheckbox.Value = 1)
+                {
+
+                    commandString .= '--paths "description:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\description(s)" '
+
+                }
+                Else
+                {
+                    commandString .= '--paths "description:' . customDownloadLocationEdit.Value . '\description(s)" '
+                }
             }
             Else
             {
@@ -264,6 +273,7 @@ handleDownloadOptionsGUI_Checkboxes()
                 ; Currently not implemeted into yt-dlp.
                 ; commandString .= '--paths "comments:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\comments" '
                 ; This script contains a work arround for moving the comments to a desired folder.
+                ; See startDownload() for more info.
             }
             Else
             {
@@ -274,13 +284,27 @@ handleDownloadOptionsGUI_Checkboxes()
     }
     Switch (downloadVideoThumbnailCheckbox.Value)
     {
+        Case 0:
+        {
+            commandString .= "--no-write-thumbnail "
+        }
         Case 1:
         {
             ; Download the video thumbnail and add it to the downloaded video.
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-thumbnail "
-                commandString .= '--paths "thumbnail:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\thumbnail(s)" '
+                commandString .= "--embed-thumbnail "
+                If (useDefaultDownloadLocationCheckbox.Value = 1)
+                {
+
+                    commandString .= '--paths "thumbnail:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\thumbnail(s)" '
+
+                }
+                Else
+                {
+                    commandString .= '--paths "thumbnail:' . customDownloadLocationEdit.Value . '\thumbnail(s)" '
+                }
             }
             Else
             {
@@ -290,14 +314,27 @@ handleDownloadOptionsGUI_Checkboxes()
     }
     Switch (downloadVideoSubtitlesCheckbox.Value)
     {
+        Case 0:
+        {
+            commandString .= "--no-write-subs "
+        }
         Case 1:
         {
             ; Download the video's subtitles and embed tem into the downloaded video.
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-subs "
-                commandString .= '--paths "subtitle:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\subtitle(s)" '
                 commandString .= "--embed-subs "
+                If (useDefaultDownloadLocationCheckbox.Value = 1)
+                {
+
+                    commandString .= '--paths "subtitle:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\subtitle(s)" '
+
+                }
+                Else
+                {
+                    commandString .= '--paths "subtitle:' . customDownloadLocationEdit.Value . '\subtitle(s)" '
+                }
             }
             Else
             {
@@ -576,7 +613,7 @@ handleDownloadOptionsGUI_InputFields()
         ; Limit the download file size to a maximum value in Megabytes.
         commandString .= "--max-filesize " . maxDownloadSizeEdit.Value . "M "
     }
-    If (customDownloadLocation.Value = "You can now specify your own download path.")
+    If (customDownloadLocationEdit.Value = "You can now specify your own download path.")
     {
         If (newDownloadFolder = "")
         {
@@ -596,7 +633,7 @@ handleDownloadOptionsGUI_InputFields()
         }
         Else
         {
-            customDownloadLocation.Value := newDownloadFolder
+            customDownloadLocationEdit.Value := newDownloadFolder
         }
     }
     ; Handles the desired download formats.
@@ -641,7 +678,7 @@ buildCommandString()
     {
         Case 0:
         {
-            commandString .= '--paths "' . customDownloadLocation.Value . '\media" '
+            commandString .= '--paths "' . customDownloadLocationEdit.Value . '\media" '
         }
         Case 1:
         {

@@ -288,7 +288,7 @@ handleMainGUI_openDownloadLocation()
         {
             Case 0:
             {
-                Run(customDownloadLocation.Value)
+                Run(customDownloadLocationEdit.Value)
             }
             Case 1:
             {

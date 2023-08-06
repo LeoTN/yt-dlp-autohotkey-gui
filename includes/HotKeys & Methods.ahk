@@ -174,7 +174,6 @@ FUNCTION SECTION
 ; Important function which executes the built command string by pasting it into the console.
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
-    Critical("On")
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
     static isDownloading := false
@@ -218,18 +217,37 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     If (downloadVideoSubtitlesCheckbox.Value = 1)
     {
         ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-        If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+        If (useDefaultDownloadLocationCheckbox.Value = 1)
         {
+            If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            {
+                Try
+                {
+                    DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    Sleep(500)
+                }
+            }
             Try
             {
-                DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
-                Sleep(500)
+                FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\media\*.info.json",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json", true)
             }
         }
-        Try
+        Else
         {
-            FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
-                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
+            If (!DirExist(customDownloadLocationEdit.Value . "\comments"))
+            {
+                Try
+                {
+                    DirCreate(customDownloadLocationEdit.Value . "\comments")
+                    Sleep(500)
+                }
+            }
+            Try
+            {
+                FileMove(customDownloadLocationEdit.Value . "\media\*.info.json",
+                    customDownloadLocationEdit.Value . "\comments\*.info.json", true)
+            }
         }
     }
     If (clearURLFileAfterDownloadCheckbox.Value = 1 && ignoreAllOptionsCheckbox.Value != 1)
@@ -645,19 +663,19 @@ deleteFilePrompt(pFileName)
                     {
                         c := "URL_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("URL_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName)
+                        FileMove(readConfigFile("URL_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "URL-Backup-File":
                     {
                         c := "URL_BACKUP_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_BACKUP_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName)
+                        FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "URL-Blacklist-File":
                     {
                         c := "BLACKLIST_FILE_LOCATION"
                         SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName)
+                        FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "latest download":
                     {
@@ -667,8 +685,8 @@ deleteFilePrompt(pFileName)
                             {
                                 Case 0:
                                 {
-                                    FileMove(customDownloadLocation.Value . '\' . downloadTime, baseFilesLocation
-                                        . "\deleted\" . downloadTime)
+                                    FileMove(customDownloadLocationEdit.Value . '\' . downloadTime, baseFilesLocation
+                                        . "\deleted\" . downloadTime, true)
                                 }
                                 Case 1:
                                 {
@@ -684,7 +702,7 @@ deleteFilePrompt(pFileName)
                     }
                 Default:
                     {
-                        terminateScriptPrompt()
+                        MsgBox("Invalid delete request.", "Error !", "O IconX T2")
                     }
             }
         }
@@ -698,7 +716,7 @@ deleteFilePrompt(pFileName)
                 If (result = "Yes")
                 {
                     FileDelete(baseFilesLocation . "\deleted\" . outFileName)
-                    FileMove(readConfigFile(c), baseFilesLocation . "\deleted\" . outFileName)
+                    FileMove(readConfigFile(c), baseFilesLocation . "\deleted\" . outFileName, true)
                 }
             }
             Else
