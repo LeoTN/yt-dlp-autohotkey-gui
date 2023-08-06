@@ -279,6 +279,7 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 ; Checks the download log file for status updates and reacts by updating the download options GUI progress bar and text fields.
 monitorDownloadProgress()
 {
+    Critical("Off")
     global booleanDownloadTerminated := false
     urlArray := readFile(readConfigFile("URL_FILE_LOCATION"), true)
     videoAmount := urlArray.Length
