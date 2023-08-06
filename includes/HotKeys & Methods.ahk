@@ -230,7 +230,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
             Try
             {
                 FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\media\*.info.json",
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json", true)
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments", true)
             }
         }
         Else
@@ -246,7 +246,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
             Try
             {
                 FileMove(customDownloadLocationEdit.Value . "\media\*.info.json",
-                    customDownloadLocationEdit.Value . "\comments\*.info.json", true)
+                    customDownloadLocationEdit.Value . "\comments", true)
             }
         }
     }
@@ -399,6 +399,7 @@ startOfFileReadLoop:
             }
         }
         ; This message only appears when the previous video processing has been finished.
+        ; NOTE : Does only work when using a temp directory as parameter !
         Else If (InStr(A_LoopReadLine, "[MoveFiles] Moving file"))
         {
             If (partProgress = 100)
@@ -411,7 +412,7 @@ startOfFileReadLoop:
         }
         Else If (booleanSkippingLocked = true)
         {
-            ; When a video is skipped this method is used to detect if a new video es beeing processed.
+            ; When a video is skipped this method is used to detect if a new video is beeing processed.
             If (InStr(A_LoopReadLine, "Extracting URL: https://www"))
             {
                 ; "[youtube:tab]" is considered to be ignored, as it only shows up when downloading a playlist.
@@ -450,10 +451,21 @@ startOfFileReadLoop:
     Try
     {
         FileCopy(A_Temp . "\yt_dlp_download_log.txt", readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), true)
+        If (useDefaultDownloadLocationCheckbox.Value = 1)
+        {
+            FileCopy(A_Temp . "\yt_dlp_download_log.txt",
+                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_log.txt", true)
+        }
+        Else
+        {
+            SplitPath(customDownloadLocationEdit.Value, &outFolderName)
+            FileCopy(A_Temp . "\yt_dlp_download_log.txt",
+                customDownloadLocationEdit.Value . "\[" . outFolderName . "]_download_log.txt", true)
+        }
     }
     Catch
     {
-        MsgBox("Could not write downloag log file.", "Warning !", "O IconX T1.5")
+        MsgBox("Could not write to download log file.", "Warning !", "O Icon! T1.5")
     }
     downloadStatusText.Text := "Final video processing..."
     Sleep(2000)
@@ -481,6 +493,25 @@ startOfFileReadLoop:
             "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
             "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
             "`nDownloaded Videos : " . downloadedVideoAmount, "Download summary", "O Iconi T5")
+    }
+    If (useDefaultDownloadLocationCheckbox.Value = 1)
+    {
+        FileAppend("##################################################`n`nTotal video amount : " . videoAmount .
+            "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
+            "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
+            "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
+            "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
+            readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
+    }
+    Else
+    {
+        SplitPath(customDownloadLocationEdit.Value, &outFolderName)
+        FileAppend("##################################################`n`nTotal video amount : " . videoAmount .
+            "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
+            "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
+            "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
+            "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
+            customDownloadLocationEdit.Value . "\[" . outFolderName . "]_download_summary.txt")
     }
 }
 
