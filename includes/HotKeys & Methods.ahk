@@ -310,6 +310,7 @@ monitorDownloadProgress()
     partProgress := 0
     ; This variable needs to exist because yt-dlp spams the file to large message which causes a lot of trouble.
     booleanSkippingLocked := false
+    booleanWaitForVideoDownload := true
     parsedLines := 0
     ; Prepares the download options GUI.
     downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
@@ -337,8 +338,25 @@ startOfFileReadLoop:
         {
             Continue
         }
+        ; Makes the script skip all other download percentage values so that the progress bar does only fill when
+        ; downloading the actual video.
+        If (booleanWaitForVideoDownload = true)
+        {
+            ; Makes sure that the the progress bar is not unlocked by messages like "Deleting file" etc.
+            If (InStr(A_LoopReadLine, "[download] Destination:"))
+            {
+                tmp_Line := A_LoopReadLine
+                Loop (downloadVideoFormatArray.Length)
+                {
+                    If (InStr(tmp_Line, "." . downloadVideoFormatArray.Get(A_Index)))
+                    {
+                        booleanWaitForVideoDownload := false
+                    }
+                }
+            }
+        }
         ; Scanns the output from the console and extracts the download progress percentage values.
-        If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0 && partProgress < 100)
+        Else If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0 && partProgress < 100)
         {
             outString := outMatch[]
             outStringReady := StrReplace(outString, "%")
@@ -356,8 +374,9 @@ startOfFileReadLoop:
             }
         }
         ; The already recorded message is important because the progress bar has to move up one video to avoid issues.
-        Else If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
+        If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
         {
+            booleanWaitForVideoDownload := true
             skippedVideoArchiveAmount++
             partProgress := 0
             downloadStatusText.Text := skippedVideoArchiveAmount . " video(s) already in archive file."
@@ -371,6 +390,7 @@ startOfFileReadLoop:
         ; Same thing as above.
         Else If (InStr(A_LoopReadLine, "has already been downloaded"))
         {
+            booleanWaitForVideoDownload := true
             skippedVideoPresentAmount++
             partProgress := 0
             downloadStatusText.Text := skippedVideoPresentAmount . " video(s) already present."
@@ -386,6 +406,7 @@ startOfFileReadLoop:
         {
             If (booleanSkippingLocked = false)
             {
+                booleanWaitForVideoDownload := true
                 booleanSkippingLocked := true
                 skippedVideoMaxSizeAmount++
                 partProgress := 0
@@ -404,6 +425,7 @@ startOfFileReadLoop:
         {
             If (partProgress = 100)
             {
+                booleanWaitForVideoDownload := true
                 downloadedVideoAmount++
                 partProgress := 0
                 downloadStatusText.Text := "Downloaded " . downloadedVideoAmount .
@@ -465,7 +487,10 @@ startOfFileReadLoop:
     }
     Catch
     {
-        MsgBox("Could not write to download log file.", "Warning !", "O Icon! T1.5")
+        If (booleanDownloadTerminated = false)
+        {
+            MsgBox("Could not write to download log file.", "Warning !", "O Icon! T1.5")
+        }
     }
     downloadStatusText.Text := "Final video processing..."
     Sleep(2000)
@@ -494,24 +519,27 @@ startOfFileReadLoop:
             "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
             "`nDownloaded Videos : " . downloadedVideoAmount, "Download summary", "O Iconi T5")
     }
-    If (useDefaultDownloadLocationCheckbox.Value = 1)
+    Try
     {
-        FileAppend("##################################################`n`nTotal video amount : " . videoAmount .
-            "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
-            "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
-            "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
-            "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
-            readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
-    }
-    Else
-    {
-        SplitPath(customDownloadLocationEdit.Value, &outFolderName)
-        FileAppend("##################################################`n`nTotal video amount : " . videoAmount .
-            "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
-            "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
-            "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
-            "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
-            customDownloadLocationEdit.Value . "\[" . outFolderName . "]_download_summary.txt")
+        If (useDefaultDownloadLocationCheckbox.Value = 1)
+        {
+            FileAppend("##################################################`n`nTotal video amount : " . videoAmount .
+                "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
+                "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
+                "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
+                "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
+                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
+        }
+        Else
+        {
+            SplitPath(customDownloadLocationEdit.Value, &outFolderName)
+            FileAppend("##################################################`n`nTotal video amount : " . videoAmount .
+                "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
+                "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
+                "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
+                "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
+                customDownloadLocationEdit.Value . "\[" . outFolderName . "]_download_summary.txt")
+        }
     }
 }
 

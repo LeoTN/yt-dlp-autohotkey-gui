@@ -324,6 +324,7 @@ handleDownloadOptionsGUI_Checkboxes()
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-subs "
+                commandString .= '--sub-langs "all" '
                 commandString .= "--embed-subs "
                 If (useDefaultDownloadLocationCheckbox.Value = 1)
                 {
