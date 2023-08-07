@@ -612,7 +612,7 @@ handleDownloadOptionsGUI_InputFields()
     If (maxDownloadSizeEdit.Value != 0)
     {
         ; Limit the download file size to a maximum value in Megabytes.
-        commandString .= "--max-filesize " . maxDownloadSizeEdit.Value . "M "
+        commandString .= '--match-filter "filesize_approx<' . maxDownloadSizeEdit.Value . 'M" '
     }
     If (customDownloadLocationEdit.Value = "You can now specify your own download path.")
     {
@@ -728,7 +728,9 @@ handleDownloadOptionsGUI_toolTipManager(pBooleanRefresh := false)
         }
     }
     ; Checks if the download GUI exists.
-    If (WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
+    ; The tooltips are disabled while downloads are running because it would interfer with the progress bar.
+    ; I know this is a sloppy solution but it might be changed in the future.
+    If (WinExist("ahk_id " . downloadOptionsGUI.Hwnd) && isDownloading = false)
     {
         handleDownloadOptionsGUI_toolTipLoop(elementHWNDArray)
     }

@@ -176,7 +176,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
 {
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
-    static isDownloading := false
+    global isDownloading := false
 
     If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
     {
@@ -402,7 +402,7 @@ startOfFileReadLoop:
             Sleep(2000)
         }
         ; This message indicates that the video will be skipped because it is larger than the selected filesize.
-        Else If (InStr(A_LoopReadLine, "File is larger than max-filesize"))
+        Else If (InStr(A_LoopReadLine, "does not pass filter (filesize_approx<" . maxDownloadSizeEdit.Value . "M)"))
         {
             If (booleanSkippingLocked = false)
             {
