@@ -69,6 +69,8 @@ registerHotkeys()
 
     ; Hotkey for clearing the URL file.
     Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), "Off")
+
+    global isDownloading := false
 }
 
 ; Hotkey support function to open the script GUI.
@@ -174,9 +176,9 @@ FUNCTION SECTION
 ; Important function which executes the built command string by pasting it into the console.
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
+    global isDownloading := false
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
-    global isDownloading := false
 
     If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
     {
