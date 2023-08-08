@@ -15,62 +15,87 @@ createDownloadOptionsGUI()
 
     generalGroupbox := downloadOptionsGUI.Add("GroupBox", "w300 R3.2", "General Options")
 
-    ignoreErrorsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+10 yp+20", "Ignore errors")
-    abortOnErrorCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Abort on error")
-    ignoreAllOptionsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Ignore all options")
-    hideDownloadCommandPromptCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+110 yp-40", "Download in a background task")
-    clearURLFileAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Clear the URL file after download")
-    enableFastDownloadModeCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Fast download mode")
+    ignoreErrorsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+10 yp+20 vIgnoreErrorsCheckbox", "Ignore errors")
+    abortOnErrorCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vAbortOnErrorCheckbox", "Abort on error")
+    ignoreAllOptionsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vIgnoreAllOptionsCheckbox", "Ignore all options")
+    hideDownloadCommandPromptCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+110 yp-40 vHideDownloadCommandPromptCheckbox",
+        "Download in a background task")
+    clearURLFileAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked vClearURLFileAfterDownloadCheckbox",
+        "Clear the URL file after download")
+    enableFastDownloadModeCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vEnableFastDownloadModeCheckbox",
+        "Fast download mode")
 
     downloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-120 yp+20 w479 R9.3", "Download Options")
 
-    limitDownloadRateText1 := downloadOptionsGUI.Add("Text", "xp+10 yp+20", "Maximum download rate`nin MB per second.")
-    limitDownloadRateEdit := downloadOptionsGUI.Add("Edit", "yp+30 Number")
-    limitDownloadRateUpDown := downloadOptionsGUI.Add("UpDown")
-    limitDownloadRateText2 := downloadOptionsGUI.Add("Text", "yp+25", "Enter 0 for no limitations. Applies to both input fields.")
-    maxDownloadSizeText1 := downloadOptionsGUI.Add("Text", "xp+200 yp-55", "Maximum download`nfile size in MB.")
-    maxDownloadSizeEdit := downloadOptionsGUI.Add("Edit", "yp+30 Number")
-    maxDownloadSizeUpDown := downloadOptionsGUI.Add("UpDown")
-    higherRetryAmountCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-200 yp+45", "Increase retry amount")
-    downloadVideoDescriptionCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video description")
-    downloadVideoCommentsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download video commentary")
-    downloadVideoThumbnailCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Download video thumbnail")
-    downloadVideoSubtitlesCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Download video subtitles")
-    downloadWholePlaylistsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+160 yp-80", "Download complete playlists")
-    useDownloadArchiveCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked", "Use download archive file")
+    limitDownloadRateText1 := downloadOptionsGUI.Add("Text", "xp+10 yp+20 vLimitDownloadRateText1",
+        "Maximum download rate`nin MB per second.")
+    limitDownloadRateEdit := downloadOptionsGUI.Add("Edit", "yp+30 Number vLimitDownloadRateEdit")
+    limitDownloadRateUpDown := downloadOptionsGUI.Add("UpDown", "vLimitDownloadRateUpDown")
+    limitDownloadRateText2 := downloadOptionsGUI.Add("Text", "yp+25 vLimitDownloadRateText2",
+        "Enter 0 for no limitations. Applies to both input fields.")
+    maxDownloadSizeText1 := downloadOptionsGUI.Add("Text", "xp+200 yp-55 vMaxDownloadSizeText1",
+        "Maximum download`nfile size in MB.")
+    maxDownloadSizeEdit := downloadOptionsGUI.Add("Edit", "yp+30 Number vMaxDownloadSizeEdit")
+    maxDownloadSizeUpDown := downloadOptionsGUI.Add("UpDown", "vMaxDownloadSizeUpDown")
+    higherRetryAmountCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-200 yp+45 vHigherRetryAmountCheckbox",
+        "Increase retry amount")
+    downloadVideoDescriptionCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked vDownloadVideoDescriptionCheckbox",
+        "Download video description")
+    downloadVideoCommentsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vDownloadVideoCommentsCheckbox",
+        "Download video commentary")
+    downloadVideoThumbnailCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked vDownloadVideoThumbnailCheckbox",
+        "Download video thumbnail")
+    downloadVideoSubtitlesCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vDownloadVideoSubtitlesCheckbox",
+        "Download video subtitles")
+    downloadWholePlaylistsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+160 yp-80 vDownloadWholePlaylistsCheckbox",
+        "Download complete playlists")
+    useDownloadArchiveCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked vUseDownloadArchiveCheckbox",
+        "Use download archive file")
 
-    chooseVideoFormatText := downloadOptionsGUI.Add("Text", "xp+174 yp-95", "Desired video format")
+    chooseVideoFormatText := downloadOptionsGUI.Add("Text", "xp+174 yp-95 vChooseVideoFormatText", "Desired video format")
     downloadVideoFormatArray := ["Best format for quality", "mp4", "webm", "avi", "flv", "mkv", "mov"]
-    chooseVideoFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1", downloadVideoFormatArray)
+    chooseVideoFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1 vChooseVideoFormatDropDownList",
+        downloadVideoFormatArray)
 
-    downloadAudioOnlyCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5", "Download audio only")
+    downloadAudioOnlyCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5 vDownloadAudioOnlyCheckbox", "Download audio only")
     downloadAudioFormatArray := ["Best format for quality", "mp3", "wav", "m4a", "flac", "aac", "alac", "opus", "vorbis"]
-    chooseAudioFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1", downloadAudioFormatArray)
+    chooseAudioFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1 vChooseAudioFormatDropDownList",
+        downloadAudioFormatArray)
 
-    alwaysHighestQualityBothCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5 Checked", "Balance quality")
-    prioritiseVideoQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Prefer video quality")
-    prioritiseAudioQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20", "Prefer audio quality")
+    alwaysHighestQualityBothCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5 Checked vAlwaysHighestQualityBothCheckbox",
+        "Balance quality")
+    prioritiseVideoQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vPrioritiseVideoQualityCheckbox",
+        "Prefer video quality")
+    prioritiseAudioQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vPrioritiseAudioQualityCheckbox",
+        "Prefer audio quality")
 
     fileSystemGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-344 yp+22.5 w260 R5.2", "File Management")
 
-    useTextFileForURLsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+10 yp+20 Checked", "Use collected URLs")
-    customURLInputEdit := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled", "Currently downloading collected URLs.")
-    useDefaultDownloadLocationCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+30 Checked", "Use default download path")
-    customDownloadLocationEdit := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled", "Currently downloading into default directory.")
+    useTextFileForURLsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+10 yp+20 Checked vUseTextFileForURLsCheckbox",
+        "Use collected URLs")
+    customURLInputEdit := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled vCustomURLInputEdit",
+        "Currently downloading collected URLs.")
+    useDefaultDownloadLocationCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+30 Checked vUseDefaultDownloadLocationCheckbox",
+        "Use default download path")
+    customDownloadLocationEdit := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled vCustomDownloadLocationEdit",
+        "Currently downloading into default directory.")
 
     startDownloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp+265 yp-90 w205 R5.2", "Download Status")
 
-    startDownloadButton := downloadOptionsGUI.Add("Button", "xp+10 yp+20 R1", "Start downloading...")
-    cancelDownloadButton := downloadOptionsGUI.Add("Button", "xp+120 w65", "Cancel")
-    terminateScriptAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-119 yp+30", "Terminate script after downloading")
-    downloadStatusProgressBar := downloadOptionsGUI.Add("Progress", "yp+25 w183", 0)
-    downloadStatusText := downloadOptionsGUI.Add("Text", "yp+20 w183", "Currently not downloading.")
+    startDownloadButton := downloadOptionsGUI.Add("Button", "xp+10 yp+20 R1 vStartDownloadButton", "Start downloading...")
+    cancelDownloadButton := downloadOptionsGUI.Add("Button", "xp+120 w65 vCancelDownloadButton", "Cancel")
+    terminateScriptAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "xp-119 yp+30 vTerminateScriptAfterDownloadCheckbox",
+        "Terminate script after downloading")
+    downloadStatusProgressBar := downloadOptionsGUI.Add("Progress", "yp+25 w183 vDownloadStatusProgressBar", 0)
+    downloadStatusText := downloadOptionsGUI.Add("Text", "yp+20 w183 vDownloadStatusText", "Currently not downloading.")
 
     presetSelectionGroupBox := downloadOptionsGUI.Add("GroupBox", "xp+28 yp-371 w165 R3.2", "Presets")
 
-    selectAndAddPresetsComboBox := downloadOptionsGUI.Add("ComboBox", "xp+10 yp+20 w145", handleDownloadOptionsGUI_refreshPresetArray())
-    savePresetButton := downloadOptionsGUI.Add("Button", "yp+30", "Save Preset")
-    loadPresetButton := downloadOptionsGUI.Add("Button", "xp+75", "Load Preset")
+    selectAndAddPresetsComboBox := downloadOptionsGUI.Add("ComboBox", "xp+10 yp+20 w145 vSelectAndAddPresetsComboBox",
+        handleDownloadOptionsGUI_refreshPresetArray())
+    savePresetButton := downloadOptionsGUI.Add("Button", "yp+30 vSavePresetButton", "Save Preset")
+    loadPresetButton := downloadOptionsGUI.Add("Button", "xp+75 vLoadPresetButton", "Load Preset")
+
 
     ignoreErrorsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     abortOnErrorCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
@@ -124,6 +149,7 @@ optionsGUI_onInit()
             }
         }
     }
+    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
 }
 
 cancelDownload()
@@ -146,6 +172,8 @@ cancelDownload()
 handleDownloadOptionsGUI_Checkboxes()
 {
     global commandString
+    ; Collects all data from the download options GUI into the object.
+    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
 
     Switch (useTextFileForURLsCheckbox.Value)
     {
@@ -492,6 +520,8 @@ handleDownloadOptionsGUI_Checkboxes()
 ; Has to be excluded to avoid disabeling options everytime handleDownloadOptionsGUI_Checkboxes() is called.
 handleDownloadOptionsGUI_Checkbox_fastDownload()
 {
+    ; Collects all data from the download options GUI into the object.
+    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
     Switch (enableFastDownloadModeCheckbox.Value)
     {
         Case 0:
@@ -534,6 +564,8 @@ handleDownloadOptionsGUI_Checkbox_fastDownload()
 
 handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
 {
+    ; Collects all data from the download options GUI into the object.
+    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
     Switch (ignoreAllOptionsCheckbox.Value)
     {
         Case 0:
@@ -595,6 +627,8 @@ handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
 handleDownloadOptionsGUI_InputFields()
 {
     global commandString
+    ; Collects all data from the download options GUI into the object.
+    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
     static newDownloadFolder := ""
 
     If (limitDownloadRateEdit.Value != 0)
@@ -647,6 +681,8 @@ handleDownloadOptionsGUI_InputFields()
 
 handleDownloadOptionsGUI_Checkbox_DownloadWholePlaylist()
 {
+    ; Collects all data from the download options GUI into the object.
+    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
     If (useTextFileForURLsCheckbox.Value = 0)
     {
         downloadWholePlaylistsCheckbox.Value := 0

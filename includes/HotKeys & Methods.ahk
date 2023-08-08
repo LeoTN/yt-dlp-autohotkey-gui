@@ -177,6 +177,8 @@ FUNCTION SECTION
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
     global isDownloading := false
+    ; Collects all data from the download options GUI into the object.
+    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
 
