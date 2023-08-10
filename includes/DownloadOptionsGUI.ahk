@@ -96,7 +96,6 @@ createDownloadOptionsGUI()
     savePresetButton := downloadOptionsGUI.Add("Button", "yp+30 vSavePresetButton", "Save Preset")
     loadPresetButton := downloadOptionsGUI.Add("Button", "xp+75 vLoadPresetButton", "Load Preset")
 
-
     ignoreErrorsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     abortOnErrorCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     ignoreAllOptionsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkbox_ignoreAllOptions())
@@ -172,8 +171,6 @@ cancelDownload()
 handleDownloadOptionsGUI_Checkboxes()
 {
     global commandString
-    ; Collects all data from the download options GUI into the object.
-    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
 
     Switch (useTextFileForURLsCheckbox.Value)
     {
@@ -520,8 +517,6 @@ handleDownloadOptionsGUI_Checkboxes()
 ; Has to be excluded to avoid disabeling options everytime handleDownloadOptionsGUI_Checkboxes() is called.
 handleDownloadOptionsGUI_Checkbox_fastDownload()
 {
-    ; Collects all data from the download options GUI into the object.
-    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
     Switch (enableFastDownloadModeCheckbox.Value)
     {
         Case 0:
@@ -564,8 +559,6 @@ handleDownloadOptionsGUI_Checkbox_fastDownload()
 
 handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
 {
-    ; Collects all data from the download options GUI into the object.
-    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
     Switch (ignoreAllOptionsCheckbox.Value)
     {
         Case 0:
@@ -627,8 +620,6 @@ handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
 handleDownloadOptionsGUI_InputFields()
 {
     global commandString
-    ; Collects all data from the download options GUI into the object.
-    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
     static newDownloadFolder := ""
 
     If (limitDownloadRateEdit.Value != 0)
@@ -681,8 +672,6 @@ handleDownloadOptionsGUI_InputFields()
 
 handleDownloadOptionsGUI_Checkbox_DownloadWholePlaylist()
 {
-    ; Collects all data from the download options GUI into the object.
-    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
     If (useTextFileForURLsCheckbox.Value = 0)
     {
         downloadWholePlaylistsCheckbox.Value := 0
@@ -873,10 +862,10 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
     Loop (presetFileArray.Length)
     {
         ; Searches for an existing default file.
-        If (InStr(presetFileArray[A_Index], "_(DEFAULT)", true))
+        If (InStr(presetFileArray.Get(A_Index), "_(DEFAULT)", true))
         {
             booleanDefaultPresetExist := true
-            defaultPresetOld := presetFileArray[A_Index]
+            defaultPresetOld := presetFileArray.Get(A_Index)
             Break
         }
         Else

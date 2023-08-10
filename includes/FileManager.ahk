@@ -84,7 +84,7 @@ writeToURLFile(pContent)
     ; Content check loop.
     Loop (i)
     {
-        If (content = tmp[A_Index])
+        If (content = tmp.Get(A_Index))
         {
             Return
         }
@@ -162,7 +162,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
                 ; Creates the blacklist file with the template.
                 Loop templateArray.Length
                 {
-                    FileAppend(templateArray[A_Index] . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
+                    FileAppend(templateArray.Get(A_Index) . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
                 }
                 checkBlackListFile(itemToCompare, booleanShowPrompt)
             }
@@ -186,7 +186,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
     }
     Loop templateArray.Length
     {
-        If (templateArray[A_Index] != tmpArray[A_Index])
+        If (templateArray.Get(A_Index) != tmpArray.Get(A_Index))
         {
             FileDelete(readConfigFile("BLACKLIST_FILE_LOCATION"))
             Try
@@ -194,7 +194,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
                 ; Creates the blacklist file with the template.
                 Loop templateArray.Length
                 {
-                    FileAppend(templateArray[A_Index] . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
+                    FileAppend(templateArray.Get(A_Index) . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
                 }
             }
             Catch
@@ -211,7 +211,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
 
     Loop blacklistArray.Length
     {
-        If (itemToCompare = blacklistArray[A_Index])
+        If (itemToCompare = blacklistArray.Get(A_Index))
         {
             Return true
         }
