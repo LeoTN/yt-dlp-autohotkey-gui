@@ -1,5 +1,6 @@
 VideoDownloader.exe
 .vscode/
+compiler/
 yt_dlp_autohotkey_gui_files/config/
 yt_dlp_autohotkey_gui_files/deleted/
 yt_dlp_autohotkey_gui_files/download/
