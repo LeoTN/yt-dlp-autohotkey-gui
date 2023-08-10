@@ -69,6 +69,8 @@ registerHotkeys()
 
     ; Hotkey for clearing the URL file.
     Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), "Off")
+
+    global isDownloading := false
 }
 
 ; Hotkey support function to open the script GUI.
@@ -164,6 +166,7 @@ Hotkey_openOptionsGUI()
             WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
         }
     }
+    global lastDownloadPath := ""
 }
 
 /*
@@ -174,10 +177,15 @@ FUNCTION SECTION
 ; Important function which executes the built command string by pasting it into the console.
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
-    Critical("On")
+    If (setup_checkInternetConnection() = false)
+    {
+        Return MsgBox("Unable to connect to the Internet.`n`nPlease check your Internet connection.", "Warning !", "O Icon! 4096 T2")
+    }
+    global isDownloading := false
+    ; Collects all data from the download options GUI into the object.
+    global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
     stringToExecute := pCommandString
     booleanSilent := pBooleanSilent
-    static isDownloading := false
 
     If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
     {
@@ -196,7 +204,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         isDownloading := true
     }
-    If (!FileExist(readConfigFile("URL_FILE_LOCATION")) && useTextFileForURLsCheckbox.Value = 1)
+    If (!FileExist(readConfigFile("URL_FILE_LOCATION")) && downloadOptionsGUI_SubmitObject.UseTextFileForURLsCheckbox = 1)
     {
         MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing : [" .
             expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download status", "O Icon! 8192")
@@ -215,28 +223,48 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         displayAndLogConsoleCommand(stringToExecute, false)
         monitorDownloadProgress()
     }
-    If (downloadVideoSubtitlesCheckbox.Value = 1)
+    If (downloadOptionsGUI_SubmitObject.DownloadVideoSubtitlesCheckbox = 1)
     {
         ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-        If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
         {
+            If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            {
+                Try
+                {
+                    DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    Sleep(500)
+                }
+            }
             Try
             {
-                DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
-                Sleep(500)
+                FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\media\*.info.json",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments", true)
             }
         }
-        Try
+        Else
         {
-            FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\video\*.info.json",
-                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments\*.info.json")
+            If (!DirExist(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments"))
+            {
+                Try
+                {
+                    DirCreate(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments")
+                    Sleep(500)
+                }
+            }
+            Try
+            {
+                FileMove(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\media\*.info.json",
+                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments", true)
+            }
         }
     }
-    If (clearURLFileAfterDownloadCheckbox.Value = 1 && ignoreAllOptionsCheckbox.Value != 1)
+    If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = 1
+        && downloadOptionsGUI_SubmitObject.IgnoreAllOptionsCheckbox != 1)
     {
         manageURLFile(false)
     }
-    If (terminateScriptAfterDownloadCheckbox.Value = 1)
+    If (downloadOptionsGUI_SubmitObject.TerminateScriptAfterDownloadCheckbox = 1)
     {
         isDownloading := false
         saveGUISettingsAsPreset("last_settings", true)
@@ -245,6 +273,17 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     }
     Else
     {
+        Switch (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox)
+        {
+            Case 0:
+            {
+                global lastDownloadPath := downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . '\' . downloadTime
+            }
+            Case 1:
+            {
+                global lastDownloadPath := readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime
+            }
+        }
         isDownloading := false
         saveGUISettingsAsPreset("last_settings", true)
     }
@@ -279,17 +318,20 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 ; Checks the download log file for status updates and reacts by updating the download options GUI progress bar and text fields.
 monitorDownloadProgress()
 {
+    Critical("Off")
     global booleanDownloadTerminated := false
     urlArray := readFile(readConfigFile("URL_FILE_LOCATION"), true)
     videoAmount := urlArray.Length
     downloadedVideoAmount := 0
     skippedVideoArchiveAmount := 0
+    skippedVideoPresentAmount := 0
     skippedVideoMaxSizeAmount := 0
     maximumBarValue := videoAmount * 100
     currentBarValue := 0
     partProgress := 0
     ; This variable needs to exist because yt-dlp spams the file to large message which causes a lot of trouble.
     booleanSkippingLocked := false
+    booleanWaitForVideoDownload := true
     parsedLines := 0
     ; Prepares the download options GUI.
     downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
@@ -317,8 +359,25 @@ startOfFileReadLoop:
         {
             Continue
         }
+        ; Makes the script skip all other download percentage values so that the progress bar does only fill when
+        ; downloading the actual video.
+        If (booleanWaitForVideoDownload = true)
+        {
+            ; Makes sure that the the progress bar is not unlocked by messages like "Deleting file" etc.
+            If (InStr(A_LoopReadLine, "[download] Destination:"))
+            {
+                tmp_Line := A_LoopReadLine
+                Loop (downloadVideoFormatArray.Length)
+                {
+                    If (InStr(tmp_Line, "." . downloadVideoFormatArray.Get(A_Index)))
+                    {
+                        booleanWaitForVideoDownload := false
+                    }
+                }
+            }
+        }
         ; Scanns the output from the console and extracts the download progress percentage values.
-        If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0 && partProgress < 100)
+        Else If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0 && partProgress < 100)
         {
             outString := outMatch[]
             outStringReady := StrReplace(outString, "%")
@@ -336,40 +395,59 @@ startOfFileReadLoop:
             }
         }
         ; The already recorded message is important because the progress bar has to move up one video to avoid issues.
-        Else If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
+        If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
         {
+            booleanWaitForVideoDownload := true
             skippedVideoArchiveAmount++
             partProgress := 0
             downloadStatusText.Text := skippedVideoArchiveAmount . " video(s) already in archive file."
             ; Calculates the progress bar value with all videos processed.
-            tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
-            currentBarValue := tmp_result * 100 + partProgress
+            tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+            currentBarValue := tmp_result * 100
+            ; Applies the changes to the GUI progress bar.
+            downloadStatusProgressBar.Value := currentBarValue
+            Sleep(2000)
+        }
+        ; Same thing as above.
+        Else If (InStr(A_LoopReadLine, "has already been downloaded"))
+        {
+            booleanWaitForVideoDownload := true
+            skippedVideoPresentAmount++
+            partProgress := 0
+            downloadStatusText.Text := skippedVideoPresentAmount . " video(s) already present."
+            ; Calculates the progress bar value with all videos processed.
+            tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+            currentBarValue := tmp_result * 100
             ; Applies the changes to the GUI progress bar.
             downloadStatusProgressBar.Value := currentBarValue
             Sleep(2000)
         }
         ; This message indicates that the video will be skipped because it is larger than the selected filesize.
-        Else If (InStr(A_LoopReadLine, "File is larger than max-filesize"))
+        Else If (InStr(A_LoopReadLine, "does not pass filter (filesize_approx<" .
+            downloadOptionsGUI_SubmitObject.MaxDownloadSizeEdit . "M)"))
         {
             If (booleanSkippingLocked = false)
             {
+                booleanWaitForVideoDownload := true
                 booleanSkippingLocked := true
                 skippedVideoMaxSizeAmount++
                 partProgress := 0
                 downloadStatusText.Text := skippedVideoMaxSizeAmount . " video(s) larger than maximum filesize."
                 ; Calculates the progress bar value with all videos processed.
-                tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
-                currentBarValue := tmp_result * 100 + partProgress
+                tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+                currentBarValue := tmp_result * 100
                 ; Applies the changes to the GUI progress bar.
                 downloadStatusProgressBar.Value := currentBarValue
                 Sleep(2000)
             }
         }
         ; This message only appears when the previous video processing has been finished.
+        ; NOTE : Does only work when using a temp directory as parameter !
         Else If (InStr(A_LoopReadLine, "[MoveFiles] Moving file"))
         {
             If (partProgress = 100)
             {
+                booleanWaitForVideoDownload := true
                 downloadedVideoAmount++
                 partProgress := 0
                 downloadStatusText.Text := "Downloaded " . downloadedVideoAmount .
@@ -378,7 +456,7 @@ startOfFileReadLoop:
         }
         Else If (booleanSkippingLocked = true)
         {
-            ; When a video is skipped this method is used to detect if a new video es beeing processed.
+            ; When a video is skipped this method is used to detect if a new video is beeing processed.
             If (InStr(A_LoopReadLine, "Extracting URL: https://www"))
             {
                 ; "[youtube:tab]" is considered to be ignored, as it only shows up when downloading a playlist.
@@ -390,7 +468,7 @@ startOfFileReadLoop:
             }
         }
         ; Calculates the progress bar value with all videos processed.
-        tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoMaxSizeAmount
+        tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
         currentBarValue := tmp_result * 100 + partProgress
         ; Applies the changes to the GUI progress bar.
         downloadStatusProgressBar.Value := currentBarValue
@@ -417,10 +495,24 @@ startOfFileReadLoop:
     Try
     {
         FileCopy(A_Temp . "\yt_dlp_download_log.txt", readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), true)
+        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
+        {
+            FileCopy(A_Temp . "\yt_dlp_download_log.txt",
+                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_log.txt", true)
+        }
+        Else
+        {
+            SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
+            FileCopy(A_Temp . "\yt_dlp_download_log.txt",
+                downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_log.txt", true)
+        }
     }
     Catch
     {
-        MsgBox("Could not write downloag log file.", "Warning !", "O IconX T1.5")
+        If (booleanDownloadTerminated = false)
+        {
+            MsgBox("Could not write to download log file.", "Warning !", "O Icon! T1.5")
+        }
     }
     downloadStatusText.Text := "Final video processing..."
     Sleep(2000)
@@ -441,12 +533,35 @@ startOfFileReadLoop:
         downloadStatusText.Text := "Downloaded " . downloadedVideoAmount .
             " out of " . videoAmount . " videos."
     }
-    If (hideDownloadCommandPromptCheckbox.Value != 1)
+    If (downloadOptionsGUI_SubmitObject.HideDownloadCommandPromptCheckbox != 1)
     {
         MsgBox("Total video amount : " . videoAmount .
             "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
-            "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount
+            "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
+            "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
             "`nDownloaded Videos : " . downloadedVideoAmount, "Download summary", "O Iconi T5")
+    }
+    Try
+    {
+        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
+        {
+            FileAppend("##################################################`n`nTotal video amount : " . videoAmount .
+                "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
+                "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
+                "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
+                "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
+                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
+        }
+        Else
+        {
+            SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
+            FileAppend("##################################################`n`nTotal video amount : " . videoAmount .
+                "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
+                "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
+                "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
+                "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
+                downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
+        }
     }
 }
 
@@ -460,24 +575,24 @@ toggleHotkey(pStateArray)
 
     Loop (stateArray.Length)
     {
-        ; The old stateArray[A_Index] = true condition has been replaced for compatibillity reasons.
-        If (InStr(stateArray[A_Index], "0", 0))
+        ; The old stateArray.Get(A_Index) = true condition has been replaced for compatibillity reasons.
+        If (InStr(stateArray.Get(A_Index), "0", 0))
         {
-            onOffArray[A_Index] := "Off"
+            onOffArray.InsertAt(A_Index, "Off")
         }
-        Else If (InStr(stateArray[A_Index], "1", 0))
+        Else If (InStr(stateArray.Get(A_Index), "1", 0))
         {
-            onOffArray[A_Index] := "On"
+            onOffArray.InsertAt(A_Index, "On")
         }
     }
 
-    Hotkey(readConfigFile("TERMINATE_SCRIPT_HK"), (*) => terminateScriptPrompt(), onOffArray[1])
-    Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), onOffArray[2])
-    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet"), onOffArray[3])
-    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray[4])
-    Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray[5])
-    Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray[6])
-    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), onOffArray[7])
+    Hotkey(readConfigFile("TERMINATE_SCRIPT_HK"), (*) => terminateScriptPrompt(), onOffArray.Get(1))
+    Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), onOffArray.Get(2))
+    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet"), onOffArray.Get(3))
+    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray.Get(4))
+    Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray.Get(5))
+    Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray.Get(6))
+    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), onOffArray.Get(7))
 }
 
 clearURLFile()
@@ -629,46 +744,35 @@ deleteFilePrompt(pFileName)
                     {
                         c := "URL_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("URL_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName)
+                        FileMove(readConfigFile("URL_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "URL-Backup-File":
                     {
                         c := "URL_BACKUP_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_BACKUP_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName)
+                        FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "URL-Blacklist-File":
                     {
                         c := "BLACKLIST_FILE_LOCATION"
                         SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName)
+                        FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "latest download":
                     {
-                        Try
+                        MsgBox(lastDownloadPath)
+                        If (DirExist(lastDownloadPath))
                         {
-                            Switch (useDefaultDownloadLocationCheckbox.Value)
-                            {
-                                Case 0:
-                                {
-                                    FileMove(customDownloadLocation.Value . '\' . downloadTime, baseFilesLocation
-                                        . "\deleted\" . downloadTime)
-                                }
-                                Case 1:
-                                {
-                                    Run(readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime, baseFilesLocation
-                                        . "\deleted\" . downloadTime)
-                                }
-                            }
+                            FileMove(lastDownloadPath, baseFilesLocation . "\deleted\" . downloadTime, true)
                         }
-                        Catch
+                        Else
                         {
                             MsgBox("No downloaded files from`ncurrent session found.", "Delete download error !", "O Icon! T2.5")
                         }
                     }
                 Default:
                     {
-                        terminateScriptPrompt()
+                        MsgBox("Invalid delete request.", "Error !", "O IconX T2")
                     }
             }
         }
@@ -682,7 +786,7 @@ deleteFilePrompt(pFileName)
                 If (result = "Yes")
                 {
                     FileDelete(baseFilesLocation . "\deleted\" . outFileName)
-                    FileMove(readConfigFile(c), baseFilesLocation . "\deleted\" . outFileName)
+                    FileMove(readConfigFile(c), baseFilesLocation . "\deleted\" . outFileName, true)
                 }
             }
             Else
@@ -698,7 +802,7 @@ reloadScriptPrompt()
     ; Number in seconds.
     i := 4
 
-    reloadScriptGUI := Gui(, "Script reload")
+    reloadScriptGUI := Gui()
     textField := reloadScriptGUI.Add("Text", "r3 w260 x20 y40", "The script will be`n reloaded in " . i . " seconds.")
     textField.SetFont("s12")
     textField.SetFont("bold")
@@ -747,7 +851,7 @@ terminateScriptPrompt()
     ; Number in seconds.
     i := 4
 
-    terminateScriptGUI := Gui(, "Script termination")
+    terminateScriptGUI := Gui()
     textField := terminateScriptGUI.Add("Text", "r3 w260 x20 y40", "The script will be`n terminated in " . i . " seconds.")
     textField.SetFont("s12")
     textField.SetFont("bold")

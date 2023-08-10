@@ -41,7 +41,6 @@ saveSearchBarContentsToFile()
 ; Saves the video URL directly by hovering over the video thumbnail on the start page.
 saveVideoURLDirectlyToFile()
 {
-    lastContent := A_Clipboard
     A_Clipboard := ""
     MouseClick("Right")
     ; Do not decrease values ! May lead to unstable performance.
@@ -49,29 +48,31 @@ saveVideoURLDirectlyToFile()
     ; Probably only works with German Firefox version.
     ; Will be language specific in the future.
     Send("k")
-    Clipwait(0.35)
-    If (lastContent = A_Clipboard)
-    {
-        MsgBox("Same URL selected twice.", "Attention !", "O Icon! T1.5")
-        Return
-    }
-    Else If (A_Clipboard = "")
-    {
-        MsgBox("No URL detected.", "Attention !", "O Icon! T1.5")
-    }
-    Else
+    If (ClipWait(0.35) = true)
     {
         clipboardContent := A_Clipboard
-        If (FileExist(readConfigFile("URL_FILE_LOCATION")))
-        {
-            writeToURLFile(clipboardContent)
-        }
-        Else
+        If (!FileExist(readConfigFile("URL_FILE_LOCATION")))
         {
             FileAppend("#Made by Donnerbaer" . "`n", readConfigFile("URL_FILE_LOCATION"))
             writeToURLFile(clipboardContent)
+            Return
+        }
+        Else If (clipboardContent != "")
+        {
+            contentArray := readFile(readConfigFile("URL_FILE_LOCATION"), true)
+            Loop (contentArray.Length)
+            {
+                If (clipboardContent = contentArray.Get(A_Index))
+                {
+                    MsgBox("Same URL selected twice.", "Attention !", "O Icon! T1.5")
+                    Return
+                }
+            }
+            writeToURLFile(clipboardContent)
+            Return
         }
     }
+    MsgBox("No URL detected.", "Attention !", "O Icon! T1.5")
 }
 
 writeToURLFile(pContent)
@@ -83,7 +84,7 @@ writeToURLFile(pContent)
     ; Content check loop.
     Loop (i)
     {
-        If (content = tmp[A_Index])
+        If (content = tmp.Get(A_Index))
         {
             Return
         }
@@ -161,7 +162,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
                 ; Creates the blacklist file with the template.
                 Loop templateArray.Length
                 {
-                    FileAppend(templateArray[A_Index] . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
+                    FileAppend(templateArray.Get(A_Index) . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
                 }
                 checkBlackListFile(itemToCompare, booleanShowPrompt)
             }
@@ -185,7 +186,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
     }
     Loop templateArray.Length
     {
-        If (templateArray[A_Index] != tmpArray[A_Index])
+        If (templateArray.Get(A_Index) != tmpArray.Get(A_Index))
         {
             FileDelete(readConfigFile("BLACKLIST_FILE_LOCATION"))
             Try
@@ -193,7 +194,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
                 ; Creates the blacklist file with the template.
                 Loop templateArray.Length
                 {
-                    FileAppend(templateArray[A_Index] . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
+                    FileAppend(templateArray.Get(A_Index) . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
                 }
             }
             Catch
@@ -210,7 +211,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
 
     Loop blacklistArray.Length
     {
-        If (itemToCompare = blacklistArray[A_Index])
+        If (itemToCompare = blacklistArray.Get(A_Index))
         {
             Return true
         }
