@@ -17,21 +17,15 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Download and Extract Autohotkey Compiler
+    - name: Extract Autohotkey Compiler
       run: |
-        # Set variables
-        $ahkZipURL = "https://www.autohotkey.com/download/ahk.zip"
-        $ahkV2ZipURL = "https://www.autohotkey.com/download/ahk-v2.zip"
+        # Set Variables
         $ahkFolder = "ahk"
         $ahkV2Folder = "ahk-v2"
 
-        # Download AutoHotkey zip files.
-        Invoke-WebRequest -Uri $ahkZipURL -OutFile "ahk.zip"
-        Invoke-WebRequest -Uri $ahkV2ZipURL -OutFile "ahk-v2.zip"
-
         # Extract the files.
-        Expand-Archive -Path "ahk.zip" -DestinationPath $ahkFolder
-        Expand-Archive -Path "ahk-v2.zip" -DestinationPath $ahkV2Folder
+        Expand-Archive -Path "compiler\ahk.zip" -DestinationPath $ahkFolder
+        Expand-Archive -Path "compiler\ahk-v2.zip" -DestinationPath $ahkV2Folder
 
     - name: Compile Autohotkey Script
       run: |

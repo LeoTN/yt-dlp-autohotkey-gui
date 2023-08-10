@@ -5,8 +5,9 @@
 SendMode "Input"
 SetWorkingDir A_ScriptDir
 CoordMode "Mouse", "Client"
-
-; Imports important functions and variables
+; Very important, basically sets the script working directory !!!
+global baseFilesLocation := detectIfWorkingDirIsDrive(A_WorkingDir)
+; Imports important functions and variables.
 ; Sets the directory for all following files.
 #Include "includes\"
 #Include "ConfigFileManager.ahk"
@@ -37,6 +38,7 @@ F6::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below.
+        scriptTutorial()
     }
 }
 
@@ -45,14 +47,18 @@ F7::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below
+        MsgBox("Hello there.")
     }
 }
 
 ; Runs a list of commands when the script is launched.
 onInit()
 {
-    global ffmpegLocation := A_WorkingDir . "\files\library\ffmpeg.exe"
-    global youTubeBackGroundLocation := A_WorkingDir . "\files\library\YouTubeBackground.jpg"
+    ; Checks the system for other already running instances of this script.
+    findProcessWithWildcard("VideoDownloader.exe")
+
+    global ffmpegLocation := baseFilesLocation . "\library\ffmpeg.exe"
+    global youTubeBackGroundLocation := baseFilesLocation . "\library\YouTubeBackground.jpg"
 
     If (!FileExist(ffmpegLocation))
     {
@@ -79,7 +85,7 @@ onInit()
         }
     }
     ; To maintain ordinary functionallity the system MUST be restarted after a finished installation of this script!
-    If (FileExist(A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt"))
+    If (FileExist(baseFilesLocation . "\NotRestartedYet(do not delete!!!).txt"))
     {
         result := MsgBox("Your system has not been REBOOTED yet.`nFor further use it is mandatory`n to REBOOT your system.",
             "Script setup status", "OC Icon! 262144")
@@ -89,9 +95,9 @@ onInit()
                 {
                     Try
                     {
-                        FileDelete(A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt")
+                        FileDelete(baseFilesLocation . "\NotRestartedYet(do not delete!!!).txt")
                     }
-                    If (!FileExist(A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt"))
+                    If (!FileExist(baseFilesLocation . "\NotRestartedYet(do not delete!!!).txt"))
                     {
                         Run(A_ComSpec . " /c shutdown /r /t 1")
                         ExitApp()
@@ -103,7 +109,7 @@ onInit()
                 }
             Default:
                 {
-                    FileAppend("Do not delete this file if you do not know what you are doing!", A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt")
+                    FileAppend("Do not delete this file if you do not know what you are doing!", baseFilesLocation . "\NotRestartedYet(do not delete!!!).txt")
                 }
         }
         MsgBox("Terminating script.", "Script status", "O Iconi T1.5")
@@ -115,7 +121,7 @@ onInit()
     Try
     {
         FileCopy(A_Temp . "\video_downloader_python_install_log.txt",
-            A_WorkingDir . "\files\config\video_downloader_python_install_log.txt")
+            baseFilesLocation . "\config\video_downloader_python_install_log.txt")
     }
     checkBlackListFile("createBlackListFile")
     Hotkey_onInit()
@@ -123,13 +129,43 @@ onInit()
     uninstallGUI_onInit()
     optionsGUI_onInit()
     ; Makes sure the script opens the uninstall GUI after restarting with admin rights.
-    If (FileExist(A_WorkingDir . "\NoPermissionsForUninstall.txt"))
+    If (FileExist(baseFilesLocation . "\NoPermissionsForUninstall.txt"))
     {
         Try
         {
-            FileDelete(A_WorkingDir . "\NoPermissionsForUninstall.txt")
+            FileDelete(baseFilesLocation . "\NoPermissionsForUninstall.txt")
         }
         Hotkey_openUninstallGUI()
+    }
+    Else
+    {
+        ; Shows a small tutorial to guide the user.
+        If (readConfigFile("ASK_FOR_TUTORIAL") = true)
+        {
+            Return scriptTutorial()
+        }
+        If (readConfigFile("SHOW_MAIN_GUI_ON_LAUNCH") = true)
+        {
+            If (!WinExist("ahk_id " . mainGUI.Hwnd))
+            {
+                Hotkey_openMainGUI()
+            }
+            Else
+            {
+                WinActivate("ahk_id " . mainGUI.Hwnd)
+            }
+        }
+        If (readConfigFile("SHOW_OPTIONS_GUI_ON_LAUNCH") = true)
+        {
+            If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
+            {
+                Hotkey_openOptionsGUI()
+            }
+            Else
+            {
+                WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
+            }
+        }
     }
 }
 
@@ -183,12 +219,12 @@ setUp()
             ; Will install the latest version of yt-dlp from GitHub.
             ; This was the old way but it would not receive that many updates.
             ; Run(A_ComSpec " /k pip install yt-dlp", , , &consolePID)
-            Run(A_ComSpec " /k python -m pip install --force-reinstall https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz",
+            Run(A_ComSpec ' /k python -m pip install --force-reinstall "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
                 , , &consolePID)
             Sleep(1500)
             Try
             {
-                While (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . " - python  -m pip install --force-reinstall https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz")
+                While (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . ' - python  -m pip install --force-reinstall "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"')
                 {
                     Sleep(500)
                 }
@@ -268,7 +304,8 @@ setUp()
                         }
                     Default:
                         {
-                            FileAppend("Do not delete this file if you do not know what you are doing!", A_WorkingDir . "\NotRestartedYet(do not delete!!!).txt")
+                            FileAppend("Do not delete this file if you do not know what you are doing!", baseFilesLocation
+                                . "\NotRestartedYet(do not delete!!!).txt")
                         }
                 }
                 MsgBox("Terminating script.", "Script status", "O Iconi T1.5")
@@ -324,21 +361,21 @@ setup_generatePathHelpFile(pOutStringReady)
 
 setup_installLibraryFiles()
 {
-    If (!DirExist(A_WorkingDir . "\files\library"))
+    If (!DirExist(baseFilesLocation . "\library"))
     {
         Try
         {
-            DirCreate(A_WorkingDir . "\files\library")
+            DirCreate(baseFilesLocation . "\library")
         }
     }
     Try
     {
-        FileInstall("files\library\YouTubeBackground.jpg", youTubeBackGroundLocation, 1)
-        FileInstall("files\library\MonitorHookFile.ps1", A_WorkingDir . "\files\library\MonitorHookFile.ps1")
+        FileInstall("yt_dlp_autohotkey_gui_files\library\YouTubeBackground.jpg", youTubeBackGroundLocation, 1)
+        FileInstall("yt_dlp_autohotkey_gui_files\library\MonitorHookFile.ps1", baseFilesLocation . "\library\MonitorHookFile.ps1")
         ; Required for yt-dlp to operate with extra functionallity.
-        FileInstall("files\library\ffmpeg.exe", ffmpegLocation, 1)
-        FileInstall("files\library\ffplay.exe", A_WorkingDir . "\files\library\ffplay.exe", 1)
-        FileInstall("files\library\ffprobe.exe", A_WorkingDir . "\files\library\ffprobe.exe", 1)
+        FileInstall("yt_dlp_autohotkey_gui_files\library\ffmpeg.exe", ffmpegLocation, 1)
+        FileInstall("yt_dlp_autohotkey_gui_files\library\ffplay.exe", baseFilesLocation . "\library\ffplay.exe", 1)
+        FileInstall("yt_dlp_autohotkey_gui_files\library\ffprobe.exe", baseFilesLocation . "\library\ffprobe.exe", 1)
     }
     Catch
     {
@@ -355,7 +392,7 @@ setup_checkPythonVersion()
     {
         FileDelete(A_Temp . "\video_downloader_python_install_log.txt")
     }
-    RunWait(A_ComSpec " /c python --version > " . A_Temp . "\video_downloader_python_install_log.txt")
+    RunWait(A_ComSpec ' /c python --version > "' . A_Temp . '\video_downloader_python_install_log.txt"')
     Sleep(500)
     ; This occures when the command does not achieve anything => python is not installed.
     If (FileRead(A_Temp . "\video_downloader_python_install_log.txt") = "")
@@ -371,11 +408,11 @@ setup_checkPythonVersion()
                     Sleep(1500)
                     Try
                     {
-                        While (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . ' - winget install "python" --accept-source-agreements --accept-package-agreements')
+                        While (WinGetTitle("ahk_pid " . consolePID) = A_ComSpec . ' - winget  install "python" --accept-source-agreements --accept-package-agreements')
                         {
                             Sleep(500)
                         }
-                        Sleep(20000)
+                        Sleep(10000)
                         WinClose("ahk_pid " . consolePID)
                     }
                     Catch
@@ -429,7 +466,7 @@ setup_checkPythonVersion()
                             tmpString1 := RegExReplace(pythonVersion, ".[0-9]$")
                             tmpString2 := ' /c winget uninstall "python ' . tmpString1 . '"'
                             RunWait(A_ComSpec . tmpString2)
-                            Run(A_ComSpec ' /k winget install "python" --accept-source-agreements --accept-package-agreements || title Completed...',
+                            Run(A_ComSpec ' /k winget install "python" --accept-source-agreements --accept-package-agreements',
                                 , , &consolePID)
                             Sleep(2000)
                             Try

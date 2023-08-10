@@ -53,9 +53,9 @@ createMainGUI()
         (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Reload Script → " .
             expandHotkey(readConfigFile("RELOAD_SCRIPT_HK")), 2), "+Radio")
 
-    activeHotkeyMenu.Add("Pause / Continue Script → " . expandHotkey(readConfigFile("PAUSE_CONTINUE_SCRIPT_HK")),
-        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Pause / Continue Script → " .
-            expandHotkey(readConfigFile("PAUSE_CONTINUE_SCRIPT_HK")), 3), "+Radio")
+    activeHotkeyMenu.Add("Currently not used → " . expandHotkey(readConfigFile("NOT_USED_HK")),
+        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Currently not used → " .
+            expandHotkey(readConfigFile("NOT_USED_HK")), 3), "+Radio")
 
     activeHotkeyMenu.Add("Start Download → " . expandHotkey(readConfigFile("DOWNLOAD_HK")),
         (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Start Download → " .
@@ -103,6 +103,8 @@ createMainGUI()
     helpMenu.Add("Used repository (yt-dlp)", (*) => Run("https://github.com/yt-dlp/yt-dlp"))
     helpMenu.Add("Original repository (youtube-downloader-using-ahk)",
         (*) => Run("https://github.com/LeoTN/youtube-downloader-using-ahk#readme"))
+    helpMenu.Add("Built in Tutorial", (*) => scriptTutorial())
+    helpMenu.SetIcon("Built in Tutorial", "shell32.dll", 24)
 
     allMenus := MenuBar()
     allMenus.Add("&File", fileMenu)
@@ -260,11 +262,11 @@ handleMainGUI_ApplyCheckmarksFromConfigFile(pMenuName)
     {
         Loop (stateArray.Length)
         {
-            If (stateArray[A_Index] = true)
+            If (stateArray.Get(A_Index) = true)
             {
                 activeHotkeyMenu.Check(A_Index . "&")
             }
-            Else If (stateArray[A_Index] = false)
+            Else If (stateArray.Get(A_Index) = false)
             {
                 activeHotkeyMenu.Uncheck(A_Index . "&")
             }
@@ -286,7 +288,7 @@ handleMainGUI_openDownloadLocation()
         {
             Case 0:
             {
-                Run(customDownloadLocation.Value)
+                Run(customDownloadLocationEdit.Value)
             }
             Case 1:
             {
@@ -296,7 +298,7 @@ handleMainGUI_openDownloadLocation()
     }
     Catch
     {
-        MsgBox("No downloaded files from `ncurrent session found.", "Open videos error !", "O Icon! T1.5")
+        MsgBox("No downloaded files from`ncurrent session found.", "Open videos error !", "O Icon! T1.5")
     }
 }
 
