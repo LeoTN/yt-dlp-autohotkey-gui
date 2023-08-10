@@ -262,11 +262,11 @@ handleMainGUI_ApplyCheckmarksFromConfigFile(pMenuName)
     {
         Loop (stateArray.Length)
         {
-            If (stateArray[A_Index] = true)
+            If (stateArray.Get(A_Index) = true)
             {
                 activeHotkeyMenu.Check(A_Index . "&")
             }
-            Else If (stateArray[A_Index] = false)
+            Else If (stateArray.Get(A_Index) = false)
             {
                 activeHotkeyMenu.Uncheck(A_Index . "&")
             }
@@ -288,7 +288,7 @@ handleMainGUI_openDownloadLocation()
         {
             Case 0:
             {
-                Run(customDownloadLocation.Value)
+                Run(customDownloadLocationEdit.Value)
             }
             Case 1:
             {

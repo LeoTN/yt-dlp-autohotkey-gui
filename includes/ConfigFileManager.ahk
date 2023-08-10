@@ -172,8 +172,8 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
         */
         Loop configVariableNameArray.Length
         {
-            IniWrite(%configVariableNameArray[A_Index]%, configFileLocation, configSectionNameArray[A_Index],
-            configVariableNameArray[A_Index])
+            IniWrite(%configVariableNameArray.Get(A_Index)%, configFileLocation, configSectionNameArray.Get(A_Index),
+                configVariableNameArray.Get(A_Index))
         }
         MsgBox("A default config file has been generated.", "Config file status", "O Iconi T3")
     }
@@ -199,8 +199,8 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
         Try
         {
             ; Replaces every config variable 's value with the config file's content.
-            configFileContentArray.InsertAt(A_Index, IniRead(configFileLocation, configSectionNameArray[A_Index]
-            , configVariableNameArray[A_Index]))
+            configFileContentArray.InsertAt(A_Index, IniRead(configFileLocation, configSectionNameArray.Get(A_Index)
+                , configVariableNameArray.Get(A_Index)))
         }
         Catch
         {
@@ -230,28 +230,28 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
     Loop (configVariableNameArray.Length)
     {
         ; Searches in the config file for the given option name to then extract the value.
-        If (InStr(configVariableNameArray[A_Index], optionName, 0))
+        If (InStr(configVariableNameArray.Get(A_Index), optionName, 0))
         {
             ; The following code only applies for path values.
             ; Everything else should be excluded.
-            If (InStr(configFileContentArray[A_Index], "\"))
+            If (InStr(configFileContentArray.Get(A_Index), "\"))
             {
-                If (validatePath(configFileContentArray[A_Index], booleanAskForPathCreation) = false)
+                If (validatePath(configFileContentArray.Get(A_Index), booleanAskForPathCreation) = false)
                 {
                     MsgBox("Could not create directory !`nCheck the config file for a valid path at :`n "
-                        . configVariableNameArray[A_Index], "Error !", "O Icon! T10")
+                        . configVariableNameArray.Get(A_Index), "Error !", "O Icon! T10")
                     MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
                     ExitApp()
                 }
                 Else
                 {
                     ; This means that there was no error with the path given.
-                    Return configFileContentArray[A_Index]
+                    Return configFileContentArray.Get(A_Index)
                 }
             }
             Else
             {
-                Return configFileContentArray[A_Index]
+                Return configFileContentArray.Get(A_Index)
             }
         }
     }
@@ -270,7 +270,7 @@ editConfigFile(pOptionName, pData)
     Loop (configVariableNameArray.Length)
     {
         ; Searches in the config file for the given option name to then change the value.
-        If (InStr(configVariableNameArray[A_Index], optionName, 0))
+        If (InStr(configVariableNameArray.Get(A_Index), optionName, 0))
         {
             Try
             {
@@ -279,15 +279,15 @@ editConfigFile(pOptionName, pData)
                 {
                     dataString := arrayToString(data)
                     IniWrite(dataString, configFileLocation
-                        , configSectionNameArray[A_Index]
-                        , configVariableNameArray[A_Index])
+                        , configSectionNameArray.Get(A_Index)
+                        , configVariableNameArray.Get(A_Index))
                     Return
                 }
                 Else
                 {
                     IniWrite(data, configFileLocation
-                        , configSectionNameArray[A_Index]
-                        , configVariableNameArray[A_Index])
+                        , configSectionNameArray.Get(A_Index)
+                        , configVariableNameArray.Get(A_Index))
                     Return
                 }
             }
@@ -295,8 +295,8 @@ editConfigFile(pOptionName, pData)
             {
                 ; If the try statement fails the object above can not be an array.
                 IniWrite(data, configFileLocation
-                    , configSectionNameArray[A_Index]
-                    , configVariableNameArray[A_Index])
+                    , configSectionNameArray.Get(A_Index)
+                    , configVariableNameArray.Get(A_Index))
                 Return
             }
         }
@@ -315,7 +315,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true)
     ; If necessary the directory read in the config file will be created.
     ; SplitPath makes sure the last part of the whole path is removed.
     ; For example it removes the "\YT_URLS.txt"
-    SplitPath(path, &outFileName, &outDir, &outExtension)
+    SplitPath(path, , &outDir, &outExtension)
     ; Looks for one of the specified characters to identify invalid path names.
     ; Searches for common mistakes in the path name.
     specialChars := '<>"/|?*'
@@ -329,6 +329,22 @@ validatePath(pPath, pBooleanAskForPathCreation := true)
     ; This happens when there is no file name given in the config file e.g. at the preset location.
     If (outExtension = "" && !DirExist(path) && booleanAskForPathCreation = true)
     {
+        ; The download and preset folder will be created without any prompt to avoid annoying the user e.g.
+        ; because the download folder has changed or deleted.
+        If (path = DOWNLOAD_PRESET_LOCATION || path = DOWNLOAD_PATH)
+        {
+            Try
+            {
+                DirCreate(pPath)
+                Sleep(500)
+                Return true
+            }
+            Catch
+            {
+                Return false
+            }
+        }
+
         result := MsgBox("The directory :`n" . path
             . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
         If (result = "Yes")
@@ -350,11 +366,11 @@ validatePath(pPath, pBooleanAskForPathCreation := true)
             ExitApp()
         }
     }
-    Else If (!DirExist(outDir))
+    Else If (!DirExist(outDir) && booleanAskForPathCreation = true)
     {
-        ; The download log file location will be created without any prompt to avoid annoying the user e.g.
+        ; The download and preset folder will be created without any prompt to avoid annoying the user e.g.
         ; because the download folder has changed or has been deleted.
-        If (outFileName = "download_log.txt")
+        If (path = DOWNLOAD_LOG_FILE_LOCATION || path = DOWNLOAD_ARCHIVE_LOCATION)
         {
             Try
             {
@@ -367,6 +383,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true)
                 Return false
             }
         }
+
         result := MsgBox("The directory :`n" . path
             . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
         If (result = "Yes")
