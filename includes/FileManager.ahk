@@ -44,7 +44,7 @@ saveVideoURLDirectlyToFile()
     A_Clipboard := ""
     MouseClick("Right")
     ; Do not decrease values ! May lead to unstable performance.
-    Sleep(100)
+    Sleep(250)
     ; Probably only works with German Firefox version.
     ; Will be language specific in the future.
     Send("k")
