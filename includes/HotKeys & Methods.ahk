@@ -223,7 +223,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         displayAndLogConsoleCommand(stringToExecute, false)
         monitorDownloadProgress()
     }
-    If (downloadOptionsGUI_SubmitObject.DownloadVideoSubtitlesCheckbox = 1)
+    If (downloadOptionsGUI_SubmitObject.downloadVideoCommentsCheckbox = 1)
     {
         ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
         If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
@@ -760,10 +760,9 @@ deleteFilePrompt(pFileName)
                     }
                 Case "latest download":
                     {
-                        MsgBox(lastDownloadPath)
                         If (DirExist(lastDownloadPath))
                         {
-                            FileMove(lastDownloadPath, baseFilesLocation . "\deleted\" . downloadTime, true)
+                            DirMove(lastDownloadPath, baseFilesLocation . "\deleted\" . downloadTime, true)
                         }
                         Else
                         {
