@@ -336,7 +336,14 @@ monitorDownloadProgress()
     ; Prepares the download options GUI.
     downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
     downloadStatusProgressBar.Value := 0
-    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+    If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
+    {
+        downloadStatusText.Text := "Playlist mode: " . downloadedVideoAmount . " video(s) processed."
+    }
+    Else
+    {
+        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+    }
 
     ; Waits for the download log file to exist.
     maxRetries := 10
@@ -406,7 +413,7 @@ startOfFileReadLoop:
             currentBarValue := tmp_result * 100
             ; Applies the changes to the GUI progress bar.
             downloadStatusProgressBar.Value := currentBarValue
-            Sleep(2000)
+            Sleep(100)
         }
         ; Same thing as above.
         Else If (InStr(A_LoopReadLine, "has already been downloaded"))
@@ -420,7 +427,7 @@ startOfFileReadLoop:
             currentBarValue := tmp_result * 100
             ; Applies the changes to the GUI progress bar.
             downloadStatusProgressBar.Value := currentBarValue
-            Sleep(2000)
+            Sleep(100)
         }
         ; This message indicates that the video will be skipped because it is larger than the selected filesize.
         Else If (InStr(A_LoopReadLine, "does not pass filter (filesize_approx<" .
@@ -438,7 +445,7 @@ startOfFileReadLoop:
                 currentBarValue := tmp_result * 100
                 ; Applies the changes to the GUI progress bar.
                 downloadStatusProgressBar.Value := currentBarValue
-                Sleep(2000)
+                Sleep(100)
             }
         }
         ; This message only appears when the previous video processing has been finished.
@@ -450,8 +457,14 @@ startOfFileReadLoop:
                 booleanWaitForVideoDownload := true
                 downloadedVideoAmount++
                 partProgress := 0
-                downloadStatusText.Text := "Downloaded " . downloadedVideoAmount .
-                    " out of " . videoAmount . " videos."
+                If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
+                {
+                    downloadStatusText.Text := "Playlist mode: " . downloadedVideoAmount . " video(s) processed."
+                }
+                Else
+                {
+                    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+                }
             }
         }
         Else If (booleanSkippingLocked = true)
@@ -530,8 +543,14 @@ startOfFileReadLoop:
     Else
     {
         downloadStatusProgressBar.Value := maximumBarValue
-        downloadStatusText.Text := "Downloaded " . downloadedVideoAmount .
-            " out of " . videoAmount . " videos."
+        If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
+        {
+            downloadStatusText.Text := "Playlist mode: " . downloadedVideoAmount . " video(s) processed."
+        }
+        Else
+        {
+            downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+        }
     }
     If (downloadOptionsGUI_SubmitObject.HideDownloadCommandPromptCheckbox != 1)
     {
