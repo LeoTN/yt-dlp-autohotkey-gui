@@ -507,17 +507,46 @@ startOfFileReadLoop:
     ; Download finish section.
     Try
     {
-        FileCopy(A_Temp . "\yt_dlp_download_log.txt", readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), true)
+        If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
+        {
+            FileCopy(A_Temp . "\yt_dlp_download_log.txt", readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), true)
+        }
         If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
         {
-            FileCopy(A_Temp . "\yt_dlp_download_log.txt",
-                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_log.txt", true)
+            If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
+            {
+                FileCopy(A_Temp . "\yt_dlp_download_log.txt",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_log.txt", true)
+            }
+            If (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")))
+            {
+                FileCopy(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION"),
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_archive.txt", true)
+            }
+            If (FileExist(readConfigFile("URL_FILE_LOCATION")))
+            {
+                FileCopy(readConfigFile("URL_FILE_LOCATION"),
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_YT_URLS.txt", true)
+            }
         }
         Else
         {
-            SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
-            FileCopy(A_Temp . "\yt_dlp_download_log.txt",
-                downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_log.txt", true)
+            If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
+            {
+                SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
+                FileCopy(A_Temp . "\yt_dlp_download_log.txt",
+                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_log.txt", true)
+            }
+            If (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")))
+            {
+                FileCopy(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION"),
+                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_archive.txt", true)
+            }
+            If (FileExist(readConfigFile("URL_FILE_LOCATION")))
+            {
+                FileCopy(readConfigFile("URL_FILE_LOCATION"),
+                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_YT_URLS.txt", true)
+            }
         }
     }
     Catch
@@ -570,6 +599,11 @@ startOfFileReadLoop:
                 "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
                 "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
                 readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
+            If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
+            {
+                FileAppend("`n`nNotice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
+            }
         }
         Else
         {
@@ -580,6 +614,11 @@ startOfFileReadLoop:
                 "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
                 "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
                 downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
+            If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
+            {
+                FileAppend("`n`nNotice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n",
+                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
+            }
         }
     }
 }
