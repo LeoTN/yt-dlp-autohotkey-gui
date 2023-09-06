@@ -225,8 +225,9 @@ manageURLFile(pBooleanShowPrompt := true)
 
     If (booleanShowPrompt = true)
     {
-        result := MsgBox("Do you want to clear the URL file ?`n`nA backup will be created anyways.", "Manage URL File", "4164 T10")
-
+        result := MsgBox("Do you want to clear the URL file ?`n`nA backup will be created anyways.",
+            "Manage URL File", "4164 T10")
+        ; When there is a prompt it is almost guaranteed not a download running so that this should work.
         If (result = "Yes")
         {
             Try
@@ -235,7 +236,7 @@ manageURLFile(pBooleanShowPrompt := true)
             }
             Catch
             {
-                MsgBox("The file does not exist !	`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
+                MsgBox("The file does not exist !`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
             }
         }
     }
@@ -243,7 +244,8 @@ manageURLFile(pBooleanShowPrompt := true)
     {
         Try
         {
-            FileMove(readConfigFile("URL_FILE_LOCATION"), readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
+            SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
+            FileMove(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
         }
     }
 }

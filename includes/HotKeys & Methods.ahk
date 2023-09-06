@@ -211,6 +211,8 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         isDownloading := false
         Return
     }
+    SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
+    FileMove(readConfigFile("URL_FILE_LOCATION"), outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
     If (booleanSilent = 1)
     {
         ; Execute the command line command and wait for it to be finished.
@@ -284,7 +286,8 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 monitorDownloadProgress()
 {
     global booleanDownloadTerminated := false
-    global urlArray := readFile(readConfigFile("URL_FILE_LOCATION"), true)
+    SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
+    global urlArray := readFile(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
     global videoAmount := urlArray.Length
     global downloadedVideoAmount := 0
     global skippedVideoArchiveAmount := 0
@@ -529,9 +532,10 @@ postProcessDownloadFiles()
                     . "`n`n##################################################`n`n",
                     readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_archive.txt")
             }
-            If (FileExist(readConfigFile("URL_FILE_LOCATION")))
+            SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
+            If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
             {
-                FileAppend(FileRead(readConfigFile("URL_FILE_LOCATION")) . "`n`nDownload time: " . downloadTime
+                FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt") . "`n`nDownload time: " . downloadTime
                     . "`n`n##################################################`n`n",
                     readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_YT_URLS.txt")
             }
@@ -553,10 +557,11 @@ postProcessDownloadFiles()
                     . "`n`n##################################################`n`n",
                     downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_archive.txt")
             }
-            If (FileExist(readConfigFile("URL_FILE_LOCATION")))
+            SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
+            If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
             {
                 SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
-                FileAppend(FileRead(readConfigFile("URL_FILE_LOCATION")) . "`n`nDownload time: " . downloadTime
+                FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt") . "`n`nDownload time: " . downloadTime
                     . "`n`n##################################################`n`n",
                     downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_YT_URLS.txt")
             }

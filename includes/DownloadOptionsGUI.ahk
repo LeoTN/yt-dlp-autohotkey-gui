@@ -697,7 +697,8 @@ buildCommandString()
         }
         Case 1:
         {
-            commandString .= '--batch-file "' . readConfigFile("URL_FILE_LOCATION") . '" '
+            SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
+            commandString .= '--batch-file "' . outDir . '\YT_URLS_CURRENTLY_DOWNLOADING.txt" '
         }
     }
     Switch (useDefaultDownloadLocationCheckbox.Value)
