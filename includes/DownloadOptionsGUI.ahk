@@ -760,7 +760,7 @@ handleDownloadOptionsGUI_toolTipManager(pBooleanRefresh := false)
         handleDownloadOptionsGUI_toolTipLoop(elementHWNDArray)
     }
 }
-
+; Possible rework idea :=> use array instead of tmp variables.
 ; When called checks if the mouse hovers over a GUI element and shows the specific tooltip.
 handleDownloadOptionsGUI_toolTipLoop(pElementHWNDArray)
 {

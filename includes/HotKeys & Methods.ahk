@@ -223,42 +223,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         displayAndLogConsoleCommand(stringToExecute, false)
         monitorDownloadProgress()
     }
-    If (downloadOptionsGUI_SubmitObject.downloadVideoCommentsCheckbox = 1)
-    {
-        ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
-        {
-            If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
-            {
-                Try
-                {
-                    DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
-                    Sleep(500)
-                }
-            }
-            Try
-            {
-                FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\media\*.info.json",
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments", true)
-            }
-        }
-        Else
-        {
-            If (!DirExist(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments"))
-            {
-                Try
-                {
-                    DirCreate(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments")
-                    Sleep(500)
-                }
-            }
-            Try
-            {
-                FileMove(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\media\*.info.json",
-                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments", true)
-            }
-        }
-    }
+    postProcessDownloadFiles()
     If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = 1
         && downloadOptionsGUI_SubmitObject.IgnoreAllOptionsCheckbox != 1)
     {
@@ -318,14 +283,13 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 ; Checks the download log file for status updates and reacts by updating the download options GUI progress bar and text fields.
 monitorDownloadProgress()
 {
-    Critical("Off")
     global booleanDownloadTerminated := false
-    urlArray := readFile(readConfigFile("URL_FILE_LOCATION"), true)
-    videoAmount := urlArray.Length
-    downloadedVideoAmount := 0
-    skippedVideoArchiveAmount := 0
-    skippedVideoPresentAmount := 0
-    skippedVideoMaxSizeAmount := 0
+    global urlArray := readFile(readConfigFile("URL_FILE_LOCATION"), true)
+    global videoAmount := urlArray.Length
+    global downloadedVideoAmount := 0
+    global skippedVideoArchiveAmount := 0
+    global skippedVideoPresentAmount := 0
+    global skippedVideoMaxSizeAmount := 0
     maximumBarValue := videoAmount * 100
     currentBarValue := 0
     partProgress := 0
@@ -505,57 +469,6 @@ startOfFileReadLoop:
         }
     }
     ; Download finish section.
-    Try
-    {
-        If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
-        {
-            FileCopy(A_Temp . "\yt_dlp_download_log.txt", readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), true)
-        }
-        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
-        {
-            If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
-            {
-                FileCopy(A_Temp . "\yt_dlp_download_log.txt",
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_log.txt", true)
-            }
-            If (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")))
-            {
-                FileCopy(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION"),
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_archive.txt", true)
-            }
-            If (FileExist(readConfigFile("URL_FILE_LOCATION")))
-            {
-                FileCopy(readConfigFile("URL_FILE_LOCATION"),
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_YT_URLS.txt", true)
-            }
-        }
-        Else
-        {
-            If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
-            {
-                SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
-                FileCopy(A_Temp . "\yt_dlp_download_log.txt",
-                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_log.txt", true)
-            }
-            If (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")))
-            {
-                FileCopy(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION"),
-                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_archive.txt", true)
-            }
-            If (FileExist(readConfigFile("URL_FILE_LOCATION")))
-            {
-                FileCopy(readConfigFile("URL_FILE_LOCATION"),
-                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_YT_URLS.txt", true)
-            }
-        }
-    }
-    Catch
-    {
-        If (booleanDownloadTerminated = false)
-        {
-            MsgBox("Could not write to download log file.", "Warning !", "O Icon! T1.5")
-        }
-    }
     downloadStatusText.Text := "Final video processing..."
     Sleep(2000)
     ; Makes sure the log powershell windows is closed as well.
@@ -589,6 +502,72 @@ startOfFileReadLoop:
             "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
             "`nDownloaded Videos : " . downloadedVideoAmount, "Download summary", "O Iconi T5")
     }
+}
+
+; Adds time, date and further information into the text files. Might also make .JSON comment files prettier in the future.
+postProcessDownloadFiles()
+{
+    ; Moves and renames all important text files into the download directory.
+    Try
+    {
+        If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
+        {
+            FileCopy(A_Temp . "\yt_dlp_download_log.txt", readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), true)
+        }
+        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
+        {
+            If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
+            {
+                ; Better alternative for FileCopy because it will append instead of overwrite the old data.
+                FileAppend(FileRead(A_Temp . "\yt_dlp_download_log.txt") . "`n`nDownload time: " . downloadTime
+                    . "`n`n##################################################`n`n",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_log.txt")
+            }
+            If (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")))
+            {
+                FileAppend(FileRead(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")) . "`n`nDownload time: " . downloadTime
+                    . "`n`n##################################################`n`n",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_archive.txt")
+            }
+            If (FileExist(readConfigFile("URL_FILE_LOCATION")))
+            {
+                FileAppend(FileRead(readConfigFile("URL_FILE_LOCATION")) . "`n`nDownload time: " . downloadTime
+                    . "`n`n##################################################`n`n",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_YT_URLS.txt")
+            }
+        }
+        Else
+        {
+            If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
+            {
+                SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
+                ; Better alternative for FileCopy because it will append instead of overwrite the old data.
+                FileAppend(FileRead(A_Temp . "\yt_dlp_download_log.txt") . "`n`nDownload time: " . downloadTime
+                    . "`n`n##################################################`n`n",
+                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_log.txt")
+            }
+            If (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")))
+            {
+                SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
+                FileAppend(FileRead(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")) . "`n`nDownload time: " . downloadTime
+                    . "`n`n##################################################`n`n",
+                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_archive.txt")
+            }
+            If (FileExist(readConfigFile("URL_FILE_LOCATION")))
+            {
+                SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
+                FileAppend(FileRead(readConfigFile("URL_FILE_LOCATION")) . "`n`nDownload time: " . downloadTime
+                    . "`n`n##################################################`n`n",
+                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_YT_URLS.txt")
+            }
+        }
+    }
+    Catch
+    {
+        MsgBox("Could not write to download log file.", "Warning !", "O Icon! T1.5")
+    }
+
+    ; Creates the download summary text file.
     Try
     {
         If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
@@ -597,13 +576,19 @@ startOfFileReadLoop:
                 "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
                 "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
                 "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
-                "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
+                "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n",
                 readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
             If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
             {
-                FileAppend("`n`nNotice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n",
+                FileAppend("Notice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
                     readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
             }
+            Else
+            {
+                FileAppend("`n", readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
+            }
+            FileAppend("Download time: " . downloadTime . "`n`n##################################################`n`n",
+                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
         }
         Else
         {
@@ -612,14 +597,58 @@ startOfFileReadLoop:
                 "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
                 "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
                 "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
-                "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n##################################################",
+                "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n",
                 downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
             If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
             {
-                FileAppend("`n`nNotice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n",
+                FileAppend("Notice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
                     downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
             }
+            Else
+            {
+                FileAppend("`n", downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
+            }
+            FileAppend("Download time: " . downloadTime . "`n`n##################################################`n`n",
+                downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
         }
+    }
+
+    If (downloadOptionsGUI_SubmitObject.downloadVideoCommentsCheckbox = 1)
+    {
+        ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
+        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
+        {
+            If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            {
+                Try
+                {
+                    DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    Sleep(500)
+                }
+            }
+            Try
+            {
+                FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\media\*.info.json",
+                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments", true)
+            }
+        }
+        Else
+        {
+            If (!DirExist(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments"))
+            {
+                Try
+                {
+                    DirCreate(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments")
+                    Sleep(500)
+                }
+            }
+            Try
+            {
+                FileMove(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\media\*.info.json",
+                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments", true)
+            }
+        }
+        ; :=> JSON prettifier here in the future.
     }
 }
 
