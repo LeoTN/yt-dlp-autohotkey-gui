@@ -177,11 +177,21 @@ FUNCTION SECTION
 ; Important function which executes the built command string by pasting it into the console.
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
+    global isDownloading
     If (setup_checkInternetConnection() = false)
     {
         Return MsgBox("Unable to connect to the Internet.`n`nPlease check your Internet connection.", "Warning !", "O Icon! 4096 T2")
     }
-    global isDownloading := false
+    If (isDownloading = true)
+    {
+        Return MsgBox("There is a download process running already.`n`nPlease wait for it to finish or cancel it.",
+            "Information", "O Icon! 4096 T2")
+    }
+    Else
+    {
+        isDownloading := true
+    }
+
     ; Collects all data from the download options GUI into the object.
     global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
     stringToExecute := pCommandString
@@ -195,15 +205,6 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
     }
-    If (isDownloading = true)
-    {
-        Return MsgBox("There is a download process running already.`n`nPlease wait for it to finish or cancel it.",
-            "Information", "O Icon! 4096 T2")
-    }
-    Else
-    {
-        isDownloading := true
-    }
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
     If (!FileExist(tmpConfig) && downloadOptionsGUI_SubmitObject.UseTextFileForURLsCheckbox = 1)
     {
@@ -213,7 +214,14 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         Return
     }
     SplitPath(tmpConfig, , &outDir)
-    FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+    If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = 1)
+    {
+        FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+    }
+    Else
+    {
+        FileCopy(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+    }
     If (booleanSilent = 1)
     {
         ; Execute the command line command and wait for it to be finished.
@@ -474,7 +482,6 @@ startOfFileReadLoop:
     }
     ; Download finish section.
     downloadStatusText.Text := "Final video processing..."
-    Sleep(2000)
     ; Makes sure the log powershell windows is closed as well.
     Try
     {
