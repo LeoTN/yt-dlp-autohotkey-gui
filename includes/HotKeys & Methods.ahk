@@ -204,15 +204,16 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         isDownloading := true
     }
-    If (!FileExist(readConfigFile("URL_FILE_LOCATION")) && downloadOptionsGUI_SubmitObject.UseTextFileForURLsCheckbox = 1)
+    tmpConfig := readConfigFile("URL_FILE_LOCATION")
+    If (!FileExist(tmpConfig) && downloadOptionsGUI_SubmitObject.UseTextFileForURLsCheckbox = 1)
     {
         MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing : [" .
             expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download status", "O Icon! 8192")
         isDownloading := false
         Return
     }
-    SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
-    FileMove(readConfigFile("URL_FILE_LOCATION"), outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+    SplitPath(tmpConfig, , &outDir)
+    FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
     If (booleanSilent = 1)
     {
         ; Execute the command line command and wait for it to be finished.
@@ -510,6 +511,7 @@ startOfFileReadLoop:
 ; Adds time, date and further information into the text files. Might also make .JSON comment files prettier in the future.
 postProcessDownloadFiles()
 {
+    tmpConfig := readConfigFile("DOWNLOAD_PATH")
     ; Moves and renames all important text files into the download directory.
     Try
     {
@@ -524,20 +526,20 @@ postProcessDownloadFiles()
                 ; Better alternative for FileCopy because it will append instead of overwrite the old data.
                 FileAppend(FileRead(A_Temp . "\yt_dlp_download_log.txt") . "`n`nDownload time: " . downloadTime
                     . "`n`n##################################################`n`n",
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_log.txt")
+                    tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_log.txt")
             }
             If (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")))
             {
                 FileAppend(FileRead(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")) . "`n`nDownload time: " . downloadTime
                     . "`n`n##################################################`n`n",
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_archive.txt")
+                    tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_archive.txt")
             }
             SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
             If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
             {
                 FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt") . "`n`nDownload time: " . downloadTime
                     . "`n`n##################################################`n`n",
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_YT_URLS.txt")
+                    tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_YT_URLS.txt")
             }
         }
         Else
@@ -582,18 +584,18 @@ postProcessDownloadFiles()
                 "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
                 "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
                 "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n",
-                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
+                tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
             If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
             {
                 FileAppend("Notice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
+                    tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
             }
             Else
             {
-                FileAppend("`n", readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
+                FileAppend("`n", tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
             }
             FileAppend("Download time: " . downloadTime . "`n`n##################################################`n`n",
-                readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
+                tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
         }
         Else
         {
@@ -623,18 +625,18 @@ postProcessDownloadFiles()
         ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
         If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
         {
-            If (!DirExist(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments"))
+            If (!DirExist(tmpConfig . "\" . downloadTime . "\comments"))
             {
                 Try
                 {
-                    DirCreate(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments")
+                    DirCreate(tmpConfig . "\" . downloadTime . "\comments")
                     Sleep(500)
                 }
             }
             Try
             {
-                FileMove(readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\media\*.info.json",
-                    readConfigFile("DOWNLOAD_PATH") . "\" . downloadTime . "\comments", true)
+                FileMove(tmpConfig . "\" . downloadTime . "\media\*.info.json",
+                    tmpConfig . "\" . downloadTime . "\comments", true)
             }
         }
         Else
@@ -835,8 +837,9 @@ deleteFilePrompt(pFileName)
                 Case "URL-File":
                     {
                         c := "URL_FILE_LOCATION"
-                        SplitPath(readConfigFile("URL_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("URL_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName, true)
+                        tmpConfig := readConfigFile("URL_FILE_LOCATION")
+                        SplitPath(tmpConfig, &outFileName)
+                        FileMove(tmpConfig, baseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "URL-Backup-File":
                     {

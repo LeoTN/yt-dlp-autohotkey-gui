@@ -154,7 +154,8 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
         {
             DirCreate(outDir)
         }
-        FileAppend("", configFileLocation)
+        FileAppend("#Important note: When changing the config file the script has to be reloaded for the changes to take effect!",
+            configFileLocation)
     }
     ; In case you forget to specify a section for EACH new config file entry this will remind you to do so :D
     If (configVariableNameArray.Length != configSectionNameArray.Length)
@@ -194,39 +195,11 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
     booleanAskForPathCreation := pBooleanAskForPathCreation
     booleanCheckConfigFileStatus := pBooleanCheckConfigFileStatus
 
-    Loop (configVariableNameArray.Length)
+    If (booleanCheckConfigFileStatus = true)
     {
-        Try
-        {
-            ; Replaces every config variable 's value with the config file's content.
-            configFileContentArray.InsertAt(A_Index, IniRead(configFileLocation, configSectionNameArray.Get(A_Index)
-                , configVariableNameArray.Get(A_Index)))
-        }
-        Catch
-        {
-            If (booleanCheckConfigFileStatus = true)
-            {
-                result := MsgBox("The script's config file seems to be corrupted or unavailable !"
-                    "`n`nDo you want to create a new one using the template ?"
-                    , "Error !", "YN IconX 8192 T10")
-                If (result = "Yes")
-                {
-                    createDefaultConfigFile()
-                    ; Gives the information a part of the script asked for even if the config file had to be generated.
-                    Return readConfigFile(optionName)
-                }
-                Else If (result = "No" || "Timeout")
-                {
-                    MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
-                    ExitApp()
-                }
-            }
-            Else
-            {
-                Return
-            }
-        }
+        checkConfigFileIntegrity()
     }
+
     Loop (configVariableNameArray.Length)
     {
         ; Searches in the config file for the given option name to then extract the value.
@@ -302,6 +275,36 @@ editConfigFile(pOptionName, pData)
         }
     }
     Throw ("Error while editing config file")
+}
+
+checkConfigFileIntegrity()
+{
+    Loop (configVariableNameArray.Length)
+    {
+        Try
+        {
+            ; Replaces every config variable 's value with the config file's content.
+            configFileContentArray.InsertAt(A_Index, IniRead(configFileLocation, configSectionNameArray.Get(A_Index)
+                , configVariableNameArray.Get(A_Index)))
+        }
+        Catch
+        {
+            result := MsgBox("The script's config file seems to be corrupted or unavailable !"
+                "`n`nDo you want to create a new one using the template ?"
+                , "Error !", "YN IconX 8192 T10")
+            If (result = "Yes")
+            {
+                createDefaultConfigFile()
+                Return true
+            }
+            Else If (result = "No" || "Timeout")
+            {
+                MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
+                ExitApp()
+                ExitApp()
+            }
+        }
+    }
 }
 
 ; Verfies the integrity of a given path or file location.

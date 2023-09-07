@@ -171,6 +171,7 @@ cancelDownload()
 handleDownloadOptionsGUI_Checkboxes()
 {
     global commandString
+    tmpConfig := readConfigFile("DOWNLOAD_PATH")
 
     Switch (useTextFileForURLsCheckbox.Value)
     {
@@ -266,8 +267,7 @@ handleDownloadOptionsGUI_Checkboxes()
                 commandString .= "--write-description "
                 If (useDefaultDownloadLocationCheckbox.Value = 1)
                 {
-
-                    commandString .= '--paths "description:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\description(s)" '
+                    commandString .= '--paths "description:' . tmpConfig . '\' . downloadTime . '\description(s)" '
 
                 }
                 Else
@@ -323,7 +323,7 @@ handleDownloadOptionsGUI_Checkboxes()
                 If (useDefaultDownloadLocationCheckbox.Value = 1)
                 {
 
-                    commandString .= '--paths "thumbnail:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\thumbnail(s)" '
+                    commandString .= '--paths "thumbnail:' . tmpConfig . '\' . downloadTime . '\thumbnail(s)" '
 
                 }
                 Else
@@ -354,7 +354,7 @@ handleDownloadOptionsGUI_Checkboxes()
                 If (useDefaultDownloadLocationCheckbox.Value = 1)
                 {
 
-                    commandString .= '--paths "subtitle:' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\subtitle(s)" '
+                    commandString .= '--paths "subtitle:' . tmpConfig . '\' . downloadTime . '\subtitle(s)" '
 
                 }
                 Else
@@ -685,8 +685,8 @@ buildCommandString()
 {
     ; Formats the value of A_Now to give each folder a unique time stamp.
     global downloadTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
-
     global commandString := "yt-dlp "
+    tmpConfig := readConfigFile("DOWNLOAD_PATH")
     ; Basic options such as download path and single URL or multiple URLs.
     Switch (useTextFileForURLsCheckbox.Value)
     {
@@ -709,7 +709,7 @@ buildCommandString()
         }
         Case 1:
         {
-            commandString .= '--paths "' . readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime . '\media" '
+            commandString .= '--paths "' . tmpConfig . '\' . downloadTime . '\media" '
         }
     }
     If (ignoreAllOptionsCheckbox.Value != 1)
@@ -720,7 +720,7 @@ buildCommandString()
     ; This makes sure that the output file does not contain any weird letters.
     commandString .= '--output "%(title)s.%(ext)s" '
     ; Sets the temporary directory for yt-dlp.
-    commandString .= '--paths "temp:' . readConfigFile("DOWNLOAD_PATH") . '\temporaryStorage" '
+    commandString .= '--paths "temp:' . tmpConfig . '\temporaryStorage" '
     ; Might help to enforce the max-filesize option.
     commandString .= "--no-part "
     ; Makes the downloading message in the console a little prettier.
@@ -801,9 +801,12 @@ handleDownloadOptionsGUI_toolTipLoop(pElementHWNDArray)
         tmp28 := "Shows no prompt when download in a background task is activated."
         tmp29 := "Single click to save a preset or double click to save as default."
         tmp30 := "The default preset will be loaded when no previous temporary preset is found."
+
         Loop (30)
         {
             elementToolTipArray.InsertAt(A_Index, %"tmp" . A_Index%)
+            ; Clears the cache to give free space.
+            %"tmp" . A_Index% := ""
         }
     }
 
