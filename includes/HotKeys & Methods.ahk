@@ -531,20 +531,20 @@ postProcessDownloadFiles()
             If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
             {
                 ; Better alternative for FileCopy because it will append instead of overwrite the old data.
-                FileAppend(FileRead(A_Temp . "\yt_dlp_download_log.txt") . "`n`nDownload time: " . downloadTime
+                FileAppend(FileRead(A_Temp . "\yt_dlp_download_log.txt") . "`n`n#Download time: " . downloadTime
                     . "`n`n##################################################`n`n",
                     tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_log.txt")
             }
             If (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")))
             {
-                FileAppend(FileRead(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")) . "`n`nDownload time: " . downloadTime
+                FileAppend(FileRead(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")) . "`n`n#: " . downloadTime
                     . "`n`n##################################################`n`n",
                     tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_archive.txt")
             }
             SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
             If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
             {
-                FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt") . "`n`nDownload time: " . downloadTime
+                FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt") . "`n`n#Download time: " . downloadTime
                     . "`n`n##################################################`n`n",
                     tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_YT_URLS.txt")
             }
@@ -555,14 +555,14 @@ postProcessDownloadFiles()
             {
                 SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
                 ; Better alternative for FileCopy because it will append instead of overwrite the old data.
-                FileAppend(FileRead(A_Temp . "\yt_dlp_download_log.txt") . "`n`nDownload time: " . downloadTime
+                FileAppend(FileRead(A_Temp . "\yt_dlp_download_log.txt") . "`n`n#Download time: " . downloadTime
                     . "`n`n##################################################`n`n",
                     downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_log.txt")
             }
             If (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")))
             {
                 SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
-                FileAppend(FileRead(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")) . "`n`nDownload time: " . downloadTime
+                FileAppend(FileRead(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")) . "`n`n#Download time: " . downloadTime
                     . "`n`n##################################################`n`n",
                     downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_archive.txt")
             }
@@ -570,7 +570,7 @@ postProcessDownloadFiles()
             If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
             {
                 SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
-                FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt") . "`n`nDownload time: " . downloadTime
+                FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt") . "`n`n#Download time: " . downloadTime
                     . "`n`n##################################################`n`n",
                     downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_YT_URLS.txt")
             }
@@ -594,14 +594,14 @@ postProcessDownloadFiles()
                 tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
             If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
             {
-                FileAppend("Notice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
+                FileAppend("#Notice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
                     tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
             }
             Else
             {
                 FileAppend("`n", tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
             }
-            FileAppend("Download time: " . downloadTime . "`n`n##################################################`n`n",
+            FileAppend("#Download time: " . downloadTime . "`n`n##################################################`n`n",
                 tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
         }
         Else
@@ -615,14 +615,14 @@ postProcessDownloadFiles()
                 downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
             If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
             {
-                FileAppend("Notice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
+                FileAppend("#Notice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
                     downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
             }
             Else
             {
                 FileAppend("`n", downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
             }
-            FileAppend("Download time: " . downloadTime . "`n`n##################################################`n`n",
+            FileAppend("#Download time: " . downloadTime . "`n`n##################################################`n`n",
                 downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
         }
     }
