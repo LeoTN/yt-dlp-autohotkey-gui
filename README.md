@@ -1,7 +1,7 @@
 # Video Downloader with basic Autohotkey GUI
 
 A simple AutoHotkey script which acts as a basic GUI to make downloading videos more accessible 
-for users who do not want to spend time learning every single command line option from the famous downloading script :                    
+for users who do not want to spend time learning every single command line option from the famous downloading script:                    
 yt-dlp (https://github.com/yt-dlp/yt-dlp).                                   
 
 **User manual**
@@ -38,4 +38,4 @@ If you are a developer who wants to use this repository, it is recommended to ei
 
 **I appreciate yt-dlp (https://github.com/yt-dlp/yt-dlp) for providing such an incredibly useful repository for everyone free to use. Your, or rather these guys (https://github.com/ytdl-org/youtube-dl) work is the reason why this script can even exist. Thank you !**
 
-Link to my original project which will most likely not be developed : https://github.com/LeoTN/youtube-downloader-using-ahk
+Link to my original project which will most likely not be developed: https://github.com/LeoTN/youtube-downloader-using-ahk

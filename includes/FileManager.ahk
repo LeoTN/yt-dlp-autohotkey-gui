@@ -2,7 +2,6 @@
 #MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
 SendMode "Input"
-SetWorkingDir A_ScriptDir
 CoordMode "Mouse", "Client"
 
 ; Beginning of the file manager functions.
@@ -209,7 +208,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
         }
     }
     ; Compare the item if it matches with the blacklist.
-    ; NOTE : This search method is not case sensitive and
+    ; NOTE: This search method is not case sensitive and
     ; it does not search like InStr() !
     blacklistArray := readFile(readConfigFile("BLACKLIST_FILE_LOCATION"))
 

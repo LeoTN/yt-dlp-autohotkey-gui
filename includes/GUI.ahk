@@ -2,7 +2,6 @@
 #MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
 SendMode "Input"
-SetWorkingDir A_ScriptDir
 CoordMode "Mouse", "Client"
 
 createMainGUI()
@@ -94,7 +93,7 @@ createMainGUI()
     optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())
     optionsMenu.SetIcon("Reload Script", "shell32.dll", 207)
     optionsMenu.Add()
-    optionsMenu.Add("Uninstall script", (*) => Hotkey_openUninstallGUI())
+    optionsMenu.Add("Uninstall script", (*) => MsgBox("Currently disabled."))
     optionsMenu.SetIcon("Uninstall script", "shell32.dll", 245)
 
     helpMenu := Menu()
@@ -119,32 +118,6 @@ createMainGUI()
     mainGUI.MenuBar := allMenus
 }
 
-createUninstallGUI()
-{
-    Global
-    uninstallGUI := Gui(, "Uninstall yt-dlp-autohotkey-gui")
-    uninstallUntilNextTimeText := uninstallGUI.Add("Text", "xp+10 yp+10 ", "Please select your uninstall options below.")
-    uninstallEverythingCheckbox := uninstallGUI.Add("Checkbox", "yp+20 Checked", "Remove everything")
-    uninstallPythonCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Uninstall python")
-    uninstallYTDLPCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Uninstall yt-dlp")
-    uninstallAllCreatedFilesCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Delete all script files")
-    uninstallAllDownloadedFilesCheckbox := uninstallGUI.Add("Checkbox", "yp+20 ", "Delete all downloaded files")
-
-    uninstallStartButton := uninstallGUI.Add("Button", "yp+30 w60", "Uninstall")
-    uninstallCancelButton := uninstallGUI.Add("Button", "xp+65 w60 Default", "Cancel")
-    uninstallOpenGitHubIssuesButton := uninstallGUI.Add("Button", "xp+65", "Open GitHub issues")
-    uninstallProgressBar := uninstallGUI.Add("Progress", "xp+120 yp+3")
-    uninstallStatusBar := uninstallGUI.Add("StatusBar", , "Until next time :')")
-
-    uninstallProvideReasonEdit := uninstallGUI.Add("Edit", "xp-41 yp-130 r8 w160",
-        "Provide feedback (optional)")
-
-    uninstallEverythingCheckbox.OnEvent("Click", (*) => handleUninstallGUI_Checkboxes())
-    uninstallStartButton.OnEvent("Click", (*) => uninstallScript())
-    uninstallCancelButton.OnEvent("Click", (*) => uninstallGUI.Hide())
-    uninstallOpenGitHubIssuesButton.OnEvent("Click", (*) => Run("https://github.com/LeoTN/yt-dlp-autohotkey-gui/issues"))
-}
-
 /*
 GUI SUPPORT FUNCTIONS
 -------------------------------------------------
@@ -155,12 +128,6 @@ mainGUI_onInit()
 {
     createMainGUI()
     handleMainGUI_ApplyCheckmarksFromConfigFile("activeHotkeyMenu")
-}
-
-uninstallGUI_onInit()
-{
-    createUninstallGUI()
-    handleUninstallGUI_Checkboxes()
 }
 
 ; Necessary in place for the normal way of toggeling the checkmark.
@@ -299,34 +266,5 @@ handleMainGUI_openDownloadLocation()
     Catch
     {
         MsgBox("No downloaded files from`ncurrent session found.", "Open videos error !", "O Icon! T1.5")
-    }
-}
-
-; Disables all other options and marks them as true.
-handleUninstallGUI_Checkboxes()
-{
-    If (uninstallEverythingCheckbox.Value = 1)
-    {
-        uninstallPythonCheckbox.Value := 1
-        uninstallYTDLPCheckbox.Value := 1
-        uninstallAllCreatedFilesCheckbox.Value := 1
-        uninstallAllDownloadedFilesCheckbox.Value := 1
-
-        uninstallPythonCheckbox.Opt("+Disabled")
-        uninstallYTDLPCheckbox.Opt("+Disabled")
-        uninstallAllCreatedFilesCheckbox.Opt("+Disabled")
-        uninstallAllDownloadedFilesCheckbox.Opt("+Disabled")
-    }
-    Else
-    {
-        uninstallPythonCheckbox.Value := 0
-        uninstallYTDLPCheckbox.Value := 0
-        uninstallAllCreatedFilesCheckbox.Value := 0
-        uninstallAllDownloadedFilesCheckbox.Value := 0
-
-        uninstallPythonCheckbox.Opt("-Disabled")
-        uninstallYTDLPCheckbox.Opt("-Disabled")
-        uninstallAllCreatedFilesCheckbox.Opt("-Disabled")
-        uninstallAllDownloadedFilesCheckbox.Opt("-Disabled")
     }
 }

@@ -2,7 +2,6 @@
 #MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
 SendMode "Input"
-SetWorkingDir A_ScriptDir
 CoordMode "Mouse", "Client"
 
 global commandString := ""
@@ -111,7 +110,7 @@ createDownloadOptionsGUI()
     useDownloadArchiveCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     useTextFileForURLsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes()
         ; Most likely you dont want to download a whole playlist when entering a single URL.
-            handleDownloadOptionsGUI_Checkbox_DownloadWholePlaylist())
+        handleDownloadOptionsGUI_Checkbox_DownloadWholePlaylist())
     useDefaultDownloadLocationCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     downloadAudioOnlyCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     alwaysHighestQualityBothCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
@@ -725,7 +724,7 @@ buildCommandString()
     commandString .= "--no-part "
     ; Makes the downloading message in the console a little prettier.
     commandString .= '--progress-template "[Downloading...] [%(progress._percent_str)s of %(progress._total_bytes_str)s ' .
-        'at %(progress._speed_str)s. Time passed : %(progress._elapsed_str)s]" '
+        'at %(progress._speed_str)s. Time passed: %(progress._elapsed_str)s]" '
     ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
     commandString .= '--ffmpeg-location "' . ffmpegLocation . '" '
     Return commandString
@@ -792,7 +791,7 @@ handleDownloadOptionsGUI_toolTipLoop(pElementHWNDArray)
         tmp20 := ""
         tmp21 := ""
         tmp22 := "Usually, a text file will be given to yt-dlp to download, but it is also possible to select a single URL."
-        tmp23 := "The current location of the URL file is : [" . readConfigFile("URL_FILE_LOCATION") . "]."
+        tmp23 := "The current location of the URL file is: [" . readConfigFile("URL_FILE_LOCATION") . "]."
         tmp24 := "Saves all downloads to the default path specified in the config file."
         tmp25 := "The current default download path is: [" . readConfigFile("DOWNLOAD_PATH") . "]." .
             "`nKeep in mind, that selecting a folder will actually download straight into it without any timestamp subfolders."
@@ -901,7 +900,7 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
         ; This avoids showing the overwrite prompt for _(TEMP) presets.
         If (booleanTemporary = false)
         {
-            result := MsgBox("The preset name : " . presetName . " already exists."
+            result := MsgBox("The preset name: " . presetName . " already exists."
                 "`n`nDo you want to overwrite it ?", "Warning !", "YN Icon! 4096 T10")
             If (result != "Yes")
             {
@@ -1002,7 +1001,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
     {
         If (booleanSupressWarning = false)
         {
-            MsgBox("The preset : " . presetName . " does not exist.", "Warning !", "O Icon! T2")
+            MsgBox("The preset: " . presetName . " does not exist.", "Warning !", "O Icon! T2")
         }
         Return false
     }
@@ -1018,7 +1017,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
             }
             Catch
             {
-                MsgBox("Failed to set value of : " . GuiCtrlObj.Text . ".", "Warning !", "O Icon! T3")
+                MsgBox("Failed to set value of: " . GuiCtrlObj.Text . ".", "Warning !", "O Icon! T3")
             }
         }
         If (InStr(GuiCtrlObj.Type, "Edit"))
@@ -1031,7 +1030,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
             }
             Catch
             {
-                MsgBox("Failed to set value of : {Input_ " . i_Input . "}.", "Warning !", "O Icon! T3")
+                MsgBox("Failed to set value of: {Input_ " . i_Input . "}.", "Warning !", "O Icon! T3")
             }
         }
         If (InStr(GuiCtrlObj.Type, "DDL"))
@@ -1044,7 +1043,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
             }
             Catch
             {
-                MsgBox("Failed to set value of : {DropDownList_ " . i_DropDownList . "}.", "Warning !", "O Icon! T3")
+                MsgBox("Failed to set value of: {DropDownList_ " . i_DropDownList . "}.", "Warning !", "O Icon! T3")
             }
         }
         ; Counts the number of elements parsed. When it reaches 37 this means that all relevant settings have been loaded.

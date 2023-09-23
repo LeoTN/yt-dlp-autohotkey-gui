@@ -2,7 +2,6 @@
 #MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
 SendMode "Input"
-SetWorkingDir A_ScriptDir
 CoordMode "Mouse", "Client"
 
 /*
@@ -96,51 +95,6 @@ Hotkey_openMainGUI()
     }
 }
 
-; Hotkey support function to open the script uninstall GUI.
-Hotkey_openUninstallGUI()
-{
-    If (A_IsCompiled = true)
-    {
-        ; Asks for administrative permissions to complete without interruption.
-        fullCommandLine := DllCall("GetCommandLine", "str")
-        If not (A_IsAdmin || RegExMatch(fullCommandLine, " /restart(?!\S)"))
-        {
-            FileAppend("Uninstall process", baseFilesLocation . "\NoPermissionsForUninstall.txt")
-            Try
-            {
-                Run '*RunAs "' A_ScriptFullPath '" /restart'
-            }
-            Catch
-            {
-                Return
-            }
-            ExitApp()
-            ExitApp()
-        }
-
-        static flipflop := true
-        If (!WinExist("ahk_id " . uninstallGUI.Hwnd))
-        {
-            uninstallGUI.Show("w400 h200")
-            flipflop := false
-        }
-        Else If (flipflop = false && WinActive("ahk_id " . uninstallGUI.Hwnd))
-        {
-            uninstallGUI.Hide()
-            flipflop := true
-        }
-        Else
-        {
-            WinActivate("ahk_id " . uninstallGUI.Hwnd)
-        }
-    }
-    Else
-    {
-        MsgBox("You can only uninstall the script if"
-            "`n`nyou are using the compiled version.", "Error !", "O IconX T3")
-    }
-}
-
 ; Hotkey support function to open the script download options GUI.
 Hotkey_openOptionsGUI()
 {
@@ -178,7 +132,7 @@ FUNCTION SECTION
 startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
 {
     global isDownloading
-    If (setup_checkInternetConnection() = false)
+    If (checkInternetConnection() = false)
     {
         Return MsgBox("Unable to connect to the Internet.`n`nPlease check your Internet connection.", "Warning !", "O Icon! 4096 T2")
     }
@@ -208,7 +162,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
     If (!FileExist(tmpConfig) && downloadOptionsGUI_SubmitObject.UseTextFileForURLsCheckbox = 1)
     {
-        MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing : [" .
+        MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing: [" .
             expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download status", "O Icon! 8192")
         isDownloading := false
         Return
@@ -284,7 +238,7 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
             FileDelete(A_Temp . "\yt_dlp_download_log.txt")
         }
         ; The powershell script now waits for the hook file.
-        Run('powershell.exe -noExit -ExecutionPolicy Bypass -file "' . baseFilesLocation . '\library\MonitorHookFile.ps1"'
+        Run('powershell.exe -noExit -executionPolicy bypass -file "' . scriptBaseFilesLocation . '\library\MonitorHookFile.ps1"'
             , , "Min", &visualPowershellPID)
         WinWait("ahk_pid " . visualPowershellPID)
         WinActivate("ahk_pid " . visualPowershellPID)
@@ -425,7 +379,7 @@ startOfFileReadLoop:
             }
         }
         ; This message only appears when the previous video processing has been finished.
-        ; NOTE : Does only work when using a temp directory as parameter !
+        ; NOTE: Does only work when using a temp directory as parameter !
         Else If (InStr(A_LoopReadLine, "[MoveFiles] Moving file"))
         {
             If (partProgress = 100)
@@ -477,7 +431,7 @@ startOfFileReadLoop:
         If (oldFileContent != newFileContent && booleanDownloadTerminated = false)
         {
             ; If there is new data.
-            goto startOfFileReadLoop
+            Goto startOfFileReadLoop
         }
     }
     ; Download finish section.
@@ -507,11 +461,11 @@ startOfFileReadLoop:
     }
     If (downloadOptionsGUI_SubmitObject.HideDownloadCommandPromptCheckbox != 1)
     {
-        MsgBox("Total video amount : " . videoAmount .
-            "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
-            "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
-            "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
-            "`nDownloaded Videos : " . downloadedVideoAmount, "Download summary", "O Iconi T5")
+        MsgBox("Total video amount: " . videoAmount .
+            "`nSkipped Videos (already in archive): " . skippedVideoArchiveAmount .
+            "`nSkipped Videos (already present): " . skippedVideoPresentAmount .
+            "`nSkipped Videos (too large): " . skippedVideoMaxSizeAmount .
+            "`nDownloaded Videos: " . downloadedVideoAmount, "Download summary", "O Iconi T5")
     }
 }
 
@@ -586,11 +540,11 @@ postProcessDownloadFiles()
     {
         If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
         {
-            FileAppend("##################################################`n`nTotal video amount : " . videoAmount .
-                "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
-                "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
-                "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
-                "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n",
+            FileAppend("##################################################`n`nTotal video amount: " . videoAmount .
+                "`nSkipped Videos (already in archive): " . skippedVideoArchiveAmount .
+                "`nSkipped Videos (already present): " . skippedVideoPresentAmount .
+                "`nSkipped Videos (too large): " . skippedVideoMaxSizeAmount .
+                "`nDownloaded Videos: " . downloadedVideoAmount . "`n`n",
                 tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
             If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
             {
@@ -607,11 +561,11 @@ postProcessDownloadFiles()
         Else
         {
             SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
-            FileAppend("##################################################`n`nTotal video amount : " . videoAmount .
-                "`nSkipped Videos (already in archive) : " . skippedVideoArchiveAmount .
-                "`nSkipped Videos (already present) : " . skippedVideoPresentAmount .
-                "`nSkipped Videos (too large) : " . skippedVideoMaxSizeAmount .
-                "`nDownloaded Videos : " . downloadedVideoAmount . "`n`n",
+            FileAppend("##################################################`n`nTotal video amount: " . videoAmount .
+                "`nSkipped Videos (already in archive): " . skippedVideoArchiveAmount .
+                "`nSkipped Videos (already present): " . skippedVideoPresentAmount .
+                "`nSkipped Videos (too large): " . skippedVideoMaxSizeAmount .
+                "`nDownloaded Videos: " . downloadedVideoAmount . "`n`n",
                 downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
             If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
             {
@@ -755,12 +709,12 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
         {
             Try
             {
-                If (!DirExist(baseFilesLocation . "\deleted"))
+                If (!DirExist(scriptBaseFilesLocation . "\deleted"))
                 {
-                    DirCreate(baseFilesLocation . "\deleted")
+                    DirCreate(scriptBaseFilesLocation . "\deleted")
                 }
                 SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
-                FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName, true)
+                FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), scriptBaseFilesLocation . "\deleted\" . outFileName, true)
                 ; Calls checkBlackListFile() in order to create a new blacklist file.
                 checkBlackListFile("generateFile", false)
                 Return
@@ -833,9 +787,9 @@ deleteFilePrompt(pFileName)
     result := MsgBox("Would you like to delete the " . fileName . " ?", "Delete " . fileName, "YN Icon! 8192 T10")
     If (result = "Yes")
     {
-        If (!DirExist(baseFilesLocation . "\deleted"))
+        If (!DirExist(scriptBaseFilesLocation . "\deleted"))
         {
-            DirCreate(baseFilesLocation . "\deleted")
+            DirCreate(scriptBaseFilesLocation . "\deleted")
         }
         Try
         {
@@ -846,25 +800,25 @@ deleteFilePrompt(pFileName)
                         c := "URL_FILE_LOCATION"
                         tmpConfig := readConfigFile("URL_FILE_LOCATION")
                         SplitPath(tmpConfig, &outFileName)
-                        FileMove(tmpConfig, baseFilesLocation . "\deleted\" . outFileName, true)
+                        FileMove(tmpConfig, scriptBaseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "URL-Backup-File":
                     {
                         c := "URL_BACKUP_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_BACKUP_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName, true)
+                        FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), scriptBaseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "URL-Blacklist-File":
                     {
                         c := "BLACKLIST_FILE_LOCATION"
                         SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), baseFilesLocation . "\deleted\" . outFileName, true)
+                        FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), scriptBaseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "latest download":
                     {
                         If (DirExist(lastDownloadPath))
                         {
-                            DirMove(lastDownloadPath, baseFilesLocation . "\deleted\" . downloadTime, true)
+                            DirMove(lastDownloadPath, scriptBaseFilesLocation . "\deleted\" . downloadTime, true)
                         }
                         Else
                         {
@@ -880,14 +834,14 @@ deleteFilePrompt(pFileName)
         ; In case something goes wrong this will try to resolve the issue.
         Catch
         {
-            If (FileExist(baseFilesLocation . "\deleted\" . outFileName) && FileExist(baseFilesLocation . "\" . outFileName))
+            If (FileExist(scriptBaseFilesLocation . "\deleted\" . outFileName) && FileExist(scriptBaseFilesLocation . "\" . outFileName))
             {
                 result := MsgBox("The " . fileName . " was found in the deleted directory."
                     "`n`nDo you want to overwrite it ?", "Warning !", "YN Icon! T10")
                 If (result = "Yes")
                 {
-                    FileDelete(baseFilesLocation . "\deleted\" . outFileName)
-                    FileMove(readConfigFile(c), baseFilesLocation . "\deleted\" . outFileName, true)
+                    FileDelete(scriptBaseFilesLocation . "\deleted\" . outFileName)
+                    FileMove(readConfigFile(c), scriptBaseFilesLocation . "\deleted\" . outFileName, true)
                 }
             }
             Else
@@ -995,7 +949,7 @@ terminateScriptPrompt()
 }
 
 ; Tries to find an existing process via a wildcard.
-; Note : Currently only supports wildcards containing the
+; Note: Currently only supports wildcards containing the
 ; beginning of the wanted process.
 findProcessWithWildcard(pWildcard)
 {
@@ -1020,7 +974,7 @@ findProcessWithWildcard(pWildcard)
         {
             tmp := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
             result := MsgBox("There is currently another instance of this script running."
-                "`nName : [" . v . "]`nPath : [" . tmp . "]`nContinue at your own risk !"
+                "`nName: [" . v . "]`nPath: [" . tmp . "]`nContinue at your own risk !"
                 "`nPress Try Again to terminate the other instance.", "Attention !", "CTC Icon! 262144 T15")
 
             Switch (result)
@@ -1075,15 +1029,15 @@ scriptTutorial()
     }
 
     MsgBox("Hello there... General Kenobi!`nWelcome to the tutorial."
-        "`nIt will try to teach you the basic functionallity of this script but keep this in mind : "
-        "`nFirstly this script is still in development phase so bugs are to be expected."
+        "`nIt will try to teach you the basic functionallity of this script but keep this in mind: "
+        "`n`nFirstly this script is still in development phase so bugs are to be expected."
         "`nSecondly PLEASE be patient and do not spam buttons like a maniac. Wait for the script to process and if"
         "`nnothing happens even after 3-5 seconds you could try pressing the button or hotkey again."
-        "`nWith that being said, let's begin with the tutorial."
+        "`n`nWith that being said, let's begin with the tutorial."
         "`n`nPress Okay to continue.",
         "Video Downloader Tutorial - Important", "O Iconi 262144")
 
-    MsgBox("This script acts as a simple GUI for yt-dlp.`n`nYou can open the main GUI by pressing : "
+    MsgBox("This script acts as a simple GUI for yt-dlp.`n`nYou can open the main GUI by pressing: "
         "`n" . expandHotkey(readConfigFile("MAIN_GUI_HK"))
         "`n`nPress Okay to continue.", "Video Downloader Tutorial - Open Main GUI", "O Iconi 262144")
     If (WinWaitActive("ahk_id " . mainGUI.Hwnd, , 5) = 0)
@@ -1106,12 +1060,12 @@ scriptTutorial()
         "`n`nOn the one hand, it provides a useful list`nof most available hotkeys"
         "`nand on the other hand, it enables you to select which hotkeys you want to activate or deactivate."
         "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Main GUI", "O Iconi 262144")
-    MsgBox("If you want to select a video there are multiple options.`nYou either open the video and press : "
-        "`n[" . expandHotkey(readConfigFile("URL_COLLECT_HK")) . "].`n`nAlternatively hover over the video thumbnail and press : "
+    MsgBox("If you want to select a video there are multiple options.`nYou either open the video and press: "
+        "`n[" . expandHotkey(readConfigFile("URL_COLLECT_HK")) . "].`n`nAlternatively hover over the video thumbnail and press: "
         "`n[" . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")) . "]."
         "`n`nPress Okay to continue.", "Video Downloader Tutorial - Select Video(s)", "O Iconi 262144")
     MsgBox("It is possible to manually open the URL file`n(with the main GUI) and edit the saved URLs."
-        "`n`nThe current location of the URL file is : [" . readConfigFile("URL_FILE_LOCATION") . "]."
+        "`n`nThe current location of the URL file is: [" . readConfigFile("URL_FILE_LOCATION") . "]."
         "`n`nPress Okay to continue.", "Video Downloader Tutorial - Find Selected Video(s)", "O Iconi 262144")
     MsgBox("To download the URLs saved in the file this script uses`na python command line application called yt-dlp."
         "`nThe download options GUI is used to pass the parameters`nto the console and specify various download options."
@@ -1124,7 +1078,7 @@ scriptTutorial()
             "Video Downloader Tutorial - Open Download Options GUI", "O Iconi 262144 T3")
     }
     MsgBox("If you see the download options GUI for the very first time,`nit might be a bit overwhelming, but once you have"
-        "`nused this script a few times it will become more familiar.`n`nQuick tip : "
+        "`nused this script a few times it will become more familiar.`n`nQuick tip: "
         "`nHover over an option with the mouse cursor`nin order to gain extra information."
         "`nNote :`nThis does only work if there is`nno download process running at the moment."
         "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Download Options GUI", "O Iconi 262144")
@@ -1150,172 +1104,107 @@ scriptTutorial()
     }
 }
 
-; Steps to uninstall the script.
-uninstallScript()
+chooseScriptWorkingDirectory()
 {
-    tmp1 := uninstallYTDLPCheckbox.Value
-    tmp2 := uninstallPythonCheckbox.Value
-    tmp3 := uninstallAllDownloadedFilesCheckbox.Value
-    tmp4 := uninstallAllCreatedFilesCheckbox.Value
-    uninstallProgressBarMaxValue := 0
-
-    result := MsgBox("Are you sure that you want to continue`n`nthe script removal process ?",
-        "Warning !", "YN Icon! 262144 T10")
-    If (result != "Yes")
+    path := DirSelect(, , "Select a working directory.")
+    If (checkForWritingRights(path) = true)
     {
-        Return
-    }
-    ; Sets the uninstall progress bar max value according to the select uninstall steps.
-    Loop (4)
-    {
-        uninstallProgressBarMaxValue += %"tmp" . A_Index% * 100
-    }
-    uninstallProgressBar.Opt("Range0-" . uninstallProgressBarMaxValue)
-    uninstallStartButton.Opt("+Disabled")
-    uninstallCancelButton.Opt("+Disabled")
-
-    ; Uninstalls dependencies and other stuff.
-    If (tmp1 = 1)
-    {
-        uninstallStatusBar.SetText("Currently uninstalling yt-dlp...")
-        RunWait(A_ComSpec ' /c python -m pip uninstall -y "yt-dlp"')
-        uninstallProgressBar.Value += 100
-    }
-    If (tmp2 = 1)
-    {
-        If (FileExist(baseFilesLocation . "\config\video_downloader_python_install_log.txt"))
+        If (!InStr(path, "yt_dlp_autohotkey_gui_files"))
         {
-            uninstallStatusBar.SetText("Currently uninstalling python...")
-            Loop Read (baseFilesLocation . "\config\video_downloader_python_install_log.txt")
-            {
-                If (InStr(A_LoopReadLine, "Python"))
-                {
-                    ; Removes the minor version digit.
-                    tmp_fileRead := RegExReplace(A_LoopReadLine, ".[0-9]$")
-                    Break
-                }
-            }
-            RunWait(A_ComSpec ' /c winget uninstall "' . tmp_fileRead . '"')
-            uninstallProgressBar.Value += 100
+            Return path . "\yt_dlp_autohotkey_gui_files"
         }
         Else
         {
-            If (!WinExist("ahk_id " . uninstallGUI.Hwnd))
-            {
-                Hotkey_openUninstallGUI()
-            }
-            Else
-            {
-                WinActivate("ahk_id " . uninstallGUI.Hwnd)
-            }
-            uninstallStatusBar.SetText("Warning ! Could not uninstall python !")
-            Sleep(2500)
-            uninstallStatusBar.SetText("You may uninstall it manually.")
-            Sleep(2500)
-            uninstallProgressBar.Value += 100
+            Return path
         }
-    }
-    If (tmp3 = 1)
-    {
-        uninstallStatusBar.SetText("Deleting downloaded files...")
-        Try
-        {
-            FileRecycle(baseFilesLocation . "\download")
-        }
-        Try
-        {
-            FileRecycle(readConfigFile("DOWNLOAD_PATH", false, false))
-        }
-        If (DirExist(baseFilesLocation . "\download") || DirExist(readConfigFile("DOWNLOAD_PATH", false, false)))
-        {
-            uninstallStatusBar.SetText("Warning ! Could not delete downloaded files !")
-            Sleep(2500)
-            uninstallStatusBar.SetText("You may delete them manually.")
-            Sleep(2500)
-        }
-        uninstallProgressBar.Value += 100
-    }
-    If (tmp4 = 1)
-    {
-        evacuationError := false
-        uninstallStatusBar.SetText("Deleting script files...")
-        ; This means that the remaining download files have to be evacuated.
-        If (tmp3 = false)
-        {
-            Try
-            {
-                uninstallStatusBar.SetText("Moving downloaded files to desktop...")
-                DirMove(baseFilesLocation . "\download", A_Desktop . "\yt_dlp_autohotkey_gui_downloads_after_uninstall", 1)
-            }
-            Catch
-            {
-                If (DirExist(baseFilesLocation . "\download"))
-                {
-                    evacuationError := true
-                    uninstallStatusBar.SetText("Warning ! Could not save downloaded files !")
-                    Sleep(2500)
-                    uninstallStatusBar.SetText("The script file deletion process will be skipped.")
-                    Sleep(2500)
-                }
-            }
-            Try
-            {
-                If (evacuationError = false)
-                {
-                    FileRecycle(baseFilesLocation)
-                }
-            }
-            uninstallProgressBar.Value += 100
-        }
-        Else
-        {
-            Try
-            {
-                FileRecycle(baseFilesLocation)
-            }
-            Catch
-            {
-                uninstallStatusBar.SetText("Warning ! Could not delete script files !")
-                Sleep(2500)
-                uninstallStatusBar.SetText("The script file deletion process will be skipped.")
-                Sleep(2500)
-            }
-        }
-        uninstallProgressBar.Value += 100
-    }
-    Sleep(3000)
-    uninstallStatusBar.SetText("Finishing removal process...")
-    Sleep(2000)
-    If (!WinExist("ahk_id " . uninstallGUI.Hwnd))
-    {
-        Hotkey_openUninstallGUI()
     }
     Else
     {
-        WinActivate("ahk_id " . uninstallGUI.Hwnd)
+        result := MsgBox("This path cannot be used because it requires administrative permissions to write.`n`n"
+            "Please select another path or press [Ignore] to use the default directory which is:`n"
+            "[" . A_AppData . "\LeoTN\VideoDownloader\yt_dlp_autohotkey_gui_files]",
+            "Invalid Working Directory", "ARI Icon! Default2")
+        Switch (result)
+        {
+            Case "Retry":
+                {
+                    Return chooseScriptWorkingDirectory()
+                }
+            Case "Ignore":
+                {
+                    Return A_AppData . "\LeoTN\VideoDownloader\yt_dlp_autohotkey_gui_files"
+                }
+            Default:
+                {
+                    ExitApp()
+                }
+        }
     }
-    uninstallStatusBar.SetText("Successfully uninstalled script. Until next time :')")
-    Sleep(5000)
-    ExitApp()
-    ExitApp()
 }
 
-; Usefull to avoid invalid file names in the config file.
-detectIfWorkingDirIsDrive(pInput)
+checkForWritingRights(pPath)
 {
-    input := pInput
+    path := pPath
 
-    SplitPath(input, , &outDir, , , &outDrive)
-    ; This means the script working directory is only a drive name.
-    If (outDrive = outDir)
+    Try
     {
-        newPath := outDrive . "\yt_dlp_autohotkey_gui_files"
+        FileAppend("checkForWritingRights", path . "\tmp.txt")
+        FileDelete(path . "\tmp.txt")
     }
-    Else
+    Catch As error
     {
-        newPath := input . "\yt_dlp_autohotkey_gui_files"
+        If (InStr(error.message, "(5) "))
+        {
+            Return false
+        }
+        Else
+        {
+            MsgBox("checkForWritingRights():`n" . error.message)
+            ExitApp()
+        }
     }
-    Return newPath
+    Return true
+}
+
+checkForValidPath(pPath)
+{
+    path := pPath
+
+    Try
+    {
+        FileGetAttrib(path)
+    }
+    Catch As error
+    {
+        If (InStr(error.message, "(2s) "))
+        {
+            Return false
+        }
+        Else
+        {
+            MsgBox("checkForValidPath():`n" . error.message)
+            ExitApp()
+        }
+    }
+    Return true
+}
+
+checkInternetConnection()
+{
+    ; Checks if the user has an established Internet connection.
+    Try
+    {
+        httpRequest := ComObject("WinHttp.WinHttpRequest.5.1")
+        httpRequest.Open("GET", "http://www.google.com", false)
+        httpRequest.Send()
+
+        If (httpRequest.Status = 200)
+        {
+            Return true
+        }
+    }
+
+    Return false
 }
 
 arrayToString(pArray)
