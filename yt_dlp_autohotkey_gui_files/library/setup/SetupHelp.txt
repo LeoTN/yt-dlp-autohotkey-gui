@@ -1,4 +1,4 @@
-Available parameters for the Setup.exe:
+Available parameters for the VideoDownloaderSetup.exe:
 
 - /run-setup
 The script will install the library files, yt-dlp and other dependencies.

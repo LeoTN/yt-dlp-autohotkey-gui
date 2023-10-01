@@ -6,6 +6,8 @@ CoordMode "Mouse", "Client"
 
 global scriptBaseFilesLocation := onInit_handleScriptDirectory()
 global workingBaseFilesLocation := onInit_handleWorkingDirectory()
+; Only needed for uninstall purposes.
+global productCode := ""
 
 onInit()
 
@@ -44,27 +46,33 @@ onInit()
     Loop A_Args.Length
     {
         parameterString .= A_Args.Get(A_Index) . " "
-        Switch (A_Args.Get(A_Index))
+        ; The RegExMatch is used to find the product code which could be different from time to time.
+        If (RegExMatch(A_Args.Get(A_Index), "/run-uninstall-{.*}", &outMatch) != 0)
         {
-            Case "/run-setup":
-                {
-                    booleanParameterSetup := true
-                }
-            Case "/force-run-setup":
-                {
-                    booleanParameterForceSetup := true
-                }
-            Case "/run-uninstall":
-                {
-                    booleanParameterUninstall := true
-                }
-            Default:
-                {
-                    MsgBox("Unsupported parameters given. Specifically: " . A_Args.Get(A_Index),
-                        "VideoDownloader Setup Status", "O Icon! 262144")
-                    generateHelpFile()
-                    ExitApp()
-                }
+            outString := outMatch[]
+            global productCode := StrReplace(outString, "/run-uninstall-")
+            booleanParameterUninstall := true
+        }
+        Else
+        {
+            Switch (A_Args.Get(A_Index))
+            {
+                Case "/run-setup":
+                    {
+                        booleanParameterSetup := true
+                    }
+                Case "/force-run-setup":
+                    {
+                        booleanParameterForceSetup := true
+                    }
+                Default:
+                    {
+                        MsgBox("Unsupported parameters given. Specifically: " . A_Args.Get(A_Index),
+                            "VideoDownloader Setup Status", "O Icon! 262144")
+                        generateHelpFile()
+                        ExitApp()
+                    }
+            }
         }
     }
 
@@ -205,6 +213,8 @@ run_setup(pBooleanForceInstall := false)
     }
     If (checkInternetConnection() = true)
     {
+        MsgBox("You can use the computer during the setup. It is recommended to avoid restarting it during the installation process."
+            . "Make sure to keep all appearing windows open until they close by themselves.", "Video Downloader Setup Status", "O Iconi")
         If (checkPythonVersion() = true)
         {
             Try
@@ -217,13 +227,13 @@ run_setup(pBooleanForceInstall := false)
             If (booleanForceInstall = true)
             {
                 Run(A_ComSpec ' /k python -m pip install --force-reinstall "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
-                    , , &consolePID)
+                    , "Min", &consolePID)
                 WinWait("ahk_pid " . consolePID)
                 Try
                 {
                     While (InStr(WinGetTitle("ahk_pid " . consolePID), "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"))
                     {
-                        Sleep(500)
+                        Sleep(1000)
                     }
                     Sleep(1500)
                 }
@@ -236,13 +246,13 @@ run_setup(pBooleanForceInstall := false)
             Else If (booleanForceInstall = false)
             {
                 Run(A_ComSpec ' /k python -m pip install "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
-                    , , &consolePID)
+                    , "Min", &consolePID)
                 WinWait("ahk_pid " . consolePID)
                 Try
                 {
                     While (InStr(WinGetTitle("ahk_pid " . consolePID), "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"))
                     {
-                        Sleep(500)
+                        Sleep(1000)
                     }
                     Sleep(1500)
                 }
@@ -299,7 +309,7 @@ run_setup(pBooleanForceInstall := false)
 
         If (FileExist(A_WorkingDir . "\AddYTDLPToPath.ps1"))
         {
-            RunWait('powershell.exe -executionPolicy bypass -file "' . A_WorkingDir . '\AddYTDLPToPath.ps1"')
+            RunWait('powershell.exe -executionPolicy bypass -file "' . A_WorkingDir . '\AddYTDLPToPath.ps1"', , "Min")
         }
         Else
         {
@@ -310,11 +320,11 @@ run_setup(pBooleanForceInstall := false)
         {
             If (booleanForceInstall = false)
             {
-                RunWait('powershell.exe -executionPolicy bypass -file "' . A_WorkingDir . '\FFmpegDownloader.ps1" -pSetupType "/run-setup"')
+                RunWait('powershell.exe -executionPolicy bypass -file "' . A_WorkingDir . '\FFmpegDownloader.ps1" -pSetupType "/run-setup"', , "Min")
             }
             Else If (booleanForceInstall = true)
             {
-                RunWait('powershell.exe -executionPolicy bypass -file "' . A_WorkingDir . '\FFmpegDownloader.ps1" -pSetupType "/force-run-setup"')
+                RunWait('powershell.exe -executionPolicy bypass -file "' . A_WorkingDir . '\FFmpegDownloader.ps1" -pSetupType "/force-run-setup"', , "Min")
             }
         }
         Else
@@ -322,9 +332,13 @@ run_setup(pBooleanForceInstall := false)
             MsgBox("Could not install FFmpeg.`n`nTerminating script.", "Error !", "O IconX T1.5")
             ExitApp()
         }
+        ; Disables the forced setup and tells the main script to create any necessary files without prompt.
+        RegWrite(1, "REG_DWORD",
+            "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanFirstTimeLaunch")
+        RegWrite(0, "REG_DWORD",
+            "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired")
         MsgBox("The setup has been completed. You can now use the main application and start downloading videos.",
             "VideoDownloader Setup Status", "O Iconi")
-        FileAppend("Choose a working directory for the script.", A_Temp . "\video_downloader_choose_working_directory.txt")
         ExitApp()
     }
     Else
@@ -489,9 +503,13 @@ uninstallScript()
     {
         WinActivate("ahk_id " . uninstallGUI.Hwnd)
     }
-    uninstallStatusBar.SetText("Successfully uninstalled script. Until next time :')")
+    uninstallStatusBar.SetText("Successfully uninstalled script dependencies. Until next time :')")
     Sleep(5000)
-    ExitApp()
+    Run(A_ComSpec ' /c msiexec.exe /x "' . productCode . '" /quiet', , "Min")
+    If (ProcessExist("VideoDownloader.exe"))
+    {
+        ProcessClose("VideoDownloader.exe")
+    }
     ExitApp()
 }
 
@@ -507,21 +525,23 @@ checkPythonVersion()
     If (FileRead(A_Temp . "\video_downloader_python_install_log.txt") = "")
     {
         result := MsgBox("No valid PYTHON installation found.`n`nWould you like to install PYTHON now ?",
-            "VideoDownloader Setup Status", "OC Iconi 4096")
+            "VideoDownloader Setup Status", "OC Icon? 4096")
         Switch (result)
         {
             Case "OK":
                 {
                     Run(A_ComSpec ' /k winget install "python" --accept-source-agreements --accept-package-agreements',
-                        , , &consolePID)
+                        , "Min", &consolePID)
                     Sleep(1500)
                     Try
                     {
                         While (InStr(WinGetTitle("ahk_pid " . consolePID), 'install "python"'))
                         {
-                            Sleep(500)
+                            Sleep(1000)
                         }
                         WinClose("ahk_pid " . consolePID)
+                        MsgBox("Please wait for PYTHON to be installed completly. The script installation is still running"
+                            . " in the background and will continue in a few seconds.", "Video Downloader Setup Status", "O Iconi T5")
                         Sleep(15000)
                         Return checkPythonVersion()
                     }
@@ -576,7 +596,7 @@ checkPythonVersion()
                             tmpString2 := ' /c winget uninstall "python ' . tmpString1 . '"'
                             RunWait(A_ComSpec . tmpString2)
                             Run(A_ComSpec ' /k winget install "python" --accept-source-agreements --accept-package-agreements',
-                                , , &consolePID)
+                                , "Min", &consolePID)
                             Sleep(2000)
                             Try
                             {
@@ -641,7 +661,7 @@ generateHelpFile()
         FileDelete(A_Desktop . "\VideoDownloaderSetupHelp.txt")
     }
     FileAppend(
-        "Available parameters for the Setup.exe:`n`n- /run-setup`n"
+        "Available parameters for the VideoDownloaderSetup.exe:`n`n- /run-setup`n"
         "The script will install the library files, yt-dlp and other dependencies.`n- /force-run-setup`n"
         "Same as above, but it will overwrite all existing files.`n- /run-uninstall`n"
         "Will guide the user through the uninstall process.`n`n"

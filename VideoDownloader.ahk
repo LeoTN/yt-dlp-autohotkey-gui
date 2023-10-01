@@ -10,6 +10,14 @@ global scriptBaseFilesLocation := onInit_handleScriptBaseFilesLocation()
 ; Creates the workingBaseFilesLocation variable.
 ; Has to be done before including all the other scripts because they will not work unless they have directory to work.
 global workingBaseFilesLocation := onInit_handleWorkingBaseFilesLocation()
+; When this value is true certain functions will behave differently and do not show unnecessary prompts.
+global booleanFirstTimeLaunch := false
+; Used to determine if a setup is required.
+global ffmpegLocation := scriptBaseFilesLocation . "\library\FFmpeg\ffmpeg.exe"
+global youTubeBackGroundLocation := scriptBaseFilesLocation . "\library\YouTubeBackground.jpg"
+
+onInit_checkIfSetupIsNeeded()
+
 ; Imports important functions and variables.
 ; Sets the directory for all following files.
 #Include "includes\"
@@ -57,23 +65,12 @@ F7::
 
 onInit_handleWorkingBaseFilesLocation()
 {
-    ; Very important, basically sets the script working directory !!!
-    If (FileExist(A_Temp . "\video_downloader_choose_working_directory.txt"))
-    {
-        MsgBox("One last thing. Please select a folder to be used as the script working directory.`n"
-            "This will be the place where all the downloads will go by default.`n`n"
-            "Be careful because this cannot be changed later on.", "Choose a Working Directory", "OC Iconi")
-        RegWrite(chooseScriptWorkingDirectory(), "REG_SZ",
-            "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "workingBaseFilesLocation")
-        FileDelete(A_Temp . "\video_downloader_choose_working_directory.txt")
-        Reload()
-    }
     regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "workingBaseFilesLocation", "")
     If (regValue = "")
     {
         RegWrite(chooseScriptWorkingDirectory(), "REG_SZ",
             "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "workingBaseFilesLocation")
-        Reload()
+        regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "workingBaseFilesLocation", "")
     }
     If (validatePath(regValue, false) = false)
     {
@@ -85,7 +82,7 @@ onInit_handleWorkingBaseFilesLocation()
                 {
                     RegWrite(chooseScriptWorkingDirectory(), "REG_SZ",
                         "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "workingBaseFilesLocation")
-                    Reload()
+                    regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "workingBaseFilesLocation", "")
                 }
             Default:
                 {
@@ -97,7 +94,6 @@ onInit_handleWorkingBaseFilesLocation()
     {
         Return regValue
     }
-
 }
 
 onInit_handleScriptBaseFilesLocation()
@@ -122,7 +118,6 @@ onInit_handleScriptBaseFilesLocation()
                         RegWrite(A_WorkingDir, "REG_SZ",
                             "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "scriptBaseFilesLocation")
                     }
-                    Reload()
                 }
             Default:
                 {
@@ -150,6 +145,9 @@ onInit_handleScriptBaseFilesLocation()
     ; Checks if the path in the registry is correct.
     If (tmpWorkingDir != tmpRegValue)
     {
+        ; REMOVE
+        MsgBox (tmpWorkingDir)
+        MsgBox (regValue)
         result := MsgBox("Different script directory found in the registry editor.`n`n"
             "Replace it with the current directory the script runs in?", "Invalid Script Directory", "YN Icon!")
         Switch (result)
@@ -166,7 +164,6 @@ onInit_handleScriptBaseFilesLocation()
                         RegWrite(A_WorkingDir, "REG_SZ",
                             "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "scriptBaseFilesLocation")
                     }
-                    Reload()
                 }
             Default:
                 {
@@ -180,43 +177,9 @@ onInit_handleScriptBaseFilesLocation()
 ; Runs a list of commands when the script is launched.
 onInit()
 {
-    global ffmpegLocation := scriptBaseFilesLocation . "\library\FFmpeg\ffmpeg.exe"
-    global youTubeBackGroundLocation := scriptBaseFilesLocation . "\library\YouTubeBackground.jpg"
-
     ; Checks the system for other already running instances of this script.
     findProcessWithWildcard("VideoDownloader.exe")
 
-    If (!FileExist(ffmpegLocation))
-    {
-        If (A_IsCompiled = false)
-        {
-            MsgBox("You are using the a non compiled version of this script."
-                "`n`nPlease continue by using a compiled version to install.", "Warning !", "O Icon! 262144 T5")
-            ExitApp()
-        }
-        result := MsgBox("No library files detected.`n`nWould you like to run a complete setup ?",
-            "VideoDownloader Setup Status", "OC Icon? 4096")
-        Switch (result)
-        {
-            Case "OK":
-                {
-                    Try
-                    {
-                        Run(scriptBaseFilesLocation . "\library\setup\Setup.exe /run-setup")
-                        ExitApp()
-                    }
-                    Catch
-                    {
-                        MsgBox("Unable to execute Setup.exe.`n`nTerminating script.", "Error", "O IconX T1.5")
-                        ExitApp()
-                    }
-                }
-            Case "Cancel":
-                {
-                    ExitApp()
-                }
-        }
-    }
     ; Only called to check the config file status.
     readConfigFile("booleanDebugMode")
     checkBlackListFile("createBlackListFile")
@@ -248,6 +211,73 @@ onInit()
         Else
         {
             WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
+        }
+    }
+}
+
+onInit_checkIfSetupIsNeeded()
+{
+    ; Cannot use true or false because RegRead() returns an actual string every time.
+    regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired", "")
+    If (regValue = "")
+    {
+        RegWrite(1, "REG_DWORD",
+            "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired")
+        regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired", "")
+    }
+    Else If (regValue = "0")
+    {
+        If (!FileExist(ffmpegLocation))
+        {
+            RegWrite(1, "REG_DWORD",
+                "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired")
+            regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired", "")
+        }
+        RunWait(A_ComSpec ' /c yt-dlp --version >> "' . A_Temp . '\tmp.txt"', , "Hide")
+        If (FileExist(A_Temp . "\tmp.txt"))
+        {
+            ; This means that the command could not be found.
+            If (FileRead(A_Temp . "\tmp.txt") = "")
+            {
+                RegWrite(1, "REG_DWORD",
+                    "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired")
+                regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired", "")
+            }
+        }
+    }
+    If (regValue = "1")
+    {
+        If (A_IsCompiled = false)
+        {
+            MsgBox("You are using the a non compiled version of this script."
+                "`n`nPlease continue by using a compiled version to install.", "Warning !", "O Icon! 262144 T5")
+            ExitApp()
+            ExitApp()
+        }
+        Try
+        {
+            Run(scriptBaseFilesLocation . "\library\setup\VideoDownloaderSetup.exe /run-setup")
+            ExitApp()
+            ExitApp()
+        }
+        Catch
+        {
+            MsgBox("Unable to execute VideoDownloaderSetup.exe.`n`nTerminating script.", "Error", "O IconX T1.5")
+            ExitApp()
+            ExitApp()
+        }
+    }
+    Else
+    {
+        ; This tells the script to start smoothly without any prompts beeing shown due to missing files.
+        regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanFirstTimeLaunch", "")
+        MsgBox regValue ; REMOVE
+        If (regValue = "1")
+        {
+            global booleanFirstTimeLaunch := true
+            MsgBox booleanFirstTimeLaunch ; REMOVE
+            RegWrite(0, "REG_DWORD",
+                "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanFirstTimeLaunch")
         }
     }
 }

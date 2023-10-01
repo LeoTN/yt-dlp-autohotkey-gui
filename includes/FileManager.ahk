@@ -149,6 +149,11 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
     templateArray := ["https://www.youtube.com/"]
     If (!FileExist(readConfigFile("BLACKLIST_FILE_LOCATION")))
     {
+        ; This creates the blacklist file silently because it is the script setup.
+        If (booleanFirstTimeLaunch = true)
+        {
+            booleanShowPrompt := false
+        }
         If (booleanShowPrompt = true)
         {
             result := MsgBox("Could not find blacklist file.`n`nDo you want to create one ?", "Warning !", "YN Icon! T10")
@@ -177,7 +182,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
         }
         Else If (result = "No" || "Timeout")
         {
-            Return
+            Return false
         }
     }
     ; In case something has changed in the blacklist file.

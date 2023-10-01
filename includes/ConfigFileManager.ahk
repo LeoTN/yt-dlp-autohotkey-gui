@@ -176,7 +176,10 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
             IniWrite(%configVariableNameArray.Get(A_Index)%, configFileLocation, configSectionNameArray.Get(A_Index),
                 configVariableNameArray.Get(A_Index))
         }
-        MsgBox("A default config file has been generated.", "Config file status", "O Iconi T3")
+        If (booleanShowPrompt = true)
+        {
+            MsgBox("A default config file has been generated.", "Config file status", "O Iconi T3")
+        }
     }
 }
 
@@ -289,6 +292,12 @@ checkConfigFileIntegrity()
         }
         Catch
         {
+            ; Does not show a prompt when the script is launched for the very first time.
+            If (booleanFirstTimeLaunch = true)
+            {
+                createDefaultConfigFile()
+                Return true
+            }
             result := MsgBox("The script config file seems to be corrupted or unavailable !"
                 "`n`nDo you want to create a new one using the template ?"
                 , "Warning !", "YN Icon! 8192 T10")

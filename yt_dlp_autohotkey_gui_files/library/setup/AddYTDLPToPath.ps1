@@ -13,15 +13,18 @@ function searchAndSetYTDLPPath($folderPath) {
     $ytDlpPath = Join-Path -Path $folderPath -ChildPath "yt-dlp.exe"
     
     if (Test-Path $ytDlpPath -PathType Leaf) {
-        [System.Environment]::SetEnvironmentVariable("yt-dlp", $ytDlpPath, [System.EnvironmentVariableTarget]::Machine)
-        $tmpValue = [System.Environment]::GetEnvironmentVariable("yt-dlp", [System.EnvironmentVariableTarget]::Machine)
+        $ytDlpDirectory = [System.IO.Path]::GetDirectoryName($ytDlpPath)
+        $currentPath = [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::Machine)
 
-        if ($tmpValue -ne $null) {
-            Write-Host "System environment variable 'yt-dlp' has been created successfully"
+        if ($currentPath -notlike "*$ytDlpDirectory*") {
+            $newPath = "$currentPath;$ytDlpDirectory"
+            [System.Environment]::SetEnvironmentVariable("Path", $newPath, [System.EnvironmentVariableTarget]::Machine)
+            Write-Host "System environment variable 'Path' has been modified successfully"
         }
         else {
-            Write-Host "Failed to create system environment variable 'yt-dlp'"
+            Write-Host "Program yt-dlp seems to already be in the system environment variable 'Path'"
         }
+
         Start-Sleep -Seconds 5
         Exit
     }
