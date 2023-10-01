@@ -1,0 +1,129 @@
+name: Build VideoDownloader MSI Installer File
+
+on: [workflow_dispatch]
+
+env:
+  FINAL_EXECUTABLE_NAME: VideoDownloader.exe
+  FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderInstaller.exe
+  FINAL_INSTALLER_NAME: VideoDownloaderInstaller.msi
+
+jobs:
+  build_exe_files:
+    name: Build and Upload Executable Artifact
+    runs-on: windows-2019
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Extract Autohotkey Compiler
+      run: |
+        # Set Variables
+        $ahkFolder = "ahk"
+        $ahkV2Folder = "ahk-v2"
+
+        # Extract the files.
+        Expand-Archive -Path "compiler\ahk.zip" -DestinationPath $ahkFolder
+        Expand-Archive -Path "compiler\ahk-v2.zip" -DestinationPath $ahkV2Folder
+
+    - name: Compile Autohotkey Main Script
+      run: |
+        # Set the paths to execute more easily.
+        $scriptPathIn = "VideoDownloader.ahk"
+        $scriptPathOut = $env:FINAL_EXECUTABLE_NAME
+
+        # Compile the script.
+        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
+        echo "The executable will be called $env:FINAL_EXECUTABLE_NAME"
+
+    - name: Upload Executable as Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.FINAL_EXECUTABLE_NAME }}
+        path: ${{ env.FINAL_EXECUTABLE_NAME }}
+
+    - name: Compile Autohotkey Setup Script
+      run: |
+        # Set the paths to execute more easily.
+        $scriptPathIn = "yt_dlp_autohotkey_gui_files/library/setup/VideoDownloaderSetup.ahk"
+        $scriptPathOut = ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+
+        # Compile the script.
+        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
+        echo "The executable will be called ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}"
+
+    - name: Upload Executable as Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+        path: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+
+  build_msi_file:
+    runs-on: windows-latest
+    name: Build MSI Installer File
+    needs: build_exe_files
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Download Main Executable Artifact
+        id: download_main_executable_artifact_id
+        uses: actions/download-artifact@v3
+        with:
+         name: ${{ env.FINAL_INSTALLER_NAME }}
+
+      - name: Download Setup Executable Artifact
+        id: download_setup_executable_artifact_id
+        uses: actions/download-artifact@v3
+        with:
+         name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+         path: ${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup
+        
+      - name: Build .AIP Project
+        uses: caphyon/advinst-github-action@main
+        with:
+          advinst-version: '21.0'
+          advinst-enable-automation: 'true'
+          aip-path: ${{ github.workspace }}\compiler\VideoDownloaderInstaller.aip
+          aip-build-name: VideoDownloader
+          aip-package-name: VideoDownloader.msi
+          aip-output-dir:  ${{ github.workspace }}
+          aip-commands: |
+            SetVersion 1.2.0
+            
+      - name: Upload Installer as Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: setup
+          path: ${{ env.FINAL_INSTALLER_NAME }}
+ 
+  create_release:
+    name: Download Executable Artifact and Create Draft Release
+    needs: build_msi_file
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+     
+    - name: Download Installer Artifact
+      id: download_installer_artifact_id
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.FINAL_INSTALLER_NAME }}
+        
+    - name: Create Draft Main Release
+      uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        artifacts: ${{steps.download_installer_artifact_id.outputs.download-path}}/${{ env.FINAL_INSTALLER_NAME }}
+        artifactContentType: application/executable
+        generateReleaseNotes: true
+        makeLatest: true
+        prerelease: false
+        removeArtifacts: true
+        draft: true
+        name: "latest-main-release"
+        tag: "latest-main-release"

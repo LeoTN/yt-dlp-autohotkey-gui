@@ -1,9 +1,12 @@
+*.lnk
 VideoDownloader.exe
 .vscode/
-compiler/
+compiler/*.zip
 yt_dlp_autohotkey_gui_files/config/
 yt_dlp_autohotkey_gui_files/deleted/
 yt_dlp_autohotkey_gui_files/download/
+yt_dlp_autohotkey_gui_files/library/FFmpeg/
+yt_dlp_autohotkey_gui_files/library/setup/VideoDownloaderSetup.exe
 yt_dlp_autohotkey_gui_files/presets/
 yt_dlp_autohotkey_gui_files/*.txt
 yt_dlp_autohotkey_gui_files/*.ini

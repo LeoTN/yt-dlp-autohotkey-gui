@@ -2,7 +2,6 @@
 #MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
 SendMode "Input"
-SetWorkingDir A_ScriptDir
 CoordMode "Mouse", "Client"
 
 /*
@@ -19,26 +18,26 @@ global booleanDebugMode := false
 CONFIG VARIABLE TEMPLATE SECTION
 -------------------------------------------------
 These default variables are used to generate the config file template.
-***IMPORTANT NOTE*** : Do NOT change the name of these variables !
+***IMPORTANT NOTE***: Do NOT change the name of these variables !
 Otherwise this can lead to fatal errors and failures !
 */
 
 ; Determines the location of the script's configuration file.
-global configFileLocation := baseFilesLocation . "\config\ytdownloader.ini"
+global configFileLocation := workingBaseFilesLocation . "\config\ytdownloader.ini"
 ; Specifies path for the .txt file which stores the URLs.
-URL_FILE_LOCATION := baseFilesLocation . "\YT_URLS.txt"
+URL_FILE_LOCATION := workingBaseFilesLocation . "\YT_URLS.txt"
 ; Specifies path for the .txt file which stores the URL backup.
-URL_BACKUP_FILE_LOCATION := baseFilesLocation . "\YT_URLS_BACKUP.txt"
+URL_BACKUP_FILE_LOCATION := workingBaseFilesLocation . "\YT_URLS_BACKUP.txt"
 ; Specifies path for the .txt file which stores the blacklist file.
-BLACKLIST_FILE_LOCATION := baseFilesLocation . "\YT_BLACKLIST.txt"
+BLACKLIST_FILE_LOCATION := workingBaseFilesLocation . "\YT_BLACKLIST.txt"
 ; Standard download log file path.
-DOWNLOAD_LOG_FILE_LOCATION := baseFilesLocation . "\download\download_log.txt"
+DOWNLOAD_LOG_FILE_LOCATION := workingBaseFilesLocation . "\download\download_log.txt"
 ; Default download archive file location.
-DOWNLOAD_ARCHIVE_LOCATION := baseFilesLocation . "\download\download_archive.txt"
+DOWNLOAD_ARCHIVE_LOCATION := workingBaseFilesLocation . "\download\download_archive.txt"
 ; Default preset storage for the download option GUI.
-DOWNLOAD_PRESET_LOCATION := baseFilesLocation . "\presets"
+DOWNLOAD_PRESET_LOCATION := workingBaseFilesLocation . "\presets"
 ; Standard download path.
-DOWNLOAD_PATH := baseFilesLocation . "\download"
+DOWNLOAD_PATH := workingBaseFilesLocation . "\download"
 
 ; Defines if the script should ask the user for a brief explaination of it's core functions.
 ASK_FOR_TUTORIAL := true
@@ -62,15 +61,15 @@ OPTIONS_GUI_HK := "+^!A"
 
 ; Will contain all config values matching with each variable name in the array below.
 ; For example configVariableNameArray[2] = "URL_FILE_LOCATION"
-; and configFileContentArray[2] = "baseFilesLocation . "\YT_URLS.txt""
-; so basically URL_FILE_LOCATION = "baseFilesLocation . "\YT_URLS.txt"".
-; NOTE : This had to be done because changing a global variable using a dynamic
+; and configFileContentArray[2] = "workingBaseFilesLocation . "\YT_URLS.txt""
+; so basically URL_FILE_LOCATION = "workingBaseFilesLocation . "\YT_URLS.txt"".
+; NOTE: This had to be done because changing a global variable using a dynamic
 ; expression like global %myGlobalVarName% := "newValue" won't work.
 global configFileContentArray := []
 
 ; Create an array including all settings variables names.
 ; This array makes it easier to apply certain values from the config file to the configFileContentArray.
-; IMPORTANT NOTE : Do NOT forget to add each new config variable name into the array !!!
+; IMPORTANT NOTE: Do NOT forget to add each new config variable name into the array !!!
 configVariableNameArray :=
     [
         "booleanDebugMode",
@@ -97,7 +96,7 @@ configVariableNameArray :=
     ]
 ; Create an array including the matching section name for EACH item in the configVariableNameArray.
 ; This makes it easier to read and write the config file.
-; IMPORTANT NOTE : Do NOT forget to add the SECTION NAME for EACH new item added in the configVariableNameArray !!!
+; IMPORTANT NOTE: Do NOT forget to add the SECTION NAME for EACH new item added in the configVariableNameArray !!!
 configSectionNameArray :=
     [
         "DebugSettings",
@@ -123,6 +122,7 @@ configSectionNameArray :=
         "Hotkeys"
     ]
 
+checkConfigFileIntegrity()
 /*
 CONFIG FILE SECTION
 -------------------------------------------------
@@ -130,7 +130,7 @@ Creates, reads and manages the script's config file.
 */
 
 ; Creates a default config file with the standard parameters. Usually always creates
-; a backup file to recover changes if needed.
+; a backup file to revert changes if needed.
 createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := false)
 {
     booleanCreateBackup := pBooleanCreateBackup
@@ -146,16 +146,17 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
     }
     If (booleanCreateBackup = true)
     {
-        If (FileExist(configFileLocation))
-        {
-            FileMove(configFileLocation, configFileLocation . "_old", true)
-        }
         If (!DirExist(SplitPath(configFileLocation, , &outDir)))
         {
             DirCreate(outDir)
         }
-        FileAppend("", configFileLocation)
+        If (FileExist(configFileLocation))
+        {
+            FileMove(configFileLocation, configFileLocation . "_old", true)
+        }
     }
+    FileAppend("#Important note: When changing the config file the script has to be reloaded for the changes to take effect!",
+        configFileLocation)
     ; In case you forget to specify a section for EACH new config file entry this will remind you to do so :D
     If (configVariableNameArray.Length != configSectionNameArray.Length)
     {
@@ -175,7 +176,10 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
             IniWrite(%configVariableNameArray.Get(A_Index)%, configFileLocation, configSectionNameArray.Get(A_Index),
                 configVariableNameArray.Get(A_Index))
         }
-        MsgBox("A default config file has been generated.", "Config file status", "O Iconi T3")
+        If (booleanShowPrompt = true)
+        {
+            MsgBox("A default config file has been generated.", "Config file status", "O Iconi T3")
+        }
     }
 }
 
@@ -183,7 +187,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
 ; The parameter optionName specifies a specific
 ; variable's content which you want to return.
 ; For example '"URL_FILE_LOCATION"' to return URL_FILE_LOCATION's content
-; which is 'baseFilesLocation . "\YT_URLS.txt"' by default.
+; which is 'workingBaseFilesLocation . "\YT_URLS.txt"' by default.
 ; Returns the value out of the config file.
 ; The booleanAskForPathCreation should be used with caution because
 ; it can have unseen consequences if a directory is not created.
@@ -194,39 +198,11 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
     booleanAskForPathCreation := pBooleanAskForPathCreation
     booleanCheckConfigFileStatus := pBooleanCheckConfigFileStatus
 
-    Loop (configVariableNameArray.Length)
+    If (booleanCheckConfigFileStatus = true)
     {
-        Try
-        {
-            ; Replaces every config variable 's value with the config file's content.
-            configFileContentArray.InsertAt(A_Index, IniRead(configFileLocation, configSectionNameArray.Get(A_Index)
-                , configVariableNameArray.Get(A_Index)))
-        }
-        Catch
-        {
-            If (booleanCheckConfigFileStatus = true)
-            {
-                result := MsgBox("The script's config file seems to be corrupted or unavailable !"
-                    "`n`nDo you want to create a new one using the template ?"
-                    , "Error !", "YN IconX 8192 T10")
-                If (result = "Yes")
-                {
-                    createDefaultConfigFile()
-                    ; Gives the information a part of the script asked for even if the config file had to be generated.
-                    Return readConfigFile(optionName)
-                }
-                Else If (result = "No" || "Timeout")
-                {
-                    MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
-                    ExitApp()
-                }
-            }
-            Else
-            {
-                Return
-            }
-        }
+        checkConfigFileIntegrity()
     }
+
     Loop (configVariableNameArray.Length)
     {
         ; Searches in the config file for the given option name to then extract the value.
@@ -293,7 +269,7 @@ editConfigFile(pOptionName, pData)
             }
             Catch
             {
-                ; If the try statement fails the object above can not be an array.
+                ; If the try statement fails the object above cannot be an array.
                 IniWrite(data, configFileLocation
                     , configSectionNameArray.Get(A_Index)
                     , configVariableNameArray.Get(A_Index))
@@ -304,6 +280,41 @@ editConfigFile(pOptionName, pData)
     Throw ("Error while editing config file")
 }
 
+checkConfigFileIntegrity()
+{
+    Loop (configVariableNameArray.Length)
+    {
+        Try
+        {
+            ; Replaces every slot in the configFileContentArray with the value from the config file's content.
+            configFileContentArray.InsertAt(A_Index, IniRead(configFileLocation, configSectionNameArray.Get(A_Index)
+                , configVariableNameArray.Get(A_Index)))
+        }
+        Catch
+        {
+            ; Does not show a prompt when the script is launched for the very first time.
+            If (booleanFirstTimeLaunch = true)
+            {
+                createDefaultConfigFile()
+                Return true
+            }
+            result := MsgBox("The script config file seems to be corrupted or unavailable !"
+                "`n`nDo you want to create a new one using the template ?"
+                , "Warning !", "YN Icon! 8192 T10")
+            If (result = "Yes")
+            {
+                createDefaultConfigFile()
+                Return true
+            }
+            Else If (result = "No" || "Timeout")
+            {
+                MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
+                ExitApp()
+            }
+        }
+    }
+}
+
 ; Verfies the integrity of a given path or file location.
 ; It will also ask the user to create the given path if it does not exist yet.
 ; Returns true if a path is valid and false otherwise.
@@ -311,98 +322,66 @@ validatePath(pPath, pBooleanAskForPathCreation := true)
 {
     path := pPath
     booleanAskForPathCreation := pBooleanAskForPathCreation
-
     ; If necessary the directory read in the config file will be created.
     ; SplitPath makes sure the last part of the whole path is removed.
     ; For example it removes the "\YT_URLS.txt"
-    SplitPath(path, , &outDir, &outExtension)
+    SplitPath(path, &outFileName, &outDir, &outExtension)
     ; Looks for one of the specified characters to identify invalid path names.
     ; Searches for common mistakes in the path name.
     specialChars := '<>"/|?*'
     Loop Parse (specialChars)
     {
-        If (InStr(outDir, A_LoopField) || InStr(outDir, "\\") || InStr(outDir, "\\\"))
+        If (InStr(path, A_LoopField) || InStr(path, "\\") || InStr(path, "\\\")) || !InStr(path, "\")
         {
             Return false
         }
     }
-    ; This happens when there is no file name given in the config file e.g. at the preset location.
-    If (outExtension = "" && !DirExist(path) && booleanAskForPathCreation = true)
+    If (booleanAskForPathCreation = true)
     {
-        ; The download and preset folder will be created without any prompt to avoid annoying the user e.g.
-        ; because the download folder has changed or deleted.
-        If (path = DOWNLOAD_PRESET_LOCATION || path = DOWNLOAD_PATH)
+        If (outFileName = "download" || outFileName = "presets")
         {
-            Try
+            DirCreate(path)
+            Return true
+        }
+        ; This means the path has no file at the end.
+        Else If (outExtension = "" && !DirExist(path))
+        {
+            result := MsgBox("The directory :`n" . path
+                . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
+            Switch (result)
             {
-                DirCreate(pPath)
-                Sleep(500)
-                Return true
-            }
-            Catch
-            {
-                Return false
+                Case "Yes":
+                    {
+                        DirCreate(path)
+                        Sleep(500)
+                        Return true
+                    }
+                Default:
+                    {
+                        MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
+                        ExitApp()
+                    }
             }
         }
-
-        result := MsgBox("The directory :`n" . path
-            . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
-        If (result = "Yes")
+        ; This means the path has a file at the end which has to be excluded.
+        Else If (!DirExist(outDir))
         {
-            Try
+            result := MsgBox("The directory :`n" . outDir
+                . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
+            Switch (result)
             {
-                DirCreate(path)
-                Sleep(500)
-                Return true
+                Case "Yes":
+                    {
+                        DirCreate(outDir)
+                        Sleep(500)
+                        Return true
+                    }
+                Default:
+                    {
+                        MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
+                        ExitApp()
+                    }
             }
-            Catch
-            {
-                Return false
-            }
-        }
-        Else If (result = "No" || "Timeout")
-        {
-            MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
-            ExitApp()
-        }
-    }
-    Else If (!DirExist(outDir) && booleanAskForPathCreation = true)
-    {
-        ; The download and preset folder will be created without any prompt to avoid annoying the user e.g.
-        ; because the download folder has changed or has been deleted.
-        If (path = DOWNLOAD_LOG_FILE_LOCATION || path = DOWNLOAD_ARCHIVE_LOCATION)
-        {
-            Try
-            {
-                DirCreate(outDir)
-                Sleep(500)
-                Return true
-            }
-            Catch
-            {
-                Return false
-            }
-        }
-
-        result := MsgBox("The directory :`n" . path
-            . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
-        If (result = "Yes")
-        {
-            Try
-            {
-                DirCreate(outDir)
-                Sleep(500)
-                Return true
-            }
-            Catch
-            {
-                Return false
-            }
-        }
-        Else If (result = "No" || "Timeout")
-        {
-            MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
-            ExitApp()
         }
     }
 }

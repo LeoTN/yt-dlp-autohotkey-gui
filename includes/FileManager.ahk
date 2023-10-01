@@ -2,7 +2,6 @@
 #MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
 SendMode "Input"
-SetWorkingDir A_ScriptDir
 CoordMode "Mouse", "Client"
 
 ; Beginning of the file manager functions.
@@ -12,6 +11,8 @@ saveSearchBarContentsToFile()
 {
     A_Clipboard := ""
     w := 1
+    tmpConfig := readConfigFile("URL_FILE_LOCATION")
+
     While (w = 1)
     {
         Send("^{l}")
@@ -26,14 +27,14 @@ saveSearchBarContentsToFile()
             Break
         }
     }
-    If (FileExist(readConfigFile("URL_FILE_LOCATION")))
+    If (FileExist(tmpConfig))
     {
 
         writeToURLFile(clipboardContent)
     }
     Else
     {
-        FileAppend("#Made by Donnerbaer" . "`n", readConfigFile("URL_FILE_LOCATION"))
+        FileAppend("#Made by Donnerbaer" . "`n", tmpConfig)
         writeToURLFile(clipboardContent)
     }
 }
@@ -51,15 +52,16 @@ saveVideoURLDirectlyToFile()
     If (ClipWait(0.35) = true)
     {
         clipboardContent := A_Clipboard
-        If (!FileExist(readConfigFile("URL_FILE_LOCATION")))
+        tmpConfig := readConfigFile("URL_FILE_LOCATION")
+        If (!FileExist(tmpConfig))
         {
-            FileAppend("#Made by Donnerbaer" . "`n", readConfigFile("URL_FILE_LOCATION"))
+            FileAppend("#Made by Donnerbaer" . "`n", tmpConfig)
             writeToURLFile(clipboardContent)
             Return
         }
         Else If (clipboardContent != "")
         {
-            contentArray := readFile(readConfigFile("URL_FILE_LOCATION"), true)
+            contentArray := readFile(tmpConfig, true)
             Loop (contentArray.Length)
             {
                 If (clipboardContent = contentArray.Get(A_Index))
@@ -78,7 +80,8 @@ saveVideoURLDirectlyToFile()
 writeToURLFile(pContent)
 {
     content := pContent
-    tmp := readFile(readConfigFile("URL_FILE_LOCATION"), true)
+    tmpConfig := readConfigFile("URL_FILE_LOCATION")
+    tmp := readFile(tmpConfig, true)
     ; Check if the URL already exists in the file.
     i := tmp.Length
     ; Content check loop.
@@ -93,7 +96,7 @@ writeToURLFile(pContent)
     {
         Return
     }
-    FileAppend(content . "`n", readConfigFile("URL_FILE_LOCATION"))
+    FileAppend(content . "`n", tmpConfig)
 }
 
 ; Reads a specified file and creates an array object with it.
@@ -146,6 +149,11 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
     templateArray := ["https://www.youtube.com/"]
     If (!FileExist(readConfigFile("BLACKLIST_FILE_LOCATION")))
     {
+        ; This creates the blacklist file silently because it is the script setup.
+        If (booleanFirstTimeLaunch = true)
+        {
+            booleanShowPrompt := false
+        }
         If (booleanShowPrompt = true)
         {
             result := MsgBox("Could not find blacklist file.`n`nDo you want to create one ?", "Warning !", "YN Icon! T10")
@@ -174,7 +182,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
         }
         Else If (result = "No" || "Timeout")
         {
-            Return
+            Return false
         }
     }
     ; In case something has changed in the blacklist file.
@@ -205,7 +213,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
         }
     }
     ; Compare the item if it matches with the blacklist.
-    ; NOTE : This search method is not case sensitive and
+    ; NOTE: This search method is not case sensitive and
     ; it does not search like InStr() !
     blacklistArray := readFile(readConfigFile("BLACKLIST_FILE_LOCATION"))
 
@@ -222,20 +230,22 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
 manageURLFile(pBooleanShowPrompt := true)
 {
     booleanShowPrompt := pBooleanShowPrompt
+    tmpConfig := readConfigFile("URL_FILE_LOCATION")
 
     If (booleanShowPrompt = true)
     {
-        result := MsgBox("Do you want to clear the URL file ?`n`nA backup will be created anyways.", "Manage URL File", "4164 T10")
-
+        result := MsgBox("Do you want to clear the URL file ?`n`nA backup will be created anyways.",
+            "Manage URL File", "4164 T10")
+        ; When there is a prompt it is almost guaranteed not a download running so that this should work.
         If (result = "Yes")
         {
             Try
             {
-                FileMove(readConfigFile("URL_FILE_LOCATION"), readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
+                FileMove(tmpConfig, readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
             }
             Catch
             {
-                MsgBox("The file does not exist !	`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
+                MsgBox("The file does not exist !`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
             }
         }
     }
@@ -243,7 +253,8 @@ manageURLFile(pBooleanShowPrompt := true)
     {
         Try
         {
-            FileMove(readConfigFile("URL_FILE_LOCATION"), readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
+            SplitPath(tmpConfig, , &outDir)
+            FileMove(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
         }
     }
 }
@@ -255,7 +266,8 @@ restoreURLFile()
         MsgBox("The URL blackup file does not exist !`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
         Return
     }
-    If (FileExist(readConfigFile("URL_FILE_LOCATION")))
+    tmpConfig := readConfigFile("URL_FILE_LOCATION")
+    If (FileExist(tmpConfig))
     {
         result := MsgBox("The URL File already exists."
             "`nPress YES to overwrite or NO to append the`nbackup file to the original file.", "Warning !", "YNC Icon! 4096 T10")
@@ -263,11 +275,11 @@ restoreURLFile()
         {
             Case "Yes":
                 {
-                    FileCopy(readConfigFile("URL_BACKUP_FILE_LOCATION"), readConfigFile("URL_FILE_LOCATION"), true)
+                    FileCopy(readConfigFile("URL_BACKUP_FILE_LOCATION"), tmpConfig, true)
                 }
             Case "No":
                 {
-                    If (InStr(FileRead(readConfigFile("URL_FILE_LOCATION")), "#Made by Donnerbaer"))
+                    If (InStr(FileRead(tmpConfig), "#Made by Donnerbaer"))
                     {
                         ; If the original URL file already contains the line, it will remove the corresponding line
                         ; from the backup file content.
@@ -278,7 +290,7 @@ restoreURLFile()
                         tmp := FileRead(readConfigFile("URL_BACKUP_FILE_LOCATION"))
                     }
                     ; Appends the backup file content to the original file.
-                    FileAppend(tmp, readConfigFile("URL_FILE_LOCATION"))
+                    FileAppend(tmp, tmpConfig)
                 }
             Default:
                 {
@@ -288,6 +300,6 @@ restoreURLFile()
     }
     Else
     {
-        FileCopy(readConfigFile("URL_BACKUP_FILE_LOCATION"), readConfigFile("URL_FILE_LOCATION"), true)
+        FileCopy(readConfigFile("URL_BACKUP_FILE_LOCATION"), tmpConfig, true)
     }
 }
