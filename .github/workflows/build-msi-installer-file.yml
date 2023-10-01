@@ -4,10 +4,11 @@ on: [workflow_dispatch]
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
+  FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderInstaller.exe
   FINAL_INSTALLER_NAME: VideoDownloaderInstaller.msi
 
 jobs:
-  build_exe_file:
+  build_exe_files:
     name: Build and Upload Executable Artifact
     runs-on: windows-2019
 
@@ -25,7 +26,7 @@ jobs:
         Expand-Archive -Path "compiler\ahk.zip" -DestinationPath $ahkFolder
         Expand-Archive -Path "compiler\ahk-v2.zip" -DestinationPath $ahkV2Folder
 
-    - name: Compile Autohotkey Script
+    - name: Compile Autohotkey Main Script
       run: |
         # Set the paths to execute more easily.
         $scriptPathIn = "VideoDownloader.ahk"
@@ -41,19 +42,47 @@ jobs:
         name: ${{ env.FINAL_EXECUTABLE_NAME }}
         path: ${{ env.FINAL_EXECUTABLE_NAME }}
 
+    - name: Compile Autohotkey Setup Script
+      run: |
+        # Set the paths to execute more easily.
+        $scriptPathIn = "yt_dlp_autohotkey_gui_files/library/setup/VideoDownloaderSetup.ahk"
+        $scriptPathOut = ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+
+        # Compile the script.
+        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
+        echo "The executable will be called ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}"
+
+    - name: Upload Executable as Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+        path: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+
   build_msi_file:
     runs-on: windows-latest
     name: Build MSI Installer File
-    needs: build_exe_file
+    needs: build_exe_files
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+
+      - name: Download Main Executable Artifact
+        id: download_main_executable_artifact_id
+        uses: actions/download-artifact@v3
+        with:
+         name: ${{ env.FINAL_INSTALLER_NAME }}
+
+      - name: Download Setup Executable Artifact
+        id: download_setup_executable_artifact_id
+        uses: actions/download-artifact@v3
+        with:
+         name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+         path: ${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup
         
       - name: Build .AIP Project
         uses: caphyon/advinst-github-action@main
         with:
           advinst-version: '21.0'
-          advinst-license: ${{ secrets.ADVINST_LICENSE_KEY }}
           advinst-enable-automation: 'true'
           aip-path: ${{ github.workspace }}\compiler\VideoDownloaderInstaller.aip
           aip-build-name: VideoDownloader
@@ -80,7 +109,7 @@ jobs:
       uses: actions/checkout@v3
      
     - name: Download Installer Artifact
-      id: download_artifact_id
+      id: download_installer_artifact_id
       uses: actions/download-artifact@v3
       with:
         name: ${{ env.FINAL_INSTALLER_NAME }}
@@ -89,7 +118,7 @@ jobs:
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        artifacts: ${{steps.download_artifact_id.outputs.download-path}}/${{ env.FINAL_INSTALLER_NAME }}
+        artifacts: ${{steps.download_installer_artifact_id.outputs.download-path}}/${{ env.FINAL_INSTALLER_NAME }}
         artifactContentType: application/executable
         generateReleaseNotes: true
         makeLatest: true
