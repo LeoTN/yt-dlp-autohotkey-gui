@@ -9,7 +9,7 @@ env:
 
 jobs:
   build_exe_files:
-    name: Build and Upload Executable Artifact
+    name: Build and Upload Executable Artifacts
     runs-on: windows-2019
 
     steps:
@@ -70,14 +70,13 @@ jobs:
         id: download_main_executable_artifact_id
         uses: actions/download-artifact@v3
         with:
-         name: ${{ env.FINAL_EXECUTABLE_NAME }}
+          name: ${{ env.FINAL_EXECUTABLE_NAME }}
 
       - name: Download Setup Executable Artifact
         id: download_setup_executable_artifact_id
         uses: actions/download-artifact@v3
         with:
-         name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
-         path: ${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup
+          name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
         
       - name: Build .AIP Project
         uses: caphyon/advinst-github-action@main
