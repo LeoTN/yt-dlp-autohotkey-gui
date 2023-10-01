@@ -4,12 +4,12 @@ on: [workflow_dispatch]
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
-  FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderInstaller.exe
+  FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderSetup.exe
   FINAL_INSTALLER_NAME: VideoDownloaderInstaller.msi
 
 jobs:
   build_exe_files:
-    name: Build and Upload Executable Artifact
+    name: Build and Upload Executable Artifacts
     runs-on: windows-2019
 
     steps:
@@ -70,7 +70,7 @@ jobs:
         id: download_main_executable_artifact_id
         uses: actions/download-artifact@v3
         with:
-         name: ${{ env.FINAL_INSTALLER_NAME }}
+          name: ${{ env.FINAL_EXECUTABLE_NAME }}
 
       - name: Download Setup Executable Artifact
         id: download_setup_executable_artifact_id
