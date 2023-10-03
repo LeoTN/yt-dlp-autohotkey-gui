@@ -1,12 +1,18 @@
 name: Build VideoDownloader MSI Installer File
 
-on: [workflow_dispatch]
+on:
+    workflow_dispatch:
+      inputs:
+        version :
+          description: "Release Version"
+          default: "0.0.0"
+          required: true
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
   FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderSetup.exe
   FINAL_INSTALLER_NAME: VideoDownloaderInstaller.msi
-  RELASE_VERSION: 1.2.0
+  RELASE_VERSION: ${{ github.event.inputs.version }}
 
 jobs:
   build_exe_files:
@@ -125,7 +131,6 @@ jobs:
         generateReleaseNotes: true
         makeLatest: true
         prerelease: false
-        removeArtifacts: true
         draft: true
-        name: "${{ env.RELASE_VERSION }}"
-        tag: "${{ env.RELASE_VERSION }}"
+        name: "v${{ env.RELASE_VERSION }}"
+        tag: "v${{ env.RELASE_VERSION }}"
