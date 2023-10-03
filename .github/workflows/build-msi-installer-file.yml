@@ -83,7 +83,7 @@ jobs:
       - name: Build .AIP Project
         uses: caphyon/advinst-github-action@main
         with:
-          advinst-version: '21.0'
+          advinst-version: '21.0.1'
           advinst-enable-automation: 'true'
           aip-path: ${{ github.workspace }}\compiler\VideoDownloaderInstaller.aip
           aip-build-name: DefaultBuild
