@@ -162,7 +162,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
     {
         MsgBox("Not every config file entry has been asigned to a section !`n`nPlease fix this by checking both arrays.",
             "Error !", "O IconX")
-        MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
+        MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
         ExitApp()
     }
     Else
@@ -178,7 +178,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
         }
         If (booleanShowPrompt = true)
         {
-            MsgBox("A default config file has been generated.", "Config file status", "O Iconi T3")
+            MsgBox("A default config file has been generated.", "Config File Status", "O Iconi T3")
         }
     }
 }
@@ -216,7 +216,7 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
                 {
                     MsgBox("Could not create directory !`nCheck the config file for a valid path at :`n "
                         . configVariableNameArray.Get(A_Index), "Error !", "O Icon! T10")
-                    MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
+                    MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
                     ExitApp()
                 }
                 Else
@@ -231,7 +231,7 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
             }
         }
     }
-    MsgBox("Could not find " . optionName . " in the config file.", "Script status", "O IconX T3")
+    MsgBox("Could not find " . optionName . " in the config file.", "Script Status", "O IconX T3")
     ExitApp()
 }
 
@@ -301,15 +301,18 @@ checkConfigFileIntegrity()
             result := MsgBox("The script config file seems to be corrupted or unavailable !"
                 "`n`nDo you want to create a new one using the template ?"
                 , "Warning !", "YN Icon! 8192 T10")
-            If (result = "Yes")
+            Switch (result)
             {
-                createDefaultConfigFile()
-                Return true
-            }
-            Else If (result = "No" || "Timeout")
-            {
-                MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
-                ExitApp()
+                Case "Yes":
+                    {
+                        createDefaultConfigFile()
+                        Return true
+                    }
+                Default:
+                    {
+                        MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
+                        ExitApp()
+                    }
             }
         }
     }
@@ -358,7 +361,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true)
                     }
                 Default:
                     {
-                        MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
+                        MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
                         ExitApp()
                     }
             }
@@ -378,7 +381,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true)
                     }
                 Default:
                     {
-                        MsgBox("Script has been terminated.", "Script status", "O IconX T1.5")
+                        MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
                         ExitApp()
                     }
             }

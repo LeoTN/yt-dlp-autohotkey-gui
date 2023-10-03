@@ -64,7 +64,7 @@ registerHotkeys()
     Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), "Off")
 
     ; Hotkey that is currently not used.
-    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet"), "Off")
+    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet", , "T2"), "Off")
 
     ; Hotkey for clearing the URL file.
     Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), "Off")
@@ -160,7 +160,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
     }
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
-    If (!FileExist(tmpConfig) && downloadOptionsGUI_SubmitObject.UseTextFileForURLsCheckbox = 1)
+    If (!FileExist(tmpConfig) && downloadOptionsGUI_SubmitObject.UseTextFileForURLsCheckbox = true)
     {
         MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing: [" .
             expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download status", "O Icon! 8192")
@@ -168,7 +168,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         Return
     }
     SplitPath(tmpConfig, , &outDir)
-    If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = 1)
+    If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = true)
     {
         FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
     }
@@ -176,7 +176,7 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         FileCopy(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
     }
-    If (booleanSilent = 1)
+    If (booleanSilent = true)
     {
         ; Execute the command line command and wait for it to be finished.
         displayAndLogConsoleCommand(stringToExecute, true)
@@ -189,12 +189,12 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         monitorDownloadProgress()
     }
     postProcessDownloadFiles()
-    If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = 1
-        && downloadOptionsGUI_SubmitObject.IgnoreAllOptionsCheckbox != 1)
+    If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = true
+        && downloadOptionsGUI_SubmitObject.IgnoreAllOptionsCheckbox != true)
     {
         manageURLFile(false)
     }
-    If (downloadOptionsGUI_SubmitObject.TerminateScriptAfterDownloadCheckbox = 1)
+    If (downloadOptionsGUI_SubmitObject.TerminateScriptAfterDownloadCheckbox = true)
     {
         isDownloading := false
         saveGUISettingsAsPreset("last_settings", true)
@@ -266,7 +266,7 @@ monitorDownloadProgress()
     ; Prepares the download options GUI.
     downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
     downloadStatusProgressBar.Value := 0
-    If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
+    If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = true)
     {
         downloadStatusText.Text := "Playlist mode: " . downloadedVideoAmount . " video(s) processed."
     }
@@ -387,7 +387,7 @@ startOfFileReadLoop:
                 booleanWaitForVideoDownload := true
                 downloadedVideoAmount++
                 partProgress := 0
-                If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
+                If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = true)
                 {
                     downloadStatusText.Text := "Playlist mode: " . downloadedVideoAmount . " video(s) processed."
                 }
@@ -450,7 +450,7 @@ startOfFileReadLoop:
     Else
     {
         downloadStatusProgressBar.Value := maximumBarValue
-        If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
+        If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = true)
         {
             downloadStatusText.Text := "Playlist mode: " . downloadedVideoAmount . " video(s) processed."
         }
@@ -459,13 +459,13 @@ startOfFileReadLoop:
             downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
         }
     }
-    If (downloadOptionsGUI_SubmitObject.HideDownloadCommandPromptCheckbox != 1)
+    If (downloadOptionsGUI_SubmitObject.HideDownloadCommandPromptCheckbox != true)
     {
         MsgBox("Total video amount: " . videoAmount .
             "`nSkipped Videos (already in archive): " . skippedVideoArchiveAmount .
             "`nSkipped Videos (already present): " . skippedVideoPresentAmount .
             "`nSkipped Videos (too large): " . skippedVideoMaxSizeAmount .
-            "`nDownloaded Videos: " . downloadedVideoAmount, "Download summary", "O Iconi T5")
+            "`nDownloaded Videos: " . downloadedVideoAmount, "Download Summary", "O Iconi T5")
     }
 }
 
@@ -480,7 +480,7 @@ postProcessDownloadFiles()
         {
             FileCopy(A_Temp . "\yt_dlp_download_log.txt", readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), true)
         }
-        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
+        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = true)
         {
             If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
             {
@@ -538,7 +538,7 @@ postProcessDownloadFiles()
     ; Creates the download summary text file.
     Try
     {
-        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
+        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = true)
         {
             FileAppend("##################################################`n`nTotal video amount: " . videoAmount .
                 "`nSkipped Videos (already in archive): " . skippedVideoArchiveAmount .
@@ -546,7 +546,7 @@ postProcessDownloadFiles()
                 "`nSkipped Videos (too large): " . skippedVideoMaxSizeAmount .
                 "`nDownloaded Videos: " . downloadedVideoAmount . "`n`n",
                 tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
-            If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
+            If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = true)
             {
                 FileAppend("#Notice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
                     tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
@@ -567,7 +567,7 @@ postProcessDownloadFiles()
                 "`nSkipped Videos (too large): " . skippedVideoMaxSizeAmount .
                 "`nDownloaded Videos: " . downloadedVideoAmount . "`n`n",
                 downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
-            If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = 1)
+            If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = true)
             {
                 FileAppend("#Notice that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
                     downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
@@ -581,10 +581,10 @@ postProcessDownloadFiles()
         }
     }
 
-    If (downloadOptionsGUI_SubmitObject.downloadVideoCommentsCheckbox = 1)
+    If (downloadOptionsGUI_SubmitObject.downloadVideoCommentsCheckbox = true)
     {
         ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = 1)
+        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = true)
         {
             If (!DirExist(tmpConfig . "\" . downloadTime . "\comments"))
             {
@@ -643,7 +643,7 @@ toggleHotkey(pStateArray)
 
     Hotkey(readConfigFile("TERMINATE_SCRIPT_HK"), (*) => terminateScriptPrompt(), onOffArray.Get(1))
     Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), onOffArray.Get(2))
-    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet"), onOffArray.Get(3))
+    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet", , "T2"), onOffArray.Get(3))
     Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray.Get(4))
     Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray.Get(5))
     Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray.Get(6))
@@ -776,7 +776,7 @@ openConfigFile()
     }
     Catch
     {
-        MsgBox("The script's config file does not exist !`n`nA fatal error has occured.", "Error !", "O Icon! T3")
+        MsgBox("The script's config file does not exist !`n`nA fatal error has occurred.", "Error !", "O Icon! T3")
     }
 }
 
@@ -822,7 +822,7 @@ deleteFilePrompt(pFileName)
                         }
                         Else
                         {
-                            MsgBox("No downloaded files from`ncurrent session found.", "Delete download error !", "O Icon! T2.5")
+                            MsgBox("No downloaded files from`ncurrent session found.", "Error !", "O Icon! T2.5")
                         }
                     }
                 Default:
@@ -846,7 +846,7 @@ deleteFilePrompt(pFileName)
             }
             Else
             {
-                MsgBox("The " . fileName . " does not exist !`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+                MsgBox("The " . fileName . " does not exist !`n`nIt was probably not generated yet.", "Warning !", "O Icon! T3")
             }
         }
     }
@@ -979,10 +979,6 @@ findProcessWithWildcard(pWildcard)
 
             Switch (result)
             {
-                Case "Continue":
-                    {
-                        ; Do nothing.
-                    }
                 Case "TryAgain":
                     {
                         Try
@@ -1002,7 +998,7 @@ findProcessWithWildcard(pWildcard)
                     }
                 Default:
                     {
-                        MsgBox("Terminating script.", "Script status", "O Iconi T1.5")
+                        MsgBox("Terminating script.", "Script Status", "O Iconi T1.5")
                         ExitApp()
                     }
                     ; Stops after the first match.
@@ -1016,11 +1012,11 @@ findProcessWithWildcard(pWildcard)
 scriptTutorial()
 {
     result := MsgBox("Would you like to have a short tutorial on how to select videos and some basic functionality?",
-        "Video Downloader Tutorial", "YN Iconi 262144")
+        "VideoDownloader Tutorial", "YN Iconi 262144")
     If (result = "No")
     {
         result := MsgBox("Press YES if you want to disable the tutorial`nfor the next time you run this script.",
-            "Video Downloader Tutorial", "YN Iconi 262144")
+            "VideoDownloader Tutorial", "YN Iconi 262144")
         If (result = "Yes")
         {
             editConfigFile("ASK_FOR_TUTORIAL", false)
@@ -1035,19 +1031,19 @@ scriptTutorial()
         "`nnothing happens even after 3-5 seconds you could try pressing the button or hotkey again."
         "`n`nWith that being said, let's begin with the tutorial."
         "`n`nPress Okay to continue.",
-        "Video Downloader Tutorial - Important", "O Iconi 262144")
+        "VideoDownloader Tutorial - Important", "O Iconi 262144")
 
     MsgBox("This script acts as a simple GUI for yt-dlp.`n`nYou can open the main GUI by pressing: "
         "`n" . expandHotkey(readConfigFile("MAIN_GUI_HK"))
-        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Open Main GUI", "O Iconi 262144")
+        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144")
     If (WinWaitActive("ahk_id " . mainGUI.Hwnd, , 5) = 0)
     {
         Hotkey_openMainGUI()
         MsgBox("The script opened the main GUI for you.`n`nNo worries, you will get the hang of it soon :)",
-            "Video Downloader Tutorial - Open Main GUI", "O Iconi 262144 T3")
+            "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144 T3")
     }
     MsgBox("The main GUI contains a lot of features and menus.`nYou can take some time to explore them by yourself."
-        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Main GUI", "O Iconi 262144")
+        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
     If (!WinExist("ahk_id " . mainGUI.Hwnd))
     {
         Hotkey_openMainGUI()
@@ -1059,48 +1055,53 @@ scriptTutorial()
     MsgBox("As you may have noticed, there is a submenu called`n[Active Hotkeys...] when you expand the [Options] menu."
         "`n`nOn the one hand, it provides a useful list`nof most available hotkeys"
         "`nand on the other hand, it enables you to select which hotkeys you want to activate or deactivate."
-        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Main GUI", "O Iconi 262144")
+        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
     MsgBox("If you want to select a video there are multiple options.`nYou either open the video and press: "
         "`n[" . expandHotkey(readConfigFile("URL_COLLECT_HK")) . "].`n`nAlternatively hover over the video thumbnail and press: "
         "`n[" . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")) . "]."
-        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Select Video(s)", "O Iconi 262144")
+        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Select Video(s)", "O Iconi 262144")
     MsgBox("It is possible to manually open the URL file`n(with the main GUI) and edit the saved URLs."
         "`n`nThe current location of the URL file is: [" . readConfigFile("URL_FILE_LOCATION") . "]."
-        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Find Selected Video(s)", "O Iconi 262144")
+        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Find Selected Video(s)", "O Iconi 262144")
     MsgBox("To download the URLs saved in the file this script uses`na python command line application called yt-dlp."
         "`nThe download options GUI is used to pass the parameters`nto the console and specify various download options."
         "`n`nPress [" . expandHotkey(readConfigFile("OPTIONS_GUI_HK")) . "] to open the download options GUI."
-        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Download Selected Video(s)", "O Iconi 262144")
+        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Download Selected Video(s)", "O Iconi 262144")
     If (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 5) = 0)
     {
         Hotkey_openOptionsGUI()
         MsgBox("The script opened the download options GUI for you.`n`nNo worries, you will get the hang of it soon :)",
-            "Video Downloader Tutorial - Open Download Options GUI", "O Iconi 262144 T3")
+            "VideoDownloader Tutorial - Open Download Options GUI", "O Iconi 262144 T3")
     }
     MsgBox("If you see the download options GUI for the very first time,`nit might be a bit overwhelming, but once you have"
         "`nused this script a few times it will become more familiar.`n`nQuick tip: "
         "`nHover over an option with the mouse cursor`nin order to gain extra information."
         "`nNote :`nThis does only work if there is`nno download process running at the moment."
-        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Download Options GUI", "O Iconi 262144")
+        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Use Download Options GUI", "O Iconi 262144")
     MsgBox("Take a look at the top right corner of the download options GUI."
         "`nPresets can be used to store the current configuration`nand load it later on."
         "`n`nPressing the save button twice will store the current preset"
         "`nas the default one which will be loaded at the beginning."
-        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Use Download Options GUI", "O Iconi 262144")
+        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Use Download Options GUI", "O Iconi 262144")
     MsgBox("Depending on your selected options the script will`nclear the URL file and save the content to a backup"
         "`nfile to possibly restore it."
-        "`n`nPress Okay to continue.", "Video Downloader Tutorial - After the Finished Download", "O Iconi 262144")
+        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - After the Finished Download", "O Iconi 262144")
     MsgBox("To change the script hotkeys and script file paths`nyou can use the config file to do so."
         "`n`nThe location of the config file is always :`n[" . configFileLocation . "]"
-        "`n`nPress Okay to continue.", "Video Downloader Tutorial - Using the Config File", "O Iconi 262144")
+        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Using the Config File", "O Iconi 262144")
     result := MsgBox("You have reached the end of the tutorial.`n`nRemember that you can access all important files"
         "`nfrom the main GUI window.`n`nWould you like to disable this tutorial for the`nnext time you run this script ?"
-        "`n`nPress Cancel to start the tutorial again.", "Video Downloader Tutorial - End", "YNC Iconi 262144")
-    If (result = "Yes") {
-        editConfigFile("ASK_FOR_TUTORIAL", false)
-    }
-    Else If (result = "Cancel") {
-        scriptTutorial()
+        "`n`nPress Cancel to start the tutorial again.", "VideoDownloader Tutorial - End", "YNC Iconi 262144")
+    Switch (result)
+    {
+        Case "Yes":
+            {
+                editConfigFile("ASK_FOR_TUTORIAL", false)
+            }
+        Case "Cancel":
+            {
+                scriptTutorial()
+            }
     }
 }
 

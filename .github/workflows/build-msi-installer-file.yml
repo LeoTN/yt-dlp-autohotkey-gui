@@ -131,6 +131,5 @@ jobs:
         generateReleaseNotes: true
         makeLatest: true
         prerelease: false
-        draft: true
         name: "v${{ env.RELASE_VERSION }}"
         tag: "v${{ env.RELASE_VERSION }}"

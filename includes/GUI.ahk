@@ -93,7 +93,7 @@ createMainGUI()
     optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())
     optionsMenu.SetIcon("Reload Script", "shell32.dll", 207)
     optionsMenu.Add()
-    optionsMenu.Add("Uninstall script", (*) => MsgBox("Currently disabled."))
+    optionsMenu.Add("Uninstall script", (*) => handleMainGUI_uninstallScript())
     optionsMenu.SetIcon("Uninstall script", "shell32.dll", 245)
 
     helpMenu := Menu()
@@ -113,7 +113,7 @@ createMainGUI()
     allMenus.Add("&Info", helpMenu)
     allMenus.SetIcon("&Info", "shell32.dll", 24)
 
-    mainGUI := Gui(, "YouTube Downloader Control Panel")
+    mainGUI := Gui(, "VD - Control Panel")
     mainGUI.Add("Picture", "w320 h-1 x-10 y-10", youTubeBackGroundLocation)
     mainGUI.MenuBar := allMenus
 }
@@ -265,6 +265,22 @@ handleMainGUI_openDownloadLocation()
     }
     Catch
     {
-        MsgBox("No downloaded files from`ncurrent session found.", "Open videos error !", "O Icon! T1.5")
+        MsgBox("No downloaded files from`ncurrent session found.", "Warning !", "O Icon! T1.5")
     }
+}
+
+handleMainGUI_uninstallScript()
+{
+    tmpPath := scriptBaseFilesLocation . "\library\setup\uninstall_shortcut.lnk"
+    If (FileExist(tmpPath))
+    {
+        Run(tmpPath)
+    }
+    Else
+    {
+        MsgBox("Could not find the uninstall shortcut folder in [" . tmpPath . "].`n`n"
+            "Please repair the installation with the .MSI installer or remove this script by using the windows program "
+            . "management option.", "VideoDownloader Uninstall Status", "O Icon!")
+    }
+
 }

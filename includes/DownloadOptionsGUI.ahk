@@ -10,7 +10,7 @@ global downloadTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
 createDownloadOptionsGUI()
 {
     Global
-    downloadOptionsGUI := Gui(, "Download Options")
+    downloadOptionsGUI := Gui(, "VD - Download Options")
 
     generalGroupbox := downloadOptionsGUI.Add("GroupBox", "w300 R3.2", "General Options")
 
@@ -153,7 +153,7 @@ optionsGUI_onInit()
 cancelDownload()
 {
     result := MsgBox("Do you really want to cancel the ongoing download process ?"
-        , "Cancel downloading", "YN Icon! 4096 T10")
+        , "Cancel Downloading", "YN Icon! 4096 T10")
 
     If (result = "Yes")
     {
@@ -210,7 +210,7 @@ handleDownloadOptionsGUI_Checkboxes()
         }
     }
     ; Stops the script form continuing because all options are considered as ignored.
-    If (ignoreAllOptionsCheckbox.Value = 1)
+    If (ignoreAllOptionsCheckbox.Value = true)
     {
         Return
     }
@@ -264,7 +264,7 @@ handleDownloadOptionsGUI_Checkboxes()
             If (enableFastDownloadModeCheckbox.Value = 0)
             {
                 commandString .= "--write-description "
-                If (useDefaultDownloadLocationCheckbox.Value = 1)
+                If (useDefaultDownloadLocationCheckbox.Value = true)
                 {
                     commandString .= '--paths "description:' . tmpConfig . '\' . downloadTime . '\description(s)" '
 
@@ -319,7 +319,7 @@ handleDownloadOptionsGUI_Checkboxes()
             {
                 commandString .= "--write-thumbnail "
                 commandString .= "--embed-thumbnail "
-                If (useDefaultDownloadLocationCheckbox.Value = 1)
+                If (useDefaultDownloadLocationCheckbox.Value = true)
                 {
 
                     commandString .= '--paths "thumbnail:' . tmpConfig . '\' . downloadTime . '\thumbnail(s)" '
@@ -350,7 +350,7 @@ handleDownloadOptionsGUI_Checkboxes()
                 commandString .= "--write-subs "
                 commandString .= '--sub-langs "all" '
                 commandString .= "--embed-subs "
-                If (useDefaultDownloadLocationCheckbox.Value = 1)
+                If (useDefaultDownloadLocationCheckbox.Value = true)
                 {
 
                     commandString .= '--paths "subtitle:' . tmpConfig . '\' . downloadTime . '\subtitle(s)" '
@@ -429,7 +429,7 @@ handleDownloadOptionsGUI_Checkboxes()
             }
         }
     }
-    If (downloadAudioOnlyCheckbox.Value != 1 && enableFastDownloadModeCheckbox.Value != 1)
+    If (downloadAudioOnlyCheckbox.Value != true && enableFastDownloadModeCheckbox.Value != true)
     {
         Switch (alwaysHighestQualityBothCheckbox.Value)
         {
@@ -450,7 +450,7 @@ handleDownloadOptionsGUI_Checkboxes()
                 }
             }
         }
-        If (alwaysHighestQualityBothCheckbox.Value != 1 && downloadAudioOnlyCheckbox.Value != 1)
+        If (alwaysHighestQualityBothCheckbox.Value != true && downloadAudioOnlyCheckbox.Value != true)
         {
             Switch (prioritiseVideoQualityCheckbox.Value)
             {
@@ -479,7 +479,7 @@ handleDownloadOptionsGUI_Checkboxes()
                     }
                 }
             }
-            If (prioritiseVideoQualityCheckbox.Value != 1 && downloadAudioOnlyCheckbox.Value != 1)
+            If (prioritiseVideoQualityCheckbox.Value != true && downloadAudioOnlyCheckbox.Value != true)
             {
                 Switch (prioritiseAudioQualityCheckbox.Value)
                 {
@@ -548,7 +548,7 @@ handleDownloadOptionsGUI_Checkbox_fastDownload()
             prioritiseAudioQualityCheckbox.Opt("+Disabled")
             chooseAudioFormatDropDownList.Opt("+Disabled")
             ; In case the user wants to download music fast.
-            If (downloadAudioOnlyCheckbox.Value = 1)
+            If (downloadAudioOnlyCheckbox.Value = true)
             {
                 chooseAudioFormatDropDownList.Opt("-Disabled")
             }
@@ -584,7 +584,7 @@ handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
             chooseAudioFormatDropDownList.Opt("-Disabled")
             ; Makes sure all checkboxes are disabled when they would conflict with other active checkboxes.
             handleDownloadOptionsGUI_Checkboxes()
-            If (enableFastDownloadModeCheckbox.Value = 1)
+            If (enableFastDownloadModeCheckbox.Value = true)
             {
                 handleDownloadOptionsGUI_Checkbox_fastDownload()
             }
@@ -662,7 +662,7 @@ handleDownloadOptionsGUI_InputFields()
         }
     }
     ; Handles the desired download formats.
-    If (enableFastDownloadModeCheckbox.Value != 1 && downloadAudioOnlyCheckbox.Value != 1 &&
+    If (enableFastDownloadModeCheckbox.Value != true && downloadAudioOnlyCheckbox.Value != true &&
         downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] != "Best format for quality")
     {
         commandString .= '--remux-video "' . downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] . '" '
@@ -711,7 +711,7 @@ buildCommandString()
             commandString .= '--paths "' . tmpConfig . '\' . downloadTime . '\media" '
         }
     }
-    If (ignoreAllOptionsCheckbox.Value != 1)
+    If (ignoreAllOptionsCheckbox.Value != true)
     {
         handleDownloadOptionsGUI_Checkboxes()
         handleDownloadOptionsGUI_InputFields()
@@ -1061,11 +1061,11 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
             FileDelete(presetLocationComplete)
         }
     }
-    If (ignoreAllOptionsCheckbox.Value = 1)
+    If (ignoreAllOptionsCheckbox.Value = true)
     {
         handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
     }
-    Else If (enableFastDownloadModeCheckbox.Value = 1)
+    Else If (enableFastDownloadModeCheckbox.Value = true)
     {
         handleDownloadOptionsGUI_Checkbox_fastDownload()
     }

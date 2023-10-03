@@ -149,7 +149,7 @@ createUninstallGUI()
 ; Disables all other options and marks them as true.
 handleUninstallGUI_Checkboxes()
 {
-    If (uninstallEverythingCheckbox.Value = 1)
+    If (uninstallEverythingCheckbox.Value = true)
     {
         uninstallPythonCheckbox.Value := 1
         uninstallYTDLPCheckbox.Value := 1
@@ -214,7 +214,7 @@ run_setup(pBooleanForceInstall := false)
     If (checkInternetConnection() = true)
     {
         MsgBox("You can use the computer during the setup. It is recommended to avoid restarting it during the installation process."
-            . "Make sure to keep all appearing windows open until they close by themselves.", "Video Downloader Setup Status", "O Iconi")
+            . "Make sure to keep all appearing windows open until they close by themselves.", "VideoDownloader Setup Status", "O Iconi")
         If (checkPythonVersion() = true)
         {
             Try
@@ -388,13 +388,13 @@ uninstallScript()
     uninstallCancelButton.Opt("+Disabled")
 
     ; Uninstalls dependencies and other stuff.
-    If (tmp1 = 1)
+    If (tmp1 = true)
     {
         uninstallStatusBar.SetText("Currently uninstalling yt-dlp...")
         RunWait(A_ComSpec ' /c python -m pip uninstall -y "yt-dlp"')
         uninstallProgressBar.Value += 100
     }
-    If (tmp2 = 1)
+    If (tmp2 = true)
     {
         If (FileExist(scriptBaseFilesLocation . "\library\setup\video_downloader_python_install_log.txt"))
         {
@@ -428,7 +428,7 @@ uninstallScript()
             uninstallProgressBar.Value += 100
         }
     }
-    If (tmp3 = 1)
+    If (tmp3 = true)
     {
         uninstallStatusBar.SetText("Deleting downloaded files...")
         Try
@@ -444,7 +444,7 @@ uninstallScript()
         }
         uninstallProgressBar.Value += 100
     }
-    If (tmp4 = 1)
+    If (tmp4 = true)
     {
         evacuationError := false
         uninstallStatusBar.SetText("Deleting script files...")
@@ -471,7 +471,7 @@ uninstallScript()
             {
                 If (evacuationError = false)
                 {
-                    FileRecycle(scriptBaseFilesLocation)
+                    FileRecycle(workingBaseFilesLocation)
                 }
             }
             uninstallProgressBar.Value += 100
@@ -480,7 +480,7 @@ uninstallScript()
         {
             Try
             {
-                FileRecycle(scriptBaseFilesLocation)
+                FileRecycle(workingBaseFilesLocation)
             }
             Catch
             {
@@ -541,7 +541,7 @@ checkPythonVersion()
                         }
                         WinClose("ahk_pid " . consolePID)
                         MsgBox("Please wait for PYTHON to be installed completly. The script installation is still running"
-                            . " in the background and will continue in a few seconds.", "Video Downloader Setup Status", "O Iconi T5")
+                            . " in the background and will continue in a few seconds.", "VideoDownloader Setup Status", "O Iconi T5")
                         Sleep(15000)
                         Return checkPythonVersion()
                     }

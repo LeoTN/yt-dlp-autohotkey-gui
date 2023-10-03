@@ -10,10 +10,9 @@ CoordMode "Mouse", "Client"
 saveSearchBarContentsToFile()
 {
     A_Clipboard := ""
-    w := 1
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
 
-    While (w = 1)
+    Loop (3)
     {
         Send("^{l}")
         Sleep(100)
@@ -66,7 +65,7 @@ saveVideoURLDirectlyToFile()
             {
                 If (clipboardContent = contentArray.Get(A_Index))
                 {
-                    MsgBox("Same URL selected twice.", "Attention !", "O Icon! T1.5")
+                    MsgBox("Same URL selected twice.", "Attention !", "O Iconi T1.5")
                     Return
                 }
             }
@@ -74,7 +73,7 @@ saveVideoURLDirectlyToFile()
             Return
         }
     }
-    MsgBox("No URL detected.", "Attention !", "O Icon! T1.5")
+    MsgBox("No URL detected.", "Attention !", "O Iconi T1.5")
 }
 
 writeToURLFile(pContent)
@@ -263,7 +262,7 @@ restoreURLFile()
 {
     If (!FileExist(readConfigFile("URL_BACKUP_FILE_LOCATION")))
     {
-        MsgBox("The URL blackup file does not exist !`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+        MsgBox("The URL backup file does not exist !`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
         Return
     }
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
@@ -291,10 +290,6 @@ restoreURLFile()
                     }
                     ; Appends the backup file content to the original file.
                     FileAppend(tmp, tmpConfig)
-                }
-            Default:
-                {
-                    ; Do nothing.
                 }
         }
     }

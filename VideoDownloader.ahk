@@ -145,9 +145,6 @@ onInit_handleScriptBaseFilesLocation()
     ; Checks if the path in the registry is correct.
     If (tmpWorkingDir != tmpRegValue)
     {
-        ; REMOVE
-        MsgBox (tmpWorkingDir)
-        MsgBox (regValue)
         result := MsgBox("Different script directory found in the registry editor.`n`n"
             "Replace it with the current directory the script runs in?", "Invalid Script Directory", "YN Icon!")
         Switch (result)
@@ -191,17 +188,6 @@ onInit()
     {
         Return scriptTutorial()
     }
-    If (readConfigFile("SHOW_MAIN_GUI_ON_LAUNCH") = true)
-    {
-        If (!WinExist("ahk_id " . mainGUI.Hwnd))
-        {
-            Hotkey_openMainGUI()
-        }
-        Else
-        {
-            WinActivate("ahk_id " . mainGUI.Hwnd)
-        }
-    }
     If (readConfigFile("SHOW_OPTIONS_GUI_ON_LAUNCH") = true)
     {
         If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
@@ -211,6 +197,17 @@ onInit()
         Else
         {
             WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
+        }
+    }
+    If (readConfigFile("SHOW_MAIN_GUI_ON_LAUNCH") = true)
+    {
+        If (!WinExist("ahk_id " . mainGUI.Hwnd))
+        {
+            Hotkey_openMainGUI()
+        }
+        Else
+        {
+            WinActivate("ahk_id " . mainGUI.Hwnd)
         }
     }
 }
@@ -262,7 +259,7 @@ onInit_checkIfSetupIsNeeded()
         }
         Catch
         {
-            MsgBox("Unable to execute VideoDownloaderSetup.exe.`n`nTerminating script.", "Error", "O IconX T1.5")
+            MsgBox("Unable to execute VideoDownloaderSetup.exe.`n`nTerminating script.", "Error !", "O IconX T1.5")
             ExitApp()
             ExitApp()
         }
@@ -271,11 +268,9 @@ onInit_checkIfSetupIsNeeded()
     {
         ; This tells the script to start smoothly without any prompts beeing shown due to missing files.
         regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanFirstTimeLaunch", "")
-        MsgBox regValue ; REMOVE
         If (regValue = "1")
         {
             global booleanFirstTimeLaunch := true
-            MsgBox booleanFirstTimeLaunch ; REMOVE
             RegWrite(0, "REG_DWORD",
                 "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanFirstTimeLaunch")
         }
