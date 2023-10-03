@@ -1,11 +1,18 @@
 name: Build VideoDownloader MSI Installer File
 
-on: [workflow_dispatch]
+on:
+    workflow_dispatch:
+      inputs:
+        version :
+          description: "Release Version"
+          default: "0"
+          required: true
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
   FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderSetup.exe
   FINAL_INSTALLER_NAME: VideoDownloaderInstaller.msi
+  RELASE_VERSION: ${{ github.event.inputs.version }}
 
 jobs:
   build_exe_files:
@@ -19,48 +26,48 @@ jobs:
     - name: Extract Autohotkey Compiler
       run: |
         # Set Variables
-        $ahkFolder = "ahk"
-        $ahkV2Folder = "ahk-v2"
+        $ahkFolder = "${{ github.workspace }}\ahk"
+        $ahkV2Folder = "${{ github.workspace }}\ahk-v2"
 
         # Extract the files.
-        Expand-Archive -Path "compiler\ahk.zip" -DestinationPath $ahkFolder
-        Expand-Archive -Path "compiler\ahk-v2.zip" -DestinationPath $ahkV2Folder
+        Expand-Archive -Path "${{ github.workspace }}\compiler\ahk.zip" -DestinationPath $ahkFolder
+        Expand-Archive -Path "${{ github.workspace }}\compiler\ahk-v2.zip" -DestinationPath $ahkV2Folder
 
     - name: Compile Autohotkey Main Script
       run: |
         # Set the paths to execute more easily.
-        $scriptPathIn = "VideoDownloader.ahk"
-        $scriptPathOut = $env:FINAL_EXECUTABLE_NAME
+        $scriptPathIn = "${{ github.workspace }}\VideoDownloader.ahk"
+        $scriptPathOut = "${{ github.workspace }}\$env:FINAL_EXECUTABLE_NAME"
 
         # Compile the script.
         ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
-        echo "The executable will be called $env:FINAL_EXECUTABLE_NAME"
-
-    - name: Upload Executable as Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{ env.FINAL_EXECUTABLE_NAME }}
-        path: ${{ env.FINAL_EXECUTABLE_NAME }}
+        echo "The executable will be saved to $scriptPathOut"
 
     - name: Compile Autohotkey Setup Script
       run: |
         # Set the paths to execute more easily.
-        $scriptPathIn = "yt_dlp_autohotkey_gui_files/library/setup/VideoDownloaderSetup.ahk"
-        $scriptPathOut = $env:FINAL_SETUP_EXECUTABLE_NAME
+        $scriptPathIn = "${{ github.workspace }}\yt_dlp_autohotkey_gui_files/library/setup/VideoDownloaderSetup.ahk"
+        $scriptPathOut = "${{ github.workspace }}\$env:FINAL_SETUP_EXECUTABLE_NAME"
 
         # Compile the script.
         ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
-        echo "The executable will be called $env:FINAL_SETUP_EXECUTABLE_NAME"
+        echo "The executable will be saved to $scriptPathOut"
 
-    - name: Upload Executable as Artifact
+    - name: Upload Main Executable as Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.FINAL_EXECUTABLE_NAME }}
+        path: ${{ github.workspace }}\${{ env.FINAL_EXECUTABLE_NAME }}
+
+    - name: Upload Setup Executable as Artifact
       uses: actions/upload-artifact@v2
       with:
         name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
-        path: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+        path: ${{ github.workspace }}\${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
 
   build_msi_file:
-    runs-on: windows-latest
-    name: Build MSI Installer File
+    runs-on: windows-2019
+    name: Build and Upload MSI Installer File
     needs: build_exe_files
     steps:
       - name: Check out repository code
@@ -71,30 +78,31 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.FINAL_EXECUTABLE_NAME }}
+          path: ${{ github.workspace }}
 
       - name: Download Setup Executable Artifact
         id: download_setup_executable_artifact_id
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+         name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+         path: ${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\setup
         
       - name: Build .AIP Project
         uses: caphyon/advinst-github-action@main
         with:
-          advinst-version: '21.0'
           advinst-enable-automation: 'true'
           aip-path: ${{ github.workspace }}\compiler\VideoDownloaderInstaller.aip
-          aip-build-name: VideoDownloader
-          aip-package-name: VideoDownloader.msi
+          aip-build-name: DefaultBuild
+          aip-package-name: ${{ env.FINAL_INSTALLER_NAME }}
           aip-output-dir:  ${{ github.workspace }}
           aip-commands: |
-            SetVersion 1.2.0
+            SetVersion "${{ env.RELASE_VERSION }}"
             
       - name: Upload Installer as Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: setup
-          path: ${{ env.FINAL_INSTALLER_NAME }}
+          name: ${{ env.FINAL_INSTALLER_NAME }}
+          path: ${{ github.workspace }}\${{ env.FINAL_INSTALLER_NAME }}
  
   create_release:
     name: Download Executable Artifact and Create Draft Release
@@ -112,6 +120,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ${{ env.FINAL_INSTALLER_NAME }}
+        path: ${{ github.workspace }}
         
     - name: Create Draft Main Release
       uses: ncipollo/release-action@v1
@@ -122,7 +131,6 @@ jobs:
         generateReleaseNotes: true
         makeLatest: true
         prerelease: false
-        removeArtifacts: true
         draft: true
-        name: "latest-main-release"
-        tag: "latest-main-release"
+        name: "v${{ env.RELASE_VERSION }}"
+        tag: "v${{ env.RELASE_VERSION }}"
