@@ -50,13 +50,13 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: ${{ env.FINAL_EXECUTABLE_NAME }}
-        path: ${{ github.workspace }}/${{ env.FINAL_EXECUTABLE_NAME }}
+        path: ${{ github.workspace }}\${{ env.FINAL_EXECUTABLE_NAME }}
 
     - name: Upload Setup Executable as Artifact
       uses: actions/upload-artifact@v2
       with:
         name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
-        path: ${{ github.workspace }}/${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
+        path: ${{ github.workspace }}\${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
 
   build_msi_file:
     runs-on: windows-2019
@@ -78,12 +78,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
          name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
-         path: ${{ github.workspace }}
+         path: ${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\setup
         
       - name: Build .AIP Project
         uses: caphyon/advinst-github-action@main
         with:
-          advinst-version: '21.0.1'
           advinst-enable-automation: 'true'
           aip-path: ${{ github.workspace }}\compiler\VideoDownloaderInstaller.aip
           aip-build-name: DefaultBuild
@@ -114,12 +113,13 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ${{ env.FINAL_INSTALLER_NAME }}
+        path: ${{ github.workspace }}
         
     - name: Create Draft Main Release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
-        artifacts: ${{steps.download_installer_artifact_id.outputs.download-path}}/${{ env.FINAL_INSTALLER_NAME }}
+        artifacts: ${{steps.download_installer_artifact_id.outputs.download-path}}\${{ env.FINAL_INSTALLER_NAME }}
         artifactContentType: application/executable
         generateReleaseNotes: true
         makeLatest: true
