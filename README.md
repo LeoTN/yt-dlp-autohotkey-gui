@@ -13,6 +13,7 @@ yt-dlp (https://github.com/yt-dlp/yt-dlp).
    and press *SHIFT + CTRL + ALT + F* to capture the URL directly.
 
 4. Select your preferred download options in the matching **download option GUI** (Press *SHIFT + CTRL + ALT + A* to open).
+
 5. Use the hotkey *SHIFT + CTRL + ALT + D* to start the download process.  
    Alternatively, you can also use the button in the **download option GUI**.
 
@@ -31,11 +32,11 @@ yt-dlp (https://github.com/yt-dlp/yt-dlp).
 - Make the script more reliable and fix issues.
 
 ## Important
-It is recommended to follow the setup instructions given by the script at the very first launch and install python and all required components so that the download will happen without complications.  
-**NOTE :** The setup will only run if you are using the compiled version of this script.
+It is recommended to follow the setup instructions given by the script at the very first launch.  
+**NOTE :** The best way of installing this script is the MSI file included in the latest release.
 
-If you are a developer who wants to use this repository, it is recommended to either run the latest main release executable or to install python and yt-dlp by yourself to make sure that everything works fine. A remark to this original repository would be nice :)
+If you are a developer who wants to use this repository, it is recommended to run the MSI executable so that all important files are included. You can than proceed with rewriting / changing the code accordingly to the included licence. A remark to this original repository would be nice :)
 
-**I appreciate yt-dlp (https://github.com/yt-dlp/yt-dlp) for providing such an incredibly useful repository for everyone free to use. Your, or rather these guys (https://github.com/ytdl-org/youtube-dl) work is the reason why this script can even exist. Thank you !**
+**I appreciate yt-dlp (https://github.com/yt-dlp/yt-dlp) for providing such an incredibly useful repository for everyone free to use. Your, or rather these guys (https://github.com/ytdl-org/youtube-dl) work is the reason why this script can even exist. I would also like to thank the team behind the software FFmpeg (https://ffmpeg.org) which I use to provide more functionality for yt-dlp. Thank you !**
 
 Link to my original project which will most likely not be developed: https://github.com/LeoTN/youtube-downloader-using-ahk

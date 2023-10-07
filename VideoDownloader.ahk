@@ -12,9 +12,6 @@ global scriptBaseFilesLocation := onInit_handleScriptBaseFilesLocation()
 global workingBaseFilesLocation := onInit_handleWorkingBaseFilesLocation()
 ; When this value is true certain functions will behave differently and do not show unnecessary prompts.
 global booleanFirstTimeLaunch := false
-; Used to determine if a setup is required.
-global ffmpegLocation := scriptBaseFilesLocation . "\library\FFmpeg\ffmpeg.exe"
-global youTubeBackGroundLocation := scriptBaseFilesLocation . "\library\YouTubeBackground.jpg"
 
 onInit_checkIfSetupIsNeeded()
 
@@ -174,6 +171,55 @@ onInit_handleScriptBaseFilesLocation()
 ; Runs a list of commands when the script is launched.
 onInit()
 {
+    Try
+    {
+        TraySetIcon(scriptBaseFilesLocation . "\library\green_arrow_icon.ico")
+    }
+    If (FileExist(scriptBaseFilesLocation . "\library\FFmpeg\ffmpeg.exe"))
+    {
+        global ffmpegLocation := scriptBaseFilesLocation . "\library\FFmpeg\ffmpeg.exe"
+    }
+    Else
+    {
+        result := MsgBox("No FFmpeg files have been found. The script may run without them but it is highly recommended to run the setup."
+            "`n`nPress YES to run the setup or NO to ignore and run anyways.", "Missing FFmpeg Files", "YNC Icon!")
+        Switch (result)
+        {
+            Case "Yes":
+                {
+                    If (A_IsCompiled = false)
+                    {
+                        MsgBox("You are using the a non compiled version of this script."
+                            "`n`nPlease continue by using a compiled version to install.", "Warning !", "O Icon! 262144 T5")
+                        ExitApp()
+                        ExitApp()
+                    }
+                    Try
+                    {
+                        Run(scriptBaseFilesLocation . "\library\setup\VideoDownloaderSetup.exe /run-setup")
+                        ExitApp()
+                        ExitApp()
+                    }
+                    Catch
+                    {
+                        MsgBox("Unable to execute VideoDownloaderSetup.exe.`n`nTerminating script.", "Error !", "O IconX T1.5")
+                        ExitApp()
+                        ExitApp()
+                    }
+                }
+            Case "No":
+                {
+                    global ffmpegLocation := "NO_PATH_PROVIDED"
+                }
+            Default:
+                {
+                    MsgBox("Terminating script.", "Script Status", "O Iconi T1.5")
+                    ExitApp()
+                }
+        }
+    }
+
+    global youTubeBackGroundLocation := scriptBaseFilesLocation . "\library\YouTubeBackground.jpg"
     ; Checks the system for other already running instances of this script.
     findProcessWithWildcard("VideoDownloader.exe")
 
@@ -186,7 +232,7 @@ onInit()
     ; Shows a small tutorial to guide the user.
     If (readConfigFile("ASK_FOR_TUTORIAL") = true)
     {
-        Return scriptTutorial()
+        scriptTutorial()
     }
     If (readConfigFile("SHOW_OPTIONS_GUI_ON_LAUNCH") = true)
     {
@@ -224,7 +270,8 @@ onInit_checkIfSetupIsNeeded()
     }
     Else If (regValue = "0")
     {
-        If (!FileExist(ffmpegLocation))
+        regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "ffmpegLocation", "")
+        If (validatePath(regValue, false) = false)
         {
             RegWrite(1, "REG_DWORD",
                 "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired")
@@ -233,7 +280,7 @@ onInit_checkIfSetupIsNeeded()
         RunWait(A_ComSpec ' /c yt-dlp --version >> "' . A_Temp . '\tmp.txt"', , "Hide")
         If (FileExist(A_Temp . "\tmp.txt"))
         {
-            ; This means that the command could not be found.
+            ; This means that the command could not be found and yt-dlp is not installed.
             If (FileRead(A_Temp . "\tmp.txt") = "")
             {
                 RegWrite(1, "REG_DWORD",

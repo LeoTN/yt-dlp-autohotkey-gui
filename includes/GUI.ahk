@@ -98,10 +98,10 @@ createMainGUI()
 
     helpMenu := Menu()
     helpMenu.Add("This repository (yt-dlp-autohotkey-gui)",
-        (*) => Run("https://github.com/LeoTN/yt-dlp-autohotkey-gui#video-downloader-with-basic-autohotkey-gui"))
+        (*) => Run("https://github.com/LeoTN/yt-dlp-autohotkey-gui#readme"))
     helpMenu.Add("Used repository (yt-dlp)", (*) => Run("https://github.com/yt-dlp/yt-dlp"))
     helpMenu.Add("Original repository (youtube-downloader-using-ahk)",
-        (*) => Run("https://github.com/LeoTN/youtube-downloader-using-ahk#readme"))
+        (*) => Run("https://github.com/LeoTN/youtube-downloader-using-ahk"))
     helpMenu.Add("Built in Tutorial", (*) => scriptTutorial())
     helpMenu.SetIcon("Built in Tutorial", "shell32.dll", 24)
 
@@ -274,7 +274,10 @@ handleMainGUI_uninstallScript()
     tmpPath := scriptBaseFilesLocation . "\library\setup\uninstall_shortcut.lnk"
     If (FileExist(tmpPath))
     {
-        Run(tmpPath)
+        Try
+        {
+            Run(tmpPath)
+        }
     }
     Else
     {

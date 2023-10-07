@@ -1024,8 +1024,8 @@ scriptTutorial()
         Return
     }
 
-    MsgBox("Hello there... General Kenobi!`nWelcome to the tutorial."
-        "`nIt will try to teach you the basic functionallity of this script but keep this in mind: "
+    MsgBox("Hello there... General Kenobi!`n`nWelcome to the tutorial."
+        "`nIt will try to teach you the basic functionality of this script but keep this in mind: "
         "`n`nFirstly this script is still in development phase so bugs are to be expected."
         "`nSecondly PLEASE be patient and do not spam buttons like a maniac. Wait for the script to process and if"
         "`nnothing happens even after 3-5 seconds you could try pressing the button or hotkey again."
@@ -1063,7 +1063,7 @@ scriptTutorial()
     MsgBox("It is possible to manually open the URL file`n(with the main GUI) and edit the saved URLs."
         "`n`nThe current location of the URL file is: [" . readConfigFile("URL_FILE_LOCATION") . "]."
         "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Find Selected Video(s)", "O Iconi 262144")
-    MsgBox("To download the URLs saved in the file this script uses`na python command line application called yt-dlp."
+    MsgBox("To download the URLs saved in the file this script uses`na Python command line application called yt-dlp."
         "`nThe download options GUI is used to pass the parameters`nto the console and specify various download options."
         "`n`nPress [" . expandHotkey(readConfigFile("OPTIONS_GUI_HK")) . "] to open the download options GUI."
         "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Download Selected Video(s)", "O Iconi 262144")
