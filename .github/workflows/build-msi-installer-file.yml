@@ -8,11 +8,17 @@ on:
           default: "0"
           required: true
 
+        is_pre_release :
+          description: "Pre-Release"
+          default: "true"
+          required: true
+
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
   FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderSetup.exe
   FINAL_INSTALLER_NAME: VideoDownloaderInstaller.msi
   RELASE_VERSION: ${{ github.event.inputs.version }}
+  IS_PRE_RELEASE: ${{ github.event.inputs.is_pre_release }}
 
 jobs:
   build_exe_files:
@@ -121,6 +127,15 @@ jobs:
       with:
         name: ${{ env.FINAL_INSTALLER_NAME }}
         path: ${{ github.workspace }}
+
+    - name: Set Release Name
+      run: |
+        if [ ${{ github.event.inputs.IS_PRE_RELEASE }} == true ]; then
+          export releaseName=pre-${{ env.RELASE_VERSION }}
+        else
+          export releaseName=v${{ env.RELASE_VERSION }}
+        fi
+        echo "releaseName=$RELEASE_NAME" >> $GITHUB_ENV
         
     - name: Create Draft Main Release
       uses: ncipollo/release-action@v1
@@ -130,6 +145,7 @@ jobs:
         artifactContentType: application/executable
         generateReleaseNotes: true
         makeLatest: true
-        prerelease: false
-        name: "v${{ env.RELASE_VERSION }}"
-        tag: "v${{ env.RELASE_VERSION }}"
+        prerelease: ${{ env.IS_PRE_RELEASE == 'true' }}
+        name: "${{env.RELASE_NAME}}"
+        tag: "${{env.RELASE_NAME}}"
+

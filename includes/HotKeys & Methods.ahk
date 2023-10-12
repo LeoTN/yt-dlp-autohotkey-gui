@@ -167,14 +167,17 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         isDownloading := false
         Return
     }
-    SplitPath(tmpConfig, , &outDir)
-    If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = true)
+    If (downloadOptionsGUI_SubmitObject.useTextFileForURLsCheckbox = true)
     {
-        FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
-    }
-    Else
-    {
-        FileCopy(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+        SplitPath(tmpConfig, , &outDir)
+        If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = true)
+        {
+            FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+        }
+        Else
+        {
+            FileCopy(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+        }
     }
     If (booleanSilent = true)
     {
@@ -249,9 +252,16 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 monitorDownloadProgress()
 {
     global booleanDownloadTerminated := false
-    SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
-    global urlArray := readFile(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
-    global videoAmount := urlArray.Length
+    If (downloadOptionsGUI_SubmitObject.useTextFileForURLsCheckbox = true)
+    {
+        SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
+        global urlArray := readFile(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+        global videoAmount := urlArray.Length
+    }
+    Else
+    {
+        global videoAmount := 1
+    }
     global downloadedVideoAmount := 0
     global skippedVideoArchiveAmount := 0
     global skippedVideoPresentAmount := 0
@@ -975,18 +985,18 @@ findProcessWithWildcard(pWildcard)
             tmp := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
             result := MsgBox("There is currently another instance of this script running."
                 "`nName: [" . v . "]`nPath: [" . tmp . "]`nContinue at your own risk !"
-                "`nPress Try Again to terminate the other instance.", "Attention !", "CTC Icon! 262144 T15")
+                "`nPress Retry to terminate the other instance.", "Attention !", "ARI Icon! 262144 T15")
 
             Switch (result)
             {
-                Case "TryAgain":
+                Case "Retry":
                     {
                         Try
                         {
                             ProcessClose(v)
                             If (ProcessWaitClose(v, 5) != 0)
                             {
-                                Throw ("Could not close the other process")
+                                Throw ("Could not close the other process.")
                             }
                         }
                         Catch
@@ -995,6 +1005,11 @@ findProcessWithWildcard(pWildcard)
                                 v . "`nTerminating script.", "Error !", "O IconX T1.5")
                             ExitApp()
                         }
+                    }
+                Case "Ignore":
+                    {
+                        ; This option is not recommended because the script is not supposed to run with multiple instances.
+                        Return
                     }
                 Default:
                     {
