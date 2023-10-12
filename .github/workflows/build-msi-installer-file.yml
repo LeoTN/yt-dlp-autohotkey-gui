@@ -17,7 +17,7 @@ env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
   FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderSetup.exe
   FINAL_INSTALLER_NAME: VideoDownloaderInstaller.msi
-  RELASE_VERSION: ${{ github.event.inputs.version }}
+  RELEASE_VERSION: ${{ github.event.inputs.version }}
   IS_PRE_RELEASE: ${{ github.event.inputs.is_pre_release }}
 
 jobs:
@@ -102,7 +102,7 @@ jobs:
           aip-package-name: ${{ env.FINAL_INSTALLER_NAME }}
           aip-output-dir:  ${{ github.workspace }}
           aip-commands: |
-            SetVersion "${{ env.RELASE_VERSION }}"
+            SetVersion "${{ env.RELEASE_VERSION }}"
             
       - name: Upload Installer as Artifact
         uses: actions/upload-artifact@v2
@@ -129,12 +129,17 @@ jobs:
         path: ${{ github.workspace }}
 
     - name: Set Release Name
-      id: set_release_name_id
+      id: set-release-name
       run: |
-        if [ ${{ github.event.inputs.IS_PRE_RELEASE }} == true ]; then
-          export releaseName=pre-${{ env.RELASE_VERSION }}
+        if [ "${{ github.event.inputs.IS_PRE_RELEASE }}" == "true" ]; then
+          releaseName="pre-${{ env.RELEASE_VERSION }}"
         else
-          export releaseName=v${{ env.RELASE_VERSION }}
+          releaseName="v${{ env.RELEASE_VERSION }}"
+        fi
+        echo "::set-env name=RELEASE_NAME::$releaseName"
+
+    - name: Print Release Name
+      run: echo "RELEASE_NAME is ${{ env.RELEASE_NAME }}"
         
     - name: Create Draft Main Release
       uses: ncipollo/release-action@v1
