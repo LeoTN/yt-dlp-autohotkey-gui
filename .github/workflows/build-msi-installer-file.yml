@@ -84,8 +84,9 @@ jobs:
       - name: Set Release Name
         id: set_release_name_id
         run: |
-          if [ "${{ github.event.inputs.IS_PRE_RELEASE }}" == "true" ]; then
-            releaseName="pre-${{ env.RELEASE_VERSION }}"
+          if test "${{ github.event.inputs.IS_PRE_RELEASE }}" = "true"
+            then
+              releaseName="pre-${{ env.RELEASE_VERSION }}"
           else
             releaseName="v${{ env.RELEASE_VERSION }}"
           fi
