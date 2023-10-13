@@ -1,18 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<DOCUMENT Type="Advanced Installer" CreateVersion="21.0.1" version="21.0.1" Modules="simple" RootPath="." Language="de" Id="{4F9331E3-AF0B-4E6E-B5A7-D11681FD110F}">
+<DOCUMENT Type="Advanced Installer" CreateVersion="21.0.1" version="21.1" Modules="simple" RootPath="." Language="de" Id="{4F9331E3-AF0B-4E6E-B5A7-D11681FD110F}">
   <COMPONENT cid="caphyon.advinst.msicomp.ProjectOptionsComponent">
+    <ROW Name="AutoSave" Value="5"/>
     <ROW Name="HiddenItems" Value="AppXProductDetailsComponent;AppXDependenciesComponent;AppXAppDetailsComponent;AppXVisualAssetsComponent;AppXCapabilitiesComponent;AppXAppDeclarationsComponent;AppXUriRulesComponent;FixupComponent;MsiXDiffComponent;MsixManifestEditorComponent"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiPropsComponent">
     <ROW Property="AI_APP_FILE" Value="[#VideoDownloader.exe]"/>
     <ROW Property="AI_BITMAP_DISPLAY_MODE" Value="0"/>
+    <ROW Property="AI_README_FILE" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui#readme"/>
+    <ROW Property="AI_RUN_AS_ADMIN" Value="1"/>
     <ROW Property="ALLUSERS" Value="1"/>
     <ROW Property="ARPCOMMENTS" Value="Simple GUI for yt-dlp." ValueLocId="*"/>
     <ROW Property="ARPHELPLINK" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui"/>
+    <ROW Property="ARPPRODUCTICON" Value="green_arrow_icon_1.exe" Type="8"/>
     <ROW Property="ARPURLINFOABOUT" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui"/>
     <ROW Property="ARPURLUPDATEINFO" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui"/>
     <ROW Property="AiPreventAutoPin" Value="System.AppUserModel.ExcludeFromShowInNewInstall"/>
-    <ROW Property="CTRLS" Value="2"/>
+    <ROW Property="AiReadmeLink" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui#readme" Type="4"/>
+    <ROW Property="CTRLS" Value="3"/>
     <ROW Property="Manufacturer" Value="LeoTN"/>
     <ROW Property="ProductCode" Value="1031:{1C82CA42-0282-48E5-8BF2-795B31640C7E} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
@@ -62,6 +67,7 @@
     <ROW File="YouTubeBackground.jpg" Component_="MonitorHookFile.ps1" FileName="YOUTUB~1.JPG|YouTubeBackground.jpg" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\YouTubeBackground.jpg" SelfReg="false"/>
     <ROW File="VideoDownloader.exe" Component_="VideoDownloader.exe" FileName="VIDEOD~1.EXE|VideoDownloader.exe" Attributes="0" SourcePath="..\VideoDownloader.exe" SelfReg="false" DigSign="true"/>
     <ROW File="VideoDownloaderSetup.exe" Component_="VideoDownloaderSetup.exe" FileName="VIDEOD~1.EXE|VideoDownloaderSetup.exe" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\VideoDownloaderSetup.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="green_arrow_icon.ico" Component_="MonitorHookFile.ps1" FileName="GREEN_~1.ICO|green_arrow_icon.ico" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\green_arrow_icon.ico" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.custcomp.MsiShortcutPropertyComponent">
     <ROW MsiShortcutProperty="UninstallProductNameVersionProductV1" Shortcut_="UninstallProductNameVersionProductV" PropertyKey="[AiPreventAutoPin]" PropVariantValue="1"/>
@@ -78,6 +84,7 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.FragmentComponent">
     <ROW Fragment="CommonUI.aip" Path="&lt;AI_FRAGS&gt;CommonUI.aip"/>
+    <ROW Fragment="FolderDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\FolderDlg.aip"/>
     <ROW Fragment="LicenseAgreementDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\LicenseAgreementDlg.aip"/>
     <ROW Fragment="MaintenanceTypeDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\MaintenanceTypeDlg.aip"/>
     <ROW Fragment="MaintenanceWelcomeDlg.aip" Path="&lt;AI_THEMES&gt;classic\fragments\MaintenanceWelcomeDlg.aip"/>
@@ -104,7 +111,7 @@
     <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_MAINT" Ordering="198"/>
     <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="CustomizeDlg" Condition="AI_MAINT" Ordering="202"/>
     <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_INSTALL" Ordering="197"/>
-    <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="LicenseAgreementDlg" Condition="AI_INSTALL" Ordering="201"/>
+    <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="FolderDlg" Condition="AI_INSTALL" Ordering="201"/>
     <ROW Dialog_="CustomizeDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_MAINT" Ordering="101"/>
     <ROW Dialog_="CustomizeDlg" Control_="Back" Event="NewDialog" Argument="MaintenanceTypeDlg" Condition="AI_MAINT" Ordering="1"/>
     <ROW Dialog_="MaintenanceTypeDlg" Control_="ChangeButton" Event="NewDialog" Argument="CustomizeDlg" Condition="AI_MAINT" Ordering="501"/>
@@ -119,8 +126,10 @@
     <ROW Dialog_="ResumeDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_RESUME" Ordering="299"/>
     <ROW Dialog_="VerifyReadyDlg" Control_="Install" Event="EndDialog" Argument="Return" Condition="AI_PATCH" Ordering="199"/>
     <ROW Dialog_="VerifyReadyDlg" Control_="Back" Event="NewDialog" Argument="PatchWelcomeDlg" Condition="AI_PATCH" Ordering="203"/>
-    <ROW Dialog_="LicenseAgreementDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_INSTALL" Ordering="1"/>
+    <ROW Dialog_="LicenseAgreementDlg" Control_="Next" Event="NewDialog" Argument="FolderDlg" Condition="AI_INSTALL" Ordering="1"/>
     <ROW Dialog_="LicenseAgreementDlg" Control_="Back" Event="NewDialog" Argument="WelcomeDlg" Condition="AI_INSTALL" Ordering="1"/>
+    <ROW Dialog_="FolderDlg" Control_="Next" Event="NewDialog" Argument="VerifyReadyDlg" Condition="AI_INSTALL" Ordering="201"/>
+    <ROW Dialog_="FolderDlg" Control_="Back" Event="NewDialog" Argument="LicenseAgreementDlg" Condition="AI_INSTALL" Ordering="1"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCreateFolderComponent">
     <ROW Directory_="APPDIR" Component_="APPDIR" ManualDelete="true"/>
@@ -147,6 +156,7 @@
     <ROW Action="AI_UnpinFromStartScreen" Type="1025" Source="ShortcutFlags.dll" Target="UnpinFromStartScreen" WithoutSeq="true"/>
     <ROW Action="AI_UnpinFromTaskbar" Type="1025" Source="ShortcutFlags.dll" Target="UnpinFromTaskbar" WithoutSeq="true"/>
     <ROW Action="AI_UnpinShortcuts" Type="1" Source="ShortcutFlags.dll" Target="UnpinShortcuts"/>
+    <ROW Action="AI_ViewReadme" Type="1" Source="aicustact.dll" Target="ViewReadMe"/>
     <ROW Action="SET_APPDIR" Type="307" Source="APPDIR" Target="[ProgramFilesFolder][Manufacturer]\[ProductName]"/>
     <ROW Action="SET_SHORTCUTDIR" Type="307" Source="SHORTCUTDIR" Target="[ProgramMenuFolder][ProductName]"/>
     <ROW Action="SET_TARGETDIR_TO_APPDIR" Type="51" Source="TARGETDIR" Target="[APPDIR]"/>
@@ -165,6 +175,7 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="SystemFoldermsiexec.exe" SourcePath="&lt;AI_RES&gt;uninstall.ico" Index="0"/>
+    <ROW Name="green_arrow_icon_1.exe" SourcePath="..\yt_dlp_autohotkey_gui_files\library\green_arrow_icon.ico" Index="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiInstExSeqComponent">
     <ROW Action="AI_DOWNGRADE" Condition="AI_NEWERPRODUCTFOUND AND (UILevel &lt;&gt; 5)" Sequence="210"/>
@@ -203,7 +214,7 @@
   <COMPONENT cid="caphyon.advinst.msicomp.MsiShortsComponent">
     <ROW Shortcut="DeinstallProductNameProductVersion" Directory_="APPDIR" Name="UNINST~2|Uninstall [|ProductName] - Version [|ProductVersion]" Component_="Version" Target="[setup_Dir]VideoDownloaderSetup.exe" Arguments="/run-uninstall-[ProductCode]" Description="Uninstalls the VideoDownloader and the dependencies." Hotkey="0" Icon_="SystemFoldermsiexec.exe" IconIndex="0" ShowCmd="1" CustomFlags="1"/>
     <ROW Shortcut="UninstallProductNameVersionProductV" Directory_="setup_Dir" Name="UNINST~2|uninstall_shortcut" Component_="AddYTDLPToPath.ps1" Target="[setup_Dir]VideoDownloaderSetup.exe" Arguments="/run-uninstall-[ProductCode]" Description="Uninstall shortcut for the main GUI." Hotkey="0" Icon_="SystemFoldermsiexec.exe" IconIndex="0" ShowCmd="1" CustomFlags="1"/>
-    <ROW Shortcut="Verknpfungzu" Directory_="DesktopFolder" Name="VIDEOD~1|VideoDownloader" Component_="VideoDownloader.exe" Target="[#VideoDownloader.exe]" Description="A simple GUI for yt-dlp." Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
+    <ROW Shortcut="Verknpfungzu" Directory_="DesktopFolder" Name="VIDEOD~1|VideoDownloader" Component_="VideoDownloader.exe" Target="[#VideoDownloader.exe]" Description="A simple GUI for yt-dlp." Hotkey="0" Icon_="green_arrow_icon_1.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiThemeComponent">
     <ATTRIBUTE name="UsedTheme" value="classic"/>

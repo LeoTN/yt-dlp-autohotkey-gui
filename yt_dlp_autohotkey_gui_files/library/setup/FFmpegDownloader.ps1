@@ -3,6 +3,7 @@ param (
 )
 $Host.UI.RawUI.BackgroundColor = "Black"
 $Host.UI.RawUI.ForegroundColor = "Green"
+$host.UI.RawUI.WindowTitle = "FFmpeg download running..."
 Clear-Host
 Write-Host "Terminal ready..."
 
@@ -59,6 +60,8 @@ if (Test-Path -Path $ffmpegArchivePath) {
     Remove-Item -Path $extractedDirectory -Force -Recurse
 
     Write-Host "Extracted executables to $outputFolder."
+    Set-ItemProperty -Path "HKCU:\SOFTWARE\LeoTN\VideoDownloader" -Name "ffmpegLocation" -Value $outputFolder"\ffmpeg.exe"
+    Write-Host "Added FFmpeg executable path to registry at HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader."
     Start-Sleep -Seconds 5	
     Exit
 }

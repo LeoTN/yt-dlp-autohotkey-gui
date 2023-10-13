@@ -8,11 +8,18 @@ on:
           default: "0"
           required: true
 
+        is_pre_release :
+          description: "Pre-Release"
+          default: "true"
+          required: true
+
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
   FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderSetup.exe
   FINAL_INSTALLER_NAME: VideoDownloaderInstaller.msi
-  RELASE_VERSION: ${{ github.event.inputs.version }}
+  RELEASE_VERSION: ${{ github.event.inputs.version }}
+  RELEASE_NAME: ""
+  IS_PRE_RELEASE: ${{ github.event.inputs.is_pre_release }}
 
 jobs:
   build_exe_files:
@@ -67,6 +74,8 @@ jobs:
 
   build_msi_file:
     runs-on: windows-2019
+    outputs:
+      release_name: ${{  steps.set_release_name_id.outputs.RELEASE_VERSION  }}
     name: Build and Upload MSI Installer File
     needs: build_exe_files
     steps:
@@ -96,7 +105,7 @@ jobs:
           aip-package-name: ${{ env.FINAL_INSTALLER_NAME }}
           aip-output-dir:  ${{ github.workspace }}
           aip-commands: |
-            SetVersion "${{ env.RELASE_VERSION }}"
+            SetVersion "${{ env.RELEASE_VERSION }}"
             
       - name: Upload Installer as Artifact
         uses: actions/upload-artifact@v2
@@ -121,6 +130,19 @@ jobs:
       with:
         name: ${{ env.FINAL_INSTALLER_NAME }}
         path: ${{ github.workspace }}
+
+    - name: Set Release Name
+      id: set-release-name
+      run: |
+        if [ "${{ github.event.inputs.IS_PRE_RELEASE }}" == "true" ]; then
+          releaseName="pre-${{ env.RELEASE_VERSION }}"
+        else
+          releaseName="v${{ env.RELEASE_VERSION }}"
+        fi
+          echo "RELEASE_NAME=$releaseName" >> $GITHUB_ENV
+
+    - name: Print Release Name
+      run: echo "The release name is ${{ env.RELEASE_NAME }}"
         
     - name: Create Draft Main Release
       uses: ncipollo/release-action@v1
@@ -130,6 +152,7 @@ jobs:
         artifactContentType: application/executable
         generateReleaseNotes: true
         makeLatest: true
-        prerelease: false
-        name: "v${{ env.RELASE_VERSION }}"
-        tag: "v${{ env.RELASE_VERSION }}"
+        prerelease: ${{ env.IS_PRE_RELEASE == 'true' }}
+        name: "${{ env.RELEASE_NAME }}"
+        tag: "${{ env.RELEASE_NAME }}"
+

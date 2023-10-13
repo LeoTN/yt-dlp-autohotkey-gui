@@ -167,14 +167,17 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         isDownloading := false
         Return
     }
-    SplitPath(tmpConfig, , &outDir)
-    If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = true)
+    If (downloadOptionsGUI_SubmitObject.useTextFileForURLsCheckbox = true)
     {
-        FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
-    }
-    Else
-    {
-        FileCopy(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+        SplitPath(tmpConfig, , &outDir)
+        If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = true)
+        {
+            FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+        }
+        Else
+        {
+            FileCopy(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+        }
     }
     If (booleanSilent = true)
     {
@@ -249,9 +252,16 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 monitorDownloadProgress()
 {
     global booleanDownloadTerminated := false
-    SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
-    global urlArray := readFile(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
-    global videoAmount := urlArray.Length
+    If (downloadOptionsGUI_SubmitObject.useTextFileForURLsCheckbox = true)
+    {
+        SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
+        global urlArray := readFile(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+        global videoAmount := urlArray.Length
+    }
+    Else
+    {
+        global videoAmount := 1
+    }
     global downloadedVideoAmount := 0
     global skippedVideoArchiveAmount := 0
     global skippedVideoPresentAmount := 0
@@ -975,18 +985,18 @@ findProcessWithWildcard(pWildcard)
             tmp := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
             result := MsgBox("There is currently another instance of this script running."
                 "`nName: [" . v . "]`nPath: [" . tmp . "]`nContinue at your own risk !"
-                "`nPress Try Again to terminate the other instance.", "Attention !", "CTC Icon! 262144 T15")
+                "`nPress Retry to terminate the other instance.", "Attention !", "ARI Icon! 262144 T15")
 
             Switch (result)
             {
-                Case "TryAgain":
+                Case "Retry":
                     {
                         Try
                         {
                             ProcessClose(v)
                             If (ProcessWaitClose(v, 5) != 0)
                             {
-                                Throw ("Could not close the other process")
+                                Throw ("Could not close the other process.")
                             }
                         }
                         Catch
@@ -995,6 +1005,11 @@ findProcessWithWildcard(pWildcard)
                                 v . "`nTerminating script.", "Error !", "O IconX T1.5")
                             ExitApp()
                         }
+                    }
+                Case "Ignore":
+                    {
+                        ; This option is not recommended because the script is not supposed to run with multiple instances.
+                        Return
                     }
                 Default:
                     {
@@ -1024,8 +1039,8 @@ scriptTutorial()
         Return
     }
 
-    MsgBox("Hello there... General Kenobi!`nWelcome to the tutorial."
-        "`nIt will try to teach you the basic functionallity of this script but keep this in mind: "
+    MsgBox("Hello there... General Kenobi!`n`nWelcome to the tutorial."
+        "`nIt will try to teach you the basic functionality of this script but keep this in mind: "
         "`n`nFirstly this script is still in development phase so bugs are to be expected."
         "`nSecondly PLEASE be patient and do not spam buttons like a maniac. Wait for the script to process and if"
         "`nnothing happens even after 3-5 seconds you could try pressing the button or hotkey again."
@@ -1063,7 +1078,7 @@ scriptTutorial()
     MsgBox("It is possible to manually open the URL file`n(with the main GUI) and edit the saved URLs."
         "`n`nThe current location of the URL file is: [" . readConfigFile("URL_FILE_LOCATION") . "]."
         "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Find Selected Video(s)", "O Iconi 262144")
-    MsgBox("To download the URLs saved in the file this script uses`na python command line application called yt-dlp."
+    MsgBox("To download the URLs saved in the file this script uses`na Python command line application called yt-dlp."
         "`nThe download options GUI is used to pass the parameters`nto the console and specify various download options."
         "`n`nPress [" . expandHotkey(readConfigFile("OPTIONS_GUI_HK")) . "] to open the download options GUI."
         "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Download Selected Video(s)", "O Iconi 262144")
