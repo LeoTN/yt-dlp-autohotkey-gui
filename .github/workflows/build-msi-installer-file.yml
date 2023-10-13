@@ -85,13 +85,12 @@ jobs:
         id: set_release_name_id
         run: |
           if (${{ github.event.inputs.IS_PRE_RELEASE }} == "true") {
-          
-              releaseName="pre-${{ env.RELEASE_VERSION }}"
+            $releaseName="pre-${{ env.RELEASE_VERSION }}"
           }
           else {
-            releaseName="v${{ env.RELEASE_VERSION }}"
+            $releaseName="v${{ env.RELEASE_VERSION }}"
           }
-          echo "RELEASE_NAME=$releaseName" >> "$GITHUB_OUTPUT"
+          echo "$RELEASE_NAME=$releaseName" >> "$GITHUB_OUTPUT"
 
       - name: Download Main Executable Artifact
         id: download_main_executable_artifact_id
