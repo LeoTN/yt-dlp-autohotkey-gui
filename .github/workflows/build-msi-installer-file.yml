@@ -18,6 +18,7 @@ env:
   FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderSetup.exe
   FINAL_INSTALLER_NAME: VideoDownloaderInstaller.msi
   RELEASE_VERSION: ${{ github.event.inputs.version }}
+  RELEASE_NAME: ""
   IS_PRE_RELEASE: ${{ github.event.inputs.is_pre_release }}
 
 jobs:
@@ -81,17 +82,6 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v2
 
-      - name: Set Release Name
-        id: set_release_name_id
-        run: |
-          if (${{ github.event.inputs.IS_PRE_RELEASE }} == "true") {
-            $releaseName="pre-${{ env.RELEASE_VERSION }}"
-          }
-          else {
-            $releaseName="v${{ env.RELEASE_VERSION }}"
-          }
-          echo "$RELEASE_NAME=$releaseName" >> "$GITHUB_OUTPUT"
-
       - name: Download Main Executable Artifact
         id: download_main_executable_artifact_id
         uses: actions/download-artifact@v3
@@ -141,8 +131,18 @@ jobs:
         name: ${{ env.FINAL_INSTALLER_NAME }}
         path: ${{ github.workspace }}
 
+    - name: Set Release Name
+      id: set-release-name
+      run: |
+        if [ "${{ github.event.inputs.IS_PRE_RELEASE }}" == "true" ]; then
+          releaseName="pre-${{ env.RELEASE_VERSION }}"
+        else
+          releaseName="v${{ env.RELEASE_VERSION }}"
+        fi
+          echo "RELEASE_NAME=$releaseName" >> $GITHUB_ENV
+
     - name: Print Release Name
-      run: echo "The release name is ${{ needs.build_msi_file.outputs.release_name }}"
+      run: echo "The release name is ${{ env.RELEASE_NAME }}"
         
     - name: Create Draft Main Release
       uses: ncipollo/release-action@v1
@@ -153,6 +153,6 @@ jobs:
         generateReleaseNotes: true
         makeLatest: true
         prerelease: ${{ env.IS_PRE_RELEASE == 'true' }}
-        name: "${{ needs.build_msi_file.outputs.release_name }}"
-        tag: "${{ needs.build_msi_file.outputs.release_name }}"
+        name: "${{ env.RELEASE_NAME }}"
+        tag: "${{ env.RELEASE_NAME }}"
 
