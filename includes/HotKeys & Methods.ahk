@@ -483,6 +483,22 @@ startOfFileReadLoop:
 postProcessDownloadFiles()
 {
     tmpConfig := readConfigFile("DOWNLOAD_PATH")
+    If (readConfigFile("DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD") = true
+        && downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = true)
+    {
+        ; Prepares for the upcomming download folder content check.
+        tmpPath := tmpConfig . "\" . downloadTime . "\media\*.*"
+        If (!FileExist(tmpPath))
+        {
+            SplitPath(tmpPath, , &outDir)
+            SplitPath(outDir, , &outDir)
+            Try
+            {
+                DirDelete(outDir, true)
+            }
+            Return
+        }
+    }
     ; Moves and renames all important text files into the download directory.
     Try
     {
@@ -542,7 +558,7 @@ postProcessDownloadFiles()
     }
     Catch
     {
-        MsgBox("Could not write to download log file.", "Warning !", "O Icon! T1.5")
+        MsgBox("Malfunction while writing to download log file.", "Warning !", "O Icon! T1.5")
     }
 
     ; Creates the download summary text file.
