@@ -197,8 +197,12 @@ onInit()
                     Try
                     {
                         Run(scriptBaseFilesLocation . "\library\setup\VideoDownloaderSetup.exe /run-setup")
-                        ExitApp()
-                        ExitApp()
+                        If (ProcessWait("VideoDownloaderSetup.exe", 30) = 0)
+                        {
+                            ExitApp()
+                        }
+                        ProcessWaitClose("VideoDownloaderSetup.exe")
+                        Reload()
                     }
                     Catch
                     {
@@ -301,8 +305,12 @@ onInit_checkIfSetupIsNeeded()
         Try
         {
             Run(scriptBaseFilesLocation . "\library\setup\VideoDownloaderSetup.exe /run-setup")
-            ExitApp()
-            ExitApp()
+            If (ProcessWait("VideoDownloaderSetup.exe", 30) = 0)
+            {
+                ExitApp()
+            }
+            ProcessWaitClose("VideoDownloaderSetup.exe")
+            Reload()
         }
         Catch
         {
