@@ -18,14 +18,14 @@ onInit()
         MsgBox("You are using the non compiled version of this script."
             "`n`nPlease continue by using a compiled version.", "Warning !", "O Icon! 262144 T5")
         generateHelpFile()
-        ExitApp()
+        terminateSetup()
     }
     Else If (A_Args.Has(1) = false)
     {
         MsgBox("You have not provided any parameters."
             "`n`nPlease run this script using the console and valid arguments.", "Warning !", "O Icon! 262144 T5")
         generateHelpFile()
-        ExitApp()
+        terminateSetup()
     }
     booleanParameterSetup := false
     booleanParameterForceSetup := false
@@ -70,7 +70,7 @@ onInit()
                         MsgBox("Unsupported parameters given. Specifically: " . A_Args.Get(A_Index),
                             "VideoDownloader Setup Status", "O Icon! 262144")
                         generateHelpFile()
-                        ExitApp()
+                        terminateSetup()
                     }
             }
         }
@@ -81,14 +81,14 @@ onInit()
         MsgBox("/run-setup and /force-run-setup cannot be used together.",
             "VideoDownloader Setup Status", "O Icon! 262144")
         generateHelpFile()
-        ExitApp()
+        terminateSetup()
     }
     Else If ((booleanParameterSetup = true || booleanParameterForceSetup = true) && booleanParameterUninstall)
     {
         MsgBox("You cannot use setup parameters with /run-uninstall.",
             "VideoDownloader Setup Status", "O Icon! 262144")
         generateHelpFile()
-        ExitApp()
+        terminateSetup()
     }
 
     ; Makes sure the setup will be executed with admin permissions.
@@ -98,12 +98,12 @@ onInit()
         Try
         {
             Run '*RunAs "' A_ScriptFullPath '" /restart ' . parameterString
-            ExitApp()
+            terminateSetup()
         }
         Catch
         {
             MsgBox("Could not complete action.`n`nTerminating script.", "Error !", "O IconX T1.5")
-            ExitApp()
+            terminateSetup()
         }
     }
     If (booleanParameterSetup = true)
@@ -221,12 +221,12 @@ handleInstallGUI_cancelInstallationButton()
             WinClose("ahk_pid " . window_4)
         }
         installGUI.Hide()
-        ; NOTE: When changing the main executable name this has to be changed as well.
+
         Try
         {
             ProcessClose("VideoDownloader.exe")
         }
-        ExitApp()
+        terminateSetup()
     }
 }
 
@@ -447,7 +447,7 @@ run_setup(pBooleanForceInstall := false)
     {
         Case "Cancel":
             {
-                ExitApp()
+                terminateSetup()
             }
     }
     If (checkInternetConnection() = true)
@@ -495,12 +495,12 @@ run_setup(pBooleanForceInstall := false)
                 Case "OK":
                     {
                         Run '*RunAs "' A_ScriptFullPath '" /restart /force-run-setup'
-                        ExitApp()
+                        terminateSetup()
                     }
                 Default:
                     {
                         MsgBox("Could not complete setup (component malfunction).`n`nTerminating script.", "Error !", "O IconX T1.5")
-                        ExitApp()
+                        terminateSetup()
                     }
             }
         }
@@ -513,7 +513,7 @@ run_setup(pBooleanForceInstall := false)
         Sleep(2000)
         MsgBox("The setup has been completed. You can now use the main application and start downloading videos.",
             "VideoDownloader Setup Status", "O Iconi")
-        ExitApp()
+        terminateSetup()
     }
     Else
     {
@@ -704,7 +704,7 @@ uninstallScript()
     {
         ProcessClose("VideoDownloader.exe")
     }
-    ExitApp()
+    terminateSetup()
 }
 
 installPython(pBooleanForceInstall)
@@ -743,7 +743,7 @@ installPython(pBooleanForceInstall)
     Catch
     {
         MsgBox("Could not complete setup (Python installation).`n`nTerminating script.", "Error !", "O IconX T1.5")
-        ExitApp()
+        terminateSetup()
     }
     ; Copies the installed Python version into the setup folder for uninstall purposes.
     If (FileExist(A_Temp . "\video_downloader_python_install_log.txt"))
@@ -785,7 +785,7 @@ installYTDLP(pBooleanForceInstall)
     Else
     {
         MsgBox("Could not add yt-dlp to system environment variables.`n`nTerminating script.", "Error !", "O IconX T1.5")
-        ExitApp()
+        terminateSetup()
     }
     Return true
 }
@@ -813,7 +813,7 @@ installFFmpeg(pBooleanForceInstall)
     Else
     {
         MsgBox("Could complete setup (FFmpeg installation).`n`nTerminating script.", "Error !", "O IconX T1.5")
-        ExitApp()
+        terminateSetup()
     }
 }
 
@@ -877,13 +877,13 @@ onInit_handleWorkingDirectory()
                             }
                         Default:
                             {
-                                ExitApp()
+                                terminateSetup()
                             }
                     }
                 }
             Default:
                 {
-                    ExitApp()
+                    terminateSetup()
                 }
         }
     }
@@ -917,13 +917,13 @@ onInit_handleScriptDirectory()
                             }
                         Default:
                             {
-                                ExitApp()
+                                terminateSetup()
                             }
                     }
                 }
             Default:
                 {
-                    ExitApp()
+                    terminateSetup()
                 }
         }
     }
@@ -957,4 +957,14 @@ chooseDirectory()
     {
         Return path
     }
+}
+
+terminateSetup()
+{
+    ; NOTE: When changing the main executable name this has to be changed as well.
+    Try
+    {
+        ProcessClose("VideoDownloader.exe")
+    }
+    ExitApp()
 }
