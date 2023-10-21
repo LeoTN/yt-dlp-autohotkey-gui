@@ -8,7 +8,7 @@
     <ROW Property="AI_APP_FILE" Value="[#VideoDownloader.exe]"/>
     <ROW Property="AI_BITMAP_DISPLAY_MODE" Value="0"/>
     <ROW Property="AI_README_FILE" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui#readme"/>
-    <ROW Property="AI_RUN_AS_ADMIN" Value="1"/>
+    <ROW Property="AI_RUN_AS_ADMIN" Value="0"/>
     <ROW Property="ALLUSERS" Value="1"/>
     <ROW Property="ARPCOMMENTS" Value="Simple GUI for yt-dlp." ValueLocId="*"/>
     <ROW Property="ARPHELPLINK" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui"/>

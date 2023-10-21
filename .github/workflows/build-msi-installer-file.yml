@@ -149,7 +149,8 @@ jobs:
       with:
         allowUpdates: true
         artifacts: ${{steps.download_installer_artifact_id.outputs.download-path}}/${{ env.FINAL_INSTALLER_NAME }}
-        artifactContentType: application/executable
+        artifactContentType: "application/executable"
+        body: "Please don't mind the windows defender message when clicking on the .MSI file. I dont want to spend money buying a digital certificate. Thanks :=)"
         generateReleaseNotes: true
         makeLatest: true
         prerelease: ${{ env.IS_PRE_RELEASE == 'true' }}

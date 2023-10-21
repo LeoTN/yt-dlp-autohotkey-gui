@@ -152,7 +152,7 @@ optionsGUI_onInit()
 
 cancelDownload()
 {
-    result := MsgBox("Do you really want to cancel the ongoing download process ?"
+    result := MsgBox("Do you really want to cancel the running download process ?"
         , "Cancel Downloading", "YN Icon! 4096 T10")
 
     If (result = "Yes")

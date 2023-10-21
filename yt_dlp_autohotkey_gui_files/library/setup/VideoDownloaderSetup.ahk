@@ -200,19 +200,32 @@ handleInstallGUI_cancelInstallationButton()
     result := MsgBox("Do you really want to cancel the installation process?", "Cancel VideoDownloader Installation", "YN Icon!")
     If (result = "Yes")
     {
+        global window_1
+        global window_2
+        global window_3
+        global window_4
         Try
         {
-            WinClose('install "python"')
+            WinClose("ahk_pid " . window_1)
         }
         Try
         {
-            WinClose("https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz")
+            WinClose("ahk_pid " . window_2)
         }
         Try
         {
-            WinClose("FFmpeg download running...")
+            WinClose("ahk_pid " . window_3)
+        }
+        Try
+        {
+            WinClose("ahk_pid " . window_4)
         }
         installGUI.Hide()
+        ; NOTE: When changing the main executable name this has to be changed as well.
+        Try
+        {
+            ProcessClose("VideoDownloader.exe")
+        }
         ExitApp()
     }
 }
