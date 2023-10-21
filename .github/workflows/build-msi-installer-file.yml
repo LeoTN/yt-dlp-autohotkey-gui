@@ -154,6 +154,7 @@ jobs:
         generateReleaseNotes: true
         makeLatest: true
         prerelease: ${{ env.IS_PRE_RELEASE == 'true' }}
+        replacesArtifacts: true
         name: "${{ env.RELEASE_NAME }}"
         tag: "${{ env.RELEASE_NAME }}"
 
