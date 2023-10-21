@@ -147,14 +147,13 @@ jobs:
     - name: Create Draft Main Release
       uses: ncipollo/release-action@v1
       with:
-        allowUpdates: true
+        allowUpdates: false
         artifacts: ${{steps.download_installer_artifact_id.outputs.download-path}}/${{ env.FINAL_INSTALLER_NAME }}
         artifactContentType: "application/executable"
         body: "Please don't mind the windows defender message when clicking on the .MSI file. I dont want to spend money buying a digital certificate. Thanks :=)"
         generateReleaseNotes: true
         makeLatest: true
         prerelease: ${{ env.IS_PRE_RELEASE == 'true' }}
-        replacesArtifacts: true
         name: "${{ env.RELEASE_NAME }}"
         tag: "${{ env.RELEASE_NAME }}"
 
