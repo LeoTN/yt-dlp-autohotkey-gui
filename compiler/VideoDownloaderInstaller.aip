@@ -60,14 +60,14 @@
     <ATTRIBUTE name="CurrentFeature" value="MainFeature"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
-    <ROW File="MonitorHookFile.ps1" Component_="MonitorHookFile.ps1" FileName="MONITO~1.PS1|MonitorHookFile.ps1" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\MonitorHookFile.ps1" SelfReg="false"/>
+    <ROW File="MonitorHookFile.ps1" Component_="MonitorHookFile.ps1" FileName="MONITO~1.PS1|MonitorHookFile.ps1" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\scripts\MonitorHookFile.ps1" SelfReg="false"/>
     <ROW File="AddYTDLPToPath.ps1" Component_="AddYTDLPToPath.ps1" FileName="ADDYTD~1.PS1|AddYTDLPToPath.ps1" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AddYTDLPToPath.ps1" SelfReg="false"/>
     <ROW File="FFmpegDownloader.ps1" Component_="AddYTDLPToPath.ps1" FileName="FFMPEG~1.PS1|FFmpegDownloader.ps1" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\FFmpegDownloader.ps1" SelfReg="false"/>
     <ROW File="SetupHelp.txt" Component_="AddYTDLPToPath.ps1" FileName="SETUPH~1.TXT|SetupHelp.txt" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\SetupHelp.txt" SelfReg="false"/>
-    <ROW File="YouTubeBackground.jpg" Component_="MonitorHookFile.ps1" FileName="YOUTUB~1.JPG|YouTubeBackground.jpg" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\YouTubeBackground.jpg" SelfReg="false"/>
+    <ROW File="YouTubeBackground.jpg" Component_="MonitorHookFile.ps1" FileName="YOUTUB~1.JPG|YouTubeBackground.jpg" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\YouTubeBackground.jpg" SelfReg="false"/>
     <ROW File="VideoDownloader.exe" Component_="VideoDownloader.exe" FileName="VIDEOD~1.EXE|VideoDownloader.exe" Version="[|ProductVersion]" Attributes="0" SourcePath="..\VideoDownloader.exe" SelfReg="false" DigSign="true"/>
     <ROW File="VideoDownloaderSetup.exe" Component_="VideoDownloaderSetup.exe" FileName="VIDEOD~1.EXE|VideoDownloaderSetup.exe" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\VideoDownloaderSetup.exe" SelfReg="false" DigSign="true"/>
-    <ROW File="green_arrow_icon.ico" Component_="MonitorHookFile.ps1" FileName="GREEN_~1.ICO|green_arrow_icon.ico" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\green_arrow_icon.ico" SelfReg="false"/>
+    <ROW File="green_arrow_icon.ico" Component_="MonitorHookFile.ps1" FileName="GREEN_~1.ICO|green_arrow_icon.ico" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\green_arrow_icon.ico" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.custcomp.MsiShortcutPropertyComponent">
     <ROW MsiShortcutProperty="UninstallProductNameVersionProductV1" Shortcut_="UninstallProductNameVersionProductV" PropertyKey="[AiPreventAutoPin]" PropVariantValue="1"/>
@@ -175,7 +175,7 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="SystemFoldermsiexec.exe" SourcePath="&lt;AI_RES&gt;uninstall.ico" Index="0"/>
-    <ROW Name="green_arrow_icon_1.exe" SourcePath="..\yt_dlp_autohotkey_gui_files\library\green_arrow_icon.ico" Index="0"/>
+    <ROW Name="green_arrow_icon_1.exe" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\green_arrow_icon.ico" Index="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiInstExSeqComponent">
     <ROW Action="AI_DOWNGRADE" Condition="AI_NEWERPRODUCTFOUND AND (UILevel &lt;&gt; 5)" Sequence="210"/>

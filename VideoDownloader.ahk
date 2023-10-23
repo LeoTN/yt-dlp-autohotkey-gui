@@ -21,7 +21,7 @@ onInit_checkIfSetupIsNeeded()
 #Include "ConfigFileManager.ahk"
 #Include "HotKeys & Methods.ahk"
 #Include "FileManager.ahk"
-#Include "GUI.ahk"
+#Include "MainGUI.ahk"
 #Include "DownloadOptionsGUI.ahk"
 
 onInit()
@@ -173,7 +173,7 @@ onInit()
 {
     Try
     {
-        TraySetIcon(scriptBaseFilesLocation . "\library\green_arrow_icon.ico")
+        TraySetIcon(scriptBaseFilesLocation . "\library\assets\green_arrow_icon.ico")
     }
     If (FileExist(scriptBaseFilesLocation . "\library\FFmpeg\ffmpeg.exe"))
     {
@@ -223,7 +223,7 @@ onInit()
         }
     }
 
-    global youTubeBackGroundLocation := scriptBaseFilesLocation . "\library\YouTubeBackground.jpg"
+    global youTubeBackGroundLocation := scriptBaseFilesLocation . "\library\assets\YouTubeBackground.jpg"
     ; Checks the system for other already running instances of this script.
     findProcessWithWildcard("VideoDownloader.exe")
 
