@@ -171,7 +171,7 @@ createInstallGUI()
     installChangeFFmpegPathButton := installGUI.Add("Button", "xp+72", "Change path")
     installScanAgainButton := installGUI.Add("Button", "xp+87", "Scan again")
 
-    installStartButton := installGUI.Add("Button", "xp-289 yp+35 w80 Default", "Install")
+    installStartButton := installGUI.Add("Button", "xp-289 yp+35 w80 Disabled Default", "Install")
     installCancelButton := installGUI.Add("Button", "xp+85 w80", "Cancel")
     installOpenGitHubIssuesButton := installGUI.Add("Button", "xp+85", "Open GitHub issues")
     installProgressBar := installGUI.Add("Progress", "xp+119 yp+3 Range0-400")
@@ -274,6 +274,7 @@ handleInstallGUI_availableComponents()
         installFFmpegCheckbox.Value := false
         installShowFFmpegPathButton.Opt("+Disabled")
     }
+    installStartButton.Opt("-Disabled")
 }
 
 ; Tries to find existing software for example if yt-dlp is already present so that this part is skipped during the setup.
@@ -513,7 +514,7 @@ run_setup(pBooleanForceInstall := false)
         Sleep(2000)
         MsgBox("The setup has been completed. You can now use the main application and start downloading videos.",
             "VideoDownloader Setup Status", "O Iconi")
-        terminateSetup()
+        ExitApp()
     }
     Else
     {

@@ -11,12 +11,12 @@ onInit()
     global downloadOptionsGUIHWNDFileLocation := A_Temp . "\download_options_GUI_HWND_File.txt"
     global downloadOptionsGUIID := ""
     global downloadOptionsGUIHWNDArray := []
-    ; REMOVE
-    /* If (!ProcessExist("VideoDownloader.exe"))
+
+    If (!ProcessExist("VideoDownloader.exe"))
     {
         MsgBox("No target application detected.", "VD - Tooltip Manager", "O Iconi T3")
         ExitApp()
-    } */
+    }
     If (!A_Args.Has(1))
     {
         MsgBox("This is a sub script from VideoDownloader which can only be called with specific parameters. "
