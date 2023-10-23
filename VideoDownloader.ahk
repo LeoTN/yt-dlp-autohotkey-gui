@@ -175,13 +175,17 @@ onInit()
     {
         TraySetIcon(scriptBaseFilesLocation . "\library\assets\green_arrow_icon.ico")
     }
+    If (FileExist(scriptBaseFilesLocation . "\library\scripts\DownloadOptionsGUITooltips.exe"))
+    {
+        global downloadOptionsGUITooltipFileLocation := scriptBaseFilesLocation . "\library\scripts\DownloadOptionsGUITooltips.exe"
+    }
     If (FileExist(scriptBaseFilesLocation . "\library\FFmpeg\ffmpeg.exe"))
     {
         global ffmpegLocation := scriptBaseFilesLocation . "\library\FFmpeg\ffmpeg.exe"
     }
     Else
     {
-        result := MsgBox("No FFmpeg files have been found. The script may run without them but it is highly recommended to run the setup."
+        result := MsgBox("Damaged or missing files detected. The script may run without them but it is highly recommended to run the setup."
             "`n`nPress YES to run the setup or NO to ignore and run anyways.", "Missing FFmpeg Files", "YNC Icon!")
         Switch (result)
         {

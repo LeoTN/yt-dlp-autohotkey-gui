@@ -105,15 +105,11 @@ Hotkey_openOptionsGUI()
         {
             downloadOptionsGUI.Show("w500 h405")
             flipflop := false
-            ; Starts the tool tip timer to react upon the user hovering over gui elements.
-            SetTimer(handleDownloadOptionsGUI_toolTipManager, 1000)
         }
         Else If (flipflop = false && WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
         {
             downloadOptionsGUI.Hide()
             flipflop := true
-            ; Stops the tool tip timer.
-            SetTimer(handleDownloadOptionsGUI_toolTipManager, 0)
         }
         Else
         {
@@ -1114,8 +1110,7 @@ scriptTutorial()
     }
     MsgBox("If you see the download options GUI for the very first time,`nit might be a bit overwhelming, but once you have"
         "`nused this script a few times it will become more familiar.`n`nQuick tip: "
-        "`nHover over an option with the mouse cursor`nin order to gain extra information."
-        "`nNote :`nThis does only work if there is`nno download process running at the moment."
+        "`nHover over an option with the mouse cursor`nto gain extra information."
         "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Use Download Options GUI", "O Iconi 262144")
     MsgBox("Take a look at the top right corner of the download options GUI."
         "`nPresets can be used to store the current configuration`nand load it later on."
