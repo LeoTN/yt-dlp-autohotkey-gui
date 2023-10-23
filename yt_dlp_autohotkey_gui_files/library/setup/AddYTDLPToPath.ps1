@@ -1,5 +1,6 @@
 $Host.UI.RawUI.BackgroundColor = "Black"
 $Host.UI.RawUI.ForegroundColor = "Green"
+$host.UI.RawUI.WindowTitle = "Modifying system environment variables..."
 Clear-Host
 Write-Host "Terminal ready..."
 

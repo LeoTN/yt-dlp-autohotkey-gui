@@ -38,7 +38,7 @@ clock()
 
     Loop
     {
-        If (ProcessExist("VideoDownloader.exe"))
+        If (!ProcessExist("VideoDownloader.exe"))
         {
             Break
         }
@@ -48,7 +48,6 @@ clock()
         }
         Sleep(1000)
     }
-
     ExitApp()
 }
 
@@ -77,11 +76,10 @@ getHWNDArrayFromFile(pFileLocation, pExpectedAmount)
     {
         MsgBox("The amount of buttons does not match the expected amount.", "VD - Tooltip Manager", "O Iconi T3")
     }
-    /* Try
+    Try
     {
         FileDelete(fileLocation)
-    } */
-    ; REMOVE
+    }
     Return HWNDArray
 }
 
