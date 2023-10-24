@@ -16,6 +16,7 @@ on:
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
   FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderSetup.exe
+  FINAL_TOOLTIP_EXECUTABLE_NAME: DownloadOptionsGUITooltips.exe
   FINAL_INSTALLER_NAME: VideoDownloaderInstaller.msi
   RELEASE_VERSION: ${{ github.event.inputs.version }}
   RELEASE_NAME: ""
@@ -53,8 +54,18 @@ jobs:
     - name: Compile Autohotkey Setup Script
       run: |
         # Set the paths to execute more easily.
-        $scriptPathIn = "${{ github.workspace }}\yt_dlp_autohotkey_gui_files/library/setup/VideoDownloaderSetup.ahk"
+        $scriptPathIn = "${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\setup\VideoDownloaderSetup.ahk"
         $scriptPathOut = "${{ github.workspace }}\$env:FINAL_SETUP_EXECUTABLE_NAME"
+
+        # Compile the script.
+        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
+        echo "The executable will be saved to $scriptPathOut"
+
+    - name: Compile Autohotkey Tooltip Script
+      run: |
+        # Set the paths to execute more easily.
+        $scriptPathIn = "${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\scripts\DownloadOptionsGUITooltips.ahk"
+        $scriptPathOut = "${{ github.workspace }}\$env:FINAL_TOOLTIP_EXECUTABLE_NAME"
 
         # Compile the script.
         ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
@@ -72,6 +83,12 @@ jobs:
         name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
         path: ${{ github.workspace }}\${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
 
+    - name: Upload Tooltip Executable as Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.FINAL_TOOLTIP_EXECUTABLE_NAME }}
+        path: ${{ github.workspace }}\${{ env.FINAL_TOOLTIP_EXECUTABLE_NAME }}
+
   build_msi_file:
     runs-on: windows-2019
     outputs:
@@ -83,18 +100,22 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Download Main Executable Artifact
-        id: download_main_executable_artifact_id
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.FINAL_EXECUTABLE_NAME }}
           path: ${{ github.workspace }}
 
       - name: Download Setup Executable Artifact
-        id: download_setup_executable_artifact_id
         uses: actions/download-artifact@v3
         with:
          name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
          path: ${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\setup
+
+      - name: Download Tooltip Executable Artifact
+        uses: actions/download-artifact@v3
+        with:
+         name: ${{ env.FINAL_TOOLTIP_EXECUTABLE_NAME }}
+         path: ${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\scripts
         
       - name: Build .AIP Project
         uses: caphyon/advinst-github-action@main

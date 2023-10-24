@@ -21,7 +21,7 @@ onInit_checkIfSetupIsNeeded()
 #Include "ConfigFileManager.ahk"
 #Include "HotKeys & Methods.ahk"
 #Include "FileManager.ahk"
-#Include "GUI.ahk"
+#Include "MainGUI.ahk"
 #Include "DownloadOptionsGUI.ahk"
 
 onInit()
@@ -173,7 +173,11 @@ onInit()
 {
     Try
     {
-        TraySetIcon(scriptBaseFilesLocation . "\library\green_arrow_icon.ico")
+        TraySetIcon(scriptBaseFilesLocation . "\library\assets\green_arrow_icon.ico")
+    }
+    If (FileExist(scriptBaseFilesLocation . "\library\scripts\DownloadOptionsGUITooltips.exe"))
+    {
+        global downloadOptionsGUITooltipFileLocation := scriptBaseFilesLocation . "\library\scripts\DownloadOptionsGUITooltips.exe"
     }
     If (FileExist(scriptBaseFilesLocation . "\library\FFmpeg\ffmpeg.exe"))
     {
@@ -181,7 +185,7 @@ onInit()
     }
     Else
     {
-        result := MsgBox("No FFmpeg files have been found. The script may run without them but it is highly recommended to run the setup."
+        result := MsgBox("Damaged or missing files detected. The script may run without them but it is highly recommended to run the setup."
             "`n`nPress YES to run the setup or NO to ignore and run anyways.", "Missing FFmpeg Files", "YNC Icon!")
         Switch (result)
         {
@@ -203,6 +207,7 @@ onInit()
                         }
                         ProcessWaitClose("VideoDownloaderSetup.exe")
                         Reload()
+                        Reload()
                     }
                     Catch
                     {
@@ -223,7 +228,7 @@ onInit()
         }
     }
 
-    global youTubeBackGroundLocation := scriptBaseFilesLocation . "\library\YouTubeBackground.jpg"
+    global youTubeBackGroundLocation := scriptBaseFilesLocation . "\library\assets\YouTubeBackground.jpg"
     ; Checks the system for other already running instances of this script.
     findProcessWithWildcard("VideoDownloader.exe")
 
