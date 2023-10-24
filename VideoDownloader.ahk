@@ -207,6 +207,7 @@ onInit()
                         }
                         ProcessWaitClose("VideoDownloaderSetup.exe")
                         Reload()
+                        Reload()
                     }
                     Catch
                     {
