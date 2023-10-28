@@ -125,7 +125,7 @@ FUNCTION SECTION
 */
 
 ; Important function which executes the built command string by pasting it into the console.
-startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
+startDownload(pCommandString, pBooleanSilent := enableSilentDownloadModeCheckbox.Value)
 {
     global isDownloading
     If (checkInternetConnection() = false)
@@ -197,8 +197,15 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         isDownloading := false
         saveGUISettingsAsPreset("last_settings", true)
-        ExitApp()
-        ExitApp()
+        If (downloadOptionsGUI_SubmitObject.EnableSilentDownloadModeCheckbox = false)
+        {
+            terminateScriptPrompt()
+        }
+        Else
+        {
+            ExitApp()
+            ExitApp()
+        }
     }
     Else
     {
@@ -473,7 +480,7 @@ startOfFileReadLoop:
             downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
         }
     }
-    If (downloadOptionsGUI_SubmitObject.HideDownloadCommandPromptCheckbox != true)
+    If (downloadOptionsGUI_SubmitObject.enableSilentDownloadModeCheckbox != true)
     {
         MsgBox("Total video amount: " . videoAmount .
             "`nSkipped Videos (already in archive): " . skippedVideoArchiveAmount .

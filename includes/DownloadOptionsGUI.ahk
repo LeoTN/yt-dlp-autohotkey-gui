@@ -17,7 +17,7 @@ createDownloadOptionsGUI()
     ignoreErrorsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+10 yp+20 vIgnoreErrorsCheckbox", "Ignore errors")
     abortOnErrorCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vAbortOnErrorCheckbox", "Abort on error")
     ignoreAllOptionsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vIgnoreAllOptionsCheckbox", "Ignore all options")
-    hideDownloadCommandPromptCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+110 yp-40 vHideDownloadCommandPromptCheckbox",
+    enableSilentDownloadModeCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+110 yp-40 vEnableSilentDownloadModeCheckbox",
         "Download in a background task")
     clearURLFileAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked vClearURLFileAfterDownloadCheckbox",
         "Clear the URL file after download")
@@ -98,7 +98,7 @@ createDownloadOptionsGUI()
     ignoreErrorsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     abortOnErrorCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     ignoreAllOptionsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkbox_ignoreAllOptions())
-    hideDownloadCommandPromptCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    enableSilentDownloadModeCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     clearURLFileAfterDownloadCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     enableFastDownloadModeCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkbox_fastDownload())
     higherRetryAmountCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
@@ -673,7 +673,7 @@ handleDownloadOptionsGUI_InputFields()
     If (enableFastDownloadModeCheckbox.Value != true && downloadAudioOnlyCheckbox.Value != true &&
         downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] != "Best format for quality")
     {
-        commandString .= '--remux-video "' . downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] . '" '
+        commandString .= '--recode-video "' . downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] . '" '
     }
 }
 
