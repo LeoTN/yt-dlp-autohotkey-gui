@@ -232,7 +232,7 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
     global hiddenConsolePID
     global visualPowershellPID
 
-    Run(A_ComSpec . ' /c ' . command . ' > "' . A_Temp
+    Run(A_ComSpec . ' /c title Download is running... & ' . command . ' > "' . A_Temp
         . '\yt_dlp_download_log.txt" && title Completed... && timeout /T 3', , "Min", &hiddenConsolePID)
     ProcessWait(hiddenConsolePID)
 

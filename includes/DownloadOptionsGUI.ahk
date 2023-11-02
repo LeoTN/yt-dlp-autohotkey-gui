@@ -269,7 +269,7 @@ handleDownloadOptionsGUI_Checkboxes()
         Case 1:
         {
             ; Add the video description to a .description file.
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 commandString .= "--write-description "
                 If (useDefaultDownloadLocationCheckbox.Value = true)
@@ -299,7 +299,7 @@ handleDownloadOptionsGUI_Checkboxes()
         Case 1:
         {
             ; Download the video 's comment section.
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 commandString .= "--write-comments "
                 ; Currently not implemeted into yt-dlp.
@@ -323,7 +323,7 @@ handleDownloadOptionsGUI_Checkboxes()
         Case 1:
         {
             ; Download the video thumbnail and add it to the downloaded video.
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 commandString .= "--write-thumbnail "
                 commandString .= "--embed-thumbnail "
@@ -353,7 +353,7 @@ handleDownloadOptionsGUI_Checkboxes()
         Case 1:
         {
             ; Download the video's subtitles and embed tem into the downloaded video.
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 commandString .= "--write-subs "
                 commandString .= '--sub-langs "all" '
@@ -405,7 +405,7 @@ handleDownloadOptionsGUI_Checkboxes()
         Case 0:
         {
             ; Downloads the video with audio.
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 chooseVideoFormatDropDownList.Opt("-Disabled")
                 alwaysHighestQualityBothCheckbox.Opt("-Disabled")
@@ -419,7 +419,7 @@ handleDownloadOptionsGUI_Checkboxes()
             ; Only extracts the audio and creates the desired audio file type.
             chooseVideoFormatDropDownList.Opt("+Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 chooseAudioFormatDropDownList.Opt("-Disabled")
                 alwaysHighestQualityBothCheckbox.Opt("+Disabled")
@@ -452,7 +452,7 @@ handleDownloadOptionsGUI_Checkboxes()
                 ; Try to choose the best audio quality both audio and video.
                 prioritiseVideoQualityCheckbox.Opt("+Disabled")
                 prioritiseAudioQualityCheckbox.Opt("+Disabled")
-                If (enableFastDownloadModeCheckbox.Value = 0)
+                If (enableFastDownloadModeCheckbox.Value = false)
                 {
                     commandString .= '--format "bestvideo+bestaudio" '
                 }
@@ -473,7 +473,7 @@ handleDownloadOptionsGUI_Checkboxes()
                     ; Try to choose the best audio quality both audio and video.
                     alwaysHighestQualityBothCheckbox.Opt("+Disabled")
                     prioritiseAudioQualityCheckbox.Opt("+Disabled")
-                    If (enableFastDownloadModeCheckbox.Value = 0)
+                    If (enableFastDownloadModeCheckbox.Value = false)
                     {
                         If (downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] = "Best format for quality")
                         {
@@ -502,7 +502,7 @@ handleDownloadOptionsGUI_Checkboxes()
                         ; Try to choose the best audio quality both audio and video.
                         alwaysHighestQualityBothCheckbox.Opt("+Disabled")
                         prioritiseVideoQualityCheckbox.Opt("+Disabled")
-                        If (enableFastDownloadModeCheckbox.Value = 0)
+                        If (enableFastDownloadModeCheckbox.Value = false)
                         {
                             If (downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] = "Best format for quality")
                             {
@@ -629,19 +629,19 @@ handleDownloadOptionsGUI_InputFields()
     global commandString
     static newDownloadFolder := ""
 
-    If (limitDownloadRateEdit.Value != 0)
+    If (limitDownloadRateEdit.Value != false)
     {
         If (limitDownloadRateEdit.Value > 100)
         {
             limitDownloadRateEdit.Value := 100
         }
         ; Limit the download rate to a maximum value in Megabytes per second.
-        If (enableFastDownloadModeCheckbox.Value = 0)
+        If (enableFastDownloadModeCheckbox.Value = false)
         {
             commandString .= "--limit-rate " . limitDownloadRateEdit.Value . "MB "
         }
     }
-    If (maxDownloadSizeEdit.Value != 0)
+    If (maxDownloadSizeEdit.Value != false)
     {
         ; Limit the download file size to a maximum value in Megabytes.
         commandString .= '--match-filter "filesize_approx<' . maxDownloadSizeEdit.Value . 'M" '
@@ -679,7 +679,7 @@ handleDownloadOptionsGUI_InputFields()
 
 handleDownloadOptionsGUI_Checkbox_DownloadWholePlaylist()
 {
-    If (useTextFileForURLsCheckbox.Value = 0)
+    If (useTextFileForURLsCheckbox.Value = false)
     {
         downloadWholePlaylistsCheckbox.Value := 0
     }
