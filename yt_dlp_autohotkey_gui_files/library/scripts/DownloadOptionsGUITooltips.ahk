@@ -101,7 +101,7 @@ handleDownloadOptionsGUI_toolTipLoop()
         tmp4 := "Hides the PowerShell status window and disables all script notifications concerning the download process."
         tmp5 := "Uncheck this option to prevent the script from deleting the URL file after the download has finished."
         tmp6 := "Disables most time-consuming options to increase download and processing speed."
-        tmp7 := "Why would anyone ever do this? Anyway you have the option to so."
+        tmp7 := "Why would anyone ever do this? Anyway you have the option to do so."
         tmp8 := "This option limits files to a maximum size. If the file is larger, its download will be skipped."
             . "`nThis option is still experimental and might cause weird results."
         tmp9 := "Useful option to try when the download fails too often."

@@ -200,30 +200,7 @@ onInit()
         {
             Case "Yes":
                 {
-                    If (A_IsCompiled = false)
-                    {
-                        MsgBox("You are using the a non compiled version of this script."
-                            "`n`nPlease continue by using a compiled version to install.", "Warning !", "O Icon! 262144 T5")
-                        ExitApp()
-                        ExitApp()
-                    }
-                    Try
-                    {
-                        Run(scriptBaseFilesLocation . "\library\setup\VideoDownloaderSetup.exe /run-setup")
-                        If (ProcessWait("VideoDownloaderSetup.exe", 30) = 0)
-                        {
-                            ExitApp()
-                        }
-                        ProcessWaitClose("VideoDownloaderSetup.exe")
-                        Reload()
-                        Reload()
-                    }
-                    Catch
-                    {
-                        MsgBox("Unable to execute VideoDownloaderSetup.exe.`n`nTerminating script.", "Error !", "O IconX T1.5")
-                        ExitApp()
-                        ExitApp()
-                    }
+                    onInit_executeSetup()
                 }
             Case "No":
                 {
@@ -309,29 +286,7 @@ onInit_checkIfSetupIsNeeded()
     }
     If (regValue = "1")
     {
-        If (A_IsCompiled = false)
-        {
-            MsgBox("You are using the a non compiled version of this script."
-                "`n`nPlease continue by using a compiled version to install.", "Warning !", "O Icon! 262144 T5")
-            ExitApp()
-            ExitApp()
-        }
-        Try
-        {
-            Run(scriptBaseFilesLocation . "\library\setup\VideoDownloaderSetup.exe /run-setup")
-            If (ProcessWait("VideoDownloaderSetup.exe", 30) = 0)
-            {
-                ExitApp()
-            }
-            ProcessWaitClose("VideoDownloaderSetup.exe")
-            Reload()
-        }
-        Catch
-        {
-            MsgBox("Unable to execute VideoDownloaderSetup.exe.`n`nTerminating script.", "Error !", "O IconX T1.5")
-            ExitApp()
-            ExitApp()
-        }
+        onInit_executeSetup()
     }
     Else
     {
@@ -343,5 +298,28 @@ onInit_checkIfSetupIsNeeded()
             RegWrite(0, "REG_DWORD",
                 "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanFirstTimeLaunch")
         }
+    }
+}
+
+onInit_executeSetup()
+{
+    If (A_IsCompiled = false)
+    {
+        MsgBox("You are using the a non compiled version of this script."
+            "`n`nPlease continue by using a compiled version to install.", "Warning !", "O Icon! 262144 T5")
+        ExitApp()
+        ExitApp()
+    }
+    Try
+    {
+        Run(scriptBaseFilesLocation . "\library\setup\VideoDownloaderSetup.exe /run-setup")
+        ExitApp()
+        ExitApp()
+    }
+    Catch
+    {
+        MsgBox("Unable to execute VideoDownloaderSetup.exe.`n`nTerminating script.", "Error !", "O IconX T1.5")
+        ExitApp()
+        ExitApp()
     }
 }

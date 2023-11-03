@@ -221,11 +221,6 @@ handleInstallGUI_cancelInstallationButton()
             WinClose("ahk_pid " . window_4)
         }
         installGUI.Hide()
-
-        Try
-        {
-            ProcessClose("VideoDownloader.exe")
-        }
         terminateSetup()
     }
 }
@@ -514,6 +509,17 @@ run_setup(pBooleanForceInstall := false)
         Sleep(2000)
         MsgBox("The setup has been completed. You can now use the main application and start downloading videos.",
             "VideoDownloader Setup Status", "O Iconi")
+        ; Starts the main application for the user.
+        regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "scriptBaseFilesLocation", "")
+        ; Removes the last subfolder if it exists.
+        If (InStr(regValue, "yt_dlp_autohotkey_gui_files"))
+        {
+            SplitPath(regValue, , &regValue)
+        }
+        If (FileExist(regValue . "\VideoDownloader.exe"))
+        {
+            Run(regValue . "\VideoDownloader.exe")
+        }
         ExitApp()
     }
     Else
@@ -701,10 +707,6 @@ uninstallScript()
     uninstallStatusBar.SetText("Successfully uninstalled script dependencies. Until next time :')")
     Sleep(5000)
     Run(A_ComSpec ' /c msiexec.exe /x "' . productCode . '" /quiet', , "Min")
-    If (ProcessExist("VideoDownloader.exe"))
-    {
-        ProcessClose("VideoDownloader.exe")
-    }
     terminateSetup()
 }
 
