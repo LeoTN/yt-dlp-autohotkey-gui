@@ -43,7 +43,7 @@ onInit()
         Will guide the user through the uninstall process.
     */
 
-    Loop A_Args.Length
+    Loop (A_Args.Length)
     {
         parameterString .= A_Args.Get(A_Index) . " "
         ; The RegExMatch is used to find the product code which could be different from time to time.
@@ -90,7 +90,6 @@ onInit()
         generateHelpFile()
         terminateSetup()
     }
-
     ; Makes sure the setup will be executed with admin permissions.
     fullCommandLine := DllCall("GetCommandLine", "str")
     If not (A_IsAdmin || RegExMatch(fullCommandLine, " /restart(?!\S)"))
@@ -114,14 +113,14 @@ onInit()
         Sleep(500)
         handleInstallGUI_availableComponents()
     }
-    Else If (booleanParameterForceSetup)
+    Else If (booleanParameterForceSetup = true)
     {
         createInstallGUI()
         ; Scans for already existing software.
         checkAvailableSetupComponents()
         force_run_setup()
     }
-    Else If (booleanParameterUninstall)
+    Else If (booleanParameterUninstall = true)
     {
         run_uninstall()
     }
@@ -279,7 +278,7 @@ checkAvailableSetupComponents()
     global booleanYTDLPFound := true
     global booleanFFmpegFound := true
     ; Scan for Python.
-    RunWait(A_ComSpec ' /c python --version >> "' . A_Temp . '\video_downloader_python_install_log.txt"', , "Hide")
+    RunWait(A_ComSpec ' /c python --version > "' . A_Temp . '\video_downloader_python_install_log.txt"', , "Hide")
     If (FileExist(A_Temp . "\video_downloader_python_install_log.txt"))
     {
         ; This occures when the command does not achieve anything => Python is not installed.
@@ -294,7 +293,7 @@ checkAvailableSetupComponents()
     }
 
     ; Scan for yt-dlp.
-    RunWait(A_ComSpec ' /c yt-dlp --version >> "' . A_Temp . '\tmp.txt"', , "Hide")
+    RunWait(A_ComSpec ' /c yt-dlp --version > "' . A_Temp . '\tmp.txt"', , "Hide")
     If (FileExist(A_Temp . "\tmp.txt"))
     {
         ; This means that the command could not be found and yt-dlp is not installed.
@@ -718,7 +717,7 @@ installPython(pBooleanForceInstall)
     installStatusBar.Text := "Installing Python..."
     If (booleanForceInstall = false)
     {
-        RunWait(A_ComSpec ' /c python --version >> "' . A_Temp . '\video_downloader_python_install_log.txt"')
+        RunWait(A_ComSpec ' /c python --version > "' . A_Temp . '\video_downloader_python_install_log.txt"')
         Sleep(500)
         ; This occures when the command finds anything (e.g. Python version) => python is installed.
         If (FileRead(A_Temp . "\video_downloader_python_install_log.txt") != "")
@@ -848,7 +847,10 @@ generateHelpFile()
         "Available parameters for the VideoDownloaderSetup.exe:`n`n- /run-setup`n"
         "The script will install the library files, yt-dlp and other dependencies.`n- /force-run-setup`n"
         "Same as above, but it will overwrite all existing files.`n- /run-uninstall`n"
-        "Will guide the user through the uninstall process.`n`n"
+        "Will guide the user through the uninstall process. It is recommended to not use this parameter for " .
+        "uninstall purposes alone. Use the uninstall option in the control panel GUI instead.`n"
+        "- /run-integrity-check`n"
+        "Checks if all components are available to ensure a smooth process.`n`n"
         "Further help at the GitHub page: `"https://github.com/LeoTN/yt-dlp-autohotkey-gui`"",
         A_Desktop . "\VideoDownloaderSetupHelp.txt")
 }

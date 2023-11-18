@@ -159,7 +159,7 @@ startDownload(pCommandString, pBooleanSilent := enableSilentDownloadModeCheckbox
     If (!FileExist(tmpConfig) && downloadOptionsGUI_SubmitObject.UseTextFileForURLsCheckbox = true)
     {
         MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing: [" .
-            expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download status", "O Icon! 8192")
+            expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download Status", "O Icon! 8192")
         isDownloading := false
         Return
     }
@@ -913,7 +913,7 @@ reloadScriptPrompt()
         while (i >= 0)
         {
             ; Makes the progress bar feel smoother.
-            Loop 20
+            Loop (20)
             {
                 progressBar.Value += 1.25
                 Sleep(50)
@@ -962,7 +962,7 @@ terminateScriptPrompt()
         while (i >= 0)
         {
             ; Makes the progress bar feel smoother.
-            Loop 20
+            Loop (20)
             {
                 progressBar.Value += 1.25
                 Sleep(50)

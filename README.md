@@ -44,7 +44,7 @@ for users who do not want to spend time learning every single command line optio
 
 If you are a developer and would like to use the repository, please note that parts of the script need to be compiled and components such as Python or FFmpeg may need to be installed first. Therefore, I recommend first installing the program via the [installer](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest/download/VideoDownloaderInstaller.msi) and then cloning the repository into the installation directory. If you have any questions or suggestions, please feel free to write a post [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/discussions/categories/q-a).
 
-**I appreciate [yt-dlp](https://github.com/yt-dlp/yt-dlp) for providing such an incredibly useful repository for everyone free to use. Your or rather [these guys](https://github.com/ytdl-org/youtube-dl) work is the reason, why this script can even exist. I would also like to thank the team behind the [FFmpeg](https://ffmpeg.org) software, which is used to provide more functionality for yt-dlp. Thank you !**
+**I appreciate [yt-dlp](https://github.com/yt-dlp/yt-dlp) for providing such an incredibly useful repository for everyone free to use. Your or rather [these guys](https://github.com/ytdl-org/youtube-dl) work is the reason, why this script can even exist. I would also like to thank the team behind the [FFmpeg](https://ffmpeg.org) software, which is used to provide more functionality for yt-dlp. Thank you!**
 
 Link to my original project, which will most likely not be developed anymore: [youtube-downloader-using-ahk](https://github.com/LeoTN/youtube-downloader-using-ahk)
 

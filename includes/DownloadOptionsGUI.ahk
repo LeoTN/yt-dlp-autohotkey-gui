@@ -155,7 +155,10 @@ optionsGUI_onInit()
     {
         ProcessClose("DownloadOptionsGUITooltips.exe")
     }
-    Run(downloadOptionsGUITooltipFileLocation . " " . downloadOptionsGUI.Hwnd)
+    Try
+    {
+        Run(downloadOptionsGUITooltipFileLocation . " " . downloadOptionsGUI.Hwnd)
+    }
 }
 
 cancelDownload()

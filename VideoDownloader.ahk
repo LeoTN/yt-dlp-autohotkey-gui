@@ -171,40 +171,77 @@ onInit_handleScriptBaseFilesLocation()
 ; Runs a list of commands when the script is launched.
 onInit()
 {
-    booleanRepairNeeded := false
+    global downloadOptionsGUITooltipFileLocation := scriptBaseFilesLocation . "\library\scripts\DownloadOptionsGUITooltips.exe"
+    global ffmpegLocation := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "ffmpegLocation", "")
+    global youTubeBackGroundLocation := scriptBaseFilesLocation . "\library\assets\YouTubeBackground.jpg"
+    local scriptIconLocation := scriptBaseFilesLocation . "\library\assets\green_arrow_icon.ico"
+
     Try
     {
-        TraySetIcon(scriptBaseFilesLocation . "\library\assets\green_arrow_icon.ico")
+        TraySetIcon(scriptIconLocation)
     }
-    If (FileExist(scriptBaseFilesLocation . "\library\scripts\DownloadOptionsGUITooltips.exe"))
+    If (!FileExist(downloadOptionsGUITooltipFileLocation))
     {
-        global downloadOptionsGUITooltipFileLocation := scriptBaseFilesLocation . "\library\scripts\DownloadOptionsGUITooltips.exe"
-    }
-    Else
-    {
-        booleanRepairNeeded := true
-    }
-    If (FileExist(scriptBaseFilesLocation . "\library\FFmpeg\ffmpeg.exe"))
-    {
-        global ffmpegLocation := scriptBaseFilesLocation . "\library\FFmpeg\ffmpeg.exe"
-    }
-    Else
-    {
-        booleanRepairNeeded := true
-    }
-    If (booleanRepairNeeded = true)
-    {
-        result := MsgBox("Damaged or missing files detected. The script may run without them but it is highly recommended to run the setup."
-            "`n`nPress YES to run the setup or NO to ignore and run anyways.", "Missing FFmpeg Files", "YNC Icon!")
+        result := MsgBox("Missing tooltip executable file.`n`nNote: Although this file is not mandatory, it is recommended to run the .MSI "
+            . "installation file to repair the program.`n`nPrepare for setup?", "Corrupted / Missing Files", "YN Icon!")
         Switch (result)
         {
             Case "Yes":
                 {
-                    onInit_executeSetup()
+                    MsgBox("Terminating script. You can now run the .MSI installer file.",
+                        "Ready for Setup", "Iconi T5")
+                    ExitApp()
                 }
             Case "No":
                 {
-                    global ffmpegLocation := "NO_PATH_PROVIDED"
+                    ; Do nothing and run anyways. (In this case not risky)
+                }
+            Default:
+                {
+                    MsgBox("Terminating script.", "Script Status", "O Iconi T1.5")
+                    ExitApp()
+                }
+        }
+    }
+    If (!FileExist(ffmpegLocation))
+    {
+        result := MsgBox("Missing FFmpeg library.`n`nNote: Although these files are not mandatory, it is recommended to run the .MSI "
+            . "installation file to repair the program. In case you continue without the FFmpeg " .
+            "library, certain functions like video converting will not work!`n`nPrepare for setup?", "Corrupted / Missing Files", "YN Icon!")
+        Switch (result)
+        {
+            Case "Yes":
+                {
+                    MsgBox("Terminating script. You can now run the .MSI installer file.",
+                        "Ready for Setup", "Iconi T5")
+                    ExitApp()
+                }
+            Case "No":
+                {
+                    ; Do nothing and run anyways. (Normal risk but converting will not work)
+                }
+            Default:
+                {
+                    MsgBox("Terminating script.", "Script Status", "O Iconi T1.5")
+                    ExitApp()
+                }
+        }
+    }
+    If (!FileExist(youTubeBackGroundLocation) || !FileExist(scriptIconLocation))
+    {
+        result := MsgBox("Missing graphic files.`n`nNote: Although these files are not mandatory, it is recommended to run the .MSI "
+            . "installation file to repair the program.`n`nPrepare for setup?", "Corrupted / Missing Files", "YN Icon!")
+        Switch (result)
+        {
+            Case "Yes":
+                {
+                    MsgBox("Terminating script. You can now run the .MSI installer file.",
+                        "Ready for Setup", "Iconi T5")
+                    ExitApp()
+                }
+            Case "No":
+                {
+                    ; Do nothing and run anyways. (Low risk but missing graphics)
                 }
             Default:
                 {
@@ -214,7 +251,6 @@ onInit()
         }
     }
 
-    global youTubeBackGroundLocation := scriptBaseFilesLocation . "\library\assets\YouTubeBackground.jpg"
     ; Checks the system for other already running instances of this script.
     findProcessWithWildcard("VideoDownloader.exe")
 
@@ -272,7 +308,18 @@ onInit_checkIfSetupIsNeeded()
                 "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired")
             regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired", "")
         }
-        RunWait(A_ComSpec ' /c yt-dlp --version >> "' . A_Temp . '\tmp.txt"', , "Hide")
+        RunWait(A_ComSpec ' /c python --version > "' . A_Temp . '\tmp.txt"', , "Hide")
+        If (FileExist(A_Temp . "\tmp.txt"))
+        {
+            ; This means that the command could not be found and Python is not installed.
+            If (FileRead(A_Temp . "\tmp.txt") = "")
+            {
+                RegWrite(1, "REG_DWORD",
+                    "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired")
+                regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired", "")
+            }
+        }
+        RunWait(A_ComSpec ' /c yt-dlp --version > "' . A_Temp . '\tmp.txt"', , "Hide")
         If (FileExist(A_Temp . "\tmp.txt"))
         {
             ; This means that the command could not be found and yt-dlp is not installed.

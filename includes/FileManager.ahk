@@ -167,7 +167,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
             Try
             {
                 ; Creates the blacklist file with the template.
-                Loop templateArray.Length
+                Loop (templateArray.Length)
                 {
                     FileAppend(templateArray.Get(A_Index) . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
                 }
@@ -191,7 +191,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
         FileDelete(readConfigFile("BLACKLIST_FILE_LOCATION"))
         Return checkBlackListFile(itemToCompare)
     }
-    Loop templateArray.Length
+    Loop (templateArray.Length)
     {
         If (templateArray.Get(A_Index) != tmpArray.Get(A_Index))
         {
@@ -199,7 +199,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
             Try
             {
                 ; Creates the blacklist file with the template.
-                Loop templateArray.Length
+                Loop (templateArray.Length)
                 {
                     FileAppend(templateArray.Get(A_Index) . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
                 }
@@ -216,7 +216,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
     ; it does not search like InStr() !
     blacklistArray := readFile(readConfigFile("BLACKLIST_FILE_LOCATION"))
 
-    Loop blacklistArray.Length
+    Loop (blacklistArray.Length)
     {
         If (itemToCompare = blacklistArray.Get(A_Index))
         {

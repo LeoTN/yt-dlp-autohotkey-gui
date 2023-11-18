@@ -114,7 +114,10 @@ createMainGUI()
     allMenus.SetIcon("&Info", "shell32.dll", 24)
 
     mainGUI := Gui(, "VD - Control Panel")
-    mainGUI.Add("Picture", "w320 h-1 x-10 y-10", youTubeBackGroundLocation)
+    Try
+    {
+        mainGUI.Add("Picture", "w320 h-1 x-10 y-10", youTubeBackGroundLocation)
+    }
     mainGUI.MenuBar := allMenus
 }
 
