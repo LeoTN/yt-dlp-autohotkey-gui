@@ -63,6 +63,7 @@ elseif ($pSetupType -eq "/force-run-setup") {
 }
 
 if (Test-Path -Path $ffmpegArchivePath) {
+    $host.UI.RawUI.WindowTitle = "Postprocessing FFmpeg files..."
     Write-Host "FFmpeg was downloaded successfully. Starting further processing...."
 
     Remove-Item -Path $extractedDirectory -Recurse -Force -ErrorAction SilentlyContinue

@@ -171,7 +171,7 @@ createInstallGUI()
     installScanAgainButton := installGUI.Add("Button", "xp+87", "Scan again")
 
     installStartButton := installGUI.Add("Button", "xp-289 yp+35 w80 Disabled Default", "Install")
-    installCancelButton := installGUI.Add("Button", "xp+85 w80", "Cancel")
+    installCancelButton := installGUI.Add("Button", "xp+85 w80 Disabled", "Cancel")
     installOpenGitHubIssuesButton := installGUI.Add("Button", "xp+85", "Open GitHub issues")
     installProgressBar := installGUI.Add("Progress", "xp+119 yp+3 Range0-400")
     installStatusBar := installGUI.Add("StatusBar", , "Installation not running...")
@@ -448,6 +448,7 @@ run_setup(pBooleanForceInstall := false)
     If (checkInternetConnection() = true)
     {
         installStartButton.Opt("+Disabled")
+        installCancelButton.Opt("-Disabled")
         MsgBox("You can use the computer during the setup. It is recommended to avoid restarting during the installation process."
             . " Make sure to keep all appearing windows open until they close by themselves.", "VideoDownloader Setup Status", "O Iconi")
         ; The setup begins with the FFmpeg files because they take the most time to download.
@@ -507,7 +508,7 @@ run_setup(pBooleanForceInstall := false)
             "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired")
         Sleep(2000)
         MsgBox("The setup has been completed. You can now use the main application and start downloading videos.",
-            "VideoDownloader Setup Status", "O Iconi")
+            "VideoDownloader Setup Status", "O Iconi 4096")
         ; Starts the main application for the user.
         regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "scriptBaseFilesLocation", "")
         ; Removes the last subfolder if it exists.
@@ -571,7 +572,7 @@ uninstallScript()
     If (tmp1 = true)
     {
         uninstallStatusBar.SetText("Currently uninstalling yt-dlp...")
-        RunWait(A_ComSpec ' /c python -m pip uninstall -y "yt-dlp"')
+        RunWait(A_ComSpec ' /c title Uninstalling yt-dlp... & python -m pip uninstall -y "yt-dlp"')
         uninstallProgressBar.Value += 100
     }
     If (tmp2 = true)
@@ -588,12 +589,12 @@ uninstallScript()
                     Break
                 }
             }
-            RunWait(A_ComSpec ' /c winget uninstall "' . tmp_fileRead . '"')
+            RunWait(A_ComSpec ' /c title Uninstalling Python... & winget uninstall "' . tmp_fileRead . '"')
             uninstallProgressBar.Value += 100
         }
         Else
         {
-            RunWait(A_ComSpec ' /c winget uninstall "Python" --version "latest"')
+            RunWait(A_ComSpec ' /c title Uninstalling Python... & winget uninstall "Python" --version "latest"')
             If (!WinExist("ahk_id " . uninstallGUI.Hwnd))
             {
                 Hotkey_openUninstallGUI()
@@ -705,7 +706,8 @@ uninstallScript()
     }
     uninstallStatusBar.SetText("Successfully uninstalled script dependencies. Until next time :')")
     Sleep(5000)
-    Run(A_ComSpec ' /c msiexec.exe /x "' . productCode . '" /quiet', , "Min")
+    Run(A_ComSpec ' /c title Do NOT close! This window will disappear when the uninstall process has finished.'
+        . ' & msiexec.exe /x "' . productCode . '" /quiet', , "Min")
     terminateSetup()
 }
 
@@ -726,7 +728,7 @@ installPython(pBooleanForceInstall)
         }
     }
 
-    Run(A_ComSpec ' /k winget install "python" --accept-source-agreements --accept-package-agreements --force --source "msstore"',
+    Run(A_ComSpec ' /k title Installing python... & winget install "python" --accept-source-agreements --accept-package-agreements --force --source "msstore"',
         , "Min", &consolePID)
     Sleep(1500)
     Try
@@ -766,12 +768,12 @@ installYTDLP(pBooleanForceInstall)
     If (booleanForceInstall = true)
     {
         ; Will install the latest version of yt-dlp from GitHub.
-        Run(A_ComSpec ' /c python -m pip install --force-reinstall "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
+        Run(A_ComSpec ' /c title Installing yt-dlp... & python -m pip install --force-reinstall "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
             , "Min", &consolePID)
     }
     Else
     {
-        Run(A_ComSpec ' /c python -m pip install "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
+        Run(A_ComSpec ' /c title Installing yt-dlp... & python -m pip install "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
             , "Min", &consolePID)
     }
 
@@ -814,7 +816,7 @@ installFFmpeg(pBooleanForceInstall)
     }
     Else
     {
-        MsgBox("Could complete setup (FFmpeg installation).`n`nTerminating script.", "Error !", "O IconX T1.5")
+        MsgBox("Could complete setup (FFmpeg installation) due to a missing PowerShell file.`n`nTerminating script.", "Error !", "O IconX T1.5")
         terminateSetup()
     }
 }
