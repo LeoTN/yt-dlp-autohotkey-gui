@@ -67,7 +67,7 @@ registerHotkeys()
     Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet", , "T2"), "Off")
 
     ; Hotkey for clearing the URL file.
-    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), "Off")
+    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => manageURLFile(), "Off")
 
     global isDownloading := false
 }
@@ -156,6 +156,27 @@ startDownload(pCommandString, pBooleanSilent := enableSilentDownloadModeCheckbox
         WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
     }
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
+    SplitPath(tmpConfig, , &outDir)
+    If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
+    {
+        result := MsgBox("An URL file from an unfinished download has been found.`n`n"
+            "Do you want do add the URLs to the current URL file?", "Unfinished Download Found", "YN Icon!")
+        Switch (result)
+        {
+            Case "Yes":
+                {
+                    ; Writes the content from the last downloaded file to the new one.
+                    FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"), tmpConfig)
+                }
+            Default:
+                {
+                    Try
+                    {
+                        FileRecycle(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt")
+                    }
+                }
+        }
+    }
     If (!FileExist(tmpConfig) && downloadOptionsGUI_SubmitObject.UseTextFileForURLsCheckbox = true)
     {
         MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing: [" .
@@ -165,7 +186,6 @@ startDownload(pCommandString, pBooleanSilent := enableSilentDownloadModeCheckbox
     }
     If (downloadOptionsGUI_SubmitObject.useTextFileForURLsCheckbox = true)
     {
-        SplitPath(tmpConfig, , &outDir)
         If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = true)
         {
             FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
@@ -684,19 +704,7 @@ toggleHotkey(pStateArray)
     Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray.Get(4))
     Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray.Get(5))
     Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray.Get(6))
-    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), onOffArray.Get(7))
-}
-
-clearURLFile()
-{
-    If (FileExist(readConfigFile("URL_FILE_LOCATION")))
-    {
-        manageURLFile()
-    }
-    Else
-    {
-        MsgBox("The  URL file does not exist !`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
-    }
+    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => manageURLFile(), onOffArray.Get(7))
 }
 
 ; Opens only one instance each
