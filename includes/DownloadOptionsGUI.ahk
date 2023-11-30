@@ -17,7 +17,7 @@ createDownloadOptionsGUI()
     ignoreErrorsCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+10 yp+20 vIgnoreErrorsCheckbox", "Ignore errors")
     abortOnErrorCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vAbortOnErrorCheckbox", "Abort on error")
     ignoreAllOptionsCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vIgnoreAllOptionsCheckbox", "Ignore all options")
-    hideDownloadCommandPromptCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+110 yp-40 vHideDownloadCommandPromptCheckbox",
+    enableSilentDownloadModeCheckbox := downloadOptionsGUI.Add("Checkbox", "xp+110 yp-40 vEnableSilentDownloadModeCheckbox",
         "Download in a background task")
     clearURLFileAfterDownloadCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 Checked vClearURLFileAfterDownloadCheckbox",
         "Clear the URL file after download")
@@ -61,8 +61,8 @@ createDownloadOptionsGUI()
     chooseAudioFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1 vChooseAudioFormatDropDownList",
         downloadAudioFormatArray)
 
-    alwaysHighestQualityBothCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5 Checked vAlwaysHighestQualityBothCheckbox",
-        "Balance quality")
+    useReencodingCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5 Checked vUseReencodingCheckbox",
+        "Recode video")
     prioritiseVideoQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vPrioritiseVideoQualityCheckbox",
         "Prefer video quality")
     prioritiseAudioQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vPrioritiseAudioQualityCheckbox",
@@ -98,7 +98,7 @@ createDownloadOptionsGUI()
     ignoreErrorsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     abortOnErrorCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     ignoreAllOptionsCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkbox_ignoreAllOptions())
-    hideDownloadCommandPromptCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    enableSilentDownloadModeCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     clearURLFileAfterDownloadCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     enableFastDownloadModeCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkbox_fastDownload())
     higherRetryAmountCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
@@ -113,7 +113,7 @@ createDownloadOptionsGUI()
         handleDownloadOptionsGUI_Checkbox_DownloadWholePlaylist())
     useDefaultDownloadLocationCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     downloadAudioOnlyCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
-    alwaysHighestQualityBothCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    useReencodingCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     prioritiseVideoQualityCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     prioritiseAudioQualityCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     terminateScriptAfterDownloadCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
@@ -131,6 +131,8 @@ createDownloadOptionsGUI()
 ; Runs a few commands when the script is executed.
 optionsGUI_onInit()
 {
+    global downloadOptionsGUITooltipFileLocation
+
     createDownloadOptionsGUI()
     buildCommandString()
     Sleep(1000)
@@ -148,11 +150,20 @@ optionsGUI_onInit()
         }
     }
     global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
+    generateHWNDArrayFile()
+    If (ProcessExist("DownloadOptionsGUITooltips.exe"))
+    {
+        ProcessClose("DownloadOptionsGUITooltips.exe")
+    }
+    Try
+    {
+        Run(downloadOptionsGUITooltipFileLocation . " " . downloadOptionsGUI.Hwnd)
+    }
 }
 
 cancelDownload()
 {
-    result := MsgBox("Do you really want to cancel the ongoing download process ?"
+    result := MsgBox("Do you really want to cancel the running download process ?"
         , "Cancel Downloading", "YN Icon! 4096 T10")
 
     If (result = "Yes")
@@ -261,7 +272,7 @@ handleDownloadOptionsGUI_Checkboxes()
         Case 1:
         {
             ; Add the video description to a .description file.
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 commandString .= "--write-description "
                 If (useDefaultDownloadLocationCheckbox.Value = true)
@@ -291,7 +302,7 @@ handleDownloadOptionsGUI_Checkboxes()
         Case 1:
         {
             ; Download the video 's comment section.
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 commandString .= "--write-comments "
                 ; Currently not implemeted into yt-dlp.
@@ -315,7 +326,7 @@ handleDownloadOptionsGUI_Checkboxes()
         Case 1:
         {
             ; Download the video thumbnail and add it to the downloaded video.
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 commandString .= "--write-thumbnail "
                 commandString .= "--embed-thumbnail "
@@ -345,7 +356,7 @@ handleDownloadOptionsGUI_Checkboxes()
         Case 1:
         {
             ; Download the video's subtitles and embed tem into the downloaded video.
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 commandString .= "--write-subs "
                 commandString .= '--sub-langs "all" '
@@ -397,10 +408,10 @@ handleDownloadOptionsGUI_Checkboxes()
         Case 0:
         {
             ; Downloads the video with audio.
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 chooseVideoFormatDropDownList.Opt("-Disabled")
-                alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+                useReencodingCheckbox.Opt("-Disabled")
                 prioritiseVideoQualityCheckbox.Opt("-Disabled")
                 prioritiseAudioQualityCheckbox.Opt("-Disabled")
             }
@@ -411,10 +422,10 @@ handleDownloadOptionsGUI_Checkboxes()
             ; Only extracts the audio and creates the desired audio file type.
             chooseVideoFormatDropDownList.Opt("+Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
-            If (enableFastDownloadModeCheckbox.Value = 0)
+            If (enableFastDownloadModeCheckbox.Value = false)
             {
                 chooseAudioFormatDropDownList.Opt("-Disabled")
-                alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+                useReencodingCheckbox.Opt("+Disabled")
                 prioritiseVideoQualityCheckbox.Opt("+Disabled")
                 prioritiseAudioQualityCheckbox.Opt("+Disabled")
             }
@@ -431,7 +442,7 @@ handleDownloadOptionsGUI_Checkboxes()
     }
     If (downloadAudioOnlyCheckbox.Value != true && enableFastDownloadModeCheckbox.Value != true)
     {
-        Switch (alwaysHighestQualityBothCheckbox.Value)
+        Switch (useReencodingCheckbox.Value)
         {
             Case 0:
             {
@@ -441,39 +452,45 @@ handleDownloadOptionsGUI_Checkboxes()
             }
             Case 1:
             {
-                ; Try to choose the best audio quality both audio and video.
+                ; When using the re-encoding option there are no preferences available for selection.
                 prioritiseVideoQualityCheckbox.Opt("+Disabled")
                 prioritiseAudioQualityCheckbox.Opt("+Disabled")
-                If (enableFastDownloadModeCheckbox.Value = 0)
+                If (enableFastDownloadModeCheckbox.Value = false)
                 {
-                    commandString .= '--format "bestvideo+bestaudio" '
+                    commandString .= '--format "bestvideo+bestaudio/best" '
                 }
             }
         }
-        If (alwaysHighestQualityBothCheckbox.Value != true && downloadAudioOnlyCheckbox.Value != true)
+        If (downloadAudioOnlyCheckbox.Value != true)
         {
             Switch (prioritiseVideoQualityCheckbox.Value)
             {
                 Case 0:
                 {
                     ; Let the user choose a prefered option.
-                    alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+                    useReencodingCheckbox.Opt("-Disabled")
                     prioritiseAudioQualityCheckbox.Opt("-Disabled")
                 }
                 Case 1:
                 {
                     ; Try to choose the best audio quality both audio and video.
-                    alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+                    useReencodingCheckbox.Opt("+Disabled")
                     prioritiseAudioQualityCheckbox.Opt("+Disabled")
-                    If (enableFastDownloadModeCheckbox.Value = 0)
+                    If (enableFastDownloadModeCheckbox.Value = false)
                     {
                         If (downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] = "Best format for quality")
                         {
-                            commandString .= '--format "bestvideo" '
+                            ; This downloads the best video or merged if format unavailable.
+                            commandString .= '--format "bestvideo+bestaudio/best" '
                         }
                         Else
                         {
-                            commandString .= '--format "bestvideo[ext=' .
+                            If (downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] = "mp4")
+                            {
+                                ; MP4 is needs extra parameters because of YouTube stuff.
+                                commandString .= '--format "[ext=mp4][vcodec^=avc]" '
+                            }
+                            commandString .= '--format "[ext=' .
                                 downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] . ']" '
                         }
                     }
@@ -486,15 +503,15 @@ handleDownloadOptionsGUI_Checkboxes()
                     Case 0:
                     {
                         ; Let the user choose a prefered option.
-                        alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+                        useReencodingCheckbox.Opt("-Disabled")
                         prioritiseVideoQualityCheckbox.Opt("-Disabled")
                     }
                     Case 1:
                     {
                         ; Try to choose the best audio quality both audio and video.
-                        alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+                        useReencodingCheckbox.Opt("+Disabled")
                         prioritiseVideoQualityCheckbox.Opt("+Disabled")
-                        If (enableFastDownloadModeCheckbox.Value = 0)
+                        If (enableFastDownloadModeCheckbox.Value = false)
                         {
                             If (downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] = "Best format for quality")
                             {
@@ -502,7 +519,7 @@ handleDownloadOptionsGUI_Checkboxes()
                             }
                             Else
                             {
-                                commandString .= '--format "bestaudio[ext=' .
+                                commandString .= '--format "[ext=' .
                                     downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] . ']" '
                             }
                         }
@@ -527,7 +544,7 @@ handleDownloadOptionsGUI_Checkbox_fastDownload()
             downloadVideoThumbnailCheckbox.Opt("-Disabled")
             downloadVideoSubtitlesCheckbox.Opt("-Disabled")
             chooseVideoFormatDropDownList.Opt("-Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+            useReencodingCheckbox.Opt("-Disabled")
             prioritiseVideoQualityCheckbox.Opt("-Disabled")
             prioritiseAudioQualityCheckbox.Opt("-Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
@@ -543,7 +560,7 @@ handleDownloadOptionsGUI_Checkbox_fastDownload()
             downloadVideoThumbnailCheckbox.Opt("+Disabled")
             downloadVideoSubtitlesCheckbox.Opt("+Disabled")
             chooseVideoFormatDropDownList.Opt("+Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+            useReencodingCheckbox.Opt("+Disabled")
             prioritiseVideoQualityCheckbox.Opt("+Disabled")
             prioritiseAudioQualityCheckbox.Opt("+Disabled")
             chooseAudioFormatDropDownList.Opt("+Disabled")
@@ -578,7 +595,7 @@ handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
             useDownloadArchiveCheckbox.Opt("-Disabled")
             chooseVideoFormatDropDownList.Opt("-Disabled")
             downloadAudioOnlyCheckbox.Opt("-Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+            useReencodingCheckbox.Opt("-Disabled")
             prioritiseVideoQualityCheckbox.Opt("-Disabled")
             prioritiseAudioQualityCheckbox.Opt("-Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
@@ -607,7 +624,7 @@ handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
             useDownloadArchiveCheckbox.Opt("+Disabled")
             chooseVideoFormatDropDownList.Opt("+Disabled")
             downloadAudioOnlyCheckbox.Opt("+Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+            useReencodingCheckbox.Opt("+Disabled")
             prioritiseVideoQualityCheckbox.Opt("+Disabled")
             prioritiseAudioQualityCheckbox.Opt("+Disabled")
             chooseAudioFormatDropDownList.Opt("+Disabled")
@@ -621,19 +638,19 @@ handleDownloadOptionsGUI_InputFields()
     global commandString
     static newDownloadFolder := ""
 
-    If (limitDownloadRateEdit.Value != 0)
+    If (limitDownloadRateEdit.Value != false)
     {
         If (limitDownloadRateEdit.Value > 100)
         {
             limitDownloadRateEdit.Value := 100
         }
         ; Limit the download rate to a maximum value in Megabytes per second.
-        If (enableFastDownloadModeCheckbox.Value = 0)
+        If (enableFastDownloadModeCheckbox.Value = false)
         {
             commandString .= "--limit-rate " . limitDownloadRateEdit.Value . "MB "
         }
     }
-    If (maxDownloadSizeEdit.Value != 0)
+    If (maxDownloadSizeEdit.Value != false)
     {
         ; Limit the download file size to a maximum value in Megabytes.
         commandString .= '--match-filter "filesize_approx<' . maxDownloadSizeEdit.Value . 'M" '
@@ -665,13 +682,13 @@ handleDownloadOptionsGUI_InputFields()
     If (enableFastDownloadModeCheckbox.Value != true && downloadAudioOnlyCheckbox.Value != true &&
         downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] != "Best format for quality")
     {
-        commandString .= '--remux-video "' . downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] . '" '
+        commandString .= '--recode-video "' . downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] . '" '
     }
 }
 
 handleDownloadOptionsGUI_Checkbox_DownloadWholePlaylist()
 {
-    If (useTextFileForURLsCheckbox.Value = 0)
+    If (useTextFileForURLsCheckbox.Value = false)
     {
         downloadWholePlaylistsCheckbox.Value := 0
     }
@@ -730,120 +747,43 @@ buildCommandString()
     Return commandString
 }
 
-; When called it will create and maintain several arrays in order to provide tool tip information for user.
-; Can be called with a set timer to react upon the user hovering over a GUI element.
-handleDownloadOptionsGUI_toolTipManager(pBooleanRefresh := false)
+generateHWNDArrayFile()
 {
-    booleanRefresh := pBooleanRefresh
-    static elementHWNDArray := []
-    ; Only refreshes if required or if the array is empty (first time call of the function).
-    If (booleanRefresh = true || !elementHWNDArray.Has(2))
-    {
-        arrayCounter := 1
-        ; Saves the HWND of all GUI elements into the HWND array.
-        For (GuiCtrlObj in downloadOptionsGUI)
-        {
-            ; This condition ignore all other GUI elements except of checkboxes, edits and lists.
-            If (InStr(GuiCtrlObj.Type, "Checkbox") || InStr(GuiCtrlObj.Type, "Edit")
-                || InStr(GuiCtrlObj.Type, "DDL") || InStr(GuiCtrlObj.Type, "Button"))
-            {
-                elementHWNDArray.InsertAt(arrayCounter, GuiCtrlObj.Hwnd)
-                arrayCounter++
-            }
-        }
-    }
-    ; Checks if the download GUI exists.
-    ; The tooltips are disabled while downloads are running because it would interfer with the progress bar.
-    ; I know this is a sloppy solution but it might be changed in the future.
-    If (WinExist("ahk_id " . downloadOptionsGUI.Hwnd) && isDownloading = false)
-    {
-        handleDownloadOptionsGUI_toolTipLoop(elementHWNDArray)
-    }
-}
-; Possible rework idea :=> use array instead of tmp variables.
-; When called checks if the mouse hovers over a GUI element and shows the specific tooltip.
-handleDownloadOptionsGUI_toolTipLoop(pElementHWNDArray)
-{
-    elementHWNDArray := pElementHWNDArray
-    ; Contains an individual tool tip for every control that requires one.
-    static elementToolTipArray := []
-    If (!elementToolTipArray.Has(2))
-    {
-        tmp1 := "Ignores errors thrown by most events."
-        tmp2 := ""
-        tmp3 := "Starts the download with the required options only."
-        tmp4 := "Hides the PowerShell window."
-        tmp5 := ""
-        tmp6 := "Disables most time-consuming options to increase download and processing speed."
-        tmp7 := ""
-        tmp8 := "This option is still experimental and might cause weird results."
-        tmp9 := "Useful option to try when the download fails too often."
-        tmp10 := ""
-        tmp11 := ""
-        tmp12 := ""
-        tmp13 := ""
-        tmp14 := "Forces the download of complete playlists if a URL contains a reference to it."
-        tmp15 := "Saves downloaded videos into an archive file to avoid downloading a video twice."
-        tmp16 := "Select a video format."
-        tmp17 := ""
-        tmp18 := "Select an audio format."
-        tmp19 := "Tries to find a compromise between audio and video quality."
-        tmp20 := ""
-        tmp21 := ""
-        tmp22 := "Usually, a text file will be given to yt-dlp to download, but it is also possible to select a single URL."
-        tmp23 := "The current location of the URL file is: [" . readConfigFile("URL_FILE_LOCATION") . "]."
-        tmp24 := "Saves all downloads to the default path specified in the config file."
-        tmp25 := "The current default download path is: [" . readConfigFile("DOWNLOAD_PATH") . "]." .
-            "`nKeep in mind, that selecting a folder will actually download straight into it without any timestamp subfolders."
-        tmp26 := ""
-        tmp27 := ""
-        tmp28 := "Shows no prompt when download in a background task is activated."
-        tmp29 := "Single click to save a preset or double click to save as default."
-        tmp30 := "The default preset will be loaded when no previous temporary preset is found."
+    global downloadOptionsGUI
 
-        Loop (30)
+    elementHWNDArray := []
+    tmpArray := []
+    arrayCounter := 1
+    fileLocation := A_Temp . "\download_options_GUI_HWND_File.txt"
+    ; Saves the HWND of all GUI elements into the HWND array.
+    For (GuiCtrlObj in downloadOptionsGUI)
+    {
+        ; This condition ignore all other GUI elements except of checkboxes, edits and lists.
+        If (InStr(GuiCtrlObj.Type, "Checkbox") || InStr(GuiCtrlObj.Type, "Edit")
+            || InStr(GuiCtrlObj.Type, "DDL") || InStr(GuiCtrlObj.Type, "Button"))
         {
-            elementToolTipArray.InsertAt(A_Index, %"tmp" . A_Index%)
-            ; Clears the cache to give free space.
-            %"tmp" . A_Index% := ""
+            tmpArray.InsertAt(arrayCounter, GuiCtrlObj.Hwnd)
+            arrayCounter++
         }
     }
-
-    If (WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
+    ; Prepares empty array slots for the next step.
+    Loop (tmpArray.Length)
     {
-        MouseGetPos(, , &outWinHWND, &outControlHWND, 2)
-        Loop (elementHWNDArray.Length)
-        {
-            If (elementHWNDArray.Get(A_Index) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND)
-            {
-                ; Saves the index of the outer loop because inside the while loops the value of A_Index will be different.
-                tmpIndex := A_Index
-                i := 0
-                ; In case the cursor is above a control element it will have to stay for 2 seconds to trigger the tool tip.
-                While (elementHWNDArray.Get(tmpIndex) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND)
-                {
-                    Sleep(100)
-                    i++
-                    If (i >= 10)
-                    {
-                        Break
-                    }
-                    Else If (!(elementHWNDArray.Get(tmpIndex) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND))
-                    {
-                        Return
-                    }
-                }
-                ToolTip(elementToolTipArray.Get(A_Index))
-                ; Waits for the user to read the tool tip as he stays above the control element with the cursor.
-                While (elementHWNDArray.Get(tmpIndex) = outControlHWND && downloadOptionsGUI.Hwnd = outWinHWND)
-                {
-                    MouseGetPos(, , &outWinHWND, &outControlHWND, 2)
-                    Sleep(100)
-                }
-                ToolTip()
-                Break
-            }
-        }
+        elementHWNDArray.InsertAt(A_Index, "")
+    }
+    ; This Loop inverts the order of the elements inside the tmpArray so that the order is correct when the items are
+    ; read again by the file read loop. It makes sense, trust me bro.
+    Loop (tmpArray.Length)
+    {
+        elementHWNDArray.InsertAt(tmpArray.Length - A_Index + 1, tmpArray.Get(A_Index))
+    }
+    Try
+    {
+        FileDelete(fileLocation)
+    }
+    Loop (elementHWNDArray.Length)
+    {
+        FileAppend(elementHWNDArray.Get(A_Index) . "`n", fileLocation)
     }
 }
 

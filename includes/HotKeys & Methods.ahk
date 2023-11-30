@@ -67,7 +67,7 @@ registerHotkeys()
     Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet", , "T2"), "Off")
 
     ; Hotkey for clearing the URL file.
-    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), "Off")
+    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => manageURLFile(), "Off")
 
     global isDownloading := false
 }
@@ -105,15 +105,11 @@ Hotkey_openOptionsGUI()
         {
             downloadOptionsGUI.Show("w500 h405")
             flipflop := false
-            ; Starts the tool tip timer to react upon the user hovering over gui elements.
-            SetTimer(handleDownloadOptionsGUI_toolTipManager, 1000)
         }
         Else If (flipflop = false && WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
         {
             downloadOptionsGUI.Hide()
             flipflop := true
-            ; Stops the tool tip timer.
-            SetTimer(handleDownloadOptionsGUI_toolTipManager, 0)
         }
         Else
         {
@@ -129,7 +125,7 @@ FUNCTION SECTION
 */
 
 ; Important function which executes the built command string by pasting it into the console.
-startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbox.Value)
+startDownload(pCommandString, pBooleanSilent := enableSilentDownloadModeCheckbox.Value)
 {
     global isDownloading
     If (checkInternetConnection() = false)
@@ -160,16 +156,36 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
         WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
     }
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
+    SplitPath(tmpConfig, , &outDir)
+    If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
+    {
+        result := MsgBox("An URL file from an unfinished download has been found.`n`n"
+            "Do you want do add the URLs to the current URL file?", "Unfinished Download Found", "YN Icon!")
+        Switch (result)
+        {
+            Case "Yes":
+                {
+                    ; Writes the content from the last downloaded file to the new one.
+                    FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"), tmpConfig)
+                }
+            Default:
+                {
+                    Try
+                    {
+                        FileRecycle(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt")
+                    }
+                }
+        }
+    }
     If (!FileExist(tmpConfig) && downloadOptionsGUI_SubmitObject.UseTextFileForURLsCheckbox = true)
     {
         MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing: [" .
-            expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download status", "O Icon! 8192")
+            expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download Status", "O Icon! 8192")
         isDownloading := false
         Return
     }
     If (downloadOptionsGUI_SubmitObject.useTextFileForURLsCheckbox = true)
     {
-        SplitPath(tmpConfig, , &outDir)
         If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = true)
         {
             FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
@@ -201,8 +217,15 @@ startDownload(pCommandString, pBooleanSilent := hideDownloadCommandPromptCheckbo
     {
         isDownloading := false
         saveGUISettingsAsPreset("last_settings", true)
-        ExitApp()
-        ExitApp()
+        If (downloadOptionsGUI_SubmitObject.EnableSilentDownloadModeCheckbox = false)
+        {
+            terminateScriptPrompt()
+        }
+        Else
+        {
+            ExitApp()
+            ExitApp()
+        }
     }
     Else
     {
@@ -229,7 +252,7 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
     global hiddenConsolePID
     global visualPowershellPID
 
-    Run(A_ComSpec . ' /c ' . command . ' > "' . A_Temp
+    Run(A_ComSpec . ' /c title Download is running... & ' . command . ' > "' . A_Temp
         . '\yt_dlp_download_log.txt" && title Completed... && timeout /T 3', , "Min", &hiddenConsolePID)
     ProcessWait(hiddenConsolePID)
 
@@ -241,7 +264,7 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
             FileDelete(A_Temp . "\yt_dlp_download_log.txt")
         }
         ; The powershell script now waits for the hook file.
-        Run('powershell.exe -noExit -executionPolicy bypass -file "' . scriptBaseFilesLocation . '\library\MonitorHookFile.ps1"'
+        Run('powershell.exe -noExit -executionPolicy bypass -file "' . scriptBaseFilesLocation . '\library\scripts\MonitorHookFile.ps1"'
             , , "Min", &visualPowershellPID)
         WinWait("ahk_pid " . visualPowershellPID)
         WinActivate("ahk_pid " . visualPowershellPID)
@@ -349,8 +372,8 @@ startOfFileReadLoop:
             partProgress := 0
             downloadStatusText.Text := skippedVideoArchiveAmount . " video(s) already in archive file."
             ; Calculates the progress bar value with all videos processed.
-            tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
-            currentBarValue := tmp_result * 100
+            tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+            currentBarValue := tmpResult * 100
             ; Applies the changes to the GUI progress bar.
             downloadStatusProgressBar.Value := currentBarValue
             Sleep(100)
@@ -363,8 +386,8 @@ startOfFileReadLoop:
             partProgress := 0
             downloadStatusText.Text := skippedVideoPresentAmount . " video(s) already present."
             ; Calculates the progress bar value with all videos processed.
-            tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
-            currentBarValue := tmp_result * 100
+            tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+            currentBarValue := tmpResult * 100
             ; Applies the changes to the GUI progress bar.
             downloadStatusProgressBar.Value := currentBarValue
             Sleep(100)
@@ -381,8 +404,8 @@ startOfFileReadLoop:
                 partProgress := 0
                 downloadStatusText.Text := skippedVideoMaxSizeAmount . " video(s) larger than maximum filesize."
                 ; Calculates the progress bar value with all videos processed.
-                tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
-                currentBarValue := tmp_result * 100
+                tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+                currentBarValue := tmpResult * 100
                 ; Applies the changes to the GUI progress bar.
                 downloadStatusProgressBar.Value := currentBarValue
                 Sleep(100)
@@ -420,11 +443,19 @@ startOfFileReadLoop:
                 }
             }
         }
-        ; Calculates the progress bar value with all videos processed.
-        tmp_result := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
-        currentBarValue := tmp_result * 100 + partProgress
-        ; Applies the changes to the GUI progress bar.
-        downloadStatusProgressBar.Value := currentBarValue
+        If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox = false)
+        {
+            ; Calculates the progress bar value with all videos processed.
+            tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+            currentBarValue := tmpResult * 100 + partProgress
+            ; Applies the changes to the GUI progress bar.
+            downloadStatusProgressBar.Value := currentBarValue
+        }
+        Else
+        {
+            ; This makes sure that the progress animation is still displayed.
+            downloadStatusProgressBar.Value := maximumBarValue - 1
+        }
         parsedLines++
     }
     ; When the loop reaches the file end it will check if the console log has reached it's end.
@@ -469,7 +500,7 @@ startOfFileReadLoop:
             downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
         }
     }
-    If (downloadOptionsGUI_SubmitObject.HideDownloadCommandPromptCheckbox != true)
+    If (downloadOptionsGUI_SubmitObject.enableSilentDownloadModeCheckbox != true)
     {
         MsgBox("Total video amount: " . videoAmount .
             "`nSkipped Videos (already in archive): " . skippedVideoArchiveAmount .
@@ -483,6 +514,22 @@ startOfFileReadLoop:
 postProcessDownloadFiles()
 {
     tmpConfig := readConfigFile("DOWNLOAD_PATH")
+    If (readConfigFile("DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD") = true
+        && downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox = true)
+    {
+        ; Prepares for the upcomming download folder content check.
+        tmpPath := tmpConfig . "\" . downloadTime . "\media\*.*"
+        If (!FileExist(tmpPath))
+        {
+            SplitPath(tmpPath, , &outDir)
+            SplitPath(outDir, , &outDir)
+            Try
+            {
+                DirDelete(outDir, true)
+            }
+            Return
+        }
+    }
     ; Moves and renames all important text files into the download directory.
     Try
     {
@@ -542,7 +589,7 @@ postProcessDownloadFiles()
     }
     Catch
     {
-        MsgBox("Could not write to download log file.", "Warning !", "O Icon! T1.5")
+        MsgBox("Malfunction while writing to download log file.", "Warning !", "O Icon! T1.5")
     }
 
     ; Creates the download summary text file.
@@ -657,19 +704,7 @@ toggleHotkey(pStateArray)
     Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray.Get(4))
     Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray.Get(5))
     Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray.Get(6))
-    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), onOffArray.Get(7))
-}
-
-clearURLFile()
-{
-    If (FileExist(readConfigFile("URL_FILE_LOCATION")))
-    {
-        manageURLFile()
-    }
-    Else
-    {
-        MsgBox("The  URL file does not exist !`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
-    }
+    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => manageURLFile(), onOffArray.Get(7))
 }
 
 ; Opens only one instance each
@@ -886,7 +921,7 @@ reloadScriptPrompt()
         while (i >= 0)
         {
             ; Makes the progress bar feel smoother.
-            Loop 20
+            Loop (20)
             {
                 progressBar.Value += 1.25
                 Sleep(50)
@@ -935,7 +970,7 @@ terminateScriptPrompt()
         while (i >= 0)
         {
             ; Makes the progress bar feel smoother.
-            Loop 20
+            Loop (20)
             {
                 progressBar.Value += 1.25
                 Sleep(50)
@@ -1090,8 +1125,7 @@ scriptTutorial()
     }
     MsgBox("If you see the download options GUI for the very first time,`nit might be a bit overwhelming, but once you have"
         "`nused this script a few times it will become more familiar.`n`nQuick tip: "
-        "`nHover over an option with the mouse cursor`nin order to gain extra information."
-        "`nNote :`nThis does only work if there is`nno download process running at the moment."
+        "`nHover over an option with the mouse cursor`nto gain extra information."
         "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Use Download Options GUI", "O Iconi 262144")
     MsgBox("Take a look at the top right corner of the download options GUI."
         "`nPresets can be used to store the current configuration`nand load it later on."

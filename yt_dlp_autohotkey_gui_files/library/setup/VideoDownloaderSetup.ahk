@@ -18,14 +18,14 @@ onInit()
         MsgBox("You are using the non compiled version of this script."
             "`n`nPlease continue by using a compiled version.", "Warning !", "O Icon! 262144 T5")
         generateHelpFile()
-        ExitApp()
+        terminateSetup()
     }
     Else If (A_Args.Has(1) = false)
     {
         MsgBox("You have not provided any parameters."
             "`n`nPlease run this script using the console and valid arguments.", "Warning !", "O Icon! 262144 T5")
         generateHelpFile()
-        ExitApp()
+        terminateSetup()
     }
     booleanParameterSetup := false
     booleanParameterForceSetup := false
@@ -43,7 +43,7 @@ onInit()
         Will guide the user through the uninstall process.
     */
 
-    Loop A_Args.Length
+    Loop (A_Args.Length)
     {
         parameterString .= A_Args.Get(A_Index) . " "
         ; The RegExMatch is used to find the product code which could be different from time to time.
@@ -70,7 +70,7 @@ onInit()
                         MsgBox("Unsupported parameters given. Specifically: " . A_Args.Get(A_Index),
                             "VideoDownloader Setup Status", "O Icon! 262144")
                         generateHelpFile()
-                        ExitApp()
+                        terminateSetup()
                     }
             }
         }
@@ -81,16 +81,15 @@ onInit()
         MsgBox("/run-setup and /force-run-setup cannot be used together.",
             "VideoDownloader Setup Status", "O Icon! 262144")
         generateHelpFile()
-        ExitApp()
+        terminateSetup()
     }
     Else If ((booleanParameterSetup = true || booleanParameterForceSetup = true) && booleanParameterUninstall)
     {
         MsgBox("You cannot use setup parameters with /run-uninstall.",
             "VideoDownloader Setup Status", "O Icon! 262144")
         generateHelpFile()
-        ExitApp()
+        terminateSetup()
     }
-
     ; Makes sure the setup will be executed with admin permissions.
     fullCommandLine := DllCall("GetCommandLine", "str")
     If not (A_IsAdmin || RegExMatch(fullCommandLine, " /restart(?!\S)"))
@@ -98,12 +97,12 @@ onInit()
         Try
         {
             Run '*RunAs "' A_ScriptFullPath '" /restart ' . parameterString
-            ExitApp()
+            terminateSetup()
         }
         Catch
         {
             MsgBox("Could not complete action.`n`nTerminating script.", "Error !", "O IconX T1.5")
-            ExitApp()
+            terminateSetup()
         }
     }
     If (booleanParameterSetup = true)
@@ -114,14 +113,14 @@ onInit()
         Sleep(500)
         handleInstallGUI_availableComponents()
     }
-    Else If (booleanParameterForceSetup)
+    Else If (booleanParameterForceSetup = true)
     {
         createInstallGUI()
         ; Scans for already existing software.
         checkAvailableSetupComponents()
         force_run_setup()
     }
-    Else If (booleanParameterUninstall)
+    Else If (booleanParameterUninstall = true)
     {
         run_uninstall()
     }
@@ -171,8 +170,8 @@ createInstallGUI()
     installChangeFFmpegPathButton := installGUI.Add("Button", "xp+72", "Change path")
     installScanAgainButton := installGUI.Add("Button", "xp+87", "Scan again")
 
-    installStartButton := installGUI.Add("Button", "xp-289 yp+35 w80 Default", "Install")
-    installCancelButton := installGUI.Add("Button", "xp+85 w80", "Cancel")
+    installStartButton := installGUI.Add("Button", "xp-289 yp+35 w80 Disabled Default", "Install")
+    installCancelButton := installGUI.Add("Button", "xp+85 w80 Disabled", "Cancel")
     installOpenGitHubIssuesButton := installGUI.Add("Button", "xp+85", "Open GitHub issues")
     installProgressBar := installGUI.Add("Progress", "xp+119 yp+3 Range0-400")
     installStatusBar := installGUI.Add("StatusBar", , "Installation not running...")
@@ -200,20 +199,28 @@ handleInstallGUI_cancelInstallationButton()
     result := MsgBox("Do you really want to cancel the installation process?", "Cancel VideoDownloader Installation", "YN Icon!")
     If (result = "Yes")
     {
+        global window_1
+        global window_2
+        global window_3
+        global window_4
         Try
         {
-            WinClose('install "python"')
+            WinClose("ahk_pid " . window_1)
         }
         Try
         {
-            WinClose("https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz")
+            WinClose("ahk_pid " . window_2)
         }
         Try
         {
-            WinClose("FFmpeg download running...")
+            WinClose("ahk_pid " . window_3)
+        }
+        Try
+        {
+            WinClose("ahk_pid " . window_4)
         }
         installGUI.Hide()
-        ExitApp()
+        terminateSetup()
     }
 }
 
@@ -261,6 +268,7 @@ handleInstallGUI_availableComponents()
         installFFmpegCheckbox.Value := false
         installShowFFmpegPathButton.Opt("+Disabled")
     }
+    installStartButton.Opt("-Disabled")
 }
 
 ; Tries to find existing software for example if yt-dlp is already present so that this part is skipped during the setup.
@@ -270,7 +278,7 @@ checkAvailableSetupComponents()
     global booleanYTDLPFound := true
     global booleanFFmpegFound := true
     ; Scan for Python.
-    RunWait(A_ComSpec ' /c python --version >> "' . A_Temp . '\video_downloader_python_install_log.txt"', , "Hide")
+    RunWait(A_ComSpec ' /c python --version > "' . A_Temp . '\video_downloader_python_install_log.txt"', , "Hide")
     If (FileExist(A_Temp . "\video_downloader_python_install_log.txt"))
     {
         ; This occures when the command does not achieve anything => Python is not installed.
@@ -285,7 +293,7 @@ checkAvailableSetupComponents()
     }
 
     ; Scan for yt-dlp.
-    RunWait(A_ComSpec ' /c yt-dlp --version >> "' . A_Temp . '\tmp.txt"', , "Hide")
+    RunWait(A_ComSpec ' /c yt-dlp --version > "' . A_Temp . '\tmp.txt"', , "Hide")
     If (FileExist(A_Temp . "\tmp.txt"))
     {
         ; This means that the command could not be found and yt-dlp is not installed.
@@ -434,12 +442,13 @@ run_setup(pBooleanForceInstall := false)
     {
         Case "Cancel":
             {
-                ExitApp()
+                terminateSetup()
             }
     }
     If (checkInternetConnection() = true)
     {
         installStartButton.Opt("+Disabled")
+        installCancelButton.Opt("-Disabled")
         MsgBox("You can use the computer during the setup. It is recommended to avoid restarting during the installation process."
             . " Make sure to keep all appearing windows open until they close by themselves.", "VideoDownloader Setup Status", "O Iconi")
         ; The setup begins with the FFmpeg files because they take the most time to download.
@@ -482,12 +491,12 @@ run_setup(pBooleanForceInstall := false)
                 Case "OK":
                     {
                         Run '*RunAs "' A_ScriptFullPath '" /restart /force-run-setup'
-                        ExitApp()
+                        terminateSetup()
                     }
                 Default:
                     {
                         MsgBox("Could not complete setup (component malfunction).`n`nTerminating script.", "Error !", "O IconX T1.5")
-                        ExitApp()
+                        terminateSetup()
                     }
             }
         }
@@ -499,7 +508,18 @@ run_setup(pBooleanForceInstall := false)
             "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanSetupRequired")
         Sleep(2000)
         MsgBox("The setup has been completed. You can now use the main application and start downloading videos.",
-            "VideoDownloader Setup Status", "O Iconi")
+            "VideoDownloader Setup Status", "O Iconi 4096")
+        ; Starts the main application for the user.
+        regValue := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "scriptBaseFilesLocation", "")
+        ; Removes the last subfolder if it exists.
+        If (InStr(regValue, "yt_dlp_autohotkey_gui_files"))
+        {
+            SplitPath(regValue, , &regValue)
+        }
+        If (FileExist(regValue . "\VideoDownloader.exe"))
+        {
+            Run(regValue . "\VideoDownloader.exe")
+        }
         ExitApp()
     }
     Else
@@ -552,7 +572,7 @@ uninstallScript()
     If (tmp1 = true)
     {
         uninstallStatusBar.SetText("Currently uninstalling yt-dlp...")
-        RunWait(A_ComSpec ' /c python -m pip uninstall -y "yt-dlp"')
+        RunWait(A_ComSpec ' /c title Uninstalling yt-dlp... & python -m pip uninstall -y "yt-dlp"')
         uninstallProgressBar.Value += 100
     }
     If (tmp2 = true)
@@ -569,12 +589,12 @@ uninstallScript()
                     Break
                 }
             }
-            RunWait(A_ComSpec ' /c winget uninstall "' . tmp_fileRead . '"')
+            RunWait(A_ComSpec ' /c title Uninstalling Python... & winget uninstall "' . tmp_fileRead . '"')
             uninstallProgressBar.Value += 100
         }
         Else
         {
-            RunWait(A_ComSpec ' /c winget uninstall "Python" --version "latest"')
+            RunWait(A_ComSpec ' /c title Uninstalling Python... & winget uninstall "Python" --version "latest"')
             If (!WinExist("ahk_id " . uninstallGUI.Hwnd))
             {
                 Hotkey_openUninstallGUI()
@@ -686,12 +706,9 @@ uninstallScript()
     }
     uninstallStatusBar.SetText("Successfully uninstalled script dependencies. Until next time :')")
     Sleep(5000)
-    Run(A_ComSpec ' /c msiexec.exe /x "' . productCode . '" /quiet', , "Min")
-    If (ProcessExist("VideoDownloader.exe"))
-    {
-        ProcessClose("VideoDownloader.exe")
-    }
-    ExitApp()
+    Run(A_ComSpec ' /c title Do NOT close! This window will disappear when the uninstall process has finished.'
+        . ' & msiexec.exe /x "' . productCode . '" /quiet', , "Min")
+    terminateSetup()
 }
 
 installPython(pBooleanForceInstall)
@@ -702,7 +719,7 @@ installPython(pBooleanForceInstall)
     installStatusBar.Text := "Installing Python..."
     If (booleanForceInstall = false)
     {
-        RunWait(A_ComSpec ' /c python --version >> "' . A_Temp . '\video_downloader_python_install_log.txt"')
+        RunWait(A_ComSpec ' /c python --version > "' . A_Temp . '\video_downloader_python_install_log.txt"')
         Sleep(500)
         ; This occures when the command finds anything (e.g. Python version) => python is installed.
         If (FileRead(A_Temp . "\video_downloader_python_install_log.txt") != "")
@@ -711,7 +728,7 @@ installPython(pBooleanForceInstall)
         }
     }
 
-    Run(A_ComSpec ' /k winget install "python" --accept-source-agreements --accept-package-agreements --force --source "msstore"',
+    Run(A_ComSpec ' /k title Installing python... & winget install "python" --accept-source-agreements --accept-package-agreements --force --source "msstore"',
         , "Min", &consolePID)
     Sleep(1500)
     Try
@@ -730,7 +747,7 @@ installPython(pBooleanForceInstall)
     Catch
     {
         MsgBox("Could not complete setup (Python installation).`n`nTerminating script.", "Error !", "O IconX T1.5")
-        ExitApp()
+        terminateSetup()
     }
     ; Copies the installed Python version into the setup folder for uninstall purposes.
     If (FileExist(A_Temp . "\video_downloader_python_install_log.txt"))
@@ -751,12 +768,12 @@ installYTDLP(pBooleanForceInstall)
     If (booleanForceInstall = true)
     {
         ; Will install the latest version of yt-dlp from GitHub.
-        Run(A_ComSpec ' /c python -m pip install --force-reinstall "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
+        Run(A_ComSpec ' /c title Installing yt-dlp... & python -m pip install --force-reinstall "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
             , "Min", &consolePID)
     }
     Else
     {
-        Run(A_ComSpec ' /c python -m pip install "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
+        Run(A_ComSpec ' /c title Installing yt-dlp... & python -m pip install "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"',
             , "Min", &consolePID)
     }
 
@@ -772,7 +789,7 @@ installYTDLP(pBooleanForceInstall)
     Else
     {
         MsgBox("Could not add yt-dlp to system environment variables.`n`nTerminating script.", "Error !", "O IconX T1.5")
-        ExitApp()
+        terminateSetup()
     }
     Return true
 }
@@ -799,8 +816,8 @@ installFFmpeg(pBooleanForceInstall)
     }
     Else
     {
-        MsgBox("Could complete setup (FFmpeg installation).`n`nTerminating script.", "Error !", "O IconX T1.5")
-        ExitApp()
+        MsgBox("Could complete setup (FFmpeg installation) due to a missing PowerShell file.`n`nTerminating script.", "Error !", "O IconX T1.5")
+        terminateSetup()
     }
 }
 
@@ -832,7 +849,10 @@ generateHelpFile()
         "Available parameters for the VideoDownloaderSetup.exe:`n`n- /run-setup`n"
         "The script will install the library files, yt-dlp and other dependencies.`n- /force-run-setup`n"
         "Same as above, but it will overwrite all existing files.`n- /run-uninstall`n"
-        "Will guide the user through the uninstall process.`n`n"
+        "Will guide the user through the uninstall process. It is recommended to not use this parameter for " .
+        "uninstall purposes alone. Use the uninstall option in the control panel GUI instead.`n"
+        "- /run-integrity-check`n"
+        "Checks if all components are available to ensure a smooth process.`n`n"
         "Further help at the GitHub page: `"https://github.com/LeoTN/yt-dlp-autohotkey-gui`"",
         A_Desktop . "\VideoDownloaderSetupHelp.txt")
 }
@@ -864,13 +884,13 @@ onInit_handleWorkingDirectory()
                             }
                         Default:
                             {
-                                ExitApp()
+                                terminateSetup()
                             }
                     }
                 }
             Default:
                 {
-                    ExitApp()
+                    terminateSetup()
                 }
         }
     }
@@ -904,13 +924,13 @@ onInit_handleScriptDirectory()
                             }
                         Default:
                             {
-                                ExitApp()
+                                terminateSetup()
                             }
                     }
                 }
             Default:
                 {
-                    ExitApp()
+                    terminateSetup()
                 }
         }
     }
@@ -944,4 +964,14 @@ chooseDirectory()
     {
         Return path
     }
+}
+
+terminateSetup()
+{
+    ; NOTE: When changing the main executable name this has to be changed as well.
+    Try
+    {
+        ProcessClose("VideoDownloader.exe")
+    }
+    ExitApp()
 }

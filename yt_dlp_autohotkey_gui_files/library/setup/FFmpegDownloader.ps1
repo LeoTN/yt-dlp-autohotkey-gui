@@ -18,6 +18,8 @@ else {
 
 $downloadUrl = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
 $ffmpegArchivePath = Join-Path -Path $PSScriptRoot -ChildPath "ffmpeg-release-essentials.zip"
+$registryPath = "HKCU:\SOFTWARE\LeoTN\VideoDownloader"
+$registryVariableName = "ffmpegLocation"
 $targetDir = $PSScriptRoot
 for ($i = 1; $i -le 2; $i++) {
     $targetDir = Split-Path -Path $targetDir -Parent
@@ -30,6 +32,24 @@ if ($pSetupType -eq "/run-setup") {
 
     if ($expectedExeFiles.Count -eq 3) {
         Write-Host "3 FFmpeg files have been found. Use /force-run-setup to re-install them."
+        Write-Host "Checking registry for ffmpegLocation variable..."
+
+        try {
+            $tmpValue = Get-ItemProperty -Path $registryPath -Name $registryVariableName | Select-Object -ExpandProperty $registryVariableName
+            if ($tmpValue -ne $outputFolder + "\ffmpeg.exe") {
+                Write-Host "Overwriting registy variable value..."
+                Set-ItemProperty -Path $registryPath -Name $registryVariableName -Value $outputFolder"\ffmpeg.exe"
+                Write-Host "Added FFmpeg executable path to registry at $registryPath."
+            }
+            else {
+                Write-Host "The specified path is correct."
+            }
+        }
+        catch {
+            Write-Host "No existing variable found. Adding ffmpeg path to registry..."
+            Set-ItemProperty -Path $registryPath -Name "ffmpegLocation" -Value $outputFolder"\ffmpeg.exe"
+            Write-Host "Added FFmpeg executable path to registry at $registryPath."
+        }
         Start-Sleep -Seconds 5
         Exit
     }
@@ -43,6 +63,7 @@ elseif ($pSetupType -eq "/force-run-setup") {
 }
 
 if (Test-Path -Path $ffmpegArchivePath) {
+    $host.UI.RawUI.WindowTitle = "Postprocessing FFmpeg files..."
     Write-Host "FFmpeg was downloaded successfully. Starting further processing...."
 
     Remove-Item -Path $extractedDirectory -Recurse -Force -ErrorAction SilentlyContinue
@@ -60,11 +81,13 @@ if (Test-Path -Path $ffmpegArchivePath) {
     Remove-Item -Path $extractedDirectory -Force -Recurse
 
     Write-Host "Extracted executables to $outputFolder."
-    Set-ItemProperty -Path "HKCU:\SOFTWARE\LeoTN\VideoDownloader" -Name "ffmpegLocation" -Value $outputFolder"\ffmpeg.exe"
-    Write-Host "Added FFmpeg executable path to registry at HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader."
+    Set-ItemProperty -Path $registryPath -Name $registryVariableName -Value $outputFolder"\ffmpeg.exe"
+    Write-Host "Added FFmpeg executable path to registry at $registryPath."
     Start-Sleep -Seconds 5	
     Exit
 }
 else {
     Write-Host "There was an error while downloading FFmpeg. If this error persists please try to download it manually."
+    Start-Sleep -Seconds 5
+    Exit
 }

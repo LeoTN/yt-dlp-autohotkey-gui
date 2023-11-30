@@ -1,0 +1,2 @@
+The ahk.zip and ahk-v2.zip files are necessary because AutoHotkey now uses CloudFlare protection and can not be accessed via an Invoke-WebRequest.
+From now on the script will use the local files instead of downloading them every time.

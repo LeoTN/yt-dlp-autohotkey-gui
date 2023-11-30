@@ -45,6 +45,8 @@ ASK_FOR_TUTORIAL := true
 SHOW_MAIN_GUI_ON_LAUNCH := true
 ; Toggle if the downnload options GUI should be shown on launch.
 SHOW_OPTIONS_GUI_ON_LAUNCH := true
+; This option controls if empty download folders with no media inside should be automatically deleted.
+DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD := true
 ; Stores which hotkeys are enabled / disabled via the GUI.
 HOTKEY_STATE_ARRAY := "[1, 1, 0, 1, 1, 1, 0]"
 ; Just a list of all standard hotkeys.
@@ -83,6 +85,7 @@ configVariableNameArray :=
         "ASK_FOR_TUTORIAL",
         "SHOW_MAIN_GUI_ON_LAUNCH",
         "SHOW_OPTIONS_GUI_ON_LAUNCH",
+        "DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD",
         "HOTKEY_STATE_ARRAY",
         "DOWNLOAD_HK",
         "URL_COLLECT_HK",
@@ -107,6 +110,7 @@ configSectionNameArray :=
         "FileLocations",
         "FileLocations",
         "FileLocations",
+        "GeneralSettings",
         "GeneralSettings",
         "GeneralSettings",
         "GeneralSettings",
