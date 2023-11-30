@@ -457,7 +457,7 @@ handleDownloadOptionsGUI_Checkboxes()
                 prioritiseAudioQualityCheckbox.Opt("+Disabled")
                 If (enableFastDownloadModeCheckbox.Value = false)
                 {
-                    commandString .= '--format "bestvideo+bestaudio" '
+                    commandString .= '--format "bestvideo+bestaudio/best" '
                 }
             }
         }
