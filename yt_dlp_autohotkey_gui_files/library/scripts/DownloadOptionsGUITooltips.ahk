@@ -12,6 +12,8 @@ onInit()
     global downloadOptionsGUIID := ""
     global downloadOptionsGUIHWNDArray := []
 
+    ProcessSetPriority("BelowNormal")
+
     If (!ProcessExist("VideoDownloader.exe"))
     {
         MsgBox("No target application detected.", "VD - Tooltip Manager", "O Iconi T3")
@@ -111,12 +113,15 @@ handleDownloadOptionsGUI_toolTipLoop()
         tmp13 := "The script will try to download every available subtitle`nlanguage and embedd them into the video file."
         tmp14 := "Forces the download of complete playlists if a URL contains a reference to it."
         tmp15 := "Saves downloaded video URLs into an archive file to avoid downloading a video twice."
-        tmp16 := "Select a video format. This will dramatically increase the download processing time. "
+        tmp16 := "Select a video format. This can increase the download processing time. "
             . "When using options such as thumbnail or subtitle embedding,`nkeep in mind that those are not supported by "
-            . "every video format and might cause the operation to fail."
+            . "every video format and might cause the operation to fail. Some formats might not be available and require the re-encode option below."
         tmp17 := "In case you only want the audio."
-        tmp18 := "Select an audio format. Should work most of the time."
-        tmp19 := "Tries to find a compromise between audio and video quality."
+        tmp18 := "Select an audio format. Some audio formats might not be available from a video."
+        tmp19 := "Recodes the video to another format using FFmpeg, which will dramatically increase processing time, but allows "
+            . "higher resolutions than 1080*1920."
+            . " When using options such as thumbnail or subtitle embedding,`nkeep in mind that those are not supported by "
+            . "every video format and might cause the operation to fail."
         tmp20 := "So you don't care about audio quality?"
         tmp21 := "*sad video quality noises*"
         tmp22 := "Usually, a text file will be given to yt-dlp to download, but it is also possible to select a single URL."

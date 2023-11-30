@@ -61,8 +61,8 @@ createDownloadOptionsGUI()
     chooseAudioFormatDropDownList := downloadOptionsGUI.Add("DropDownList", "y+17 Choose1 vChooseAudioFormatDropDownList",
         downloadAudioFormatArray)
 
-    alwaysHighestQualityBothCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5 Checked vAlwaysHighestQualityBothCheckbox",
-        "Balance quality")
+    useReencodingCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+27.5 Checked vUseReencodingCheckbox",
+        "Recode video")
     prioritiseVideoQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vPrioritiseVideoQualityCheckbox",
         "Prefer video quality")
     prioritiseAudioQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vPrioritiseAudioQualityCheckbox",
@@ -113,7 +113,7 @@ createDownloadOptionsGUI()
         handleDownloadOptionsGUI_Checkbox_DownloadWholePlaylist())
     useDefaultDownloadLocationCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     downloadAudioOnlyCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
-    alwaysHighestQualityBothCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
+    useReencodingCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     prioritiseVideoQualityCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     prioritiseAudioQualityCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
     terminateScriptAfterDownloadCheckbox.OnEvent("Click", (*) => handleDownloadOptionsGUI_Checkboxes())
@@ -411,7 +411,7 @@ handleDownloadOptionsGUI_Checkboxes()
             If (enableFastDownloadModeCheckbox.Value = false)
             {
                 chooseVideoFormatDropDownList.Opt("-Disabled")
-                alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+                useReencodingCheckbox.Opt("-Disabled")
                 prioritiseVideoQualityCheckbox.Opt("-Disabled")
                 prioritiseAudioQualityCheckbox.Opt("-Disabled")
             }
@@ -425,7 +425,7 @@ handleDownloadOptionsGUI_Checkboxes()
             If (enableFastDownloadModeCheckbox.Value = false)
             {
                 chooseAudioFormatDropDownList.Opt("-Disabled")
-                alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+                useReencodingCheckbox.Opt("+Disabled")
                 prioritiseVideoQualityCheckbox.Opt("+Disabled")
                 prioritiseAudioQualityCheckbox.Opt("+Disabled")
             }
@@ -442,7 +442,7 @@ handleDownloadOptionsGUI_Checkboxes()
     }
     If (downloadAudioOnlyCheckbox.Value != true && enableFastDownloadModeCheckbox.Value != true)
     {
-        Switch (alwaysHighestQualityBothCheckbox.Value)
+        Switch (useReencodingCheckbox.Value)
         {
             Case 0:
             {
@@ -452,7 +452,7 @@ handleDownloadOptionsGUI_Checkboxes()
             }
             Case 1:
             {
-                ; Try to choose the best audio quality both audio and video.
+                ; When using the re-encoding option there are no preferences available for selection.
                 prioritiseVideoQualityCheckbox.Opt("+Disabled")
                 prioritiseAudioQualityCheckbox.Opt("+Disabled")
                 If (enableFastDownloadModeCheckbox.Value = false)
@@ -461,30 +461,36 @@ handleDownloadOptionsGUI_Checkboxes()
                 }
             }
         }
-        If (alwaysHighestQualityBothCheckbox.Value != true && downloadAudioOnlyCheckbox.Value != true)
+        If (downloadAudioOnlyCheckbox.Value != true)
         {
             Switch (prioritiseVideoQualityCheckbox.Value)
             {
                 Case 0:
                 {
                     ; Let the user choose a prefered option.
-                    alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+                    useReencodingCheckbox.Opt("-Disabled")
                     prioritiseAudioQualityCheckbox.Opt("-Disabled")
                 }
                 Case 1:
                 {
                     ; Try to choose the best audio quality both audio and video.
-                    alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+                    useReencodingCheckbox.Opt("+Disabled")
                     prioritiseAudioQualityCheckbox.Opt("+Disabled")
                     If (enableFastDownloadModeCheckbox.Value = false)
                     {
                         If (downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] = "Best format for quality")
                         {
-                            commandString .= '--format "bestvideo" '
+                            ; This downloads the best video or merged if format unavailable.
+                            commandString .= '--format "bestvideo+bestaudio/best" '
                         }
                         Else
                         {
-                            commandString .= '--format "bestvideo[ext=' .
+                            If (downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] = "mp4")
+                            {
+                                ; MP4 is needs extra parameters because of YouTube stuff.
+                                commandString .= '--format "[ext=mp4][vcodec^=avc]" '
+                            }
+                            commandString .= '--format "[ext=' .
                                 downloadVideoFormatArray[chooseVideoFormatDropDownList.Value] . ']" '
                         }
                     }
@@ -497,13 +503,13 @@ handleDownloadOptionsGUI_Checkboxes()
                     Case 0:
                     {
                         ; Let the user choose a prefered option.
-                        alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+                        useReencodingCheckbox.Opt("-Disabled")
                         prioritiseVideoQualityCheckbox.Opt("-Disabled")
                     }
                     Case 1:
                     {
                         ; Try to choose the best audio quality both audio and video.
-                        alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+                        useReencodingCheckbox.Opt("+Disabled")
                         prioritiseVideoQualityCheckbox.Opt("+Disabled")
                         If (enableFastDownloadModeCheckbox.Value = false)
                         {
@@ -513,7 +519,7 @@ handleDownloadOptionsGUI_Checkboxes()
                             }
                             Else
                             {
-                                commandString .= '--format "bestaudio[ext=' .
+                                commandString .= '--format "[ext=' .
                                     downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] . ']" '
                             }
                         }
@@ -538,7 +544,7 @@ handleDownloadOptionsGUI_Checkbox_fastDownload()
             downloadVideoThumbnailCheckbox.Opt("-Disabled")
             downloadVideoSubtitlesCheckbox.Opt("-Disabled")
             chooseVideoFormatDropDownList.Opt("-Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+            useReencodingCheckbox.Opt("-Disabled")
             prioritiseVideoQualityCheckbox.Opt("-Disabled")
             prioritiseAudioQualityCheckbox.Opt("-Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
@@ -554,7 +560,7 @@ handleDownloadOptionsGUI_Checkbox_fastDownload()
             downloadVideoThumbnailCheckbox.Opt("+Disabled")
             downloadVideoSubtitlesCheckbox.Opt("+Disabled")
             chooseVideoFormatDropDownList.Opt("+Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+            useReencodingCheckbox.Opt("+Disabled")
             prioritiseVideoQualityCheckbox.Opt("+Disabled")
             prioritiseAudioQualityCheckbox.Opt("+Disabled")
             chooseAudioFormatDropDownList.Opt("+Disabled")
@@ -589,7 +595,7 @@ handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
             useDownloadArchiveCheckbox.Opt("-Disabled")
             chooseVideoFormatDropDownList.Opt("-Disabled")
             downloadAudioOnlyCheckbox.Opt("-Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("-Disabled")
+            useReencodingCheckbox.Opt("-Disabled")
             prioritiseVideoQualityCheckbox.Opt("-Disabled")
             prioritiseAudioQualityCheckbox.Opt("-Disabled")
             chooseAudioFormatDropDownList.Opt("-Disabled")
@@ -618,7 +624,7 @@ handleDownloadOptionsGUI_Checkbox_ignoreAllOptions()
             useDownloadArchiveCheckbox.Opt("+Disabled")
             chooseVideoFormatDropDownList.Opt("+Disabled")
             downloadAudioOnlyCheckbox.Opt("+Disabled")
-            alwaysHighestQualityBothCheckbox.Opt("+Disabled")
+            useReencodingCheckbox.Opt("+Disabled")
             prioritiseVideoQualityCheckbox.Opt("+Disabled")
             prioritiseAudioQualityCheckbox.Opt("+Disabled")
             chooseAudioFormatDropDownList.Opt("+Disabled")
