@@ -6,7 +6,7 @@ for users who do not want to spend time learning every single command line optio
 **How to install**
 
 > 1. Download the latest installer [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest/download/VideoDownloaderInstaller.msi).
-> 2.  If there is windows defender message, click on *additional information* to continue.
+> 2. If there is windows defender message, click on *additional information* to continue.
 > 3. Follow the installation steps until you are asked to launch *VideoDownloaderSetup.exe*.
 > 4. Confirm the action and wait for the program to check for existing dependencies.
 > 5. Press the *Install* button. Missing files and software will be installed.
@@ -16,11 +16,11 @@ for users who do not want to spend time learning every single command line optio
 
 > 1. Open the video you wish to download. For example [this](https://www.youtube.com/watch?v=xvFZjo5PgG0) one.
 > 2. Press **SHIFT + CTRL + ALT + S** in order to save the URL.
-> 3. Alternatively, you can hover over the video thumbnail, for example on the YouTube homepage, 
+> 3. Alternatively, you can hover over the video thumbnail, for example on the YouTube homepage,
 > and press **SHIFT + CTRL + ALT + F** to capture the URL directly.
-> 4. Select your preferred downloading options using the **Download Options GUI** 
+> 4. Select your preferred downloading options using the **Download Options GUI**
 > (Press **SHIFT + CTRL + ALT + A** to open).
-> 5. Use the hotkey **SHIFT + CTRL + ALT + D** to start the download process. 
+> 5. Use the hotkey **SHIFT + CTRL + ALT + D** to start the download process.
 > 6. Depending on the settings, the URL file is deleted and a backup is created.
 
 **Features**
@@ -49,4 +49,5 @@ If you are a developer and would like to use the repository, please note that pa
 Link to my original project, which will most likely not be developed anymore: [youtube-downloader-using-ahk](https://github.com/LeoTN/youtube-downloader-using-ahk)
 
 ## Licence
+
 [GNU Affero General Public License v3.0](https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENCE)
