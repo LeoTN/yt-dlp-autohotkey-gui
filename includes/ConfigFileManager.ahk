@@ -11,6 +11,8 @@ Add debug variables here.
 */
 ; This variable is also written into the config file.
 global booleanDebugMode := false
+; Stops the annoying tooltip startup when debugging.
+disableTooltipStartup := false
 
 ;------------------------------------------------
 
@@ -75,6 +77,7 @@ global configFileContentArray := []
 configVariableNameArray :=
     [
         "booleanDebugMode",
+        "disableTooltipStartup",
         "URL_FILE_LOCATION",
         "URL_BACKUP_FILE_LOCATION",
         "BLACKLIST_FILE_LOCATION",
@@ -102,6 +105,7 @@ configVariableNameArray :=
 ; IMPORTANT NOTE: Do NOT forget to add the SECTION NAME for EACH new item added in the configVariableNameArray !!!
 configSectionNameArray :=
     [
+        "DebugSettings",
         "DebugSettings",
         "FileLocations",
         "FileLocations",

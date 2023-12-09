@@ -177,23 +177,20 @@ startDownload(pCommandString, pBooleanSilent := enableSilentDownloadModeCheckbox
                 }
         }
     }
-    If (!FileExist(tmpConfig) && downloadOptionsGUI_SubmitObject.UseTextFileForURLsCheckbox = true)
+    If (!FileExist(tmpConfig))
     {
         MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing: [" .
             expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download Status", "O Icon! 8192")
         isDownloading := false
         Return
     }
-    If (downloadOptionsGUI_SubmitObject.useTextFileForURLsCheckbox = true)
+    If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = true)
     {
-        If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox = true)
-        {
-            FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
-        }
-        Else
-        {
-            FileCopy(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
-        }
+        FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+    }
+    Else
+    {
+        FileCopy(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
     }
     If (booleanSilent = true)
     {
@@ -249,8 +246,8 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 {
     command := pCommand
     booleanSilent := pBooleanSilent
-    global hiddenConsolePID
-    global visualPowershellPID
+    global hiddenConsolePID := 0
+    global visualPowershellPID := 0
 
     Run(A_ComSpec . ' /c title Download is running... & ' . command . ' > "' . A_Temp
         . '\yt_dlp_download_log.txt" && title Completed... && timeout /T 3', , "Min", &hiddenConsolePID)
@@ -275,16 +272,9 @@ displayAndLogConsoleCommand(pCommand, pBooleanSilent)
 monitorDownloadProgress()
 {
     global booleanDownloadTerminated := false
-    If (downloadOptionsGUI_SubmitObject.useTextFileForURLsCheckbox = true)
-    {
-        SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
-        global urlArray := readFile(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
-        global videoAmount := urlArray.Length
-    }
-    Else
-    {
-        global videoAmount := 1
-    }
+    SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
+    global urlArray := readFile(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
+    global videoAmount := urlArray.Length
     global downloadedVideoAmount := 0
     global skippedVideoArchiveAmount := 0
     global skippedVideoPresentAmount := 0
