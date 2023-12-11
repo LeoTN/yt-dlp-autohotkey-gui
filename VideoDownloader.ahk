@@ -342,6 +342,17 @@ onInit_checkIfSetupIsNeeded()
         If (regValue = "1")
         {
             global booleanFirstTimeLaunch := true
+            ; Prompts the user to provide his browser information (name and language) which are used for the URL pickup hotkeys.
+            createBrowserInformationGUI(false)
+            ; Basically waits for the browser information GUI to be destroyed which only happens when the selection was successful.
+            WinWaitClose("ahk_id " . browserInformationGUI.Hwnd)
+            browserName := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "browserName", "")
+            broswerLanguage := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "browserLanguage", "")
+            If (browserName = "" || broswerLanguage = "")
+            {
+                MsgBox("Incomplete setup. Terminating script.", "Script Setup Status", "O IconX T1.5")
+                ExitApp()
+            }
             RegWrite(0, "REG_DWORD",
                 "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "booleanFirstTimeLaunch")
         }
@@ -353,7 +364,7 @@ onInit_executeSetup()
     If (A_IsCompiled = false)
     {
         MsgBox("You are using the a non compiled version of this script."
-            "`n`nPlease continue by using a compiled version to install.", "Warning !", "O Icon! 262144 T5")
+            "`n`nPlease continue by using a compiled version to install.", "Warning!", "O Icon! 262144 T5")
         ExitApp()
         ExitApp()
     }
@@ -365,7 +376,7 @@ onInit_executeSetup()
     }
     Catch
     {
-        MsgBox("Unable to execute VideoDownloaderSetup.exe.`n`nTerminating script.", "Error !", "O IconX T1.5")
+        MsgBox("Unable to execute VideoDownloaderSetup.exe.`n`nTerminating script.", "Error!", "O IconX T1.5")
         ExitApp()
         ExitApp()
     }

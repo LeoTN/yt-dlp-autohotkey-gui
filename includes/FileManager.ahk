@@ -28,7 +28,6 @@ saveSearchBarContentsToFile()
     }
     If (FileExist(tmpConfig))
     {
-
         writeToURLFile(clipboardContent)
     }
     Else
@@ -42,12 +41,10 @@ saveSearchBarContentsToFile()
 saveVideoURLDirectlyToFile()
 {
     A_Clipboard := ""
-    MouseClick("Right")
-    ; Do not decrease values ! May lead to unstable performance.
-    Sleep(250)
-    ; Probably only works with German Firefox version.
-    ; Will be language specific in the future.
-    Send("k")
+    If (pressMatchingBrowserCopyURLHotkey() = false)
+    {
+        Return
+    }
     If (ClipWait(0.35) = true)
     {
         clipboardContent := A_Clipboard
@@ -65,7 +62,7 @@ saveVideoURLDirectlyToFile()
             {
                 If (clipboardContent = contentArray.Get(A_Index))
                 {
-                    MsgBox("Same URL selected twice.", "Attention !", "O Iconi T1.5")
+                    MsgBox("Same URL selected twice.", "Attention!", "O Iconi T1.5")
                     Return
                 }
             }
@@ -73,7 +70,123 @@ saveVideoURLDirectlyToFile()
             Return
         }
     }
-    MsgBox("No URL detected.", "Attention !", "O Iconi T1.5")
+    MsgBox("No URL detected.", "Attention!", "O Iconi T1.5")
+}
+
+pressMatchingBrowserCopyURLHotkey()
+{
+    /*
+    Edge DE -> RC I Enter
+    Edge ENG -> RC O Enter
+    Chrome DE -> RC E
+    Chrome ENG -> RC E
+    Firefox DE -> RC K
+    Firefox ENG -> RC L
+    */
+    static browserName := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "browserName", "")
+    static broswerLanguage := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "browserLanguage", "")
+    browserHotkeyErrorcode := ""
+
+    MouseClick("Right")
+    ; Do not decrease value! May lead to unstable performance.
+    Sleep(250)
+    Switch (browserName)
+    {
+        Case "Firefox":
+            {
+                Switch (broswerLanguage)
+                {
+                    Case "Deutsch":
+                        {
+                            Send("k")
+                        }
+                    Case "English":
+                        {
+                            Send("l")
+                        }
+                    Case "Other":
+                        {
+                            browserHotkeyErrorcode := "no_support"
+                        }
+                    Default:
+                        {
+                            MsgBox("Invalid browser language found!", "Warning!", "O Icon!")
+                            Return false
+                        }
+                }
+            }
+        Case "Chrome":
+            {
+                Switch (broswerLanguage)
+                {
+                    Case "Deutsch":
+                        {
+                            Send("e")
+                        }
+                    Case "English":
+                        {
+                            Send("e")
+                        }
+                    Case "Other":
+                        {
+                            browserHotkeyErrorcode := "no_support"
+                        }
+                    Default:
+                        {
+                            MsgBox("Invalid browser language found!", "Warning!", "O Icon!")
+                            Return false
+                        }
+                }
+            }
+        Case "Edge":
+            {
+                Switch (broswerLanguage)
+                {
+                    Case "Deutsch":
+                        {
+                            Send("i")
+                            Sleep(150)
+                            Send("{Enter}")
+                        }
+                    Case "English":
+                        {
+                            Send("o")
+                            Sleep(150)
+                            Send("{Enter}")
+                        }
+                    Case "Other":
+                        {
+                            browserHotkeyErrorcode := "no_support"
+                        }
+                    Default:
+                        {
+                            MsgBox("Invalid browser language found!", "Warning!", "O Icon!")
+                            Return false
+                        }
+                }
+            }
+        Case "Other":
+            {
+                browserHotkeyErrorcode := "no_support"
+            }
+        Default:
+            {
+                MsgBox("Invalid browser name found!", "Warning!", "O Icon!")
+                Return false
+            }
+    }
+    If (browserHotkeyErrorcode = "no_support")
+    {
+        MsgBox("You have selected a browser configuration that is currently not supported for this hotkey."
+            . "`nYou can try changing the browser settings in the [Options] menu of the main GUI and see if the URL is saved. "
+            . "If you would like to request support for your browser, please go to the GitHub page and create a request.`n`n"
+            . "The request should contain the name of the browser, along with the corresponding download link. "
+            . "Additionally, the hotkey to copy the link should be included.`n`nSimply put, when you right-click on a video "
+            . "on the YouTube homepage, a browser context menu appears. This menu typically contains an option called [Copy Link]. "
+            . "Try to find the key on the keyboard to select this option directly. The link to the video should then be "
+            . "saved in the clipboard. If you have any questions, please include them in the request.", "Missing Browser Support", "O Iconi")
+        Return false
+    }
 }
 
 writeToURLFile(pContent)
@@ -129,7 +242,7 @@ readFile(pFileLocation, pBooleanCheckIfURL := false)
     }
     Catch
     {
-        MsgBox("The file does not exist !	`n`nreadFile() could not be executed properly", "Error !", "O Icon! T3")
+        MsgBox("The file does not exist !	`n`nreadFile() could not be executed properly", "Error!", "O Icon! T3")
         Return
     }
 }
@@ -155,7 +268,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
         }
         If (booleanShowPrompt = true)
         {
-            result := MsgBox("Could not find blacklist file.`n`nDo you want to create one ?", "Warning !", "YN Icon! T10")
+            result := MsgBox("Could not find blacklist file.`n`nDo you want to create one ?", "Warning!", "YN Icon! T10")
         }
         ; Only so that the if condition down under does not throw an error.
         If (IsSet(result) = false)
@@ -175,7 +288,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
             }
             Catch
             {
-                MsgBox("Could not create file !	`n`nCheck the config file for a valid path.", "Error !", "O Icon! T3")
+                MsgBox("Could not create file !	`n`nCheck the config file for a valid path.", "Error!", "O Icon! T3")
                 ExitApp()
             }
         }
@@ -206,7 +319,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
             }
             Catch
             {
-                MsgBox("Could not create blacklist file !	`n`nNo one knows why.", "Error !", "O Icon! T3")
+                MsgBox("Could not create blacklist file !	`n`nNo one knows why.", "Error!", "O Icon! T3")
                 ExitApp()
             }
         }
@@ -244,7 +357,7 @@ manageURLFile(pBooleanShowPrompt := true)
             }
             Catch
             {
-                MsgBox("The file does not exist !`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
+                MsgBox("The file does not exist !`n`nIt was probably already cleared.", "Error!", "O Icon! T3")
             }
         }
     }
@@ -262,14 +375,14 @@ restoreURLFile()
 {
     If (!FileExist(readConfigFile("URL_BACKUP_FILE_LOCATION")))
     {
-        MsgBox("The URL backup file does not exist !`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+        MsgBox("The URL backup file does not exist !`n`nIt was probably not generated yet.", "Error!", "O Icon! T3")
         Return
     }
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
     If (FileExist(tmpConfig))
     {
         result := MsgBox("The URL File already exists."
-            "`nPress YES to overwrite or NO to append the`nbackup file to the original file.", "Warning !", "YNC Icon! 4096 T10")
+            "`nPress YES to overwrite or NO to append the`nbackup file to the original file.", "Warning!", "YNC Icon! 4096 T10")
         Switch (result)
         {
             Case "Yes":

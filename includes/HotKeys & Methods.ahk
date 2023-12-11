@@ -130,12 +130,12 @@ startDownload(pCommandString, pBooleanSilent := enableSilentDownloadModeCheckbox
     global isDownloading
     If (checkInternetConnection() = false)
     {
-        Return MsgBox("Unable to connect to the Internet.`n`nPlease check your Internet connection.", "Warning !", "O Icon! 4096 T2")
+        Return MsgBox("Unable to connect to the Internet.`n`nPlease check your Internet connection.", "Warning!", "O Icon! 4096 T2")
     }
     If (isDownloading = true)
     {
         Return MsgBox("There is a download process running already.`n`nPlease wait for it to finish or cancel it.",
-            "Information", "O Icon! 4096 T2")
+            "Download Status", "O Icon! 4096 T2")
     }
     Else
     {
@@ -305,7 +305,7 @@ monitorDownloadProgress()
         Sleep(1000)
         If (maxRetries <= 0)
         {
-            MsgBox("Could not find hook file to track progress.`n`nTerminating script.", "Error !", "O IconX T2")
+            MsgBox("Could not find hook file to track progress.`n`nTerminating script.", "Error!", "O IconX T2")
             ExitApp()
             ExitApp()
         }
@@ -579,7 +579,7 @@ postProcessDownloadFiles()
     }
     Catch
     {
-        MsgBox("Malfunction while writing to download log file.", "Warning !", "O Icon! T1.5")
+        MsgBox("Malfunction while writing to download log file.", "Warning!", "O Icon! T1.5")
     }
 
     ; Creates the download summary text file.
@@ -712,7 +712,7 @@ openURLFile()
     }
     Catch
     {
-        MsgBox("The URL file does not exist !`n`nIt was probably already cleared.", "Error !", "O Icon! T3")
+        MsgBox("The URL file does not exist !`n`nIt was probably already cleared.", "Error!", "O Icon! T3")
     }
 }
 
@@ -730,7 +730,7 @@ openURLBackupFile()
     }
     Catch
     {
-        MsgBox("The URL backup file does not exist !`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+        MsgBox("The URL backup file does not exist !`n`nIt was probably not generated yet.", "Error!", "O Icon! T3")
     }
 }
 
@@ -739,7 +739,7 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
     booleanShowPrompt := pBooleanShowPrompt
     If (booleanShowPrompt = true)
     {
-        result := MsgBox("Do you really want to replace the current`n`nblacklist file with a new one ?", "Warning !", "YN Icon! T10")
+        result := MsgBox("Do you really want to replace the current`n`nblacklist file with a new one ?", "Warning!", "YN Icon! T10")
         If (result = "Yes")
         {
             Try
@@ -786,7 +786,7 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
     }
     Catch
     {
-        MsgBox("The URL blacklist file does not exist !`n`nIt was probably not generated yet.", "Error !", "O Icon! T3")
+        MsgBox("The URL blacklist file does not exist !`n`nIt was probably not generated yet.", "Error!", "O Icon! T3")
     }
 }
 
@@ -811,7 +811,7 @@ openConfigFile()
     }
     Catch
     {
-        MsgBox("The script's config file does not exist !`n`nA fatal error has occurred.", "Error !", "O Icon! T3")
+        MsgBox("The script's config file does not exist !`n`nA fatal error has occurred.", "Error!", "O Icon! T3")
     }
 }
 
@@ -857,12 +857,12 @@ deleteFilePrompt(pFileName)
                         }
                         Else
                         {
-                            MsgBox("No downloaded files from`ncurrent session found.", "Error !", "O Icon! T2.5")
+                            MsgBox("No downloaded files from`ncurrent session found.", "Error!", "O Icon! T2.5")
                         }
                     }
                 Default:
                     {
-                        MsgBox("Invalid delete request.", "Error !", "O IconX T2")
+                        MsgBox("Invalid delete request.", "Error!", "O IconX T2")
                     }
             }
         }
@@ -872,7 +872,7 @@ deleteFilePrompt(pFileName)
             If (FileExist(scriptBaseFilesLocation . "\deleted\" . outFileName) && FileExist(scriptBaseFilesLocation . "\" . outFileName))
             {
                 result := MsgBox("The " . fileName . " was found in the deleted directory."
-                    "`n`nDo you want to overwrite it ?", "Warning !", "YN Icon! T10")
+                    "`n`nDo you want to overwrite it ?", "Warning!", "YN Icon! T10")
                 If (result = "Yes")
                 {
                     FileDelete(scriptBaseFilesLocation . "\deleted\" . outFileName)
@@ -881,7 +881,7 @@ deleteFilePrompt(pFileName)
             }
             Else
             {
-                MsgBox("The " . fileName . " does not exist !`n`nIt was probably not generated yet.", "Warning !", "O Icon! T3")
+                MsgBox("The " . fileName . " does not exist !`n`nIt was probably not generated yet.", "Warning!", "O Icon! T3")
             }
         }
     }
@@ -1027,7 +1027,7 @@ findProcessWithWildcard(pWildcard)
                         Catch
                         {
                             MsgBox("Could not close process :`n"
-                                v . "`nTerminating script.", "Error !", "O IconX T1.5")
+                                v . "`nTerminating script.", "Error!", "O IconX T1.5")
                             ExitApp()
                         }
                     }
@@ -1245,6 +1245,66 @@ checkInternetConnection()
     }
 
     Return false
+}
+
+; This simple GUI is used to gather information about the user's browser and language.
+; The information is important for functions that interact with the browser.
+createBrowserInformationGUI(pBooleanForceRestart := true)
+{
+    booleanForceRestart := pBooleanForceRestart
+
+    global browserInformationGUI := Gui(, "VideoDownloader - Browser Identification Assistant")
+    browserInformationGUI.Add("Text", "yp+10", "Hello there :)`n`nIn order to be able to use "
+        . "the corresponding hotkeys to save the URLs, `na short identification of your browser is required.")
+    browserInformationGUI.Add("Text", "yp+60", "1) Please select the browser that you primarily use from the list below.")
+    tmpArray1 := ["Firefox", "Chrome", "Edge", "Other"]
+    browserInformationGUI.Add("DropDownList", "yp+20 w150 vBrowserNameDropDownList", tmpArray1)
+
+    browserInformationGUI.Add("Text", "yp+40", "2) Please select your browser language. Most likely your system language.")
+    tmpArray2 := ["Deutsch", "English", "Other"]
+    browserInformationGUI.Add("DropDownList", "yp+20 w150 vBrowserLanguageDropDownList", tmpArray2)
+
+    browserInformationGUI.Add("Text", "yp+40", "There might be more available options in the future.")
+    browserInformationGUI.Add("Text", "yp+20", "Changing this option requires a script restart!")
+    finishButton := browserInformationGUI.Add("Button", "yp+20", "Finish")
+    finishButton.OnEvent("Click", (*) => handleBrowserInformationGUI_ProcessInformation(browserInformationGUI.Submit(false),
+        booleanForceRestart))
+
+    browserInformationGUI.Show()
+}
+
+handleBrowserInformationGUI_ProcessInformation(pSubmitObject, pBooleanForceRestart := true)
+{
+    submitObject := pSubmitObject
+    booleanForceRestart := pBooleanForceRestart
+
+    result := MsgBox("Finish browser information selection process?", "Finish Selection", "YN Icon?")
+    Switch (result)
+    {
+        Case "Yes":
+            {
+                ; Let the function continue.
+            }
+        Default:
+            {
+                Return
+            }
+    }
+    ; Checks if both options have a value.
+    If (submitObject.BrowserLanguageDropDownList = "" && submitObject.BrowserLanguageDropDownList = "")
+    {
+        MsgBox("Please select an option for both input fields.", "Selection Error", "O Icon! T3")
+        Return
+    }
+    RegWrite(submitObject.BrowserNameDropDownList, "REG_SZ",
+        "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "browserName")
+    RegWrite(submitObject.BrowserLanguageDropDownList, "REG_SZ",
+        "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "browserLanguage")
+    browserInformationGUI.Destroy()
+    If (booleanForceRestart = true)
+    {
+        reloadScriptPrompt()
+    }
 }
 
 arrayToString(pArray)

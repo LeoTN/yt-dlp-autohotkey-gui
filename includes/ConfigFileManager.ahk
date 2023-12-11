@@ -146,7 +146,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
 
     If (booleanShowPrompt = true)
     {
-        result := MsgBox("Do you really want to replace the current`n`nconfig file with a new one ?", "Warning !", "YN Icon! T10")
+        result := MsgBox("Do you really want to replace the current`n`nconfig file with a new one ?", "Warning!", "YN Icon! T10")
         If (result = "No" || result = "Timeout")
         {
             Return
@@ -169,7 +169,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
     If (configVariableNameArray.Length != configSectionNameArray.Length)
     {
         MsgBox("Not every config file entry has been asigned to a section !`n`nPlease fix this by checking both arrays.",
-            "Error !", "O IconX")
+            "Error!", "O IconX")
         MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
         ExitApp()
     }
@@ -198,7 +198,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
 ; which is 'workingBaseFilesLocation . "\YT_URLS.txt"' by default.
 ; Returns the value out of the config file.
 ; The booleanAskForPathCreation should be used with caution because
-; it can have unseen consequences if a directory is not created.
+; it can have unforeseen consequences if a directory is not created.
 readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckConfigFileStatus := true)
 {
     ; Thanks to my buddy Elias for testing and helping me debugging this script :)
@@ -223,7 +223,7 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
                 If (validatePath(configFileContentArray.Get(A_Index), booleanAskForPathCreation) = false)
                 {
                     MsgBox("Could not create directory !`nCheck the config file for a valid path at :`n "
-                        . configVariableNameArray.Get(A_Index), "Error !", "O Icon! T10")
+                        . configVariableNameArray.Get(A_Index), "Error!", "O Icon! T10")
                     MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
                     ExitApp()
                 }
@@ -239,7 +239,7 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
             }
         }
     }
-    MsgBox("Could not find " . optionName . " in the config file.", "Script Status", "O IconX T3")
+    MsgBox("Could not find " . optionName . " in the config file.", "Config File Status", "O IconX T3")
     ExitApp()
 }
 
@@ -308,7 +308,7 @@ checkConfigFileIntegrity()
             }
             result := MsgBox("The script config file seems to be corrupted or unavailable !"
                 "`n`nDo you want to create a new one using the template ?"
-                , "Warning !", "YN Icon! 8192 T10")
+                , "Warning!", "YN Icon! 8192 T10")
             Switch (result)
             {
                 Case "Yes":
@@ -358,7 +358,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true)
         Else If (outExtension = "" && !DirExist(path))
         {
             result := MsgBox("The directory :`n" . path
-                . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
+                . "`ndoes not exist.`nWould you like to create it ?", "Warning!", "YN Icon! T10")
             Switch (result)
             {
                 Case "Yes":
@@ -378,7 +378,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true)
         Else If (!DirExist(outDir))
         {
             result := MsgBox("The directory :`n" . outDir
-                . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
+                . "`ndoes not exist.`nWould you like to create it ?", "Warning!", "YN Icon! T10")
             Switch (result)
             {
                 Case "Yes":

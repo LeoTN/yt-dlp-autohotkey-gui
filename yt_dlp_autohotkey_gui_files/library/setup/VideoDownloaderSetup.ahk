@@ -16,14 +16,14 @@ onInit()
     If (A_IsCompiled = false)
     {
         MsgBox("You are using the non compiled version of this script."
-            "`n`nPlease continue by using a compiled version.", "Warning !", "O Icon! 262144 T5")
+            "`n`nPlease continue by using a compiled version.", "Warning!", "O Icon! 262144 T5")
         generateHelpFile()
         terminateSetup()
     }
     Else If (A_Args.Has(1) = false)
     {
         MsgBox("You have not provided any parameters."
-            "`n`nPlease run this script using the console and valid arguments.", "Warning !", "O Icon! 262144 T5")
+            "`n`nPlease run this script using the console and valid arguments.", "Warning!", "O Icon! 262144 T5")
         generateHelpFile()
         terminateSetup()
     }
@@ -101,7 +101,7 @@ onInit()
         }
         Catch
         {
-            MsgBox("Could not complete action.`n`nTerminating script.", "Error !", "O IconX T1.5")
+            MsgBox("Could not complete action.`n`nTerminating script.", "Error!", "O IconX T1.5")
             terminateSetup()
         }
     }
@@ -174,7 +174,7 @@ createInstallGUI()
     installCancelButton := installGUI.Add("Button", "xp+85 w80 Disabled", "Cancel")
     installOpenGitHubIssuesButton := installGUI.Add("Button", "xp+85", "Open GitHub issues")
     installProgressBar := installGUI.Add("Progress", "xp+119 yp+3 Range0-400")
-    installStatusBar := installGUI.Add("StatusBar", , "Installation not running...")
+    installStatusBar := installGUI.Add("StatusBar", , "Checking available system components. Please wait...")
 
     installShowFFmpegPathButton.OnEvent("Click", (*) => handleInstallGUI_showFFmpegPathButton())
     installChangeFFmpegPathButton.OnEvent("Click", (*) => handleInstallGUI_checkFFmpegLocation(DirSelect(, false, "Please select the FFmpeg folder.")))
@@ -268,6 +268,7 @@ handleInstallGUI_availableComponents()
         installFFmpegCheckbox.Value := false
         installShowFFmpegPathButton.Opt("+Disabled")
     }
+    installStatusBar.Text := "Ready to start installation process..."
     installStartButton.Opt("-Disabled")
 }
 
@@ -495,7 +496,7 @@ run_setup(pBooleanForceInstall := false)
                     }
                 Default:
                     {
-                        MsgBox("Could not complete setup (component malfunction).`n`nTerminating script.", "Error !", "O IconX T1.5")
+                        MsgBox("Could not complete setup (component malfunction).`n`nTerminating script.", "Error!", "O IconX T1.5")
                         terminateSetup()
                     }
             }
@@ -554,7 +555,7 @@ uninstallScript()
     uninstallProgressBarMaxValue := 0
 
     result := MsgBox("Are you sure that you want to continue`n`nthe script removal process ?",
-        "Warning !", "YN Icon! 262144 T10")
+        "Warning!", "YN Icon! 262144 T10")
     If (result != "Yes")
     {
         Return
@@ -746,7 +747,7 @@ installPython(pBooleanForceInstall)
     }
     Catch
     {
-        MsgBox("Could not complete setup (Python installation).`n`nTerminating script.", "Error !", "O IconX T1.5")
+        MsgBox("Could not complete setup (Python installation).`n`nTerminating script.", "Error!", "O IconX T1.5")
         terminateSetup()
     }
     ; Copies the installed Python version into the setup folder for uninstall purposes.
@@ -788,7 +789,7 @@ installYTDLP(pBooleanForceInstall)
     }
     Else
     {
-        MsgBox("Could not add yt-dlp to system environment variables.`n`nTerminating script.", "Error !", "O IconX T1.5")
+        MsgBox("Could not add yt-dlp to system environment variables.`n`nTerminating script.", "Error!", "O IconX T1.5")
         terminateSetup()
     }
     Return true
@@ -816,7 +817,7 @@ installFFmpeg(pBooleanForceInstall)
     }
     Else
     {
-        MsgBox("Could complete setup (FFmpeg installation) due to a missing PowerShell file.`n`nTerminating script.", "Error !", "O IconX T1.5")
+        MsgBox("Could complete setup (FFmpeg installation) due to a missing PowerShell file.`n`nTerminating script.", "Error!", "O IconX T1.5")
         terminateSetup()
     }
 }

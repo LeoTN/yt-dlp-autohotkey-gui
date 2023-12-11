@@ -19,7 +19,7 @@
     <ROW Property="AiReadmeLink" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui#readme" Type="4"/>
     <ROW Property="CTRLS" Value="3"/>
     <ROW Property="Manufacturer" Value="LeoTN"/>
-    <ROW Property="ProductCode" Value="1031:{0818CFD0-9B05-44B9-B616-D1AED6DA3C01} " Type="16"/>
+    <ROW Property="ProductCode" Value="1031:{C3E80E88-0FF5-4557-AE2C-1A97F1D57659} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="VideoDownloader"/>
     <ROW Property="ProductVersion" Value="0" Options="4"/>
@@ -56,6 +56,8 @@
     <ROW Component="VideoDownloaderSetup.exe" ComponentId="{F7E50E75-565A-4529-A14F-295D6009FD27}" Directory_="setup_Dir" Attributes="256" KeyPath="VideoDownloaderSetup.exe"/>
     <ROW Component="booleanFirstTimeLaunch" ComponentId="{077D7FB4-BCFC-438F-A2FF-03E2EE3697C8}" Directory_="APPDIR" Attributes="4" KeyPath="booleanFirstTimeLaunch"/>
     <ROW Component="booleanSetupRequired" ComponentId="{B2A7A298-9C96-4772-B466-9DAF5A813DFE}" Directory_="APPDIR" Attributes="4" KeyPath="booleanSetupRequired"/>
+    <ROW Component="browserLanguage" ComponentId="{23CE2369-9E7D-4648-BFFB-7CD840A04BFB}" Directory_="APPDIR" Attributes="4" KeyPath="browserLanguage"/>
+    <ROW Component="browserType" ComponentId="{5130466E-5E48-48F1-BACD-A06161D2E77B}" Directory_="APPDIR" Attributes="4" KeyPath="browserType"/>
     <ROW Component="green_arrow_icon.ico" ComponentId="{6E6C028D-CFD2-49B3-B6B1-453405EE30D0}" Directory_="assets_Dir" Attributes="0" KeyPath="YouTubeBackground1.jpg" Type="0"/>
     <ROW Component="scriptBaseFilesLocation_2" ComponentId="{5FD8B8B3-205B-4B8A-8120-B1EBD6857D62}" Directory_="APPDIR" Attributes="4" KeyPath="scriptBaseFilesLocation_2"/>
     <ROW Component="yt_dlp_autohotkey_gui_files" ComponentId="{53C94CAA-C918-4A3A-B981-BE25263F98B1}" Directory_="yt_dlp_autohotkey_gui_files_Dir" Attributes="0"/>
@@ -180,6 +182,8 @@
     <ROW Feature_="MainFeature" Component_="DownloadOptionsGUITooltips.ahk"/>
     <ROW Feature_="MainFeature" Component_="DownloadOptionsGUITooltips.exe"/>
     <ROW Feature_="MainFeature" Component_="green_arrow_icon.ico"/>
+    <ROW Feature_="MainFeature" Component_="browserType"/>
+    <ROW Feature_="MainFeature" Component_="browserLanguage"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="SystemFoldermsiexec.exe" SourcePath="&lt;AI_RES&gt;uninstall.ico" Index="0"/>
@@ -217,6 +221,8 @@
     <ROW Registry="Version_2" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="version" Value="[ProductVersion]" Component_="Version"/>
     <ROW Registry="booleanFirstTimeLaunch" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="booleanFirstTimeLaunch" Value="#0" Component_="booleanFirstTimeLaunch" VirtualValue="#"/>
     <ROW Registry="booleanSetupRequired" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="booleanSetupRequired" Value="#1" Component_="booleanSetupRequired" VirtualValue="#"/>
+    <ROW Registry="browserLanguage" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="browserLanguage" Component_="browserLanguage"/>
+    <ROW Registry="browserType" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="browserType" Component_="browserType"/>
     <ROW Registry="scriptBaseFilesLocation_2" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="scriptBaseFilesLocation" Value="[APPDIR]yt_dlp_autohotkey_gui_files" Component_="scriptBaseFilesLocation_2"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiShortsComponent">
