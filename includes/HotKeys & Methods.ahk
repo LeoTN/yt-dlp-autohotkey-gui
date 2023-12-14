@@ -1257,7 +1257,7 @@ createBrowserInformationGUI(pBooleanForceRestart := true)
     browserInformationGUI.Add("Text", "yp+10", "Hello there :)`n`nIn order to be able to use "
         . "the corresponding hotkeys to save the URLs, `na short identification of your browser is required.")
     browserInformationGUI.Add("Text", "yp+60", "1) Please select the browser that you primarily use from the list below.")
-    tmpArray1 := ["Firefox", "Chrome", "Edge", "Other"]
+    tmpArray1 := ["Firefox", "Chrome", "Edge", "Opera GX", "Other"]
     browserInformationGUI.Add("DropDownList", "yp+20 w150 vBrowserNameDropDownList", tmpArray1)
 
     browserInformationGUI.Add("Text", "yp+40", "2) Please select your browser language. Most likely your system language.")

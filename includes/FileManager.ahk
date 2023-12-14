@@ -82,6 +82,8 @@ pressMatchingBrowserCopyURLHotkey()
     Chrome ENG -> RC E
     Firefox DE -> RC K
     Firefox ENG -> RC L
+    Opera GX DE -> RC L
+    Opera GX ENG -> RC E
     */
     static browserName := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "browserName", "")
     static broswerLanguage := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "browserLanguage", "")
@@ -153,6 +155,29 @@ pressMatchingBrowserCopyURLHotkey()
                             Send("o")
                             Sleep(150)
                             Send("{Enter}")
+                        }
+                    Case "Other":
+                        {
+                            browserHotkeyErrorcode := "no_support"
+                        }
+                    Default:
+                        {
+                            MsgBox("Invalid browser language found!", "Warning!", "O Icon!")
+                            Return false
+                        }
+                }
+            }
+        Case "Opera GX":
+            {
+                Switch (broswerLanguage)
+                {
+                    Case "Deutsch":
+                        {
+                            Send("l")
+                        }
+                    Case "English":
+                        {
+                            Send("e")
                         }
                     Case "Other":
                         {
