@@ -1,0 +1,37 @@
+name: Browser support request
+about: Here you can request support for your own browser to work with the hotkeys
+title: Unsupported browser request
+labels: enhancement
+assignees: ''
+
+body:
+
+  - type: textarea
+    id: browser-name
+    attributes:
+      label: Browser Name
+      description: Enter your browser name here.
+
+  - type: textarea
+    id: download-link
+    attributes:
+      label: Browser Download Link
+      description: Enter the link to download your browser.
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: |
+        Follow the instructions below and provide the requested details.
+
+        1. Go to the YouTube homepage and do a right-click to open your browser's context menu.
+        2. Look for an option called something like "Copy Link."
+        3. Begin to press keys on your keyboard while the context menu is open to find the one that immediately copies the link into your clipboard.
+        4. Make sure that you can paste the link (e.g., into Notepad or any text field).
+        5. If your browser supports another method to copy a link under the mouse cursor, feel free to write it down.
+
+        Provide the additional information in the text area below.
+
+    validations:
+      required: true
