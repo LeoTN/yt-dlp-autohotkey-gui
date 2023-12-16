@@ -1,9 +1,6 @@
 name: Browser support request
-about: Here you can request support for your own browser to work with the hotkeys
-title: Unsupported browser request
-labels: enhancement
-assignees: ''
-
+description: Here you can request support for your own browser to work with the hotkeys
+labels: [enhancement]
 body:
 
   - type: textarea
@@ -32,6 +29,3 @@ body:
         5. If your browser supports another method to copy a link under the mouse cursor, feel free to write it down.
 
         Provide the additional information in the text area below.
-
-    validations:
-      required: true
