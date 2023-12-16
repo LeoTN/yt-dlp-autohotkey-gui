@@ -25,30 +25,7 @@ body:
 - type: textarea
   attributes:
     label: **Additional Information**
-    name: Browser support request
-description: Here you can request support for your own browser to work with the hotkeys
-labels: [enhancement]
-body:
-
-  - type: textarea
-    id: browser-name
-    attributes:
-      label: Browser Name
-      description: Enter your browser name here.
-      required: true
-
-  - type: textarea
-    id: download-link
-    attributes:
-      label: Browser Download Link
-      description: Enter the link to download your browser.
-      required: true
-
-  - type: textarea
-    id: additional-info
-    attributes:
-      label: Additional Information
-      description: |
+    description: |
         Follow the instructions below and provide the requested details.
 
         1. Go to the YouTube homepage and do a right-click to open your browser's context menu.
@@ -58,4 +35,5 @@ body:
         5. If your browser supports another method to copy a link under the mouse cursor, feel free to write it down.
 
         Provide the additional information in the text area below.
-     required: true
+  validations:
+    required: true
