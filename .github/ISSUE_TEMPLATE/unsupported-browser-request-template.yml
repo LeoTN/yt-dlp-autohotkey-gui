@@ -5,28 +5,28 @@ labels: ["enhancement"]
 body:
 - type: checkboxes
   attributes:
-    label: **Is there an existing request for this?**
-    description: Please search to see if a request already exists or if your browser is already implemented.
+    label: "**Is there an existing request for this?**"
+    description: "Please search to see if a request already exists or if your browser is already implemented."
     options:
-    - label: This request is unique.
+    - label: "This request is unique."
       required: true
 - type: textarea
   attributes:
-    label: **Browser Name**
-    description: Write the name of your browser here.
+    label: "**Browser Name**"
+    description: "Write the name of your browser here."
   validations:
     required: true
 - type: textarea
   attributes:
-    label: **Browser Download Link**
-    description: The download link should start or lead to the download directly.
+    label: "**Browser Download Link**"
+    description: "The download link should start or lead to the download directly."
   validations:
     required: true
 - type: textarea
   attributes:
-    label: **Additional Information**
+    label: "**Additional Information**"
     description: |
-        Follow the instructions below and provide the requested details.
+        "Follow the instructions below and provide the requested details.
 
         1. Go to the YouTube homepage and do a right-click to open your browser's context menu.
         2. Look for an option called something like "Copy Link".
@@ -34,6 +34,6 @@ body:
         4. Make sure that you can paste the link (e.g. into Notepad or any text field).
         5. If your browser supports another method to copy a link under the mouse cursor, feel free to write it down.
 
-        Provide the additional information in the text area below.
+        Provide the additional information in the text area below."
   validations:
     required: true
