@@ -288,5 +288,4 @@ handleMainGUI_uninstallScript()
             "Please repair the installation with the .MSI installer or remove this script by using the windows program "
             . "management option.", "VideoDownloader Uninstall Status", "O Icon!")
     }
-
 }

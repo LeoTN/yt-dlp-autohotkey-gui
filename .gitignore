@@ -2,9 +2,9 @@
 VideoDownloader.exe
 .vscode/
 compiler/*.zip
-compiler/*.msi
 compiler/*.autosave.aip
 compiler/VideoDownloaderInstaller-cache/
+compiler/deployment/Files/*.msi
 yt_dlp_autohotkey_gui_files/config/
 yt_dlp_autohotkey_gui_files/deleted/
 yt_dlp_autohotkey_gui_files/download/
