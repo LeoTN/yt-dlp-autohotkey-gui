@@ -128,7 +128,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ${{ env.FINAL_INSTALLER_NAME }}
-        path: ${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup
+        path: ${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/Files
 
     - name: Compress Installer Archive
       run: |
