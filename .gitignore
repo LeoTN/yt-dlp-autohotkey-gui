@@ -4,12 +4,11 @@ VideoDownloader.exe
 compiler/*.zip
 compiler/*.autosave.aip
 compiler/VideoDownloaderInstaller-cache/
-compiler/deployment/Files/*.msi
 yt_dlp_autohotkey_gui_files/config/
 yt_dlp_autohotkey_gui_files/deleted/
 yt_dlp_autohotkey_gui_files/download/
 yt_dlp_autohotkey_gui_files/library/FFmpeg/
-yt_dlp_autohotkey_gui_files/library/setup/VideoDownloaderSetup.exe
+yt_dlp_autohotkey_gui_files/library/setup/Files/
 yt_dlp_autohotkey_gui_files/library/scripts/DownloadOptionsGUITooltips.exe
 yt_dlp_autohotkey_gui_files/presets/
 yt_dlp_autohotkey_gui_files/*.txt

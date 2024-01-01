@@ -86,7 +86,7 @@ createMainGUI()
     optionsMenu.SetIcon("Clear URL File", "shell32.dll", 43)
     optionsMenu.Add("Restore URL File from Backup", (*) => restoreURLFile())
     optionsMenu.SetIcon("Restore URL File from Backup", "shell32.dll", 240)
-    optionsMenu.Add("Open Download Options GUI", (*) => Hotkey_openOptionsGUI())
+    optionsMenu.Add("Open Download Options GUI", (*) => hotkey_openOptionsGUI())
     optionsMenu.SetIcon("Open Download Options GUI", "shell32.dll", 123)
     optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
     optionsMenu.SetIcon("Terminate Script", "shell32.dll", 28)
@@ -95,6 +95,8 @@ createMainGUI()
     optionsMenu.Add()
     optionsMenu.Add("Uninstall script", (*) => handleMainGUI_uninstallScript())
     optionsMenu.SetIcon("Uninstall script", "shell32.dll", 245)
+    optionsMenu.Add("Repair script", (*) => handleMainGUI_repairScript())
+    optionsMenu.SetIcon("Repair script", "shell32.dll", 41)
 
     helpMenu := Menu()
     helpMenu.Add("This repository (yt-dlp-autohotkey-gui)",
@@ -274,18 +276,60 @@ handleMainGUI_openDownloadLocation()
 
 handleMainGUI_uninstallScript()
 {
-    tmpPath := scriptBaseFilesLocation . "\library\setup\uninstall_shortcut.lnk"
-    If (FileExist(tmpPath))
+    videoDownloaderSetupExecutableLocation := scriptBaseFilesLocation . "\library\setup\VideoDownloader-Setup.exe"
+
+    If (A_IsCompiled)
     {
-        Try
+        result := MsgBox("Uninstall VideoDownloader now?", "Uninstall VideoDownloader", "YN Icon?")
+        Switch (result)
         {
-            Run(tmpPath)
+            Case "Yes":
+                {
+                    If (FileExist(videoDownloaderSetupExecutableLocation))
+                    {
+                        Run(videoDownloaderSetupExecutableLocation . ' -deploymentType "Uninstall"')
+                    }
+                    Else
+                    {
+                        MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
+                            . "].", "Execute Uninstall Setup - Error!", "O Icon!")
+                    }
+                }
         }
     }
     Else
     {
-        MsgBox("Could not find the uninstall shortcut folder in [" . tmpPath . "].`n`n"
-            "Please repair the installation with the .MSI installer or remove this script by using the windows program "
-            . "management option.", "VideoDownloader Uninstall Status", "O Icon!")
+        MsgBox("You are using a non compiled version of this script."
+            "`n`nYou cannot uninstall VideoDownloader now.", "Uninstall VideoDownloader - Error!", "O IconX 262144 T5")
+    }
+}
+
+handleMainGUI_repairScript()
+{
+    videoDownloaderSetupExecutableLocation := scriptBaseFilesLocation . "\library\setup\VideoDownloader-Setup.exe"
+
+    If (A_IsCompiled)
+    {
+        result := MsgBox("Repair VideoDownloader now?", "Repair VideoDownloader", "YN Icon?")
+        Switch (result)
+        {
+            Case "Yes":
+                {
+                    If (FileExist(videoDownloaderSetupExecutableLocation))
+                    {
+                        Run(videoDownloaderSetupExecutableLocation . ' -deploymentType "Repair"')
+                    }
+                    Else
+                    {
+                        MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
+                            . "].", "Execute Repair Setup - Error!", "O Icon!")
+                    }
+                }
+        }
+    }
+    Else
+    {
+        MsgBox("You are using a non compiled version of this script."
+            "`n`nYou cannot repair VideoDownloader now.", "Repair VideoDownloader - Error!", "O IconX 262144 T5")
     }
 }

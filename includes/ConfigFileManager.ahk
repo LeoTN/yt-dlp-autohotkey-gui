@@ -18,115 +18,119 @@ global booleanDebugMode := false
 CONFIG VARIABLE TEMPLATE SECTION
 -------------------------------------------------
 These default variables are used to generate the config file template.
-***IMPORTANT NOTE***: Do NOT change the name of these variables !
-Otherwise this can lead to fatal errors and failures !
+***IMPORTANT NOTE***: Do NOT change the name of these variables!
+Otherwise this can lead to fatal errors and failures!
 */
 
-; Determines the location of the script's configuration file.
-global configFileLocation := workingBaseFilesLocation . "\config\ytdownloader.ini"
-; Specifies path for the .txt file which stores the URLs.
-URL_FILE_LOCATION := workingBaseFilesLocation . "\YT_URLS.txt"
-; Specifies path for the .txt file which stores the URL backup.
-URL_BACKUP_FILE_LOCATION := workingBaseFilesLocation . "\YT_URLS_BACKUP.txt"
-; Specifies path for the .txt file which stores the blacklist file.
-BLACKLIST_FILE_LOCATION := workingBaseFilesLocation . "\YT_BLACKLIST.txt"
-; Standard download log file path.
-DOWNLOAD_LOG_FILE_LOCATION := workingBaseFilesLocation . "\download\download_log.txt"
-; Default download archive file location.
-DOWNLOAD_ARCHIVE_LOCATION := workingBaseFilesLocation . "\download\download_archive.txt"
-; Default preset storage for the download option GUI.
-DOWNLOAD_PRESET_LOCATION := workingBaseFilesLocation . "\presets"
-; Standard download path.
-DOWNLOAD_PATH := workingBaseFilesLocation . "\download"
+config_onInit()
+{
+    ; Determines the location of the script's configuration file.
+    global configFileLocation := workingBaseFilesLocation . "\config\ytdownloader.ini"
+    ; Specifies path for the .txt file which stores the URLs.
+    global URL_FILE_LOCATION := workingBaseFilesLocation . "\YT_URLS.txt"
+    ; Specifies path for the .txt file which stores the URL backup.
+    global URL_BACKUP_FILE_LOCATION := workingBaseFilesLocation . "\YT_URLS_BACKUP.txt"
+    ; Specifies path for the .txt file which stores the blacklist file.
+    global BLACKLIST_FILE_LOCATION := workingBaseFilesLocation . "\YT_BLACKLIST.txt"
+    ; Standard download log file path.
+    global DOWNLOAD_LOG_FILE_LOCATION := workingBaseFilesLocation . "\download\download_log.txt"
+    ; Default download archive file location.
+    global DOWNLOAD_ARCHIVE_LOCATION := workingBaseFilesLocation . "\download\download_archive.txt"
+    ; Default preset storage for the download option GUI.
+    global DOWNLOAD_PRESET_LOCATION := workingBaseFilesLocation . "\presets"
+    ; Standard download path.
+    global DOWNLOAD_PATH := workingBaseFilesLocation . "\download"
 
-; Defines if the script should ask the user for a brief explaination of it's core functions.
-ASK_FOR_TUTORIAL := true
-; Toggle if the main GUI should be shown on launch.
-SHOW_MAIN_GUI_ON_LAUNCH := true
-; Toggle if the downnload options GUI should be shown on launch.
-SHOW_OPTIONS_GUI_ON_LAUNCH := true
-; This option controls if empty download folders with no media inside should be automatically deleted.
-DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD := true
-; Stores which hotkeys are enabled / disabled via the GUI.
-HOTKEY_STATE_ARRAY := "[1, 1, 0, 1, 1, 1, 0]"
-; Just a list of all standard hotkeys.
-DOWNLOAD_HK := "+^!D"
-URL_COLLECT_HK := "+^!S"
-THUMBNAIL_URL_COLLECT_HK := "+^!F"
-MAIN_GUI_HK := "+^!G"
-TERMINATE_SCRIPT_HK := "+^!T"
-RELOAD_SCRIPT_HK := "+^!R"
-NOT_USED_HK := "+^!P"
-CLEAR_URL_FILE_HK := "!F1"
-OPTIONS_GUI_HK := "+^!A"
-;------------------------------------------------
+    ; Defines if the script should ask the user for a brief explaination of it's core functions.
+    global ASK_FOR_TUTORIAL := true
+    ; Toggle if the main GUI should be shown on launch.
+    global SHOW_MAIN_GUI_ON_LAUNCH := true
+    ; Toggle if the downnload options GUI should be shown on launch.
+    global SHOW_OPTIONS_GUI_ON_LAUNCH := true
+    ; This option controls if empty download folders with no media inside should be automatically deleted.
+    global DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD := true
+    ; Stores which hotkeys are enabled / disabled via the GUI.
+    global HOTKEY_STATE_ARRAY := "[1, 1, 0, 1, 1, 1, 0]"
+    ; Just a list of all standard hotkeys.
+    global DOWNLOAD_HK := "+^!D"
+    global URL_COLLECT_HK := "+^!S"
+    global THUMBNAIL_URL_COLLECT_HK := "+^!F"
+    global MAIN_GUI_HK := "+^!G"
+    global TERMINATE_SCRIPT_HK := "+^!T"
+    global RELOAD_SCRIPT_HK := "+^!R"
+    global NOT_USED_HK := "+^!P"
+    global CLEAR_URL_FILE_HK := "!F1"
+    global OPTIONS_GUI_HK := "+^!A"
+    ;------------------------------------------------
 
-; Will contain all config values matching with each variable name in the array below.
-; For example configVariableNameArray[2] = "URL_FILE_LOCATION"
-; and configFileContentArray[2] = "workingBaseFilesLocation . "\YT_URLS.txt""
-; so basically URL_FILE_LOCATION = "workingBaseFilesLocation . "\YT_URLS.txt"".
-; NOTE: This had to be done because changing a global variable using a dynamic
-; expression like global %myGlobalVarName% := "newValue" won't work.
-global configFileContentArray := []
+    ; Will contain all config values matching with each variable name in the array below.
+    ; For example configVariableNameArray[2] = "URL_FILE_LOCATION"
+    ; and configFileContentArray[2] = "workingBaseFilesLocation . "\YT_URLS.txt""
+    ; so basically URL_FILE_LOCATION = "workingBaseFilesLocation . "\YT_URLS.txt"".
+    ; NOTE: This had to be done because changing a global variable using a dynamic
+    ; expression like global %myGlobalVarName% := "newValue" won't work.
+    global configFileContentArray := []
 
-; Create an array including all settings variables names.
-; This array makes it easier to apply certain values from the config file to the configFileContentArray.
-; IMPORTANT NOTE: Do NOT forget to add each new config variable name into the array !!!
-configVariableNameArray :=
-    [
-        "booleanDebugMode",
-        "URL_FILE_LOCATION",
-        "URL_BACKUP_FILE_LOCATION",
-        "BLACKLIST_FILE_LOCATION",
-        "DOWNLOAD_LOG_FILE_LOCATION",
-        "DOWNLOAD_ARCHIVE_LOCATION",
-        "DOWNLOAD_PRESET_LOCATION",
-        "DOWNLOAD_PATH",
-        "ASK_FOR_TUTORIAL",
-        "SHOW_MAIN_GUI_ON_LAUNCH",
-        "SHOW_OPTIONS_GUI_ON_LAUNCH",
-        "DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD",
-        "HOTKEY_STATE_ARRAY",
-        "DOWNLOAD_HK",
-        "URL_COLLECT_HK",
-        "THUMBNAIL_URL_COLLECT_HK",
-        "MAIN_GUI_HK",
-        "OPTIONS_GUI_HK",
-        "TERMINATE_SCRIPT_HK",
-        "RELOAD_SCRIPT_HK",
-        "NOT_USED_HK",
-        "CLEAR_URL_FILE_HK"
-    ]
-; Create an array including the matching section name for EACH item in the configVariableNameArray.
-; This makes it easier to read and write the config file.
-; IMPORTANT NOTE: Do NOT forget to add the SECTION NAME for EACH new item added in the configVariableNameArray !!!
-configSectionNameArray :=
-    [
-        "DebugSettings",
-        "FileLocations",
-        "FileLocations",
-        "FileLocations",
-        "FileLocations",
-        "FileLocations",
-        "FileLocations",
-        "FileLocations",
-        "GeneralSettings",
-        "GeneralSettings",
-        "GeneralSettings",
-        "GeneralSettings",
-        "Hotkeys",
-        "Hotkeys",
-        "Hotkeys",
-        "Hotkeys",
-        "Hotkeys",
-        "Hotkeys",
-        "Hotkeys",
-        "Hotkeys",
-        "Hotkeys",
-        "Hotkeys"
-    ]
+    ; Create an array including all settings variables names.
+    ; This array makes it easier to apply certain values from the config file to the configFileContentArray.
+    ; IMPORTANT NOTE: Do NOT forget to add each new config variable name into the array !!!
+    global configVariableNameArray :=
+        [
+            "booleanDebugMode",
+            "URL_FILE_LOCATION",
+            "URL_BACKUP_FILE_LOCATION",
+            "BLACKLIST_FILE_LOCATION",
+            "DOWNLOAD_LOG_FILE_LOCATION",
+            "DOWNLOAD_ARCHIVE_LOCATION",
+            "DOWNLOAD_PRESET_LOCATION",
+            "DOWNLOAD_PATH",
+            "ASK_FOR_TUTORIAL",
+            "SHOW_MAIN_GUI_ON_LAUNCH",
+            "SHOW_OPTIONS_GUI_ON_LAUNCH",
+            "DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD",
+            "HOTKEY_STATE_ARRAY",
+            "DOWNLOAD_HK",
+            "URL_COLLECT_HK",
+            "THUMBNAIL_URL_COLLECT_HK",
+            "MAIN_GUI_HK",
+            "OPTIONS_GUI_HK",
+            "TERMINATE_SCRIPT_HK",
+            "RELOAD_SCRIPT_HK",
+            "NOT_USED_HK",
+            "CLEAR_URL_FILE_HK"
+        ]
+    ; Create an array including the matching section name for EACH item in the configVariableNameArray.
+    ; This makes it easier to read and write the config file.
+    ; IMPORTANT NOTE: Do NOT forget to add the SECTION NAME for EACH new item added in the configVariableNameArray !!!
+    global configSectionNameArray :=
+        [
+            "DebugSettings",
+            "FileLocations",
+            "FileLocations",
+            "FileLocations",
+            "FileLocations",
+            "FileLocations",
+            "FileLocations",
+            "FileLocations",
+            "GeneralSettings",
+            "GeneralSettings",
+            "GeneralSettings",
+            "GeneralSettings",
+            "Hotkeys",
+            "Hotkeys",
+            "Hotkeys",
+            "Hotkeys",
+            "Hotkeys",
+            "Hotkeys",
+            "Hotkeys",
+            "Hotkeys",
+            "Hotkeys",
+            "Hotkeys"
+        ]
 
-checkConfigFileIntegrity()
+    checkConfigFileIntegrity()
+}
+
 /*
 CONFIG FILE SECTION
 -------------------------------------------------
@@ -142,7 +146,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
 
     If (booleanShowPrompt = true)
     {
-        result := MsgBox("Do you really want to replace the current`n`nconfig file with a new one ?", "Warning !", "YN Icon! T10")
+        result := MsgBox("Do you really want to replace the current`nconfig file with a new one ?", "Warning !", "YN Icon! T10")
         If (result = "No" || result = "Timeout")
         {
             Return
@@ -166,7 +170,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
     {
         MsgBox("Not every config file entry has been asigned to a section !`n`nPlease fix this by checking both arrays.",
             "Error !", "O IconX")
-        MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
+        MsgBox("Script terminated.", "Script Status", "O IconX T1.5")
         ExitApp()
     }
     Else
@@ -202,6 +206,10 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
     booleanAskForPathCreation := pBooleanAskForPathCreation
     booleanCheckConfigFileStatus := pBooleanCheckConfigFileStatus
 
+    global configVariableNameArray
+    global configFileContentArray
+    global booleanFirstTimeLaunch
+
     If (booleanCheckConfigFileStatus = true)
     {
         checkConfigFileIntegrity()
@@ -216,11 +224,17 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
             ; Everything else should be excluded.
             If (InStr(configFileContentArray.Get(A_Index), "\"))
             {
-                If (validatePath(configFileContentArray.Get(A_Index), booleanAskForPathCreation) = false)
+                booleanCreatePathSilent := false
+                If (booleanFirstTimeLaunch)
                 {
-                    MsgBox("Could not create directory !`nCheck the config file for a valid path at :`n "
-                        . configVariableNameArray.Get(A_Index), "Error !", "O Icon! T10")
-                    MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
+                    booleanAskForPathCreation := false
+                    booleanCreatePathSilent := true
+                }
+                If (!validatePath(configFileContentArray.Get(A_Index), booleanAskForPathCreation, booleanCreatePathSilent))
+                {
+                    MsgBox("Could not create directory !`nCheck the config file for a valid path at`n["
+                        . configVariableNameArray.Get(A_Index) . "]", "Error !", "O Icon! T10")
+                    MsgBox("Script terminated.", "Script Status", "O IconX T1.5")
                     ExitApp()
                 }
                 Else
@@ -235,7 +249,7 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
             }
         }
     }
-    MsgBox("Could not find " . optionName . " in the config file.", "Script Status", "O IconX T3")
+    MsgBox("Could not find " . optionName . " in the config file.`nScript terminated.", "Config File Status", "O IconX T3")
     ExitApp()
 }
 
@@ -302,8 +316,8 @@ checkConfigFileIntegrity()
                 createDefaultConfigFile()
                 Return true
             }
-            result := MsgBox("The script config file seems to be corrupted or unavailable !"
-                "`n`nDo you want to create a new one using the template ?"
+            result := MsgBox("The script config file seems to be corrupted or unavailable!"
+                "`n`nDo you want to create a new one using the template?"
                 , "Warning !", "YN Icon! 8192 T10")
             Switch (result)
             {
@@ -314,7 +328,7 @@ checkConfigFileIntegrity()
                     }
                 Default:
                     {
-                        MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
+                        MsgBox("Script terminated.", "Script Status", "O IconX T1.5")
                         ExitApp()
                     }
             }
@@ -325,70 +339,95 @@ checkConfigFileIntegrity()
 ; Verfies the integrity of a given path or file location.
 ; It will also ask the user to create the given path if it does not exist yet.
 ; Returns true if a path is valid and false otherwise.
-validatePath(pPath, pBooleanAskForPathCreation := true)
+validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent := false)
 {
     path := pPath
     booleanAskForPathCreation := pBooleanAskForPathCreation
-    ; If necessary the directory read in the config file will be created.
+    booleanCreatePathSilent := pBooleanCreatePathSilent
+
+    If (booleanAskForPathCreation && booleanCreatePathSilent)
+    {
+        MsgBox("[" . A_ThisFunc "()] [ERROR] booleanAskForPathCreation and booleanCreatePathSilent cannot be true at the "
+            . "same time.`nTerminating script.", "[" . A_ThisFunc "()]", "IconX")
+        ExitApp()
+    }
+
     ; SplitPath makes sure the last part of the whole path is removed.
     ; For example it removes the "\YT_URLS.txt"
-    SplitPath(path, &outFileName, &outDir, &outExtension)
+    SplitPath(path, &outFileName, &outDir, &outExtension, , &outDrive)
+    ; Replaces the drive name with empty space, because the "C:" would trigger the parse loop below mistakenly.
+    pathWithoutDrive := StrReplace(path, outDrive)
     ; Looks for one of the specified characters to identify invalid path names.
     ; Searches for common mistakes in the path name.
-    specialChars := '<>"/|?*'
+    specialChars := '<>"/|?*:'
     Loop Parse (specialChars)
     {
-        If (InStr(path, A_LoopField) || InStr(path, "\\") || InStr(path, "\\\")) || !InStr(path, "\")
+        If (InStr(pathWithoutDrive, A_LoopField))
         {
             Return false
         }
     }
-    If (booleanAskForPathCreation = true)
+    ; Checks if the path contains two or more or no "\".
+    If (RegExMatch(path, "\\{2,}") || !InStr(path, "\"))
     {
-        If (outFileName = "download" || outFileName = "presets")
+        Return false
+    }
+
+    ; This means the path has no file at the end.
+    If (outExtension = "")
+    {
+        If (!DirExist(path))
         {
-            DirCreate(path)
-            Return true
-        }
-        ; This means the path has no file at the end.
-        Else If (outExtension = "" && !DirExist(path))
-        {
-            result := MsgBox("The directory :`n" . path
-                . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
-            Switch (result)
+            If (booleanAskForPathCreation)
             {
-                Case "Yes":
-                    {
-                        DirCreate(path)
-                        Sleep(500)
-                        Return true
-                    }
-                Default:
-                    {
-                        MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
-                        ExitApp()
-                    }
+                result := MsgBox("The directory`n[" . path . "]`ndoes not exist."
+                    "`nWould you like to create it ?", "Warning !", "YN Icon! T10")
+                Switch (result)
+                {
+                    Case "Yes":
+                        {
+                            DirCreate(path)
+                        }
+                    Default:
+                        {
+                            MsgBox("Script terminated.", "Script Status", "O IconX T1.5")
+                            ExitApp()
+                        }
+                }
             }
-        }
-        ; This means the path has a file at the end which has to be excluded.
-        Else If (!DirExist(outDir))
-        {
-            result := MsgBox("The directory :`n" . outDir
-                . "`ndoes not exist.`nWould you like to create it ?", "Warning !", "YN Icon! T10")
-            Switch (result)
+            Else If (booleanCreatePathSilent)
             {
-                Case "Yes":
-                    {
-                        DirCreate(outDir)
-                        Sleep(500)
-                        Return true
-                    }
-                Default:
-                    {
-                        MsgBox("Script has been terminated.", "Script Status", "O IconX T1.5")
-                        ExitApp()
-                    }
+                DirCreate(path)
             }
         }
     }
+    ; This means the path has a file at the end, which has to be excluded.
+    Else
+    {
+        If (!DirExist(outDir))
+        {
+            If (booleanAskForPathCreation)
+            {
+                result := MsgBox("The directory`n[" . outDir . "]`ndoes not exist."
+                    "`nWould you like to create it ?", "Warning !", "YN Icon! T10")
+                Switch (result)
+                {
+                    Case "Yes":
+                        {
+                            DirCreate(outDir)
+                        }
+                    Default:
+                        {
+                            MsgBox("Script terminated.", "Script Status", "O IconX T1.5")
+                            ExitApp()
+                        }
+                }
+            }
+            Else If (booleanCreatePathSilent)
+            {
+                DirCreate(outDir)
+            }
+        }
+    }
+    Return true
 }

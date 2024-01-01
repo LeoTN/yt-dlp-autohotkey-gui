@@ -79,11 +79,14 @@ https://psappdeploytoolkit.com
 #>
 
 
-[CmdletBinding()]
+[CmdletBinding()] # Manual change!
 Param (
     [Parameter(Mandatory = $false)]
     [ValidateSet('Install', 'Uninstall', 'Repair')]
     [String]$DeploymentType = 'deployment_type_not_set',
+    [Parameter(Mandatory = $false)]
+    [ValidateSet($true, $false)]
+    $booleanRunSetupActionsQuiet = 'quiet_setup_not_set',
     [Parameter(Mandatory = $false)]
     [ValidateSet('Interactive', 'Silent', 'NonInteractive')]
     [String]$DeployMode = 'Interactive',
@@ -107,15 +110,16 @@ Try {
     ##* VARIABLE DECLARATION
     ##*===============================================
     ## Variables: Application
+    ## CHANGE THESE VALUES WITH CARE! They are used within the script for various reasons.
     [string]$appVendor = 'LeoTN'
     [string]$appName = 'VideoDownloader'
-    [string]$appVersion = '1.3.0'
+    [string]$appVersion = ''
     [string]$appArch = ''
     [string]$appLang = 'EN'
-    [string]$appRevision = '01'
+    [string]$appRevision = ''
     [string]$appScriptVersion = '1.0.0'
     [string]$appScriptDate = '22/12/2023'
-    [string]$appScriptAuthor = '<author name>'
+    [string]$appScriptAuthor = 'LeoTN / PowerShellAppDeploymentToolkit'
     ##*===============================================
     ## Variables: Install Titles (Only set here to override defaults set by the toolkit)
     [string]$installName = ''
@@ -176,36 +180,38 @@ Try {
     ##*===============================================
 
     # Set the install directories to the default value.
-    $videoDownloaderInstallDirectory = '"' + $envProgramFilesX86 + '\LeoTN\VideoDownloader"'
+    $videoDownloaderInstallDirectory = "$envProgramFilesX86\$appVendor\$appName"
     $pythonInstallDirectory = "$envLocalAppData\Programs\Python\Python_3.12"
     # Define where the script properties are located.
     $videoDownloaderInstallerLocation = "$dirFiles\VideoDownloaderInstaller.msi"
+    $videoDownloaderRegistryDirectory = "HKCU:\SOFTWARE\$appVendor\$appName"
     $ffmpegSetupScriptLocation = "$dirSupportFiles\FFmpegSetup.ps1"
     $ytdlpSetupScriptLocation = "$dirSupportFiles\yt-dlpSetup.ps1"
     # Other important values.
     $pythonRequiredDiskSpace = 200
     $videoDownloaderRequiredDiskSpace = 300
-    $booleanRunSetupActionsQuiet = $false
+    # Used for the message at the end.
+    $booleanSetupErrorOccurred = $false
 
     If (-not (Test-Path -Path $videoDownloaderInstallerLocation)) {
         Write-Log "`n`n`n`n`n[ERROR] Missing VideoDownloaderInstaller.msi at`n[$videoDownloaderInstallerLocation]`n`n`n`n`n"
         # Language support needed.
         $balloonText = "Missing VideoDownloader installer file!"
-        Show-BalloonTip -BalloonTipText $balloonText
+        Show-BalloonTip -BalloonTipText $balloonText -BalloonTipIcon "Error"
         Exit-Script
     }
     If (-not (Test-Path -Path $ffmpegSetupScriptLocation)) {
         Write-Log "`n`n`n`n`n[ERROR] Missing FFmpegSetup.ps1 at`n[$ffmpegSetupScriptLocation]`n`n`n`n`n"
         # Language support needed.
         $balloonText = "Missing FFmpeg setup file!"
-        Show-BalloonTip -BalloonTipText $balloonText
+        Show-BalloonTip -BalloonTipText $balloonText -BalloonTipIcon "Error"
         Exit-Script
     }
     If (-not (Test-Path -Path $ytdlpSetupScriptLocation)) {
         Write-Log "`n`n`n`n`n[ERROR] Missing yt-dlpSetup.ps1 at`n[$ytdlpSetupScriptLocation]`n`n`n`n`n"
         # Language support needed.
         $balloonText = "Missing yt-dlp setup file!"
-        Show-BalloonTip -BalloonTipText $balloonText
+        Show-BalloonTip -BalloonTipText $balloonText -BalloonTipIcon "Error"
         Exit-Script
     }
     
@@ -214,15 +220,15 @@ Try {
     ##*===============================================
 
     ##*===============================================
-    ##* NO DEPLOYMENT TYPE GIVEN SECTION
+    ##* NO SETUP VISIBILITY GIVEN SECTION
     ##*===============================================
 
-    If ($deploymentType -eq "deployment_type_not_set") {
+    If ($booleanRunSetupActionsQuiet -eq 'quiet_setup_not_set') {
         # Language support needed.
         $selectQuietBooleanButtonOption_1 = "Yes"
         $selectQuietBooleanButtonOption_2 = "Cancel"
         $selectQuietBooleanButtonOption_3 = "No"
-        $result = Show-InstallationPrompt -Title "Select Setup Visibility" -Message "Would you like to enable the quiet setup? This will hide most setup windows and notifications." -ButtonLeftText $selectQuietBooleanButtonOption_1 -ButtonMiddleText $selectQuietBooleanButtonOption_2 -ButtonRightText $selectQuietBooleanButtonOption_3
+        $result = Show-InstallationPrompt -Title "Select Setup Visibility" -Message "Would you like to enable the quiet setup?`nThis will hide most setup windows and notifications." -ButtonLeftText $selectQuietBooleanButtonOption_1 -ButtonMiddleText $selectQuietBooleanButtonOption_2 -ButtonRightText $selectQuietBooleanButtonOption_3
         If ($result -eq $selectQuietBooleanButtonOption_1) {
             $booleanRunSetupActionsQuiet = $true
         }
@@ -231,9 +237,19 @@ Try {
             Show-BalloonTip -BalloonTipText $balloonText
             Exit-Script
         }
+    }
 
-        Write-Log "`n`n[INFO] booleanRunSetupActionsQuiet = $booleanRunSetupActionsQuiet`n`n"
+    Write-Log "`n`n[INFO] booleanRunSetupActionsQuiet = $booleanRunSetupActionsQuiet`n`n"
 
+    ##*===============================================
+    ##* NO SETUP VISIBILITY GIVEN SECTION END
+    ##*===============================================
+
+    ##*===============================================
+    ##* NO DEPLOYMENT TYPE GIVEN SECTION
+    ##*===============================================
+
+    If ($deploymentType -eq "deployment_type_not_set") {
         $selectDeploymentTypeButtonOption_1 = "Install/Repair"
         $selectDeploymentTypeButtonOption_2 = "Cancel"
         $selectDeploymentTypeButtonOption_3 = "Uninstall"
@@ -303,6 +319,25 @@ Try {
     ##*===============================================
     ##* NO DEPLOYMENT TYPE GIVEN SECTION END
     ##*===============================================
+
+    ## Check deployment type (install/uninstall)
+    Switch ($deploymentType) {
+        'Install' {
+            $deploymentTypeName = $configDeploymentTypeInstall
+        }
+        'Uninstall' {
+            $deploymentTypeName = $configDeploymentTypeUnInstall
+        }
+        'Repair' {
+            $deploymentTypeName = $configDeploymentTypeRepair
+        }
+        Default {
+            $deploymentTypeName = $configDeploymentTypeInstall
+        }
+    }
+    If ($deploymentTypeName) {
+        Write-Log -Message "Deployment type is [$deploymentTypeName]." -Source $appDeployToolkitName
+    }
 
     If ($deploymentType -ine 'Uninstall' -and $deploymentType -ine 'Repair') {
         ##*===============================================
@@ -382,25 +417,69 @@ Try {
         ##* INSTALLATION (VideoDownloader)
         ##*===============================================
 
-        installVideoDownloader -pVideoDownloaderInstallationDirectory $videoDownloaderInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet
+        $tmpAppName = "VideoDownloader"
+        If (getBooleanReturn(installVideoDownloader -pVideoDownloaderInstallationDirectory $videoDownloaderInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet)) {
+            Write-Log "`n`n[INSTALL] [INFO] Installed $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[INSTALL] [WARNING] Could not install $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not install $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Install Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
 
         ##*===============================================
-        ##* INSTALLATION (Python 3.12)
+        ##* INSTALLATION (Python 3.12.0)
         ##*===============================================
 
-        installPython -pPythonInstallDirectory $pythonInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet
-
+        $tmpAppName = "Python"
+        If (getBooleanReturn(installPython -pPythonInstallDirectory $pythonInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet)) {
+            Write-Log "`n`n[INSTALL] [INFO] Installed $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[INSTALL] [WARNING] Could not install $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not install $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Install Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
+        
         ##*===============================================
         ##* INSTALLATION (yt-dlp)
         ##*===============================================
 
-        installYTDLP -pPythonInstallationDirectory $pythonInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet
+        $tmpAppName = "yt-dlp"
+        If (getBooleanReturn(installYTDLP -pPythonInstallationDirectory $pythonInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet)) {
+            Write-Log "`n`n[INSTALL] [INFO] Installed $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[INSTALL] [WARNING] Could not install $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not install $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Install Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
 
         ##*===============================================
         ##* INSTALLATION (FFmpeg library)
         ##*===============================================
 
-        installFFmpeg -pVideoDownloaderInstallationDirectory $videoDownloaderInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet
+        $tmpAppName = "FFmpeg"
+        If (getBooleanReturn(installFFmpeg -pVideoDownloaderInstallationDirectory $videoDownloaderInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet)) {
+            Write-Log "`n`n[INSTALL] [INFO] Installed $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[INSTALL] [WARNING] Could not install $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not install $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Install Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
 
         ##*===============================================
         ##* POST-INSTALLATION
@@ -409,7 +488,17 @@ Try {
 
         ## <Perform Post-Installation tasks here>
 
-        Show-InstallationPrompt -Message "$appName installation completed." -ButtonRightText "OK" -Icon Information -NoWait
+        # Disables the forced setup and tells the main script to create any necessary files without prompt.
+        Set-RegistryKey -Key $videoDownloaderRegistryDirectory -Name "booleanSetupRequired" -Value 0 -Type "Binary"
+        Set-RegistryKey -Key $videoDownloaderRegistryDirectory -Name "booleanFirstTimeLaunch" -Value 1 -Type "Binary"
+        Write-Log "`n`n[INFO] Changed registry entries:`n[booleanSetupRequired = 0 and booleanFirstTimeLaunch = 1] at`n[$videoDownloaderRegistryDirectory].`n`n"
+        # Language support needed.
+        If ($booleanSetupErrorOccurred) {
+            Show-InstallationPrompt -Message "$appName installation completed with errors.`nIt is recommended to repair the installation." -ButtonRightText "OK" -Icon "Warning" -NoWait
+        }
+        Else {
+            Show-InstallationPrompt -Message "$appName installation completed.`n`nHave fun with the application :)" -ButtonRightText "OK" -Icon "Information" -NoWait
+        }
     }
     ElseIf ($deploymentType -ieq 'Uninstall') {
         ##*===============================================
@@ -432,25 +521,69 @@ Try {
         ##* UNINSTALLATION (FFmpeg library)
         ##*===============================================
 
-        uninstallFFmpeg -pVideoDownloaderInstallationDirectory $videoDownloaderInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet
+        $tmpAppName = "FFmpeg"
+        If (getBooleanReturn(uninstallFFmpeg -pVideoDownloaderInstallationDirectory $videoDownloaderInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet)) {
+            Write-Log "`n`n[INSTALL] [INFO] Uninstalled $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[INSTALL] [WARNING] Could not uninstall $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not uninstall $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Uninstall Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
 
         ##*===============================================
         ##* UNINSTALLATION (yt-dlp)
         ##*===============================================
 
-        uninstallYTDLP -pPythonInstallationDirectory $pythonInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet
+        $tmpAppName = "yt-dlp"
+        If (getBooleanReturn(uninstallYTDLP -pPythonInstallationDirectory $pythonInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet)) {
+            Write-Log "`n`n[INSTALL] [INFO] Uninstalled $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[INSTALL] [WARNING] Could not uninstall $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not uninstall $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Uninstall Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
 
         ##*===============================================
-        ##* UNINSTALLATION (Python 3.12)
+        ##* UNINSTALLATION (Python 3.12.0)
         ##*===============================================
 
-        uninstallPython
+        $tmpAppName = "Python"
+        If (getBooleanReturn(uninstallPython)) {
+            Write-Log "`n`n[INSTALL] [INFO] Uninstalled $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[INSTALL] [WARNING] Could not uninstall $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not uninstall $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Uninstall Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
 
         ##*===============================================
         ##* UNINSTALLATION (VideoDownloader)
         ##*===============================================
 
-        uninstallVideoDownloader -pBooleanQuiet $booleanRunSetupActionsQuiet
+        $tmpAppName = "VideoDownloader"
+        If (getBooleanReturn(uninstallVideoDownloader -pBooleanQuiet $booleanRunSetupActionsQuiet)) {
+            Write-Log "`n`n[INSTALL] [INFO] Uninstalled $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[INSTALL] [WARNING] Could not uninstall $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not uninstall $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Uninstall Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
 
         ##*===============================================
         ##* POST-UNINSTALLATION
@@ -458,6 +591,13 @@ Try {
         [String]$installPhase = 'Post-Uninstallation'
 
         ## <Perform Post-Uninstallation tasks here>
+        # Language support needed.
+        If ($booleanSetupErrorOccurred) {
+            Show-InstallationPrompt -Message "$appName uninstallation completed with errors.`n`nErrors may also occur when components were previously uninstalled." -ButtonRightText "OK" -Icon "Warning" -NoWait
+        }
+        Else {
+            Show-InstallationPrompt -Message "$appName uninstallation completed.`n`nUntil next time :')" -ButtonRightText "OK" -Icon "Information" -NoWait
+        }
     }
     ElseIf ($deploymentType -ieq 'Repair') {
         ##*===============================================
@@ -478,25 +618,69 @@ Try {
         ##* REPAIR (VideoDownloader)
         ##*===============================================
 
-        repairVideoDownloader -pBooleanQuiet $booleanRunSetupActionsQuiet
+        $tmpAppName = "VideoDownloader"
+        If (getBooleanReturn(repairVideoDownloader -pBooleanQuiet $booleanRunSetupActionsQuiet)) {
+            Write-Log "`n`n[REPAIR] [INFO] Repaired $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[REPAIR] [WARNING] Could not repair $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not repair $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Repair Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
 
         ##*===============================================
-        ##* REPAIR (Python 3.12)
+        ##* REPAIR (Python 3.12.0)
         ##*===============================================
 
-        repairPython -pBooleanQuiet $booleanRunSetupActionsQuiet
+        $tmpAppName = "Python"
+        If (getBooleanReturn(repairPython -pPythonInstallDirectory $pythonInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet)) {
+            Write-Log "`n`n[REPAIR] [INFO] Repaired $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[REPAIR] [WARNING] Could not repair $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not repair $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Repair Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
 
         ##*===============================================
         ##* REPAIR (yt-dlp)
         ##*===============================================
 
-        repairYTDLP -pPythonInstallationDirectory $pythonInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet
+        $tmpAppName = "yt-dlp"
+        If (getBooleanReturn(repairYTDLP -pPythonInstallationDirectory $pythonInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet)) {
+            Write-Log "`n`n[REPAIR] [INFO] Repaired $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[REPAIR] [WARNING] Could not repair $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not repair $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Repair Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
 
         ##*===============================================
         ##* REPAIR (FFmpeg library)
         ##*===============================================
 
-        repairFFmpeg -pVideoDownloaderInstallationDirectory $videoDownloaderInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet
+        $tmpAppName = "FFmpeg"
+        If (getBooleanReturn(repairFFmpeg -pVideoDownloaderInstallationDirectory $videoDownloaderInstallDirectory -pBooleanQuiet $booleanRunSetupActionsQuiet)) {
+            Write-Log "`n`n[REPAIR] [INFO] Repaired $tmpAppName successfully.`n`n"
+        }
+        Else {
+            Write-Log "`n`n[REPAIR] [WARNING] Could not repair $tmpAppName successfully.`n`n"
+            $booleanSetupErrorOccurred = $true
+            # Language support needed.
+            $balloonText = "Could not repair $tmpAppName successfully."
+            $balloonTitle = "$tmpAppName Repair Status"
+            Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipIcon "Warning"
+        }
 
         ##*===============================================
         ##* POST-REPAIR
@@ -504,6 +688,18 @@ Try {
         [String]$installPhase = 'Post-Repair'
 
         ## <Perform Post-Repair tasks here>
+
+        # Disables the forced setup and tells the main script to create any necessary files without prompt.
+        Set-RegistryKey -Key $videoDownloaderRegistryDirectory -Name "booleanSetupRequired" -Value 0 -Type "Binary"
+        Set-RegistryKey -Key $videoDownloaderRegistryDirectory -Name "booleanFirstTimeLaunch" -Value 1 -Type "Binary"
+        Write-Log "`n`n[INFO] Changed registry entries:`n[booleanSetupRequired = 0 and booleanFirstTimeLaunch = 1] at`n[$videoDownloaderRegistryDirectory].`n`n"
+        # Language support needed.
+        If ($booleanSetupErrorOccurred) {
+            Show-InstallationPrompt -Message "$appName repair completed with errors.`n`nIt is recommended to repair the installation again. If this error persists, please uninstall and re-install all components or report the issue on the GitHub page." -ButtonRightText "OK" -Icon "Warning" -NoWait
+        }
+        Else {
+            Show-InstallationPrompt -Message "$appName repair completed. `n`nHave fun with the repaired application :D" -ButtonRightText "OK" -Icon "Information" -NoWait
+        }
     }
     ##*===============================================
     ##* END SCRIPT BODY

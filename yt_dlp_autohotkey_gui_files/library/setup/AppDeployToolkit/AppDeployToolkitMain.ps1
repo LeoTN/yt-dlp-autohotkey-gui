@@ -11008,7 +11008,7 @@ https://psappdeploytoolkit.com
     Param (
         [Parameter(Mandatory = $false)]
         [ValidateRange(1, 60)]
-        [Int32]$WaitingTime = 5
+        [Int32]$WaitingTime = 3
     )
 
     Begin {
@@ -16271,30 +16271,14 @@ Switch ($deployMode) {
     }
 }
 
-## Check deployment type (install/uninstall)
-Switch ($deploymentType) {
-    'Install' {
-        $deploymentTypeName = $configDeploymentTypeInstall
-    }
-    'Uninstall' {
-        $deploymentTypeName = $configDeploymentTypeUnInstall
-    }
-    'Repair' {
-        $deploymentTypeName = $configDeploymentTypeRepair
-    }
-    Default {
-        $deploymentTypeName = $configDeploymentTypeInstall
-    }
-}
-If ($deploymentTypeName) {
-    Write-Log -Message "Deployment type is [$deploymentTypeName]." -Source $appDeployToolkitName
-}
+# Manual change!
+# Moved this part to Deploy-Application.ps1
 
 If ($useDefaultMsi) {
     Write-Log -Message "Discovered Zero-Config MSI installation file [$defaultMsiFile]." -Source $appDeployToolkitName
 }
 
-## Check current permissions and exit if not running with Administrator rights
+## Check current permissions and exit if not running with administrator rights
 If ($configToolkitRequireAdmin) {
     #  Check if the current process is running with elevated administrator permissions
     If ((-not $IsAdmin) -and (-not $ShowBlockedAppDialog)) {

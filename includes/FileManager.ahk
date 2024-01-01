@@ -175,7 +175,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
             }
             Catch
             {
-                MsgBox("Could not create file !	`n`nCheck the config file for a valid path.", "Error !", "O Icon! T3")
+                MsgBox("Could not create file!`n`nCheck the config file for a valid path.", "Error !", "O Icon! T3")
                 ExitApp()
             }
         }
@@ -206,7 +206,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
             }
             Catch
             {
-                MsgBox("Could not create blacklist file !	`n`nNo one knows why.", "Error !", "O Icon! T3")
+                MsgBox("Could not create blacklist file!`n`nNo one knows why.", "Error !", "O Icon! T3")
                 ExitApp()
             }
         }

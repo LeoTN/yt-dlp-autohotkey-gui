@@ -5,7 +5,7 @@ on:
       inputs:
         version :
           description: "Release Version"
-          default: "0"
+          default: "0.0.0"
           required: true
 
         is_pre_release :
@@ -15,9 +15,9 @@ on:
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
-  FINAL_SETUP_EXECUTABLE_NAME: VideoDownloaderSetup.exe
   FINAL_TOOLTIP_EXECUTABLE_NAME: DownloadOptionsGUITooltips.exe
   FINAL_INSTALLER_NAME: VideoDownloaderInstaller.msi
+  FINAL_INSTALLER_ARCHIVE_NAME: VideoDownloaderInstaller.zip
   RELEASE_VERSION: ${{ github.event.inputs.version }}
   RELEASE_NAME: ""
   IS_PRE_RELEASE: ${{ github.event.inputs.is_pre_release }}
@@ -51,16 +51,6 @@ jobs:
         ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
         echo "The executable will be saved to $scriptPathOut"
 
-    - name: Compile Autohotkey Setup Script
-      run: |
-        # Set the paths to execute more easily.
-        $scriptPathIn = "${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\setup\VideoDownloaderSetup.ahk"
-        $scriptPathOut = "${{ github.workspace }}\$env:FINAL_SETUP_EXECUTABLE_NAME"
-
-        # Compile the script.
-        ahk\Compiler\Ahk2Exe.exe /in $scriptPathIn /out $scriptPathOut /base "ahk-v2\AutoHotkey64.exe" /silent
-        echo "The executable will be saved to $scriptPathOut"
-
     - name: Compile Autohotkey Tooltip Script
       run: |
         # Set the paths to execute more easily.
@@ -76,12 +66,6 @@ jobs:
       with:
         name: ${{ env.FINAL_EXECUTABLE_NAME }}
         path: ${{ github.workspace }}\${{ env.FINAL_EXECUTABLE_NAME }}
-
-    - name: Upload Setup Executable as Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
-        path: ${{ github.workspace }}\${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
 
     - name: Upload Tooltip Executable as Artifact
       uses: actions/upload-artifact@v2
@@ -104,12 +88,6 @@ jobs:
         with:
           name: ${{ env.FINAL_EXECUTABLE_NAME }}
           path: ${{ github.workspace }}
-
-      - name: Download Setup Executable Artifact
-        uses: actions/download-artifact@v3
-        with:
-         name: ${{ env.FINAL_SETUP_EXECUTABLE_NAME }}
-         path: ${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\setup
 
       - name: Download Tooltip Executable Artifact
         uses: actions/download-artifact@v3
@@ -150,7 +128,11 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ${{ env.FINAL_INSTALLER_NAME }}
-        path: ${{ github.workspace }}
+        path: ${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\setup
+
+    - name: Compress Installer Archive
+      run: |
+        zip -rq "${{ github.workspace }}\${{ env.FINAL_INSTALLER_ARCHIVE_NAME }}" "${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\setup"
 
     - name: Set Release Name
       id: set-release-name
@@ -168,13 +150,13 @@ jobs:
     - name: Create Draft Main Release
       uses: ncipollo/release-action@v1
       with:
-        allowUpdates: false
-        artifacts: ${{steps.download_installer_artifact_id.outputs.download-path}}/${{ env.FINAL_INSTALLER_NAME }}
+        allowUpdates: true
+        artifacts: ${{ github.workspace }}/${{ env.FINAL_INSTALLER_ARCHIVE_NAME }}
+        artifactErrorsFailBuild: true
         artifactContentType: "application/executable"
-        body: "Please don't mind the windows defender message when clicking on the .MSI file. I dont want to spend money buying a digital certificate. Thanks :)"
+        body: 'Download the "${{ env.FINAL_INSTALLER_ARCHIVE_NAME }}" file, extract it and execute "VideoDownloader-Setup.exe". Have fun :)'
         generateReleaseNotes: true
         makeLatest: true
         prerelease: ${{ env.IS_PRE_RELEASE == 'true' }}
-        name: "${{ env.RELEASE_NAME }}"
-        tag: "${{ env.RELEASE_NAME }}"
-
+        name: ${{ env.RELEASE_NAME }}
+        tag: ${{ env.RELEASE_NAME }}
