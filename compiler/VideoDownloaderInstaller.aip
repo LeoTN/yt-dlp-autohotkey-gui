@@ -52,7 +52,7 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
     <ROW Component="APPDIR" ComponentId="{C58A7097-A45E-45D7-B9D2-CF2C72CAC188}" Directory_="APPDIR" Attributes="0"/>
-    <ROW Component="AppDeployToolkitBanner.png" ComponentId="{CFFD24A2-214F-42D0-A6EE-E3098C1A9A80}" Directory_="AppDeployToolkit_Dir" Attributes="0" KeyPath="AppDeployToolkitBanner.png" Type="0"/>
+    <ROW Component="AppDeployToolkitBanner.png" ComponentId="{CAB5EC50-D709-4E57-922C-88104E079112}" Directory_="AppDeployToolkit_Dir" Attributes="0" KeyPath="AppDeployToolkitBanner.png" Type="0"/>
     <ROW Component="DeployApplication.ps1" ComponentId="{95D84860-954A-4BFE-8AC8-63C5AAC9D87E}" Directory_="setup_1_Dir" Attributes="0" KeyPath="DeployApplication.ps1" Type="0"/>
     <ROW Component="DownloadOptionsGUITooltips.ahk" ComponentId="{5DAD288A-DC85-48BE-A0D4-1CEB5285CCBC}" Directory_="scripts_Dir" Attributes="0" KeyPath="MonitorHookFile.ps1" Type="0"/>
     <ROW Component="DownloadOptionsGUITooltips.exe" ComponentId="{9F118F35-6151-4BDE-A870-E0A171760A5C}" Directory_="scripts_Dir" Attributes="256" KeyPath="DownloadOptionsGUITooltips.exe"/>
@@ -78,6 +78,11 @@
     <ROW File="green_arrow_icon1.ico" Component_="green_arrow_icon.ico" FileName="GREEN_~1.ICO|green_arrow_icon.ico" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\green_arrow_icon.ico" SelfReg="false"/>
     <ROW File="MonitorHookFile.ps1" Component_="DownloadOptionsGUITooltips.ahk" FileName="MONITO~1.PS1|MonitorHookFile.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\scripts\MonitorHookFile.ps1" SelfReg="false"/>
     <ROW File="DownloadOptionsGUITooltips.exe" Component_="DownloadOptionsGUITooltips.exe" FileName="DOWNLO~1.EXE|DownloadOptionsGUITooltips.exe" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\scripts\DownloadOptionsGUITooltips.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="DeployApplication.ps1" Component_="DeployApplication.ps1" FileName="DEPLOY~1.PS1|Deploy-Application.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\Deploy-Application.ps1" SelfReg="false"/>
+    <ROW File="README.txt" Component_="DeployApplication.ps1" FileName="README.txt" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\README.txt" SelfReg="false"/>
+    <ROW File="FFmpegSetup.ps1" Component_="FFmpegSetup.ps1" FileName="FFMPEG~1.PS1|FFmpegSetup.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\SupportFiles\FFmpegSetup.ps1" SelfReg="false"/>
+    <ROW File="ytdlpSetup.ps1" Component_="FFmpegSetup.ps1" FileName="YT-DLP~1.PS1|yt-dlpSetup.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\SupportFiles\yt-dlpSetup.ps1" SelfReg="false"/>
+    <ROW File="VideoDownloaderSetup.exe" Component_="VideoDownloaderSetup.exe" FileName="VIDEOD~1.EXE|VideoDownloader-Setup.exe" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\VideoDownloader-Setup.exe" SelfReg="false" DigSign="true"/>
     <ROW File="AppDeployToolkitBanner.png" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~1.PNG|AppDeployToolkitBanner.png" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitBanner.png" SelfReg="false"/>
     <ROW File="AppDeployToolkitConfig.xml" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~1.XML|AppDeployToolkitConfig.xml" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitConfig.xml" SelfReg="false"/>
     <ROW File="AppDeployToolkitExtensions.ps1" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~1.PS1|AppDeployToolkitExtensions.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitExtensions.ps1" SelfReg="false"/>
@@ -86,11 +91,6 @@
     <ROW File="AppDeployToolkitLogo.png" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~2.PNG|AppDeployToolkitLogo.png" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitLogo.png" SelfReg="false"/>
     <ROW File="AppDeployToolkitMain.cs" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~1.CS|AppDeployToolkitMain.cs" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitMain.cs" SelfReg="false"/>
     <ROW File="AppDeployToolkitMain.ps1" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~3.PS1|AppDeployToolkitMain.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitMain.ps1" SelfReg="false"/>
-    <ROW File="DeployApplication.ps1" Component_="DeployApplication.ps1" FileName="DEPLOY~1.PS1|Deploy-Application.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\Deploy-Application.ps1" SelfReg="false"/>
-    <ROW File="README.txt" Component_="DeployApplication.ps1" FileName="README.txt" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\README.txt" SelfReg="false"/>
-    <ROW File="FFmpegSetup.ps1" Component_="FFmpegSetup.ps1" FileName="FFMPEG~1.PS1|FFmpegSetup.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\SupportFiles\FFmpegSetup.ps1" SelfReg="false"/>
-    <ROW File="ytdlpSetup.ps1" Component_="FFmpegSetup.ps1" FileName="YT-DLP~1.PS1|yt-dlpSetup.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\SupportFiles\yt-dlpSetup.ps1" SelfReg="false"/>
-    <ROW File="VideoDownloaderSetup.exe" Component_="VideoDownloaderSetup.exe" FileName="VIDEOD~1.EXE|VideoDownloader-Setup.exe" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\VideoDownloader-Setup.exe" SelfReg="false" DigSign="true"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BootstrOptComponent">
     <ROW BootstrOptKey="GlobalOptions" DownloadFolder="[AppDataFolder][|Manufacturer]\[|ProductName]\prerequisites" Options="2"/>
@@ -192,12 +192,12 @@
     <ROW Feature_="MainFeature" Component_="DownloadOptionsGUITooltips.ahk"/>
     <ROW Feature_="MainFeature" Component_="DownloadOptionsGUITooltips.exe"/>
     <ROW Feature_="MainFeature" Component_="green_arrow_icon.ico"/>
-    <ROW Feature_="MainFeature" Component_="AppDeployToolkitBanner.png"/>
     <ROW Feature_="MainFeature" Component_="DeployApplication.ps1"/>
     <ROW Feature_="MainFeature" Component_="Files"/>
     <ROW Feature_="MainFeature" Component_="FFmpegSetup.ps1"/>
     <ROW Feature_="MainFeature" Component_="VideoDownloaderSetup.exe"/>
     <ROW Feature_="MainFeature" Component_="videoDownloaderWorkingDirectory"/>
+    <ROW Feature_="MainFeature" Component_="AppDeployToolkitBanner.png"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="green_arrow_icon_1.exe" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\green_arrow_icon.ico" Index="0"/>

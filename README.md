@@ -37,7 +37,8 @@ for users who do not want to spend time learning every single command line optio
 
 ## Important
 
-> This is my first script using the [PowerShell AppDeploymentToolkit](https://github.com/PSAppDeployToolkit/PSAppDeployToolkit), so expect bugs and errors. All the good stuff :D
+> This is my first script using the [PowerShell AppDeploymentToolkit](https://github.com/PSAppDeployToolkit/PSAppDeployToolkit), so expect bugs and errors.  
+All the good stuff :)
 
 **NOTE :** The best way of installing this script is the installer archive file included in the [latest release](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest). You can find all releases [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases).
 

@@ -46,7 +46,7 @@ Param (
 function installVideoDownloader($pVideoDownloaderInstallationDirectory, $pBooleanQuiet = $false) {
     Write-Log "`n`n[installVideoDownloader()] [INFO] pVideoDownloaderInstallationDirectory = $pVideoDownloaderInstallationDirectory`n`n"
     Write-Log "`n`n[installVideoDownloader()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
-    Show-InstallationProgress -StatusMessage "Installing VideoDownloader. Please wait..."
+    Show-InstallationProgress -StatusMessage "Installing VideoDownloader. Please wait..." -TopMost $false
 
     $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact $true
     If ($installedVideoDownloaderObject) {
@@ -88,7 +88,7 @@ function installVideoDownloader($pVideoDownloaderInstallationDirectory, $pBoolea
 
 function uninstallVideoDownloader($pBooleanQuiet = $false) {
     Write-Log "`n`n[uninstallVideoDownloader()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
-    Show-InstallationProgress -StatusMessage "Uninstalling VideoDownloader. Please wait..."
+    Show-InstallationProgress -StatusMessage "Uninstalling VideoDownloader. Please wait..." -TopMost $false
 
     $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact $true
     If ($installedVideoDownloaderObject) {
@@ -121,7 +121,7 @@ function uninstallVideoDownloader($pBooleanQuiet = $false) {
 
 function repairVideoDownloader($pBooleanQuiet = $false) {
     Write-Log "`n`n[repairVideoDownloader()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
-    Show-InstallationProgress -StatusMessage "Repairing VideoDownloader. Please wait..."
+    Show-InstallationProgress -StatusMessage "Repairing VideoDownloader. Please wait..." -TopMost $false
 
     $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact $true
     If ($installedVideoDownloaderObject) {
@@ -151,7 +151,7 @@ function repairVideoDownloader($pBooleanQuiet = $false) {
 function installPython($pPythonInstallDirectory, $pBooleanQuiet = $false) {
     Write-Log "`n`n[installPython()] [INFO] pPythonInstallDirectory = $pPythonInstallDirectory`n`n"
     Write-Log "`n`n[installPython()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
-    Show-InstallationProgress -StatusMessage "Checking system requirements for Python 3.12.0. Please wait..."
+    Show-InstallationProgress -StatusMessage "Checking system requirements for Python 3.12.0. Please wait..." -TopMost $false
 
     If (getBooleanReturn(getPythonInstallStatus)) {
         $installedPythonObject = Get-InstalledApplication -Name "Python 3.12"
@@ -186,7 +186,7 @@ function installPython($pPythonInstallDirectory, $pBooleanQuiet = $false) {
                 # Install Python 3.12 (32-bit).
                 If ($exePath32.Exists) {
                     Write-Log "`n`n[installPython()] [INFO] Found $($exePath32.FullName), now attempting to install Python 3.12.0 (32-bit).`n`n"     
-                    Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (32-bit). This might take some time. Please wait..."
+                    Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (32-bit). This might take some time. Please wait..." -TopMost $false
                     Execute-ProcessAsUser -Path "$exePath32" -Parameters $parameterString -Wait
                 }     
             }
@@ -195,13 +195,13 @@ function installPython($pPythonInstallDirectory, $pBooleanQuiet = $false) {
                 # Install Python 3.12 (64-bit).
                 If ($exePath64.Exists) {
                     Write-Log "`n`n[installPython()] [INFO] Found $($exePath64.FullName), now attempting to install Python 3.12.0 (64-bit).`n`n"              
-                    Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (64-bit). This might take some time. Please wait..."
+                    Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (64-bit). This might take some time. Please wait..." -TopMost $false
                     Execute-ProcessAsUser -Path "$exePath64" -Parameters $parameterString -Wait
                 }
                 # Install Python 3.12 (32-bit) if 64-bit installer is not available.     
                 ElseIf ($exePath32.Exists) {
                     Write-Log "`n`n[installPython()] [INFO] Found $($exePath32.FullName), now attempting to install Python 3.12.0 (32-bit).`n`n"     
-                    Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (32-bit). This might take some time. Please wait..."
+                    Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (32-bit). This might take some time. Please wait..." -TopMost $false
                     Execute-ProcessAsUser -Path "$exePath32" -Parameters $parameterString -Wait
                 }
             }
@@ -219,7 +219,7 @@ function installPython($pPythonInstallDirectory, $pBooleanQuiet = $false) {
 }
 
 function uninstallPython() {
-    Show-InstallationProgress -StatusMessage "Uninstalling Python 3.12.0. This might take some time. Please wait..."
+    Show-InstallationProgress -StatusMessage "Uninstalling Python 3.12.0. This might take some time. Please wait..." -TopMost $false
 
     $installedPythonObject = Get-InstalledApplication -Name "Python 3.12.0"    
     If ($installedPythonObject) {
@@ -238,7 +238,7 @@ function uninstallPython() {
 
 function repairPython($pPythonInstallDirectory, $pBooleanQuiet = $false) {
     Write-Log "`n`n[repairPython()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
-    Show-InstallationProgress -StatusMessage "Repairing Python 3.12.0. This might take some time. Please wait..."
+    Show-InstallationProgress -StatusMessage "Repairing Python 3.12.0. This might take some time. Please wait..." -TopMost $false
 
     $installedPythonObject = Get-InstalledApplication -Name "Python 3.12.0"
     If ($installedPythonObject) {
@@ -246,34 +246,35 @@ function repairPython($pPythonInstallDirectory, $pBooleanQuiet = $false) {
         Write-Log "`n`n[repairPython()] [INFO] Other potentially useful information:`n[$installedPythonObject].`n`n"
         Write-Log "`n`n[repairPython()] [INFO] Found Python 3.12.0 installation at:`n[$installedPythonLocation].`n`n"
         Write-Log "`n`n[repairPython()] [INFO] Starting Python 3.12 repair.`n`n"
-
-        $exePath64 = Get-ChildItem -Path "$dirFiles" -Include "python-3*amd64.exe" -File -Recurse -ErrorAction SilentlyContinue
-        $exePath32 = Get-ChildItem -Path "$dirFiles" -Include "python-3*.exe" -Exclude "python-3*amd64.exe" -File -Recurse -ErrorAction SilentlyContinue
-        If ($pBooleanQuiet) {
-            $parameterString = "/quiet /repair"
-        }
-        Else {
-            $parameterString = "/passive /repair"
-        }
-        If ($installedPythonObject.Is64BitApplication) {
-            Write-Log "`n`n[repairPython()] [INFO] Found Python 3.12.0 (64-bit).`n`n"
-            # Repair Python 3.12 (64-bit).
-            If ($exePath64.Exists) {
-                Write-Log "`n`n[repairPython()] [INFO] Found $($exePath64.FullName), now attempting to repair Python 3.12.0 (64-bit).`n`n"              
-                Show-InstallationProgress -StatusMessage "Repairing Python 3.12.0 (64-bit). This might take some time. Please wait..."
-                Execute-ProcessAsUser -Path "$exePath64" -Parameters $parameterString -Wait
+        If (checkPythonInstallerFilesPresence) {
+            $exePath64 = Get-ChildItem -Path "$dirFiles" -Include "python-3*amd64.exe" -File -Recurse -ErrorAction SilentlyContinue
+            $exePath32 = Get-ChildItem -Path "$dirFiles" -Include "python-3*.exe" -Exclude "python-3*amd64.exe" -File -Recurse -ErrorAction SilentlyContinue
+            If ($pBooleanQuiet) {
+                $parameterString = "/quiet /repair"
             }
-        }
-        Else {
-            Write-Log "`n`n[repairPython()] [INFO] Found Python 3.12.0 (32-bit).`n`n"
-            # Repair Python 3.12 (32-bit).
-            If ($exePath32.Exists) {
-                Write-Log "`n`n[repairPython()] [INFO] Found $($exePath32.FullName), now attempting to repair Python 3.12.0 (32-bit).`n`n"              
-                Show-InstallationProgress -StatusMessage "Repairing Python 3.12.0 (32-bit). This might take some time. Please wait..."
-                Execute-ProcessAsUser -Path "$exePath32" -Parameters $parameterString -Wait
+            Else {
+                $parameterString = "/passive /repair"
             }
+            If ($installedPythonObject.Is64BitApplication) {
+                Write-Log "`n`n[repairPython()] [INFO] Found Python 3.12.0 (64-bit).`n`n"
+                # Repair Python 3.12 (64-bit).
+                If ($exePath64.Exists) {
+                    Write-Log "`n`n[repairPython()] [INFO] Found $($exePath64.FullName), now attempting to repair Python 3.12.0 (64-bit).`n`n"              
+                    Show-InstallationProgress -StatusMessage "Repairing Python 3.12.0 (64-bit). This might take some time. Please wait..." -TopMost $false
+                    Execute-ProcessAsUser -Path "$exePath64" -Parameters $parameterString -Wait
+                }
+            }
+            Else {
+                Write-Log "`n`n[repairPython()] [INFO] Found Python 3.12.0 (32-bit).`n`n"
+                # Repair Python 3.12 (32-bit).
+                If ($exePath32.Exists) {
+                    Write-Log "`n`n[repairPython()] [INFO] Found $($exePath32.FullName), now attempting to repair Python 3.12.0 (32-bit).`n`n"              
+                    Show-InstallationProgress -StatusMessage "Repairing Python 3.12.0 (32-bit). This might take some time. Please wait..." -TopMost $false
+                    Execute-ProcessAsUser -Path "$exePath32" -Parameters $parameterString -Wait
+                }
+            }
+            Return $true
         }
-        Return $true
     }
     Else {
         Write-Log "`n`n[repairPython()] [INFO] Unable to find installed Python 3.12.0 instance. Running installPython()...`n`n"
@@ -326,7 +327,7 @@ function getPythonInstallStatus() {
     }
 }
 
-function checkPythonInstallerFilesPresence([bool]$pBooleanNoDownload = $false) {
+function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false) {
     $pythonInstallerFinaDirectory = "$dirFiles"
     $pythonInstaller32Name = "python-3.12.0.exe"
     $pythonInstaller64Name = "python-3.12.0-amd64.exe"
@@ -359,6 +360,7 @@ function checkPythonInstallerFilesPresence([bool]$pBooleanNoDownload = $false) {
                 Return $false
             }
             Try {
+                Show-InstallationProgress -StatusMessage "Downloading Python installer. Please wait..." -TopMost $false
                 Invoke-WebRequest -Uri $pythonInstaller32DownloadLink -OutFile "$pythonInstallerFinaDirectory\$pythonInstaller32Name"
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Downloaded 32 bit executable to`n[$pythonInstallerFinaDirectory].`n`n"
             }
@@ -385,6 +387,7 @@ function checkPythonInstallerFilesPresence([bool]$pBooleanNoDownload = $false) {
                 Return $false
             }
             Try {
+                Show-InstallationProgress -StatusMessage "Downloading Python installer. Please wait..." -TopMost $false
                 Invoke-WebRequest -Uri $pythonInstaller64DownloadLink -OutFile "$pythonInstallerFinaDirectory\$pythonInstaller64Name"
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Downloaded 64 bit executable to`n[$pythonInstallerFinaDirectory].`n`n"
             }
@@ -422,7 +425,7 @@ General:
 function installYTDLP($pPythonInstallationDirectory, $pBooleanQuiet = $false) {
     Write-Log "`n`n[installYTDLP()] [INFO] pPythonInstallationDirectory = $pPythonInstallationDirectory`n`n"
     Write-Log "`n`n[installYTDLP()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n" 
-    Show-InstallationProgress -StatusMessage "Running yt-dlp setup script (install). Please wait..." # CAUSES ERROR WITH RETURN $false !!!
+    Show-InstallationProgress -StatusMessage "Running yt-dlp setup script (install). Please wait..." -TopMost $false # CAUSES ERROR WITH RETURN $false and $true !!!
 
     Write-Log "`n`n**********[yt-dlp Setup Script START]**********`n`n"
     If (-not (Test-Path -Path $ytdlpSetupScriptLocation)) {
@@ -497,7 +500,7 @@ function installYTDLP($pPythonInstallationDirectory, $pBooleanQuiet = $false) {
 function uninstallYTDLP($pPythonInstallationDirectory, $pBooleanQuiet = $false) {
     Write-Log "`n`n[uninstallYTDLP()] [INFO] pPythonInstallationDirectory = $pPythonInstallationDirectory`n`n"
     Write-Log "`n`n[uninstallYTDLP()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n" 
-    Show-InstallationProgress -StatusMessage "Running yt-dlp setup script (uninstall). Please wait..."
+    Show-InstallationProgress -StatusMessage "Running yt-dlp setup script (uninstall). Please wait..." -TopMost $false
 
     Write-Log "`n`n**********[yt-dlp Setup Script START]**********`n`n"
     If (-not (Test-Path -Path $ytdlpSetupScriptLocation)) {
@@ -564,7 +567,7 @@ function uninstallYTDLP($pPythonInstallationDirectory, $pBooleanQuiet = $false) 
 function repairYTDLP($pPythonInstallationDirectory, $pBooleanQuiet = $false) {
     Write-Log "`n`n[repairYTDLP()] [INFO] pPythonInstallationDirectory = $pPythonInstallationDirectory`n`n"
     Write-Log "`n`n[repairYTDLP()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n" 
-    Show-InstallationProgress -StatusMessage "Running yt-dlp setup script (repair). Please wait..."
+    Show-InstallationProgress -StatusMessage "Running yt-dlp setup script (repair). Please wait..." -TopMost $false
 
     Write-Log "`n`n**********[yt-dlp Setup Script START]**********`n`n"
     If (-not (Test-Path -Path $ytdlpSetupScriptLocation)) {
@@ -701,7 +704,7 @@ General:
 function installFFmpeg($pVideoDownloaderInstallationDirectory, $pBooleanQuiet = $false) {
     Write-Log "`n`n[installFFmpeg()] [INFO] pVideoDownloaderInstallationDirectory = $pVideoDownloaderInstallationDirectory`n`n"
     Write-Log "`n`n[installFFmpeg()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
-    Show-InstallationProgress -StatusMessage "Running FFmpeg setup script (install). Please wait..." # CAUSES ERROR WITH RETURN $false !!!
+    Show-InstallationProgress -StatusMessage "Running FFmpeg setup script (install). Please wait..." -TopMost $false # CAUSES ERROR WITH RETURN $false and $true!!!
     
     Write-Log "`n`n**********[FFmpeg Setup Script START]**********`n`n"
     If (-not (Test-Path -Path $ffmpegSetupScriptLocation)) {
@@ -776,7 +779,7 @@ function installFFmpeg($pVideoDownloaderInstallationDirectory, $pBooleanQuiet = 
 function uninstallFFmpeg($pVideoDownloaderInstallationDirectory, $pBooleanQuiet = $false) {
     Write-Log "`n`n[uninstallFFmpeg] [INFO] pVideoDownloaderInstallationDirectory = $pVideoDownloaderInstallationDirectory`n`n"
     Write-Log "`n`n[uninstallFFmpeg()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n" 
-    Show-InstallationProgress -StatusMessage "Running FFmpeg setup script (uninstall). Please wait..."
+    Show-InstallationProgress -StatusMessage "Running FFmpeg setup script (uninstall). Please wait..." -TopMost $false
 
     Write-Log "`n`n**********[FFmpeg Setup Script START]**********`n`n"
     If (-not (Test-Path -Path $ffmpegSetupScriptLocation)) {
@@ -843,7 +846,7 @@ function uninstallFFmpeg($pVideoDownloaderInstallationDirectory, $pBooleanQuiet 
 function repairFFmpeg($pVideoDownloaderInstallationDirectory, $pBooleanQuiet = $false) {
     Write-Log "`n`n[repairFFmpeg()] [INFO] pVideoDownloaderInstallationDirectory = $pVideoDownloaderInstallationDirectory`n`n"
     Write-Log "`n`n[repairFFmpeg()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n" 
-    Show-InstallationProgress -StatusMessage "Running FFmpeg setup script (repair). Please wait..."
+    Show-InstallationProgress -StatusMessage "Running FFmpeg setup script (repair). Please wait..." -TopMost $false
 
     Write-Log "`n`n**********[FFmpeg Setup Script START]**********`n`n"
     If (-not (Test-Path -Path $ffmpegSetupScriptLocation)) {

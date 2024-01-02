@@ -494,10 +494,10 @@ Try {
         Write-Log "`n`n[INFO] Changed registry entries:`n[booleanSetupRequired = 0 and booleanFirstTimeLaunch = 1] at`n[$videoDownloaderRegistryDirectory].`n`n"
         # Language support needed.
         If ($booleanSetupErrorOccurred) {
-            Show-InstallationPrompt -Message "$appName installation completed with errors.`nIt is recommended to repair the installation." -ButtonRightText "OK" -Icon "Warning" -NoWait
+            Show-InstallationPrompt -Message "$appName installation completed with errors.`n`nIt is recommended to repair the installation." -ButtonRightText "OK" -Icon "Warning"
         }
         Else {
-            Show-InstallationPrompt -Message "$appName installation completed.`n`nHave fun with the application :)" -ButtonRightText "OK" -Icon "Information" -NoWait
+            Show-InstallationPrompt -Message "$appName installation completed.`n`nHave fun with the application :)" -ButtonRightText "OK" -Icon "Information"
         }
     }
     ElseIf ($deploymentType -ieq 'Uninstall') {
@@ -593,10 +593,10 @@ Try {
         ## <Perform Post-Uninstallation tasks here>
         # Language support needed.
         If ($booleanSetupErrorOccurred) {
-            Show-InstallationPrompt -Message "$appName uninstallation completed with errors.`n`nErrors may also occur when components were previously uninstalled." -ButtonRightText "OK" -Icon "Warning" -NoWait
+            Show-InstallationPrompt -Message "$appName uninstallation completed with errors.`n`nErrors may also occur when components were previously uninstalled." -ButtonRightText "OK" -Icon "Warning"
         }
         Else {
-            Show-InstallationPrompt -Message "$appName uninstallation completed.`n`nUntil next time :')" -ButtonRightText "OK" -Icon "Information" -NoWait
+            Show-InstallationPrompt -Message "$appName uninstallation completed.`n`nUntil next time :')" -ButtonRightText "OK" -Icon "Information"
         }
     }
     ElseIf ($deploymentType -ieq 'Repair') {
@@ -695,10 +695,10 @@ Try {
         Write-Log "`n`n[INFO] Changed registry entries:`n[booleanSetupRequired = 0 and booleanFirstTimeLaunch = 1] at`n[$videoDownloaderRegistryDirectory].`n`n"
         # Language support needed.
         If ($booleanSetupErrorOccurred) {
-            Show-InstallationPrompt -Message "$appName repair completed with errors.`n`nIt is recommended to repair the installation again. If this error persists, please uninstall and re-install all components or report the issue on the GitHub page." -ButtonRightText "OK" -Icon "Warning" -NoWait
+            Show-InstallationPrompt -Message "$appName repair completed with errors.`n`nIt is recommended to repair the installation again. If this error persists, please uninstall and re-install all components or report the issue on the GitHub page." -ButtonRightText "OK" -Icon "Warning"
         }
         Else {
-            Show-InstallationPrompt -Message "$appName repair completed. `n`nHave fun with the repaired application :D" -ButtonRightText "OK" -Icon "Information" -NoWait
+            Show-InstallationPrompt -Message "$appName repair completed.`n`nHave fun with the repaired application :D" -ButtonRightText "OK" -Icon "Information"
         }
     }
     ##*===============================================
