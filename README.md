@@ -5,12 +5,11 @@ for users who do not want to spend time learning every single command line optio
 
 **How to install**
 
-> 1. Download the latest installer [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest/download/VideoDownloaderInstaller.msi).
-> 2. If there is windows defender message, click on *additional information* to continue.
-> 3. Follow the installation steps until you are asked to launch *VideoDownloaderSetup.exe*.
-> 4. Confirm the action and wait for the program to check for existing dependencies.
-> 5. Press the *Install* button. Missing files and software will be installed.
-> 6. You will be notified once the setup has completed.
+> 1. Download the latest installer [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest/download/VideoDownloaderInstaller.zip).
+> 2. Extract the folder and execute *VideoDownloader-Setup.exe*.
+> 3. Click your way through the prompts.
+> 4. Depending on your system and the pre-installed dependencies, the installation (start) may take longer.
+> 5. You will be notified once the setup has completed.
 
 **How to use**
 
@@ -38,11 +37,14 @@ for users who do not want to spend time learning every single command line optio
 
 ## Important
 
-> This is my first script with an included MSI installer so there will be bugs and all the good stuff eventually.
+> This is my first script using the [PowerShell AppDeploymentToolkit](https://github.com/PSAppDeployToolkit/PSAppDeployToolkit), so expect bugs and errors.  
+All the good stuff :)
 
-**NOTE :** The best way of installing this script is the MSI file included in the [latest release](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest). You can find all releases [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases).
+**NOTE :** The best way of installing this script is the installer archive file included in the [latest release](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest). You can find all releases [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases).
 
-If you are a developer and would like to use the repository, please note that parts of the script need to be compiled and components such as Python or FFmpeg may need to be installed first. Therefore, I recommend first installing the program via the [installer](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest/download/VideoDownloaderInstaller.msi) and then cloning the repository into the installation directory. If you have any questions or suggestions, please feel free to write a post [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/discussions/categories/q-a).
+If you are a developer and would like to use the repository, please note, that parts of this script need to be compiled and components such as Python or FFmpeg may need to be installed first.
+
+Therefore, I recommend cloning the repository first and afterwards executing the **VideDownloader-Setup.exe** file located in the [installer archive](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest/download/VideoDownloaderInstaller.zip) to install the application. Select the repository folder *yt-dlp-autohotkey-gui* as the installation target folder and you're done.
 
 **I appreciate [yt-dlp](https://github.com/yt-dlp/yt-dlp) for providing such an incredibly useful repository for everyone free to use. Your or rather [these guys](https://github.com/ytdl-org/youtube-dl) work is the reason, why this script can even exist. I would also like to thank the team behind the [FFmpeg](https://ffmpeg.org) software, which is used to provide more functionality for yt-dlp. Thank you!**
 

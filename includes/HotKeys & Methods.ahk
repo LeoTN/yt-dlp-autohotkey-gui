@@ -4,32 +4,9 @@
 SendMode "Input"
 CoordMode "Mouse", "Client"
 
-/*
-DEBUG SECTION
--------------------------------------------------
-Hotkey to disable/enable debug mode.
-*/
-
-+^!F1::
+hotkey_onInit()
 {
-    If (readConfigFile("booleanDebugMode") = true)
-    {
-        editConfigFile("booleanDebugMode", false)
-        MsgBox("Debug mode has been disabled.", "DEBUG MODE", "O Iconi 262144 T1")
-    }
-    Else If (readConfigFile("booleanDebugMode") = false)
-    {
-        editConfigFile("booleanDebugMode", true)
-        MsgBox("Debug mode has been enabled.", "DEBUG MODE", "O Icon! 262144 T1")
-    }
-    Else
-    {
-        Throw ("No valid state in booleanDebugMode")
-    }
-}
-
-Hotkey_onInit()
-{
+    global isDownloading := false
     Try
     {
         registerHotkeys()
@@ -54,9 +31,9 @@ registerHotkeys()
     Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), "On")
 
     ; GUI hotkey (opens GUI).
-    Hotkey(readConfigFile("MAIN_GUI_HK"), (*) => Hotkey_openMainGUI())
+    Hotkey(readConfigFile("MAIN_GUI_HK"), (*) => hotkey_openMainGUI())
     ; Hotkey to open Download Options GUI.
-    Hotkey(readConfigFile("OPTIONS_GUI_HK"), (*) => Hotkey_openOptionsGUI())
+    Hotkey(readConfigFile("OPTIONS_GUI_HK"), (*) => hotkey_openOptionsGUI())
     ; Hotkey to termniate the script.
     Hotkey(readConfigFile("TERMINATE_SCRIPT_HK"), (*) => terminateScriptPrompt(), "Off")
 
@@ -69,11 +46,12 @@ registerHotkeys()
     ; Hotkey for clearing the URL file.
     Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => manageURLFile(), "Off")
 
-    global isDownloading := false
+    ; Debug hotkey
+    Hotkey("F1", (*) => hotkey_toggleDebugMode(), "On")
 }
 
 ; Hotkey support function to open the script GUI.
-Hotkey_openMainGUI()
+hotkey_openMainGUI()
 {
     Try
     {
@@ -96,7 +74,7 @@ Hotkey_openMainGUI()
 }
 
 ; Hotkey support function to open the script download options GUI.
-Hotkey_openOptionsGUI()
+hotkey_openOptionsGUI()
 {
     Try
     {
@@ -117,6 +95,24 @@ Hotkey_openOptionsGUI()
         }
     }
     global lastDownloadPath := ""
+}
+
+hotkey_toggleDebugMode()
+{
+    If (readConfigFile("booleanDebugMode") = true)
+    {
+        editConfigFile("booleanDebugMode", false)
+        MsgBox("Debug mode has been disabled.", "DEBUG MODE", "O Iconi 262144 T1")
+    }
+    Else If (readConfigFile("booleanDebugMode") = false)
+    {
+        editConfigFile("booleanDebugMode", true)
+        MsgBox("Debug mode has been enabled.", "DEBUG MODE", "O Icon! 262144 T1")
+    }
+    Else
+    {
+        Throw ("No valid state in booleanDebugMode")
+    }
 }
 
 /*
@@ -149,7 +145,7 @@ startDownload(pCommandString, pBooleanSilent := enableSilentDownloadModeCheckbox
 
     If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
     {
-        Hotkey_openOptionsGUI()
+        hotkey_openOptionsGUI()
     }
     Else
     {
@@ -305,7 +301,7 @@ monitorDownloadProgress()
         Sleep(1000)
         If (maxRetries <= 0)
         {
-            MsgBox("Could not find hook file to track progress.`n`nTerminating script.", "Error!", "O IconX T2")
+            MsgBox("Could not find hook file to track progress.`n`nScript terminated.", "Error !", "O IconX T2")
             ExitApp()
             ExitApp()
         }
@@ -1068,7 +1064,7 @@ scriptTutorial()
         "`nIt will try to teach you the basic functionality of this script but keep this in mind: "
         "`n`nFirstly this script is still in development phase so bugs are to be expected."
         "`nSecondly PLEASE be patient and do not spam buttons like a maniac. Wait for the script to process and if"
-        "`nnothing happens even after 3-5 seconds you could try pressing the button or hotkey again."
+        "`nnothing happens even after 3-5 seconds, you could try pressing the button or hotkey again."
         "`n`nWith that being said, let's begin with the tutorial."
         "`n`nPress Okay to continue.",
         "VideoDownloader Tutorial - Important", "O Iconi 262144")
@@ -1078,7 +1074,7 @@ scriptTutorial()
         "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144")
     If (WinWaitActive("ahk_id " . mainGUI.Hwnd, , 5) = 0)
     {
-        Hotkey_openMainGUI()
+        hotkey_openMainGUI()
         MsgBox("The script opened the main GUI for you.`n`nNo worries, you will get the hang of it soon :)",
             "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144 T3")
     }
@@ -1086,7 +1082,7 @@ scriptTutorial()
         "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
     If (!WinExist("ahk_id " . mainGUI.Hwnd))
     {
-        Hotkey_openMainGUI()
+        hotkey_openMainGUI()
     }
     Else
     {
@@ -1109,7 +1105,7 @@ scriptTutorial()
         "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Download Selected Video(s)", "O Iconi 262144")
     If (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 5) = 0)
     {
-        Hotkey_openOptionsGUI()
+        hotkey_openOptionsGUI()
         MsgBox("The script opened the download options GUI for you.`n`nNo worries, you will get the hang of it soon :)",
             "VideoDownloader Tutorial - Open Download Options GUI", "O Iconi 262144 T3")
     }
@@ -1144,10 +1140,105 @@ scriptTutorial()
     }
 }
 
-chooseScriptWorkingDirectory()
+getPythonInstallionStatus()
 {
-    path := DirSelect(, , "Select a working directory.")
-    If (checkForWritingRights(path) = true)
+    Try
+    {
+        ; "python" changed to "py" because the recommended Python version is 3.12.
+        RunWait(A_ComSpec ' /c py --version > "' . A_Temp . '\tmp.txt"', , "Hide")
+        If (FileExist(A_Temp . "\tmp.txt"))
+        {
+            ; This means that the command could not be found and Python is not installed.
+            If (FileRead(A_Temp . "\tmp.txt") = "")
+            {
+                Return false
+            }
+            Else
+            {
+                Return true
+            }
+        }
+        Else
+        {
+            Return false
+        }
+    }
+    Catch
+    {
+        Return false
+    }
+}
+
+getYTDLPInstallionStatus()
+{
+    Try
+    {
+        RunWait(A_ComSpec ' /c yt-dlp --version > "' . A_Temp . '\tmp.txt"', , "Hide")
+        If (FileExist(A_Temp . "\tmp.txt"))
+        {
+            ; This means that the command could not be found and yt-dlp is not installed.
+            If (FileRead(A_Temp . "\tmp.txt") = "")
+            {
+                Return false
+            }
+            Else
+            {
+                Return true
+            }
+        }
+        Else
+        {
+            Return false
+        }
+    }
+    Catch
+    {
+        Return false
+    }
+}
+
+getFFmpegInstallionStatus()
+{
+    Try
+    {
+        regValue := RegRead(videoDownloaderRegistryDirectory, "ffmpegLocation", "")
+        ; If the FFmpeg path is valid.
+        If (validatePath(regValue, false) && regValue != "")
+        {
+            If (!FileExist(regValue))
+            {
+                Return false
+            }
+            Else
+            {
+                Return true
+            }
+        }
+        Else
+        {
+            Return false
+        }
+    }
+    Catch
+    {
+        Return false
+    }
+}
+
+changeWorkingDirectory()
+{
+    regValue := RegRead(videoDownloaderRegistryDirectory, "videoDownloaderWorkingDirectory", "")
+    If (validatePath(regValue, false) && regValue != "")
+    {
+        defaultWorkingDirectory := regValue
+    }
+    Else
+    {
+        defaultWorkingDirectory := A_AppData . "\LeoTN\VideoDownloader\yt_dlp_autohotkey_gui_files"
+    }
+
+    path := DirSelect("*" . defaultWorkingDirectory, 3, "Select a working directory.")
+    If (checkForWritingRights(path))
     {
         If (!InStr(path, "yt_dlp_autohotkey_gui_files"))
         {
@@ -1160,19 +1251,19 @@ chooseScriptWorkingDirectory()
     }
     Else
     {
-        result := MsgBox("This path cannot be used because it requires administrative permissions to write.`n`n"
-            "Please select another path or press [Ignore] to use the default directory which is:`n"
-            "[" . A_AppData . "\LeoTN\VideoDownloader\yt_dlp_autohotkey_gui_files]",
+        result := MsgBox("This path cannot be used because it requires administrative permissions to write in.`n`n"
+            "Please select another path or press [Ignore] to use the default directory which is`n"
+            "[" . defaultWorkingDirectory . "].",
             "Invalid Working Directory", "ARI Icon! Default2")
         Switch (result)
         {
             Case "Retry":
                 {
-                    Return chooseScriptWorkingDirectory()
+                    Return changeWorkingDirectory()
                 }
             Case "Ignore":
                 {
-                    Return A_AppData . "\LeoTN\VideoDownloader\yt_dlp_autohotkey_gui_files"
+                    Return defaultWorkingDirectory
                 }
             Default:
                 {
@@ -1199,13 +1290,14 @@ checkForWritingRights(pPath)
         }
         Else
         {
-            MsgBox("checkForWritingRights():`n" . error.message)
+            MsgBox("[checkForWritingRights()] [ERROR]:`n" . error.message)
             ExitApp()
         }
     }
     Return true
 }
 
+; REMOVE ?
 checkForValidPath(pPath)
 {
     path := pPath
