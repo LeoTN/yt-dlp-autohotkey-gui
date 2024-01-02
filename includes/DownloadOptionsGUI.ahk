@@ -164,8 +164,7 @@ optionsGUI_onInit()
 
 cancelDownload()
 {
-    result := MsgBox("Do you really want to cancel the running download process ?"
-        , "Cancel Download Process", "YN Icon! 4096 T10")
+    result := MsgBox("Do you really want to cancel the running download process ?", "VD - Cancel Download Process?", "YN Icon! 262144")
 
     If (result = "Yes")
     {
@@ -596,7 +595,7 @@ handleDownloadOptionsGUI_CustomDownloadPath()
         }
         If (newDownloadFolderLocal = "")
         {
-            MsgBox("Invalid folder selection.", "Error!", "O IconX T1.5")
+            MsgBox("Invalid folder selection.", "VD - Invalid Path!", "O IconX T1.5")
             ; Checks the default download location checkbox so that the user loses focus on the input field.
             ; Therefore he can click on it again and the "focus" event will be triggered.
             useDefaultDownloadLocationCheckbox.Value := 1
@@ -711,7 +710,7 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
     ; In case the user wants to accidentally create a preset with an empty name.
     If (presetName = "")
     {
-        Return MsgBox("Please provide a name for your preset.", "Warning!", "O Icon! T2")
+        Return MsgBox("Please provide a name for your preset.", "VD - No Preset Name!", "O Icon! T2")
     }
     Loop (presetFileArray.Length)
     {
@@ -752,7 +751,7 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
         If (booleanTemporary = false)
         {
             result := MsgBox("The preset name: " . presetName . " already exists."
-                "`n`nDo you want to overwrite it ?", "Warning!", "YN Icon! 4096 T10")
+                "`n`nDo you want to overwrite it ?", "VD - Overwrite Existing Preset?", "YN Icon! 262144")
             If (result != "Yes")
             {
                 Return false
@@ -768,9 +767,8 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
     {
         If (booleanDefaultPresetExist = true && booleanDefault = true)
         {
-            result := MsgBox("An existing default file has been found."
-                "`n`nReplace " . defaultPresetOld . " with " . presetName . " ?", "Warning!",
-                "YN Icon! 4096 T10")
+            result := MsgBox("An existing default file has been found.`n`nReplace " . defaultPresetOld . " with " . presetName . " ?",
+                "VD - Replace Default Preset File?", "YN Icon! 262144")
             If (result != "Yes")
             {
                 Return false
@@ -852,7 +850,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
     {
         If (booleanSupressWarning = false)
         {
-            MsgBox("The preset: " . presetName . " does not exist.", "Warning!", "O Icon! T2")
+            MsgBox("The preset: " . presetName . " does not exist.", "VD - Preset Not Found!", "O Icon! T2")
         }
         Return false
     }
@@ -868,7 +866,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
             }
             Catch
             {
-                MsgBox("Failed to set value of: " . GuiCtrlObj.Text . ".", "Warning!", "O Icon! T3")
+                MsgBox("Failed to set value of: " . GuiCtrlObj.Text . ".", "VD - Preset Value - Warning!", "O Icon! T3")
             }
         }
         If (InStr(GuiCtrlObj.Type, "Edit"))
@@ -881,7 +879,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
             }
             Catch
             {
-                MsgBox("Failed to set value of: {Input_ " . i_Input . "}.", "Warning!", "O Icon! T3")
+                MsgBox("Failed to set value of: {Input_ " . i_Input . "}.", "VD - Preset Value - Warning!", "O Icon! T3")
             }
         }
         If (InStr(GuiCtrlObj.Type, "DDL"))
@@ -894,7 +892,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
             }
             Catch
             {
-                MsgBox("Failed to set value of: {DropDownList_ " . i_DropDownList . "}.", "Warning!", "O Icon! T3")
+                MsgBox("Failed to set value of: {DropDownList_ " . i_DropDownList . "}.", "VD - Preset Value - Warning!", "O Icon! T3")
             }
         }
         ; Counts the number of elements parsed. When it reaches 37 this means that all relevant settings have been loaded.

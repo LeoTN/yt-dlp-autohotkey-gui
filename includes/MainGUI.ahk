@@ -272,7 +272,7 @@ handleMainGUI_openDownloadLocation()
     }
     Catch
     {
-        MsgBox("No downloaded files from`ncurrent session found.", "Warning!", "O Icon! T1.5")
+        MsgBox("No downloaded files from`ncurrent session found.", "VD - Missing File(s)!", "O Icon! T1.5")
     }
 }
 
@@ -282,7 +282,7 @@ handleMainGUI_uninstallScript()
 
     If (A_IsCompiled)
     {
-        result := MsgBox("Uninstall VideoDownloader now?", "Uninstall VideoDownloader", "YN Icon?")
+        result := MsgBox("Uninstall VideoDownloader now?", "VD - Uninstall VideoDownloader", "YN Icon? 262144")
         Switch (result)
         {
             Case "Yes":
@@ -294,7 +294,7 @@ handleMainGUI_uninstallScript()
                     Else
                     {
                         MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
-                            . "].", "Execute Uninstall Setup - Error!", "O Icon!")
+                            . "].", "VD - Execute Uninstall Setup - Error!", "O Icon! 262144")
                     }
                 }
         }
@@ -302,36 +302,66 @@ handleMainGUI_uninstallScript()
     Else
     {
         MsgBox("You are using a non compiled version of this script."
-            "`n`nYou cannot uninstall VideoDownloader now.", "Uninstall VideoDownloader - Error!", "O IconX 262144 T5")
+            "`n`nYou cannot uninstall VideoDownloader now.", "VD - Uninstall VideoDownloader - Error!", "O IconX 262144 T10")
     }
 }
 
-handleMainGUI_repairScript()
+handleMainGUI_repairScript(pBooleanAllowRefuse := true)
 {
+    booleanAllowRefuse := pBooleanAllowRefuse
     videoDownloaderSetupExecutableLocation := scriptBaseFilesLocation . "\library\setup\VideoDownloader-Setup.exe"
 
     If (A_IsCompiled)
     {
-        result := MsgBox("Repair VideoDownloader now?", "Repair VideoDownloader", "YN Icon?")
-        Switch (result)
+        If (booleanAllowRefuse)
         {
-            Case "Yes":
-                {
-                    If (FileExist(videoDownloaderSetupExecutableLocation))
+            result := MsgBox("Repair VideoDownloader now?", "VD - Repair Action Advised!", "YN Icon? 262144")
+            Switch (result)
+            {
+                Case "Yes":
                     {
-                        Run(videoDownloaderSetupExecutableLocation . ' -deploymentType "Repair"')
+                        If (FileExist(videoDownloaderSetupExecutableLocation))
+                        {
+                            Run(videoDownloaderSetupExecutableLocation . ' -deploymentType "Repair"')
+                        }
+                        Else
+                        {
+                            MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
+                                . "]`nScript terminated.", "VD - Execute Repair Setup - Error!", "O Icon! 262144")
+                        }
+                        ExitApp()
                     }
-                    Else
+            }
+        }
+        Else
+        {
+            result := MsgBox("Repair VideoDownloader now?", "VD - Repair Action Required!", "YN Icon? 262144")
+            Switch (result)
+            {
+                Case "Yes":
                     {
-                        MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
-                            . "].", "Execute Repair Setup - Error!", "O Icon!")
+                        If (FileExist(videoDownloaderSetupExecutableLocation))
+                        {
+                            Run(videoDownloaderSetupExecutableLocation . ' -deploymentType "Repair"')
+                        }
+                        Else
+                        {
+                            MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
+                                . "]`nScript terminated.", "VD - Execute Repair Setup - Error!", "O Icon! 262144")
+                        }
                     }
-                }
+                Default:
+                    {
+                        MsgBox("You can repair VideoDownloader at any time.`nScript terminated.", "VD - Repair Action Required! - Canceled", "O Iconi T5")
+                    }
+            }
+            ExitApp()
         }
     }
     Else
     {
         MsgBox("You are using a non compiled version of this script."
-            "`n`nYou cannot repair VideoDownloader now.", "Repair VideoDownloader - Error!", "O IconX 262144 T5")
+            "`n`nYou cannot repair VideoDownloader now.`nScript terminated.", "VD - Repair Action Advised! - Error!", "O IconX 262144 T10")
+        ExitApp()
     }
 }

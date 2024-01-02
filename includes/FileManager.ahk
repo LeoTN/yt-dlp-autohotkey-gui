@@ -45,7 +45,7 @@ saveVideoURLDirectlyToFile()
     {
         Return
     }
-    If (ClipWait(0.35) = true)
+    If (ClipWait(0.4) = true)
     {
         clipboardContent := A_Clipboard
         tmpConfig := readConfigFile("URL_FILE_LOCATION")
@@ -62,7 +62,7 @@ saveVideoURLDirectlyToFile()
             {
                 If (clipboardContent = contentArray.Get(A_Index))
                 {
-                    MsgBox("Same URL selected twice.", "Attention!", "O Iconi T1.5")
+                    MsgBox("Same URL selected twice.", "VD - Duplicate URL!", "O Iconi T1.5")
                     Return
                 }
             }
@@ -70,7 +70,7 @@ saveVideoURLDirectlyToFile()
             Return
         }
     }
-    MsgBox("No URL detected.", "Attention!", "O Iconi T1.5")
+    MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1.5")
 }
 
 pressMatchingBrowserCopyURLHotkey()
@@ -112,7 +112,7 @@ pressMatchingBrowserCopyURLHotkey()
                         }
                     Default:
                         {
-                            MsgBox("Invalid browser language found!", "Warning!", "O Icon!")
+                            MsgBox("Invalid browser language found!", "VD - Browser Language - Warning!", "O Icon!")
                             Return false
                         }
                 }
@@ -135,7 +135,7 @@ pressMatchingBrowserCopyURLHotkey()
                         }
                     Default:
                         {
-                            MsgBox("Invalid browser language found!", "Warning!", "O Icon!")
+                            MsgBox("Invalid browser language found!", "VD - Browser Language - Warning!", "O Icon!")
                             Return false
                         }
                 }
@@ -147,14 +147,20 @@ pressMatchingBrowserCopyURLHotkey()
                     Case "Deutsch":
                         {
                             Send("i")
-                            Sleep(150)
-                            Send("{Enter}")
+                            ; Special case because the context menu in Edge is different.
+                            If (ClipWait(0.4) = false)
+                            {
+                                Send("{Enter}")
+                            }
                         }
                     Case "English":
                         {
                             Send("o")
-                            Sleep(150)
-                            Send("{Enter}")
+                            ; Special case because the context menu in Edge is different.
+                            If (ClipWait(0.4) = false)
+                            {
+                                Send("{Enter}")
+                            }
                         }
                     Case "Other":
                         {
@@ -162,7 +168,7 @@ pressMatchingBrowserCopyURLHotkey()
                         }
                     Default:
                         {
-                            MsgBox("Invalid browser language found!", "Warning!", "O Icon!")
+                            MsgBox("Invalid browser language found!", "VD - Browser Language - Warning!", "O Icon!")
                             Return false
                         }
                 }
@@ -185,7 +191,7 @@ pressMatchingBrowserCopyURLHotkey()
                         }
                     Default:
                         {
-                            MsgBox("Invalid browser language found!", "Warning!", "O Icon!")
+                            MsgBox("Invalid browser language found!", "VD - Browser Language - Warning!", "O Icon!")
                             Return false
                         }
                 }
@@ -196,7 +202,7 @@ pressMatchingBrowserCopyURLHotkey()
             }
         Default:
             {
-                MsgBox("Invalid browser name found!", "Warning!", "O Icon!")
+                MsgBox("Invalid browser name found!", "VD - Browser Name - Warning!", "O Icon!")
                 Return false
             }
     }
@@ -209,7 +215,7 @@ pressMatchingBrowserCopyURLHotkey()
             . "Additionally, the hotkey to copy the link should be included.`n`nSimply put, when you right-click on a video "
             . "on the YouTube homepage, a browser context menu appears. This menu typically contains an option called [Copy Link]. "
             . "Try to find the key on the keyboard to select this option directly. The link to the video should then be "
-            . "saved in the clipboard. If you have any questions, please include them in the request.", "Missing Browser Support", "O Iconi")
+            . "saved in the clipboard. If you have any questions, please include them in the request.", "VD - Unsupported Browser!", "O Iconi")
         Return false
     }
 }
@@ -267,8 +273,8 @@ readFile(pFileLocation, pBooleanCheckIfURL := false)
     }
     Catch
     {
-        MsgBox("The file does not exist !	`n`nreadFile() could not be executed properly", "Error!", "O Icon! T3")
-        Return
+        MsgBox("[" . A_ThisFunc "()] [ERROR] Could not read file!`nTerminating script.", "VD - [" . A_ThisFunc "()]", "IconX 262144")
+        ExitApp()
     }
 }
 
@@ -293,7 +299,8 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
         }
         If (booleanShowPrompt = true)
         {
-            result := MsgBox("Could not find blacklist file.`n`nDo you want to create one ?", "Warning!", "YN Icon! T10")
+            result := MsgBox("Could not find blacklist file.`n`nDo you want to create one ?",
+                "VD - Missing Blacklist File!", "YN Icon! 262144")
         }
         ; Only so that the if condition down under does not throw an error.
         If (IsSet(result) = false)
@@ -313,7 +320,8 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
             }
             Catch
             {
-                MsgBox("Could not create file!`n`nCheck the config file for a valid path.", "Error !", "O Icon! T3")
+                MsgBox("Could not create blacklist file!`n`nCheck the config file for a valid path.",
+                    "VD - Blacklist File Status - Error!", "O Icon! 262144")
                 ExitApp()
             }
         }
@@ -344,7 +352,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
             }
             Catch
             {
-                MsgBox("Could not create blacklist file!`n`nNo one knows why.", "Error !", "O Icon! T3")
+                MsgBox("Could not create blacklist file!`n`nNo one knows why.", "VD - Blacklist File Status - Error!", "O Icon! 262144")
                 ExitApp()
             }
         }
@@ -372,7 +380,7 @@ manageURLFile(pBooleanShowPrompt := true)
     If (booleanShowPrompt = true)
     {
         result := MsgBox("Do you want to clear the URL file ?`n`nA backup will be created anyways.",
-            "Manage URL File", "4164 T10")
+            "VD - Manage URL File", "YN Icon? 262144")
         ; When there is a prompt it is almost guaranteed not a download running so that this should work.
         If (result = "Yes")
         {
@@ -382,7 +390,7 @@ manageURLFile(pBooleanShowPrompt := true)
             }
             Catch
             {
-                MsgBox("The file does not exist !`n`nIt was probably already cleared.", "Error!", "O Icon! T3")
+                MsgBox("The URL file does not exist !`n`nIt was probably already cleared.", "VD - Missing URL File!", "O Icon! T3")
             }
         }
     }
@@ -400,14 +408,14 @@ restoreURLFile()
 {
     If (!FileExist(readConfigFile("URL_BACKUP_FILE_LOCATION")))
     {
-        MsgBox("The URL backup file does not exist !`n`nIt was probably not generated yet.", "Error!", "O Icon! T3")
+        MsgBox("The URL backup file does not exist !`n`nIt was probably not generated yet.", "VD - Missing URL Backup File!", "O Icon! T3")
         Return
     }
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
     If (FileExist(tmpConfig))
     {
         result := MsgBox("The URL File already exists."
-            "`nPress YES to overwrite or NO to append the`nbackup file to the original file.", "Warning!", "YNC Icon! 4096 T10")
+            "`nPress YES to overwrite or NO to append the`nbackup file to the original file.", "VD - Existing URL File - Warning!", "YNC Icon! 262144")
         Switch (result)
         {
             Case "Yes":

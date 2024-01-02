@@ -102,12 +102,12 @@ hotkey_toggleDebugMode()
     If (readConfigFile("booleanDebugMode") = true)
     {
         editConfigFile("booleanDebugMode", false)
-        MsgBox("Debug mode has been disabled.", "DEBUG MODE", "O Iconi 262144 T1")
+        MsgBox("Debug mode has been disabled.", "VD - DEBUG MODE", "O Iconi 262144 T1")
     }
     Else If (readConfigFile("booleanDebugMode") = false)
     {
         editConfigFile("booleanDebugMode", true)
-        MsgBox("Debug mode has been enabled.", "DEBUG MODE", "O Icon! 262144 T1")
+        MsgBox("Debug mode has been enabled.", "VD - DEBUG MODE", "O Icon! 262144 T1")
     }
     Else
     {
@@ -126,12 +126,12 @@ startDownload(pCommandString, pBooleanSilent := enableSilentDownloadModeCheckbox
     global isDownloading
     If (checkInternetConnection() = false)
     {
-        Return MsgBox("Unable to connect to the Internet.`n`nPlease check your Internet connection.", "Warning!", "O Icon! 4096 T2")
+        Return MsgBox("Unable to connect to the Internet.`n`nPlease check your Internet connection.", "VD - No Internet Connection!", "O Icon! 262144 T2")
     }
     If (isDownloading = true)
     {
         Return MsgBox("There is a download process running already.`n`nPlease wait for it to finish or cancel it.",
-            "Download Status", "O Icon! 4096 T2")
+            "VD - Download Status", "O Icon! 262144 T2")
     }
     Else
     {
@@ -156,7 +156,7 @@ startDownload(pCommandString, pBooleanSilent := enableSilentDownloadModeCheckbox
     If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
     {
         result := MsgBox("An URL file from an unfinished download has been found.`n`n"
-            "Do you want do add the URLs to the current URL file?", "Unfinished Download Found", "YN Icon!")
+            "Do you want do add the URLs to the current URL file?", "VD - Unfinished Download Found", "YN Icon! 262144")
         Switch (result)
         {
             Case "Yes":
@@ -176,7 +176,7 @@ startDownload(pCommandString, pBooleanSilent := enableSilentDownloadModeCheckbox
     If (!FileExist(tmpConfig))
     {
         MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing: [" .
-            expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "Download Status", "O Icon! 8192")
+            expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "VD - Download Status", "O Icon! 262144")
         isDownloading := false
         Return
     }
@@ -301,7 +301,7 @@ monitorDownloadProgress()
         Sleep(1000)
         If (maxRetries <= 0)
         {
-            MsgBox("Could not find hook file to track progress.`n`nScript terminated.", "Error !", "O IconX T2")
+            MsgBox("Could not find hook file to track progress.`n`nScript terminated.", "VD - Download Status - Error!", "O IconX 262144")
             ExitApp()
             ExitApp()
         }
@@ -492,7 +492,7 @@ startOfFileReadLoop:
             "`nSkipped Videos (already in archive): " . skippedVideoArchiveAmount .
             "`nSkipped Videos (already present): " . skippedVideoPresentAmount .
             "`nSkipped Videos (too large): " . skippedVideoMaxSizeAmount .
-            "`nDownloaded Videos: " . downloadedVideoAmount, "Download Summary", "O Iconi T5")
+            "`nDownloaded Videos: " . downloadedVideoAmount, "VD - Download Summary", "O Iconi T5")
     }
 }
 
@@ -575,7 +575,7 @@ postProcessDownloadFiles()
     }
     Catch
     {
-        MsgBox("Malfunction while writing to download log file.", "Warning!", "O Icon! T1.5")
+        MsgBox("Malfunction while writing to download log file.", "VD - Download Status - Warning!", "O Icon! T1.5")
     }
 
     ; Creates the download summary text file.
@@ -708,7 +708,7 @@ openURLFile()
     }
     Catch
     {
-        MsgBox("The URL file does not exist !`n`nIt was probably already cleared.", "Error!", "O Icon! T3")
+        MsgBox("The URL file does not exist !`n`nIt was probably already cleared.", "VD - Missing URL File!", "O Icon! T3")
     }
 }
 
@@ -726,7 +726,7 @@ openURLBackupFile()
     }
     Catch
     {
-        MsgBox("The URL backup file does not exist !`n`nIt was probably not generated yet.", "Error!", "O Icon! T3")
+        MsgBox("The URL backup file does not exist !`n`nIt was probably not generated yet.", "VD - Missing URL Backup File!", "O Icon! T3")
     }
 }
 
@@ -735,7 +735,7 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
     booleanShowPrompt := pBooleanShowPrompt
     If (booleanShowPrompt = true)
     {
-        result := MsgBox("Do you really want to replace the current`n`nblacklist file with a new one ?", "Warning!", "YN Icon! T10")
+        result := MsgBox("Do you really want to replace the current blacklist file with a new one ?", "VD - Replace Existing URL Blacklist File?", "YN Icon! 262144")
         If (result = "Yes")
         {
             Try
@@ -782,7 +782,7 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
     }
     Catch
     {
-        MsgBox("The URL blacklist file does not exist !`n`nIt was probably not generated yet.", "Error!", "O Icon! T3")
+        MsgBox("The URL blacklist file does not exist !`n`nIt was probably not generated yet.", "VD - Missing URL Blacklist File!", "O Icon! T3")
     }
 }
 
@@ -807,7 +807,7 @@ openConfigFile()
     }
     Catch
     {
-        MsgBox("The script's config file does not exist !`n`nA fatal error has occurred.", "Error!", "O Icon! T3")
+        MsgBox("The script's config file does not exist !`n`nA fatal error has occurred.", "VD - Config File Status - Error!", "O Icon! 262144")
     }
 }
 
@@ -815,7 +815,7 @@ openConfigFile()
 deleteFilePrompt(pFileName)
 {
     fileName := pFileName
-    result := MsgBox("Would you like to delete the " . fileName . " ?", "Delete " . fileName, "YN Icon! 8192 T10")
+    result := MsgBox("Would you like to delete the " . fileName . " ?", "VD - Delete " . fileName . "?", "YN Icon! 262144")
     If (result = "Yes")
     {
         If (!DirExist(scriptBaseFilesLocation . "\deleted"))
@@ -853,12 +853,12 @@ deleteFilePrompt(pFileName)
                         }
                         Else
                         {
-                            MsgBox("No downloaded files from`ncurrent session found.", "Error!", "O Icon! T2.5")
+                            MsgBox("No downloaded files from`ncurrent session found.", "VD - Missing File(s)!", "O Icon! T2.5")
                         }
                     }
                 Default:
                     {
-                        MsgBox("Invalid delete request.", "Error!", "O IconX T2")
+                        MsgBox("Invalid delete request.", "VD - Delete File Status - Error!", "O IconX T2 262144")
                     }
             }
         }
@@ -868,7 +868,7 @@ deleteFilePrompt(pFileName)
             If (FileExist(scriptBaseFilesLocation . "\deleted\" . outFileName) && FileExist(scriptBaseFilesLocation . "\" . outFileName))
             {
                 result := MsgBox("The " . fileName . " was found in the deleted directory."
-                    "`n`nDo you want to overwrite it ?", "Warning!", "YN Icon! T10")
+                    "`n`nDo you want to overwrite it ?", "VD - Overwrite Existing File(s)?", "YN Icon! 262144")
                 If (result = "Yes")
                 {
                     FileDelete(scriptBaseFilesLocation . "\deleted\" . outFileName)
@@ -877,7 +877,7 @@ deleteFilePrompt(pFileName)
             }
             Else
             {
-                MsgBox("The " . fileName . " does not exist !`n`nIt was probably not generated yet.", "Warning!", "O Icon! T3")
+                MsgBox("The " . fileName . " does not exist !`n`nIt was probably not generated yet.", "VD - Missing File(s)!", "O Icon! T3")
             }
         }
     }
@@ -1006,7 +1006,7 @@ findProcessWithWildcard(pWildcard)
             tmp := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
             result := MsgBox("There is currently another instance of this script running."
                 "`nName: [" . v . "]`nPath: [" . tmp . "]`nContinue at your own risk !"
-                "`nPress Retry to terminate the other instance.", "Attention !", "ARI Icon! 262144 T15")
+                "`nPress Retry to terminate the other instance.", "VD - Multiple Script Instances Found!", "ARI Icon! 262144")
 
             Switch (result)
             {
@@ -1023,7 +1023,7 @@ findProcessWithWildcard(pWildcard)
                         Catch
                         {
                             MsgBox("Could not close process :`n"
-                                v . "`nTerminating script.", "Error!", "O IconX T1.5")
+                                v . "`nTerminating script.", "VD - Close Process - Error!", "O IconX T3 262144")
                             ExitApp()
                         }
                     }
@@ -1034,7 +1034,7 @@ findProcessWithWildcard(pWildcard)
                     }
                 Default:
                     {
-                        MsgBox("Terminating script.", "Script Status", "O Iconi T1.5")
+                        MsgBox("Script terminated.", "VD - Script Status", "O Iconi T1.5")
                         ExitApp()
                     }
                     ; Stops after the first match.
@@ -1048,11 +1048,11 @@ findProcessWithWildcard(pWildcard)
 scriptTutorial()
 {
     result := MsgBox("Would you like to have a short tutorial on how to select videos and some basic functionality?",
-        "VideoDownloader Tutorial", "YN Iconi 262144")
+        "VideoDownloader Tutorial - Start Tutorial?", "YN Iconi 262144")
     If (result = "No")
     {
         result := MsgBox("Press YES if you want to disable the tutorial`nfor the next time you run this script.",
-            "VideoDownloader Tutorial", "YN Iconi 262144")
+            "VideoDownloader Tutorial - Disable For Next Time?", "YN Iconi 262144")
         If (result = "Yes")
         {
             editConfigFile("ASK_FOR_TUTORIAL", false)
@@ -1237,7 +1237,7 @@ changeWorkingDirectory()
         defaultWorkingDirectory := A_AppData . "\LeoTN\VideoDownloader\yt_dlp_autohotkey_gui_files"
     }
 
-    path := DirSelect("*" . defaultWorkingDirectory, 3, "Select a working directory.")
+    path := DirSelect("*" . defaultWorkingDirectory, 3, "Select a working directory. This will be the place for downloaded media, settings and presets.")
     If (checkForWritingRights(path))
     {
         If (!InStr(path, "yt_dlp_autohotkey_gui_files"))
@@ -1254,7 +1254,7 @@ changeWorkingDirectory()
         result := MsgBox("This path cannot be used because it requires administrative permissions to write in.`n`n"
             "Please select another path or press [Ignore] to use the default directory which is`n"
             "[" . defaultWorkingDirectory . "].",
-            "Invalid Working Directory", "ARI Icon! Default2")
+            "VD - Invalid Working Directory!", "ARI Icon! Default2")
         Switch (result)
         {
             Case "Retry":
@@ -1290,31 +1290,7 @@ checkForWritingRights(pPath)
         }
         Else
         {
-            MsgBox("[checkForWritingRights()] [ERROR]:`n" . error.message)
-            ExitApp()
-        }
-    }
-    Return true
-}
-
-; REMOVE ?
-checkForValidPath(pPath)
-{
-    path := pPath
-
-    Try
-    {
-        FileGetAttrib(path)
-    }
-    Catch As error
-    {
-        If (InStr(error.message, "(2s) "))
-        {
-            Return false
-        }
-        Else
-        {
-            MsgBox("checkForValidPath():`n" . error.message)
+            MsgBox("[" . A_ThisFunc . "()] [ERROR]`n[" . error.message . "]", "VD - [" . A_ThisFunc . "()]")
             ExitApp()
         }
     }
@@ -1346,8 +1322,8 @@ createBrowserInformationGUI(pBooleanForceRestart := true)
     booleanForceRestart := pBooleanForceRestart
 
     global browserInformationGUI := Gui(, "VideoDownloader - Browser Identification Assistant")
-    browserInformationGUI.Add("Text", "yp+10", "Hello there :)`n`nIn order to be able to use "
-        . "the corresponding hotkeys to save the URLs, `na short identification of your browser is required.")
+    browserInformationGUI.Add("Text", "yp+10", "Hello there :)`n`nTo use "
+        . "the corresponding hotkeys to save the URLs,`na short identification of your browser is required.")
     browserInformationGUI.Add("Text", "yp+60", "1) Please select the browser that you primarily use from the list below.")
     tmpArray1 := ["Firefox", "Chrome", "Edge", "Opera GX", "Other"]
     browserInformationGUI.Add("DropDownList", "yp+20 w150 vBrowserNameDropDownList", tmpArray1)
@@ -1356,8 +1332,9 @@ createBrowserInformationGUI(pBooleanForceRestart := true)
     tmpArray2 := ["Deutsch", "English", "Other"]
     browserInformationGUI.Add("DropDownList", "yp+20 w150 vBrowserLanguageDropDownList", tmpArray2)
 
-    browserInformationGUI.Add("Text", "yp+40", "There might be more available options in the future.")
-    browserInformationGUI.Add("Text", "yp+20", "Changing this option requires a script restart!")
+    browserInformationGUI.Add("Link", "yp+40", 'In case your browser is not listet, you can request it on the '
+        . '<a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/issues/new">GitHub</a> page.')
+    browserInformationGUI.Add("Text", "yp+20", "Changing this options might require a script restart!")
     finishButton := browserInformationGUI.Add("Button", "yp+20", "Finish")
     finishButton.OnEvent("Click", (*) => handleBrowserInformationGUI_ProcessInformation(browserInformationGUI.Submit(false),
         booleanForceRestart))
@@ -1370,7 +1347,7 @@ handleBrowserInformationGUI_ProcessInformation(pSubmitObject, pBooleanForceResta
     submitObject := pSubmitObject
     booleanForceRestart := pBooleanForceRestart
 
-    result := MsgBox("Finish browser information selection process?", "Finish Selection", "YN Icon?")
+    result := MsgBox("Finish browser information selection process?", "VD - Finish Browser Selection?", "YN Icon?")
     Switch (result)
     {
         Case "Yes":
@@ -1385,7 +1362,7 @@ handleBrowserInformationGUI_ProcessInformation(pSubmitObject, pBooleanForceResta
     ; Checks if both options have a value.
     If (submitObject.BrowserLanguageDropDownList = "" && submitObject.BrowserLanguageDropDownList = "")
     {
-        MsgBox("Please select an option for both input fields.", "Selection Error", "O Icon! T3")
+        MsgBox("Please select an option for both input fields.", "VD - Browser Selection - Error!", "O Icon! T3")
         Return
     }
     RegWrite(submitObject.BrowserNameDropDownList, "REG_SZ",

@@ -12,7 +12,7 @@ Add debug variables here.
 ; This variable is also written into the config file.
 global booleanDebugMode := false
 ; Stops the annoying tooltip startup when debugging.
-disableTooltipStartup := false
+global disableTooltipStartup := false
 
 ;------------------------------------------------
 
@@ -79,6 +79,7 @@ config_onInit()
     global configVariableNameArray :=
         [
             "booleanDebugMode",
+            "disableTooltipStartup",
             "URL_FILE_LOCATION",
             "URL_BACKUP_FILE_LOCATION",
             "BLACKLIST_FILE_LOCATION",
@@ -106,6 +107,7 @@ config_onInit()
     ; IMPORTANT NOTE: Do NOT forget to add the SECTION NAME for EACH new item added in the configVariableNameArray !!!
     global configSectionNameArray :=
         [
+            "DebugSettings",
             "DebugSettings",
             "FileLocations",
             "FileLocations",
@@ -148,7 +150,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
 
     If (booleanShowPrompt = true)
     {
-        result := MsgBox("Do you really want to replace the current`nconfig file with a new one ?", "Warning !", "YN Icon! T10")
+        result := MsgBox("Do you really want to replace the current config file with a new one ?", "VD - Replace Config File?", "YN Icon! 262144")
         If (result = "No" || result = "Timeout")
         {
             Return
@@ -165,14 +167,14 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
             FileMove(configFileLocation, configFileLocation . "_old", true)
         }
     }
-    FileAppend("#Important note: When changing the config file the script has to be reloaded for the changes to take effect!",
-        configFileLocation)
+    FileAppend("#Important note: When changing the config file the script has to be reloaded for the changes to take effect!`n"
+        . "#You can find a hotkey list here: (https://www.autohotkey.com/docs/v2/Hotkeys.htm#Symbols)", configFileLocation)
     ; In case you forget to specify a section for EACH new config file entry this will remind you to do so :D
     If (configVariableNameArray.Length != configSectionNameArray.Length)
     {
         MsgBox("Not every config file entry has been asigned to a section !`n`nPlease fix this by checking both arrays.",
-            "Error !", "O IconX")
-        MsgBox("Script terminated.", "Script Status", "O IconX T1.5")
+            "VD - Config File Status - Error!", "O IconX 262144")
+        MsgBox("Script terminated.", "VD - Script Status", "O IconX T1.5")
         ExitApp()
     }
     Else
@@ -188,7 +190,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
         }
         If (booleanShowPrompt = true)
         {
-            MsgBox("A default config file has been generated.", "Config File Status", "O Iconi T3")
+            MsgBox("A default config file has been generated.", "VD - Config File Status", "O Iconi T3")
         }
     }
 }
@@ -234,9 +236,9 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
                 }
                 If (!validatePath(configFileContentArray.Get(A_Index), booleanAskForPathCreation, booleanCreatePathSilent))
                 {
-                    MsgBox("Could not create directory !`nCheck the config file for a valid path at`n["
-                        . configVariableNameArray.Get(A_Index) . "]", "Error !", "O Icon! T10")
-                    MsgBox("Script terminated.", "Script Status", "O IconX T1.5")
+                    MsgBox("Check the config file for a valid path at`n["
+                        . configVariableNameArray.Get(A_Index) . "]", "VD - Config File Status - Error!", "O Icon! 262144")
+                    MsgBox("Script terminated.", "VD - Script Status", "O IconX T1.5")
                     ExitApp()
                 }
                 Else
@@ -251,7 +253,7 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
             }
         }
     }
-    MsgBox("Could not find " . optionName . " in the config file.`nScript terminated.", "Config File Status", "O IconX T3")
+    MsgBox("Could not find " . optionName . " in the config file.`nScript terminated.", "VD - Config File Status - Error!", "O IconX 262144")
     ExitApp()
 }
 
@@ -320,7 +322,7 @@ checkConfigFileIntegrity()
             }
             result := MsgBox("The script config file seems to be corrupted or unavailable!"
                 "`n`nDo you want to create a new one using the template?"
-                , "Warning !", "YN Icon! 8192 T10")
+                , "VD - Config File Status - Warning!", "YN Icon! 262144")
             Switch (result)
             {
                 Case "Yes":
@@ -330,7 +332,7 @@ checkConfigFileIntegrity()
                     }
                 Default:
                     {
-                        MsgBox("Script terminated.", "Script Status", "O IconX T1.5")
+                        MsgBox("Script terminated.", "VD - Script Status", "O IconX T1.5")
                         ExitApp()
                     }
             }
@@ -350,7 +352,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent
     If (booleanAskForPathCreation && booleanCreatePathSilent)
     {
         MsgBox("[" . A_ThisFunc "()] [ERROR] booleanAskForPathCreation and booleanCreatePathSilent cannot be true at the "
-            . "same time.`nTerminating script.", "[" . A_ThisFunc "()]", "IconX")
+            . "same time.`nTerminating script.", "VD - [" . A_ThisFunc "()]", "IconX 262144")
         ExitApp()
     }
 
@@ -382,8 +384,8 @@ validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent
         {
             If (booleanAskForPathCreation)
             {
-                result := MsgBox("The directory`n[" . path . "]`ndoes not exist."
-                    "`nWould you like to create it ?", "Warning !", "YN Icon! T10")
+                result := MsgBox("The directory`n[" . path . "] does not exist."
+                    "`nWould you like to create it ?", "VD - Config File Status - Warning!", "YN Icon! 262144")
                 Switch (result)
                 {
                     Case "Yes":
@@ -392,7 +394,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent
                         }
                     Default:
                         {
-                            MsgBox("Script terminated.", "Script Status", "O IconX T1.5")
+                            MsgBox("Script terminated.", "VD - Script Status", "O IconX T1.5")
                             ExitApp()
                         }
                 }
@@ -410,8 +412,8 @@ validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent
         {
             If (booleanAskForPathCreation)
             {
-                result := MsgBox("The directory`n[" . outDir . "]`ndoes not exist."
-                    "`nWould you like to create it ?", "Warning !", "YN Icon! T10")
+                result := MsgBox("The directory`n[" . outDir . "] does not exist."
+                    "`nWould you like to create it ?", "VD - Config File Status - Warning!", "YN Icon! 262144")
                 Switch (result)
                 {
                     Case "Yes":
@@ -420,7 +422,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent
                         }
                     Default:
                         {
-                            MsgBox("Script terminated.", "Script Status", "O IconX T1.5")
+                            MsgBox("Script terminated.", "VD - Script Status", "O IconX T1.5")
                             ExitApp()
                         }
                 }
