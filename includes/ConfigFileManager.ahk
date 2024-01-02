@@ -11,6 +11,8 @@ Add debug variables here.
 */
 ; This variable is also written into the config file.
 global booleanDebugMode := false
+; Stops the annoying tooltip startup when debugging.
+disableTooltipStartup := false
 
 ;------------------------------------------------
 
@@ -198,7 +200,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
 ; which is 'workingBaseFilesLocation . "\YT_URLS.txt"' by default.
 ; Returns the value out of the config file.
 ; The booleanAskForPathCreation should be used with caution because
-; it can have unseen consequences if a directory is not created.
+; it can have unforeseen consequences if a directory is not created.
 readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckConfigFileStatus := true)
 {
     ; Thanks to my buddy Elias for testing and helping me debugging this script :)

@@ -320,7 +320,7 @@ F6::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below.
-        scriptTutorial()
+        handleDownloadOptionsGUI_ResolveElementConflicts()
     }
 }
 
@@ -329,7 +329,7 @@ F7::
     If (readConfigFile("booleanDebugMode") = true)
     {
         ; Enter code below
-        MsgBox("Hello there.")
+        handleDownloadOptionsGUI_ProcessCommandStringInputs()
     }
 }
 

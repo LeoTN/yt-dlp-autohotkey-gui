@@ -63,6 +63,8 @@
     <ROW Component="VideoDownloaderSetup.exe" ComponentId="{736516C7-82F3-428E-A3C8-8C66F8CC1841}" Directory_="setup_1_Dir" Attributes="0" KeyPath="VideoDownloaderSetup.exe"/>
     <ROW Component="booleanFirstTimeLaunch" ComponentId="{077D7FB4-BCFC-438F-A2FF-03E2EE3697C8}" Directory_="APPDIR" Attributes="4" KeyPath="booleanFirstTimeLaunch"/>
     <ROW Component="booleanSetupRequired" ComponentId="{B2A7A298-9C96-4772-B466-9DAF5A813DFE}" Directory_="APPDIR" Attributes="4" KeyPath="booleanSetupRequired"/>
+    <ROW Component="browserLanguage" ComponentId="{23CE2369-9E7D-4648-BFFB-7CD840A04BFB}" Directory_="APPDIR" Attributes="4" KeyPath="browserLanguage"/>
+    <ROW Component="browserType" ComponentId="{5130466E-5E48-48F1-BACD-A06161D2E77B}" Directory_="APPDIR" Attributes="4" KeyPath="browserType"/>
     <ROW Component="green_arrow_icon.ico" ComponentId="{6E6C028D-CFD2-49B3-B6B1-453405EE30D0}" Directory_="assets_Dir" Attributes="0" KeyPath="YouTubeBackground1.jpg" Type="0"/>
     <ROW Component="scriptBaseFilesLocation_2" ComponentId="{5FD8B8B3-205B-4B8A-8120-B1EBD6857D62}" Directory_="APPDIR" Attributes="4" KeyPath="scriptBaseFilesLocation_2"/>
     <ROW Component="videoDownloaderWorkingDirectory" ComponentId="{2F57433B-BE69-4182-B900-3390918C20BD}" Directory_="APPDIR" Attributes="4" KeyPath="videoDownloaderWorkingDirectory"/>

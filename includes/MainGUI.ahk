@@ -88,6 +88,8 @@ createMainGUI()
     optionsMenu.SetIcon("Restore URL File from Backup", "shell32.dll", 240)
     optionsMenu.Add("Open Download Options GUI", (*) => hotkey_openOptionsGUI())
     optionsMenu.SetIcon("Open Download Options GUI", "shell32.dll", 123)
+    optionsMenu.Add("Change Browser Information", (*) => createBrowserInformationGUI())
+    optionsMenu.SetIcon("Change Browser Information", "shell32.dll", 243)
     optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
     optionsMenu.SetIcon("Terminate Script", "shell32.dll", 28)
     optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())
@@ -270,7 +272,7 @@ handleMainGUI_openDownloadLocation()
     }
     Catch
     {
-        MsgBox("No downloaded files from`ncurrent session found.", "Warning !", "O Icon! T1.5")
+        MsgBox("No downloaded files from`ncurrent session found.", "Warning!", "O Icon! T1.5")
     }
 }
 
