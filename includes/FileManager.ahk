@@ -6,19 +6,19 @@ CoordMode "Mouse", "Client"
 
 ; Beginning of the file manager functions.
 
-; Save search bar contents to text file.
+/*
+Save search bar contents to text file.
+@returns [boolean] Depending on the function's success.
+*/
 saveSearchBarContentsToFile()
 {
-    A_Clipboard := ""
-    tmpConfig := readConfigFile("URL_FILE_LOCATION")
-
     Loop (3)
     {
         Send("^{l}")
         Sleep(100)
         Send("^{c}")
 
-        If (ClipWait(2) = true)
+        If (ClipWait(0.5))
         {
             clipboardContent := A_Clipboard
             Sleep(100)
@@ -26,240 +26,193 @@ saveSearchBarContentsToFile()
             Break
         }
     }
-    If (FileExist(tmpConfig))
+    If (IsSet(clipboardContent))
     {
-        writeToURLFile(clipboardContent)
+        result := writeToURLFile(clipboardContent)
+        Switch (result)
+        {
+            Case "duplicate_url":
+                {
+                    MsgBox("Same URL selected twice.", "VD - Duplicate URL!", "O Iconi T1.5")
+                    Return false
+                }
+            Case "already_in_blacklist_file":
+                {
+                    MsgBox("Selected URL is blacklisted.", "VD - Blacklistet URL!", "O Iconi T1.5")
+                    Return false
+                }
+            Case true:
+            {
+                Return true
+            }
+            Default:
+            {
+                MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid return value from writeToURLFile() received [" . result . "]."
+                    , "VD - [" . A_ThisFunc . "()]", "Icon! 262144")
+                Return false
+            }
+        }
     }
     Else
     {
-        FileAppend("#Made by Donnerbaer" . "`n", tmpConfig)
-        writeToURLFile(clipboardContent)
+        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1.5")
     }
 }
 
-; Saves the video URL directly by hovering over the video thumbnail on the start page.
+/*
+Saves the video URL directly by hovering over the video thumbnail on the start page.
+@returns [boolean] Depending on the function's success.
+*/
 saveVideoURLDirectlyToFile()
 {
-    A_Clipboard := ""
-    If (pressMatchingBrowserCopyURLHotkey() = false)
+    videoURL := getBrowserURLUnderMouseCursor()
+    tmpConfig := readConfigFile("URL_FILE_LOCATION")
+    ; False if URL is invalid or not found.
+    If (videoURL)
     {
-        Return
-    }
-    If (ClipWait(0.4) = true)
-    {
-        clipboardContent := A_Clipboard
-        tmpConfig := readConfigFile("URL_FILE_LOCATION")
-        If (!FileExist(tmpConfig))
+        result := writeToURLFile(videoURL)
+        Switch (result)
         {
-            FileAppend("#Made by Donnerbaer" . "`n", tmpConfig)
-            writeToURLFile(clipboardContent)
-            Return
-        }
-        Else If (clipboardContent != "")
-        {
-            contentArray := readFile(tmpConfig, true)
-            Loop (contentArray.Length)
-            {
-                If (clipboardContent = contentArray.Get(A_Index))
+            Case "duplicate_url":
                 {
-                    MsgBox("Same URL selected twice.", "VD - Duplicate URL!", "O Iconi T1.5")
-                    Return
+                    MsgBox("Same URL selected twice.", "VD - Duplicate URL!", "O Iconi T0.8")
+                    Return false
                 }
-            }
-            writeToURLFile(clipboardContent)
-            Return
-        }
-    }
-    MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1.5")
-}
-
-pressMatchingBrowserCopyURLHotkey()
-{
-    /*
-    Edge DE -> RC I Enter
-    Edge ENG -> RC O Enter
-    Chrome DE -> RC E
-    Chrome ENG -> RC E
-    Firefox DE -> RC K
-    Firefox ENG -> RC L
-    Opera GX DE -> RC L
-    Opera GX ENG -> RC E
-    */
-    static browserName := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "browserName", "")
-    static broswerLanguage := RegRead("HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader", "browserLanguage", "")
-    browserHotkeyErrorcode := ""
-
-    MouseClick("Right")
-    ; Do not decrease value! May lead to unstable performance.
-    Sleep(250)
-    Switch (browserName)
-    {
-        Case "Firefox":
-            {
-                Switch (broswerLanguage)
+            Case "already_in_blacklist_file":
                 {
-                    Case "Deutsch":
-                        {
-                            Send("k")
-                        }
-                    Case "English":
-                        {
-                            Send("l")
-                        }
-                    Case "Other":
-                        {
-                            browserHotkeyErrorcode := "no_support"
-                        }
-                    Default:
-                        {
-                            MsgBox("Invalid browser language found!", "VD - Browser Language - Warning!", "O Icon!")
-                            Return false
-                        }
+                    MsgBox("Selected URL is blacklisted.", "VD - Blacklistet URL!", "O Iconi T1")
+                    Return false
                 }
-            }
-        Case "Chrome":
+            Case true:
             {
-                Switch (broswerLanguage)
-                {
-                    Case "Deutsch":
-                        {
-                            Send("e")
-                        }
-                    Case "English":
-                        {
-                            Send("e")
-                        }
-                    Case "Other":
-                        {
-                            browserHotkeyErrorcode := "no_support"
-                        }
-                    Default:
-                        {
-                            MsgBox("Invalid browser language found!", "VD - Browser Language - Warning!", "O Icon!")
-                            Return false
-                        }
-                }
+                Return true
             }
-        Case "Edge":
+            Default:
             {
-                Switch (broswerLanguage)
-                {
-                    Case "Deutsch":
-                        {
-                            Send("i")
-                            ; Special case because the context menu in Edge is different.
-                            If (ClipWait(0.4) = false)
-                            {
-                                Send("{Enter}")
-                            }
-                        }
-                    Case "English":
-                        {
-                            Send("o")
-                            ; Special case because the context menu in Edge is different.
-                            If (ClipWait(0.4) = false)
-                            {
-                                Send("{Enter}")
-                            }
-                        }
-                    Case "Other":
-                        {
-                            browserHotkeyErrorcode := "no_support"
-                        }
-                    Default:
-                        {
-                            MsgBox("Invalid browser language found!", "VD - Browser Language - Warning!", "O Icon!")
-                            Return false
-                        }
-                }
-            }
-        Case "Opera GX":
-            {
-                Switch (broswerLanguage)
-                {
-                    Case "Deutsch":
-                        {
-                            Send("l")
-                        }
-                    Case "English":
-                        {
-                            Send("e")
-                        }
-                    Case "Other":
-                        {
-                            browserHotkeyErrorcode := "no_support"
-                        }
-                    Default:
-                        {
-                            MsgBox("Invalid browser language found!", "VD - Browser Language - Warning!", "O Icon!")
-                            Return false
-                        }
-                }
-            }
-        Case "Other":
-            {
-                browserHotkeyErrorcode := "no_support"
-            }
-        Default:
-            {
-                MsgBox("Invalid browser name found!", "VD - Browser Name - Warning!", "O Icon!")
+                MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid return value from writeToURLFile() received [" . result . "]."
+                    , "VD - [" . A_ThisFunc . "()]", "Icon! 262144")
                 Return false
             }
+        }
     }
-    If (browserHotkeyErrorcode = "no_support")
+    MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T0.8")
+    Return false
+}
+
+/*
+Basically a support function for saveVideoURLDirectlyToFile().
+@returns [boolean] false in case of failure and [String] if an URL has been found.
+*/
+getBrowserURLUnderMouseCursor()
+{
+    ; These three variables contain the matching values for each role type.
+    role_Shortcut := 30
+    role_Text := 42
+    role_Group := 20
+
+    Try
     {
-        MsgBox("You have selected a browser configuration that is currently not supported for this hotkey."
-            . "`nYou can try changing the browser settings in the [Options] menu of the main GUI and see if the URL is saved. "
-            . "If you would like to request support for your browser, please go to the GitHub page and create a request.`n`n"
-            . "The request should contain the name of the browser, along with the corresponding download link. "
-            . "Additionally, the hotkey to copy the link should be included.`n`nSimply put, when you right-click on a video "
-            . "on the YouTube homepage, a browser context menu appears. This menu typically contains an option called [Copy Link]. "
-            . "Try to find the key on the keyboard to select this option directly. The link to the video should then be "
-            . "saved in the clipboard. If you have any questions, please include them in the request.", "VD - Unsupported Browser!", "O Iconi")
+        Loop (3)
+        {
+            ; Get the video element.
+            videoElementAccOrigin := Acc.ElementFromPoint()
+        }
+        videoElementAccOriginParent := videoElementAccOrigin.Parent
+
+        Try
+        {
+            ; Looks for the URL in the originally selected element.
+            videoElementValue := videoElementAccOrigin.Normalize({ Role: role_Shortcut, not: { Value: "" } })
+            videoURL := videoElementValue.Value
+        }
+        Try
+        {
+            ; Looks for the URL in the originally selected element.
+            videoElementValue := videoElementAccOrigin.Normalize({ Role: role_Text, not: { Value: "" } })
+            videoURL := videoElementValue.Value
+        }
+        ; Parent section.
+        Try
+        {
+            ; Tries to find matching childs in the parent of the originally selected element.
+            videoElementAccChildShortcut := videoElementAccOriginParent.FindElement({ Role: role_Shortcut, not: { Value: "" } })
+        }
+        Try
+        {
+            ; Looks for the URL in the "brothers" of the originally selected element.
+            videoElementValue := videoElementAccChildShortcut.Normalize({ Role: role_Shortcut, not: { Value: "" } })
+            videoURL := videoElementValue.Value
+        }
+        Try
+        {
+            ; Looks for the URL in the "brothers" of the originally selected element.
+            videoElementValue := videoElementAccChildShortcut.Normalize({ Role: role_Text, not: { Value: "" } })
+            videoURL := videoElementValue.Value
+        }
+
+        If (IsSet(videoURL))
+        {
+            ; The /@ is located in the youtuber channel link, which should not be selected.
+            If (InStr(videoURL, "https://") && !InStr(videoURL, "/@"))
+            {
+                Return videoURL
+            }
+        }
+        Return false
+    }
+    Catch
+    {
         Return false
     }
 }
 
+/*
+Writes entries to the URL file. It will also create one, if it doesn't exist.
+@param pContent [String] Should be a valid URL.
+@returns [boolean] true if the operation was successful or [String] depending on the outcome.
+*/
 writeToURLFile(pContent)
 {
-    content := pContent
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
+    If (!FileExist(tmpConfig))
+    {
+        FileAppend("#Made by Donnerbaer`n", tmpConfig)
+    }
     tmp := readFile(tmpConfig, true)
-    ; Check if the URL already exists in the file.
     i := tmp.Length
-    ; Content check loop.
+    ; Check if the URL already exists in the file.
     Loop (i)
     {
-        If (content = tmp.Get(A_Index))
+        If (pContent = tmp.Get(A_Index))
         {
-            Return
+            Return "duplicate_url"
         }
     }
-    If (checkBlackListFile(content) = true)
+    If (checkBlackListFile(pContent))
     {
-        Return
+        Return "already_in_blacklist_file"
     }
-    FileAppend(content . "`n", tmpConfig)
+    FileAppend(pContent . "`n", tmpConfig)
+    Return true
 }
 
-; Reads a specified file and creates an array object with it.
-; Based on "`n" it will split the document.
-; The parameter booleanCheckIfURL defines if you only want to include
-; URLS and other links into the outcomming array.
-; Returns the created array.
+/*
+Reads a specified file and creates an array object with it.
+Based on "`n" it will split the document.
+@param pFileLocation[String] Should be the path to a valid.TXT file.
+@param pBooleanCheckIfURL [boolean] If set to true, only valid URLS will be read into the array.
+@returns [array] containing each line of the file in a seperate slot.
+*/
 readFile(pFileLocation, pBooleanCheckIfURL := false)
 {
-    fileLocation := pFileLocation
-    booleanCheckIfURL := pBooleanCheckIfURL
     Try
     {
-        ; The loop makes sure, that only URLs are included into the array.
-        URLs := FileRead(fileLocation)
+        URLs := FileRead(pFileLocation)
         fileArray := []
         i := 1
-        For k, v in StrSplit(URLs, "`n")
+        For (k, v in StrSplit(URLs, "`n"))
         {
-            If (!InStr(v, "://") && booleanCheckIfURL = true)
+            If (!InStr(v, "://") && pBooleanCheckIfURL)
             {
                 Continue
             }
@@ -271,43 +224,38 @@ readFile(pFileLocation, pBooleanCheckIfURL := false)
         }
         Return fileArray
     }
-    Catch
+    Catch As error
     {
-        MsgBox("[" . A_ThisFunc "()] [ERROR] Could not read file!`nTerminating script.", "VD - [" . A_ThisFunc "()]", "IconX 262144")
-        ExitApp()
+        displayErrorMessage(error, , true)
     }
 }
 
-; Checks a given input if it exists on the blacklist.
-; Returns true if a match was found and false otherwise.
-; The parameter booleanShowPrompt sets if the user will receive
-; the MsgBox asking about creating a new blacklist file.
+/*
+Checks a given input if it exists on the blacklist.
+@param pItemToCompare [String] A string (URL) to search in the blacklist file.
+@param pBooleanShowPrompt [boolean] Show a prompt to create a new blacklist file, if necessary.
+@returns [boolean] True, if the item was found in the blacklist file. False otherwise.
+*/
 checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
 {
-    itemToCompare := pItemToCompare
-    booleanShowPrompt := pBooleanShowPrompt
     ; This content will be added to the new created blacklist file.
     ; You can add content to the ignore list by adding it to the .txt file
     ; or directly to the template array.
-    templateArray := ["https://www.youtube.com/"]
+    templateArray := ["https://www.youtube.com"]
     If (!FileExist(readConfigFile("BLACKLIST_FILE_LOCATION")))
     {
         ; This creates the blacklist file silently because it is the script setup.
-        If (booleanFirstTimeLaunch = true)
+        If (booleanFirstTimeLaunch)
         {
-            booleanShowPrompt := false
+            pBooleanShowPrompt := false
         }
-        If (booleanShowPrompt = true)
+        result := ""
+        If (pBooleanShowPrompt)
         {
             result := MsgBox("Could not find blacklist file.`n`nDo you want to create one ?",
                 "VD - Missing Blacklist File!", "YN Icon! 262144")
         }
-        ; Only so that the if condition down under does not throw an error.
-        If (IsSet(result) = false)
-        {
-            result := ""
-        }
-        If (result = "Yes" || booleanShowPrompt = false)
+        If (result = "Yes" || !pBooleanShowPrompt)
         {
             Try
             {
@@ -316,7 +264,6 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
                 {
                     FileAppend(templateArray.Get(A_Index) . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
                 }
-                checkBlackListFile(itemToCompare, booleanShowPrompt)
             }
             Catch
             {
@@ -330,41 +277,22 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
             Return false
         }
     }
-    ; In case something has changed in the blacklist file.
+    ; In case the blacklist file is broken.
     tmpArray := readFile(readConfigFile("BLACKLIST_FILE_LOCATION"))
     If (!tmpArray.Has(1))
     {
         FileDelete(readConfigFile("BLACKLIST_FILE_LOCATION"))
-        Return checkBlackListFile(itemToCompare)
+        Return checkBlackListFile(pItemToCompare, pBooleanShowPrompt)
     }
-    Loop (templateArray.Length)
-    {
-        If (templateArray.Get(A_Index) != tmpArray.Get(A_Index))
-        {
-            FileDelete(readConfigFile("BLACKLIST_FILE_LOCATION"))
-            Try
-            {
-                ; Creates the blacklist file with the template.
-                Loop (templateArray.Length)
-                {
-                    FileAppend(templateArray.Get(A_Index) . "`n", readConfigFile("BLACKLIST_FILE_LOCATION"))
-                }
-            }
-            Catch
-            {
-                MsgBox("Could not create blacklist file!`n`nNo one knows why.", "VD - Blacklist File Status - Error!", "O Icon! 262144")
-                ExitApp()
-            }
-        }
-    }
+
     ; Compare the item if it matches with the blacklist.
     ; NOTE: This search method is not case sensitive and
-    ; it does not search like InStr() !
+    ; it does not search like InStr()!
     blacklistArray := readFile(readConfigFile("BLACKLIST_FILE_LOCATION"))
 
     Loop (blacklistArray.Length)
     {
-        If (itemToCompare = blacklistArray.Get(A_Index))
+        If (pItemToCompare = blacklistArray.Get(A_Index))
         {
             Return true
         }
@@ -372,43 +300,60 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
     Return false
 }
 
-manageURLFile(pBooleanShowPrompt := true)
+/*
+Clears the content of the URL file and writes it to the URL backup file.
+@param pBooleanShowPrompt [boolean] Show a prompt to confirm clearing the file.
+@returns [boolean] True, if the item was found in the blacklist file. False otherwise.
+*/
+clearURLFile(pBooleanShowPrompt := true)
 {
-    booleanShowPrompt := pBooleanShowPrompt
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
 
-    If (booleanShowPrompt = true)
+    If (pBooleanShowPrompt)
     {
+        If (!FileExist)
+        {
+            MsgBox("The URL file does not exist!`n`nIt was probably already cleared.", "VD - Missing URL File!", "O Icon! T3")
+            Return false
+        }
         result := MsgBox("Do you want to clear the URL file ?`n`nA backup will be created anyways.",
             "VD - Manage URL File", "YN Icon? 262144")
-        ; When there is a prompt it is almost guaranteed not a download running so that this should work.
-        If (result = "Yes")
+        Switch (result)
         {
-            Try
-            {
-                FileMove(tmpConfig, readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
-            }
-            Catch
-            {
-                MsgBox("The URL file does not exist !`n`nIt was probably already cleared.", "VD - Missing URL File!", "O Icon! T3")
-            }
+            Case "Yes":
+                {
+                    Try
+                    {
+                        FileMove(tmpConfig, readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
+                        Return true
+                    }
+                    Catch As error
+                    {
+                        displayErrorMessage(error)
+                    }
+                }
         }
     }
     Else
     {
         Try
         {
-            SplitPath(tmpConfig, , &outDir)
-            FileMove(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
+            FileMove(tmpConfig, readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
+            Return true
+        }
+        Catch As error
+        {
+            displayErrorMessage(error)
         }
     }
 }
 
+; Restores the content from the URL backup file to the URL file.
 restoreURLFile()
 {
     If (!FileExist(readConfigFile("URL_BACKUP_FILE_LOCATION")))
     {
-        MsgBox("The URL backup file does not exist !`n`nIt was probably not generated yet.", "VD - Missing URL Backup File!", "O Icon! T3")
+        MsgBox("The URL backup file does not exist!`n`nIt was probably not generated yet.", "VD - Missing URL Backup File!", "O Icon! T3")
         Return
     }
     tmpConfig := readConfigFile("URL_FILE_LOCATION")

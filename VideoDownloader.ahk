@@ -1,4 +1,4 @@
-; NOTE: This is the main .ahk file which has to be started !!!
+; NOTE: This is the main .ahk file which has to be started!!!
 #SingleInstance Force
 #MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
@@ -13,6 +13,7 @@ CoordMode "Mouse", "Client"
 #Include "FileManager.ahk"
 #Include "MainGUI.ahk"
 #Include "DownloadOptionsGUI.ahk"
+#Include "Acc.ahk"
 
 onInit()
 
@@ -93,11 +94,11 @@ onInit()
     mainGUI_onInit()
     optionsGUI_onInit()
     ; Shows a small tutorial to guide the user.
-    If (readConfigFile("ASK_FOR_TUTORIAL") = true)
+    If (readConfigFile("ASK_FOR_TUTORIAL"))
     {
         scriptTutorial()
     }
-    If (readConfigFile("SHOW_OPTIONS_GUI_ON_LAUNCH") = true)
+    If (readConfigFile("SHOW_OPTIONS_GUI_ON_LAUNCH"))
     {
         If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
         {
@@ -108,7 +109,7 @@ onInit()
             WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
         }
     }
-    If (readConfigFile("SHOW_MAIN_GUI_ON_LAUNCH") = true)
+    If (readConfigFile("SHOW_MAIN_GUI_ON_LAUNCH"))
     {
         If (!WinExist("ahk_id " . mainGUI.Hwnd))
         {
@@ -248,7 +249,7 @@ Add debug hotkeys here.
 ; Debug hotkey template.
 F5::
 {
-    If (readConfigFile("booleanDebugMode") = true)
+    If (readConfigFile("booleanDebugMode"))
     {
         ; Enter code below.
         A_Clipboard := A_ComSpec ' /k ' . buildCommandString() . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"'
@@ -257,7 +258,7 @@ F5::
 
 F6::
 {
-    If (readConfigFile("booleanDebugMode") = true)
+    If (readConfigFile("booleanDebugMode"))
     {
         ; Enter code below.
         handleDownloadOptionsGUI_ResolveElementConflicts()
@@ -266,7 +267,7 @@ F6::
 
 F7::
 {
-    If (readConfigFile("booleanDebugMode") = true)
+    If (readConfigFile("booleanDebugMode"))
     {
         ; Enter code below
         handleDownloadOptionsGUI_ProcessCommandStringInputs()

@@ -75,7 +75,7 @@ config_onInit()
 
     ; Create an array including all settings variables names.
     ; This array makes it easier to apply certain values from the config file to the configFileContentArray.
-    ; IMPORTANT NOTE: Do NOT forget to add each new config variable name into the array !!!
+    ; IMPORTANT NOTE: Do NOT forget to add each new config variable name into the array!!!
     global configVariableNameArray :=
         [
             "booleanDebugMode",
@@ -104,7 +104,7 @@ config_onInit()
         ]
     ; Create an array including the matching section name for EACH item in the configVariableNameArray.
     ; This makes it easier to read and write the config file.
-    ; IMPORTANT NOTE: Do NOT forget to add the SECTION NAME for EACH new item added in the configVariableNameArray !!!
+    ; IMPORTANT NOTE: Do NOT forget to add the SECTION NAME for EACH new item added in the configVariableNameArray!!!
     global configSectionNameArray :=
         [
             "DebugSettings",
@@ -141,14 +141,14 @@ CONFIG FILE SECTION
 Creates, reads and manages the script's config file.
 */
 
-; Creates a default config file with the standard parameters. Usually always creates
-; a backup file to revert changes if needed.
+/*
+Checks a given input if it exists on the blacklist.
+@param pBooleanCreateBackup [boolean] If set to true, the old config file will be saved.
+@param pBooleanShowPrompt [boolean] Show a prompt to create the config file or do it silent.
+*/
 createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := false)
 {
-    booleanCreateBackup := pBooleanCreateBackup
-    booleanShowPrompt := pBooleanShowPrompt
-
-    If (booleanShowPrompt = true)
+    If (pBooleanShowPrompt)
     {
         result := MsgBox("Do you really want to replace the current config file with a new one ?", "VD - Replace Config File?", "YN Icon! 262144")
         If (result = "No" || result = "Timeout")
@@ -156,7 +156,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
             Return
         }
     }
-    If (booleanCreateBackup = true)
+    If (pBooleanCreateBackup)
     {
         If (!DirExist(SplitPath(configFileLocation, , &outDir)))
         {
@@ -172,7 +172,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
     ; In case you forget to specify a section for EACH new config file entry this will remind you to do so :D
     If (configVariableNameArray.Length != configSectionNameArray.Length)
     {
-        MsgBox("Not every config file entry has been asigned to a section !`n`nPlease fix this by checking both arrays.",
+        MsgBox("Not every config file entry has been asigned to a section!`n`nPlease fix this by checking both arrays.",
             "VD - Config File Status - Error!", "O IconX 262144")
         MsgBox("Script terminated.", "VD - Script Status", "O IconX T1.5")
         ExitApp()
@@ -188,33 +188,29 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
             IniWrite(%configVariableNameArray.Get(A_Index)%, configFileLocation, configSectionNameArray.Get(A_Index),
                 configVariableNameArray.Get(A_Index))
         }
-        If (booleanShowPrompt = true)
+        If (pBooleanShowPrompt)
         {
             MsgBox("A default config file has been generated.", "VD - Config File Status", "O Iconi T3")
         }
     }
 }
 
-; Reads the config file and extracts it's values.
-; The parameter optionName specifies a specific
-; variable's content which you want to return.
-; For example '"URL_FILE_LOCATION"' to return URL_FILE_LOCATION's content
-; which is 'workingBaseFilesLocation . "\YT_URLS.txt"' by default.
-; Returns the value out of the config file.
-; The booleanAskForPathCreation should be used with caution because
-; it can have unforeseen consequences if a directory is not created.
+/*
+Reads the config file and extracts it's values.
+@param pOptionName [String] Should be the name of an config file option for example "URL_FILE_LOCATION"
+@param pBooleanAskForPathCreation [boolean] If set to true, will display a prompt to create the path,
+if it does not exist on the current system.
+@param pBooleanCheckConfigFileStatus [boolean] If set to true, will check the config file integrity while reading.
+@returns [Any] A value from the config file.
+*/
 readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckConfigFileStatus := true)
 {
     ; Thanks to my buddy Elias for testing and helping me debugging this script :)
-    optionName := pOptionName
-    booleanAskForPathCreation := pBooleanAskForPathCreation
-    booleanCheckConfigFileStatus := pBooleanCheckConfigFileStatus
-
     global configVariableNameArray
     global configFileContentArray
     global booleanFirstTimeLaunch
 
-    If (booleanCheckConfigFileStatus = true)
+    If (pBooleanCheckConfigFileStatus)
     {
         checkConfigFileIntegrity()
     }
@@ -222,7 +218,7 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
     Loop (configVariableNameArray.Length)
     {
         ; Searches in the config file for the given option name to then extract the value.
-        If (InStr(configVariableNameArray.Get(A_Index), optionName, 0))
+        If (InStr(configVariableNameArray.Get(A_Index), pOptionName, 0))
         {
             ; The following code only applies for path values.
             ; Everything else should be excluded.
@@ -231,10 +227,10 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
                 booleanCreatePathSilent := false
                 If (booleanFirstTimeLaunch)
                 {
-                    booleanAskForPathCreation := false
+                    pBooleanAskForPathCreation := false
                     booleanCreatePathSilent := true
                 }
-                If (!validatePath(configFileContentArray.Get(A_Index), booleanAskForPathCreation, booleanCreatePathSilent))
+                If (!validatePath(configFileContentArray.Get(A_Index), pBooleanAskForPathCreation, booleanCreatePathSilent))
                 {
                     MsgBox("Check the config file for a valid path at`n["
                         . configVariableNameArray.Get(A_Index) . "]", "VD - Config File Status - Error!", "O Icon! 262144")
@@ -253,55 +249,59 @@ readConfigFile(pOptionName, pBooleanAskForPathCreation := true, pBooleanCheckCon
             }
         }
     }
-    MsgBox("Could not find " . optionName . " in the config file.`nScript terminated.", "VD - Config File Status - Error!", "O IconX 262144")
+    MsgBox("Could not find " . pOptionName . " in the config file.`nScript terminated.", "VD - Config File Status - Error!", "O IconX 262144")
     ExitApp()
 }
 
-; The parameter optionName specifies a specific
-; variable's content which you want to edit.
-; The parameter data holds the new data for the config file.
+/*
+Changes existing values in the config file.
+@param pOptionName [String] Should be the name of a config file option for example "URL_FILE_LOCATION".
+@param pData [Any] The data to replace the old value with.
+*/
 editConfigFile(pOptionName, pData)
 {
-    optionName := pOptionName
-    data := pData
     ; Basically the same as creating the config file.
-    Loop (configVariableNameArray.Length)
+    Try
     {
-        ; Searches in the config file for the given option name to then change the value.
-        If (InStr(configVariableNameArray.Get(A_Index), optionName, 0))
+        Loop (configVariableNameArray.Length)
         {
-            Try
+            ; Searches in the config file for the given option name to then change the value.
+            If (InStr(configVariableNameArray.Get(A_Index), pOptionName, 0))
             {
-                ; Check just in case the given data is an array.
-                If (data.Has(1) = true)
+                Try
                 {
-                    dataString := arrayToString(data)
-                    IniWrite(dataString, configFileLocation
+                    ; Check just in case the given data is an array.
+                    If (pData.Has(1))
+                    {
+                        dataString := arrayToString(pData)
+                        IniWrite(dataString, configFileLocation
+                            , configSectionNameArray.Get(A_Index)
+                            , configVariableNameArray.Get(A_Index))
+                    }
+                    Else
+                    {
+                        IniWrite(pData, configFileLocation
+                            , configSectionNameArray.Get(A_Index)
+                            , configVariableNameArray.Get(A_Index))
+                    }
+                }
+                Catch
+                {
+                    ; If the try statement fails the object above cannot be an array.
+                    IniWrite(pData, configFileLocation
                         , configSectionNameArray.Get(A_Index)
                         , configVariableNameArray.Get(A_Index))
-                    Return
                 }
-                Else
-                {
-                    IniWrite(data, configFileLocation
-                        , configSectionNameArray.Get(A_Index)
-                        , configVariableNameArray.Get(A_Index))
-                    Return
-                }
-            }
-            Catch
-            {
-                ; If the try statement fails the object above cannot be an array.
-                IniWrite(data, configFileLocation
-                    , configSectionNameArray.Get(A_Index)
-                    , configVariableNameArray.Get(A_Index))
-                Return
             }
         }
     }
-    Throw ("Error while editing config file")
+    Catch As error
+    {
+        displayErrorMessage(error)
+    }
 }
 
+; Reads the whole config file and throws an error when something is not right.
 checkConfigFileIntegrity()
 {
     Loop (configVariableNameArray.Length)
@@ -315,7 +315,7 @@ checkConfigFileIntegrity()
         Catch
         {
             ; Does not show a prompt when the script is launched for the very first time.
-            If (booleanFirstTimeLaunch = true)
+            If (booleanFirstTimeLaunch)
             {
                 createDefaultConfigFile()
                 Return true
@@ -339,28 +339,28 @@ checkConfigFileIntegrity()
         }
     }
 }
-
-; Verfies the integrity of a given path or file location.
-; It will also ask the user to create the given path if it does not exist yet.
-; Returns true if a path is valid and false otherwise.
+/*
+Verfies the integrity of a given path or file location.
+NOTE: pBooleanAskForPathCreation and pBooleanCreatePathSilent cannot be true at the same time.
+@param pPath [String] Should be a path to validate.
+@param pBooleanAskForPathCreation [boolean] If set to true, will display a prompt to create the non-existing directory.
+@param pBooleanCreatePathSilent [boolean] If set to true, will create any valid directory, if it doesn't exist.
+@returns [boolean] True if a path is valid and false otherwise.
+*/
 validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent := false)
 {
-    path := pPath
-    booleanAskForPathCreation := pBooleanAskForPathCreation
-    booleanCreatePathSilent := pBooleanCreatePathSilent
-
-    If (booleanAskForPathCreation && booleanCreatePathSilent)
+    If (pBooleanAskForPathCreation && pBooleanCreatePathSilent)
     {
-        MsgBox("[" . A_ThisFunc "()] [ERROR] booleanAskForPathCreation and booleanCreatePathSilent cannot be true at the "
-            . "same time.`nTerminating script.", "VD - [" . A_ThisFunc "()]", "IconX 262144")
+        MsgBox("[" . A_ThisFunc . "()] [ERROR] pBooleanAskForPathCreation and pBooleanCreatePathSilent cannot be true at the "
+            . "same time.`nTerminating script.", "VD - [" . A_ThisFunc . "()]", "IconX 262144")
         ExitApp()
     }
 
     ; SplitPath makes sure the last part of the whole path is removed.
     ; For example it removes the "\YT_URLS.txt"
-    SplitPath(path, &outFileName, &outDir, &outExtension, , &outDrive)
+    SplitPath(pPath, &outFileName, &outDir, &outExtension, , &outDrive)
     ; Replaces the drive name with empty space, because the "C:" would trigger the parse loop below mistakenly.
-    pathWithoutDrive := StrReplace(path, outDrive)
+    pathWithoutDrive := StrReplace(pPath, outDrive)
     ; Looks for one of the specified characters to identify invalid path names.
     ; Searches for common mistakes in the path name.
     specialChars := '<>"/|?*:'
@@ -372,7 +372,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent
         }
     }
     ; Checks if the path contains two or more or no "\".
-    If (RegExMatch(path, "\\{2,}") || !InStr(path, "\"))
+    If (RegExMatch(pPath, "\\{2,}") || !InStr(pPath, "\"))
     {
         Return false
     }
@@ -380,17 +380,17 @@ validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent
     ; This means the path has no file at the end.
     If (outExtension = "")
     {
-        If (!DirExist(path))
+        If (!DirExist(pPath))
         {
-            If (booleanAskForPathCreation)
+            If (pBooleanAskForPathCreation)
             {
-                result := MsgBox("The directory`n[" . path . "] does not exist."
+                result := MsgBox("The directory`n[" . pPath . "] does not exist."
                     "`nWould you like to create it ?", "VD - Config File Status - Warning!", "YN Icon! 262144")
                 Switch (result)
                 {
                     Case "Yes":
                         {
-                            DirCreate(path)
+                            DirCreate(pPath)
                         }
                     Default:
                         {
@@ -399,9 +399,9 @@ validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent
                         }
                 }
             }
-            Else If (booleanCreatePathSilent)
+            Else If (pBooleanCreatePathSilent)
             {
-                DirCreate(path)
+                DirCreate(pPath)
             }
         }
     }
@@ -410,7 +410,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent
     {
         If (!DirExist(outDir))
         {
-            If (booleanAskForPathCreation)
+            If (pBooleanAskForPathCreation)
             {
                 result := MsgBox("The directory`n[" . outDir . "] does not exist."
                     "`nWould you like to create it ?", "VD - Config File Status - Warning!", "YN Icon! 262144")
@@ -427,7 +427,7 @@ validatePath(pPath, pBooleanAskForPathCreation := true, pBooleanCreatePathSilent
                         }
                 }
             }
-            Else If (booleanCreatePathSilent)
+            Else If (pBooleanCreatePathSilent)
             {
                 DirCreate(outDir)
             }

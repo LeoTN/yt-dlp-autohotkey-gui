@@ -46,7 +46,7 @@ If you are a developer and would like to use the repository, please note, that p
 
 Therefore, I recommend cloning the repository first and afterwards executing the **VideDownloader-Setup.exe** file located in the [installer archive](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest/download/VideoDownloaderInstaller.zip) to install the application. Select the repository folder *yt-dlp-autohotkey-gui* as the installation target folder and you're done.
 
-**I appreciate [yt-dlp](https://github.com/yt-dlp/yt-dlp) for providing such an incredibly useful repository for everyone free to use. Your or rather [these guys](https://github.com/ytdl-org/youtube-dl) work is the reason, why this script can even exist. I would also like to thank the team behind the [FFmpeg](https://ffmpeg.org) software, which is used to provide more functionality for yt-dlp. Thank you!**
+**I appreciate [yt-dlp](https://github.com/yt-dlp/yt-dlp) for providing such an incredibly useful repository for everyone free to use. Your or rather [these guys](https://github.com/ytdl-org/youtube-dl) work is the reason, why this script can even exist. I would also like to thank the team behind the [FFmpeg](https://ffmpeg.org) software, which is used to provide more functionality for yt-dlp. Shoutout to the guy who made the [Acc library](https://github.com/Descolada/Acc-v2)! Thank you!**
 
 Link to my original project, which will most likely not be developed anymore: [youtube-downloader-using-ahk](https://github.com/LeoTN/youtube-downloader-using-ahk)
 

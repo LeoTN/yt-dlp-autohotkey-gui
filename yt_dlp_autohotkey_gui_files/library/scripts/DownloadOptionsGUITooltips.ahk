@@ -55,32 +55,30 @@ clock()
 
 getHWNDArrayFromFile(pFileLocation, pExpectedAmount)
 {
-    fileLocation := pFileLocation
-    ; Serves as a control condition in case something goes wrong.
-    expectedAmount := pExpectedAmount
     HWNDArray := []
 
-    If (!FileExist(fileLocation))
+    If (!FileExist(pFileLocation))
     {
         MsgBox("Missing HWND file.", "VD - Tooltip Manager", "O Iconi T3")
         ExitApp()
     }
     ; In this case I cannot use A_LoopIndex because it would break when the loop skips an empty line.
     i := 1
-    Loop Read (fileLocation)
+    Loop Read (pFileLocation)
     {
         If (A_LoopReadLine != "")
         {
             HWNDArray.InsertAt(i, A_LoopReadLine)
         }
     }
-    If (HWNDArray.Length != expectedAmount)
+    ; Serves as a control condition in case something goes wrong.
+    If (HWNDArray.Length != pExpectedAmount)
     {
         MsgBox("The amount of buttons does not match the expected amount.", "VD - Tooltip Manager", "O Iconi T3")
     }
     Try
     {
-        FileDelete(fileLocation)
+        FileDelete(pFileLocation)
     }
     Return HWNDArray
 }
