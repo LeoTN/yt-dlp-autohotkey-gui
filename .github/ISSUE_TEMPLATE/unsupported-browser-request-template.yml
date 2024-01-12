@@ -1,0 +1,42 @@
+name: Unsupported Browser Request
+description: Request implementation of your browser for the script hotkeys
+title: "Unsupported Browser Request"
+labels: ["enhancement"]
+body:
+- type: checkboxes
+  attributes:
+    label: "Is there an existing request for this?"
+    description: |
+      Please search to see if a request already exists or if support for your browser is already implemented. 
+      In case you want to report a browser support issue, please use another issue template.
+    options:
+    - label: "This request is unique."
+      required: true
+- type: textarea
+  attributes:
+    label: "Browser Name"
+    description: "Write the name of your browser here."
+    placeholder: "For example: Firefox, Chrome etc."
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: "Browser Download Link"
+    description: "The download link should start or lead to the download directly."
+    placeholder: "For example: https://www.mozilla.org/de/firefox/windows"
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: "Additional Information"
+    description: |
+        Follow the instructions below and provide the requested details.
+
+        1. Go to the YouTube homepage and do a right-click to open your browser's context menu.
+        2. Look for an option called something like "Copy Link".
+        3. Begin to press keys on your keyboard while the context menu is open to find the one that immediately copies the link into your clipboard.
+        4. Make sure that you can paste the link (e.g. into Notepad or any text field).
+        5. If your browser supports another method to copy a link under the mouse cursor, feel free to write it down.
+    placeholder: "For example: Right Click E. This example is from the Chrome browser."
+  validations:
+    required: true
