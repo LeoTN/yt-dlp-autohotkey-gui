@@ -12,17 +12,18 @@
     <ROW Property="ALLUSERS" Value="1" MultiBuildValue="DefaultBuild:3"/>
     <ROW Property="ARPCOMMENTS" Value="Simple GUI for yt-dlp." ValueLocId="*"/>
     <ROW Property="ARPHELPLINK" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui"/>
+    <ROW Property="ARPNOMODIFY" MultiBuildValue="DefaultBuild:1"/>
     <ROW Property="ARPPRODUCTICON" Value="green_arrow_icon_1.exe" Type="8"/>
     <ROW Property="ARPURLINFOABOUT" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui"/>
     <ROW Property="ARPURLUPDATEINFO" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui"/>
-    <ROW Property="AiPreventAutoPin" Value="System.AppUserModel.ExcludeFromShowInNewInstall"/>
     <ROW Property="AiReadmeLink" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui#readme" Type="4"/>
     <ROW Property="CTRLS" Value="3"/>
     <ROW Property="Manufacturer" Value="LeoTN"/>
-    <ROW Property="ProductCode" Value="1031:{0818CFD0-9B05-44B9-B616-D1AED6DA3C01} " Type="16"/>
+    <ROW Property="ProductCode" Value="1031:{B2A0E13E-C858-48F6-8F5B-C176CBB00F98} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="VideoDownloader"/>
-    <ROW Property="ProductVersion" Value="0" Options="4"/>
+    <ROW Property="ProductVersion" Value="0.0.0" Options="4"/>
+    <ROW Property="REBOOT" MultiBuildValue="DefaultBuild:ReallySuppress"/>
     <ROW Property="RUNAPPLICATION" Value="1" Type="4"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{D7889C57-A8FB-4412-992A-8BEE98744251}"/>
@@ -37,27 +38,36 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiDirsComponent">
     <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1"/>
+    <ROW Directory="AppDeployToolkit_Dir" Directory_Parent="setup_1_Dir" DefaultDir="APPDEP~1|AppDeployToolkit"/>
     <ROW Directory="DesktopFolder" Directory_Parent="TARGETDIR" DefaultDir="DESKTO~1|DesktopFolder" IsPseudoRoot="1"/>
+    <ROW Directory="Files_Dir" Directory_Parent="setup_1_Dir" DefaultDir="Files"/>
     <ROW Directory="ProgramMenuFolder" Directory_Parent="TARGETDIR" DefaultDir="PROGRA~1|ProgramMenuFolder" IsPseudoRoot="1"/>
+    <ROW Directory="SupportFiles_Dir" Directory_Parent="setup_1_Dir" DefaultDir="SUPPOR~1|SupportFiles"/>
     <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
     <ROW Directory="assets_Dir" Directory_Parent="library_Dir" DefaultDir="assets"/>
     <ROW Directory="library_Dir" Directory_Parent="yt_dlp_autohotkey_gui_files_Dir" DefaultDir="library"/>
     <ROW Directory="scripts_Dir" Directory_Parent="library_Dir" DefaultDir="scripts"/>
-    <ROW Directory="setup_Dir" Directory_Parent="library_Dir" DefaultDir="setup"/>
+    <ROW Directory="setup_1_Dir" Directory_Parent="library_Dir" DefaultDir="setup"/>
     <ROW Directory="yt_dlp_autohotkey_gui_files_Dir" Directory_Parent="APPDIR" DefaultDir="YT_DLP~1|yt_dlp_autohotkey_gui_files"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
     <ROW Component="APPDIR" ComponentId="{C58A7097-A45E-45D7-B9D2-CF2C72CAC188}" Directory_="APPDIR" Attributes="0"/>
-    <ROW Component="AddYTDLPToPath.ps1" ComponentId="{30125901-8E26-4AB6-90A8-F842B321DECE}" Directory_="setup_Dir" Attributes="0" KeyPath="AddYTDLPToPath.ps1" Type="0"/>
+    <ROW Component="AppDeployToolkitBanner.png" ComponentId="{CAB5EC50-D709-4E57-922C-88104E079112}" Directory_="AppDeployToolkit_Dir" Attributes="0" KeyPath="AppDeployToolkitBanner.png" Type="0"/>
+    <ROW Component="DeployApplication.ps1" ComponentId="{95D84860-954A-4BFE-8AC8-63C5AAC9D87E}" Directory_="setup_1_Dir" Attributes="0" KeyPath="DeployApplication.ps1" Type="0"/>
     <ROW Component="DownloadOptionsGUITooltips.ahk" ComponentId="{5DAD288A-DC85-48BE-A0D4-1CEB5285CCBC}" Directory_="scripts_Dir" Attributes="0" KeyPath="MonitorHookFile.ps1" Type="0"/>
     <ROW Component="DownloadOptionsGUITooltips.exe" ComponentId="{9F118F35-6151-4BDE-A870-E0A171760A5C}" Directory_="scripts_Dir" Attributes="256" KeyPath="DownloadOptionsGUITooltips.exe"/>
+    <ROW Component="FFmpegSetup.ps1" ComponentId="{7F32AEAB-4609-48A2-A67B-F5133B701D27}" Directory_="SupportFiles_Dir" Attributes="0" KeyPath="FFmpegSetup.ps1" Type="0"/>
+    <ROW Component="Files" ComponentId="{595BAF19-AE30-46E7-928D-F063865C9511}" Directory_="Files_Dir" Attributes="0"/>
     <ROW Component="Version" ComponentId="{B4B1F4F9-F536-49F6-BF8C-9033207F33D8}" Directory_="APPDIR" Attributes="4" KeyPath="Version_2"/>
     <ROW Component="VideoDownloader.exe" ComponentId="{95B8FEEA-6749-4D9B-8C52-5D8ACC28A3C0}" Directory_="APPDIR" Attributes="256" KeyPath="VideoDownloader.exe"/>
-    <ROW Component="VideoDownloaderSetup.exe" ComponentId="{F7E50E75-565A-4529-A14F-295D6009FD27}" Directory_="setup_Dir" Attributes="256" KeyPath="VideoDownloaderSetup.exe"/>
+    <ROW Component="VideoDownloaderSetup.exe" ComponentId="{736516C7-82F3-428E-A3C8-8C66F8CC1841}" Directory_="setup_1_Dir" Attributes="0" KeyPath="VideoDownloaderSetup.exe"/>
     <ROW Component="booleanFirstTimeLaunch" ComponentId="{077D7FB4-BCFC-438F-A2FF-03E2EE3697C8}" Directory_="APPDIR" Attributes="4" KeyPath="booleanFirstTimeLaunch"/>
     <ROW Component="booleanSetupRequired" ComponentId="{B2A7A298-9C96-4772-B466-9DAF5A813DFE}" Directory_="APPDIR" Attributes="4" KeyPath="booleanSetupRequired"/>
+    <ROW Component="browserLanguage" ComponentId="{23CE2369-9E7D-4648-BFFB-7CD840A04BFB}" Directory_="APPDIR" Attributes="4" KeyPath="browserLanguage"/>
+    <ROW Component="browserType" ComponentId="{5130466E-5E48-48F1-BACD-A06161D2E77B}" Directory_="APPDIR" Attributes="4" KeyPath="browserType"/>
     <ROW Component="green_arrow_icon.ico" ComponentId="{6E6C028D-CFD2-49B3-B6B1-453405EE30D0}" Directory_="assets_Dir" Attributes="0" KeyPath="YouTubeBackground1.jpg" Type="0"/>
     <ROW Component="scriptBaseFilesLocation_2" ComponentId="{5FD8B8B3-205B-4B8A-8120-B1EBD6857D62}" Directory_="APPDIR" Attributes="4" KeyPath="scriptBaseFilesLocation_2"/>
+    <ROW Component="videoDownloaderWorkingDirectory" ComponentId="{2F57433B-BE69-4182-B900-3390918C20BD}" Directory_="APPDIR" Attributes="4" KeyPath="videoDownloaderWorkingDirectory"/>
     <ROW Component="yt_dlp_autohotkey_gui_files" ComponentId="{53C94CAA-C918-4A3A-B981-BE25263F98B1}" Directory_="yt_dlp_autohotkey_gui_files_Dir" Attributes="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
@@ -65,24 +75,30 @@
     <ATTRIBUTE name="CurrentFeature" value="MainFeature"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
-    <ROW File="AddYTDLPToPath.ps1" Component_="AddYTDLPToPath.ps1" FileName="ADDYTD~1.PS1|AddYTDLPToPath.ps1" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AddYTDLPToPath.ps1" SelfReg="false"/>
-    <ROW File="FFmpegDownloader.ps1" Component_="AddYTDLPToPath.ps1" FileName="FFMPEG~1.PS1|FFmpegDownloader.ps1" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\FFmpegDownloader.ps1" SelfReg="false"/>
-    <ROW File="SetupHelp.txt" Component_="AddYTDLPToPath.ps1" FileName="SETUPH~1.TXT|SetupHelp.txt" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\SetupHelp.txt" SelfReg="false"/>
     <ROW File="VideoDownloader.exe" Component_="VideoDownloader.exe" FileName="VIDEOD~1.EXE|VideoDownloader.exe" Version="[|ProductVersion]" Attributes="0" SourcePath="..\VideoDownloader.exe" SelfReg="false" DigSign="true"/>
-    <ROW File="VideoDownloaderSetup.exe" Component_="VideoDownloaderSetup.exe" FileName="VIDEOD~1.EXE|VideoDownloaderSetup.exe" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\VideoDownloaderSetup.exe" SelfReg="false" DigSign="true"/>
     <ROW File="YouTubeBackground1.jpg" Component_="green_arrow_icon.ico" FileName="YOUTUB~1.JPG|YouTubeBackground.jpg" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\YouTubeBackground.jpg" SelfReg="false"/>
     <ROW File="green_arrow_icon1.ico" Component_="green_arrow_icon.ico" FileName="GREEN_~1.ICO|green_arrow_icon.ico" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\green_arrow_icon.ico" SelfReg="false"/>
-    <ROW File="MonitorHookFile.ps1" Component_="DownloadOptionsGUITooltips.ahk" FileName="MONITO~1.PS1|MonitorHookFile.ps1" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\scripts\MonitorHookFile.ps1" SelfReg="false"/>
-    <ROW File="DownloadOptionsGUITooltips.exe" Component_="DownloadOptionsGUITooltips.exe" FileName="DOWNLO~1.EXE|DownloadOptionsGUITooltips.exe" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\scripts\DownloadOptionsGUITooltips.exe" SelfReg="false" DigSign="true"/>
-  </COMPONENT>
-  <COMPONENT cid="caphyon.advinst.custcomp.MsiShortcutPropertyComponent">
-    <ROW MsiShortcutProperty="UninstallProductNameVersionProductV1" Shortcut_="UninstallProductNameVersionProductV" PropertyKey="[AiPreventAutoPin]" PropVariantValue="1"/>
+    <ROW File="MonitorHookFile.ps1" Component_="DownloadOptionsGUITooltips.ahk" FileName="MONITO~1.PS1|MonitorHookFile.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\scripts\MonitorHookFile.ps1" SelfReg="false"/>
+    <ROW File="DownloadOptionsGUITooltips.exe" Component_="DownloadOptionsGUITooltips.exe" FileName="DOWNLO~1.EXE|DownloadOptionsGUITooltips.exe" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\scripts\DownloadOptionsGUITooltips.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="DeployApplication.ps1" Component_="DeployApplication.ps1" FileName="DEPLOY~1.PS1|Deploy-Application.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\Deploy-Application.ps1" SelfReg="false"/>
+    <ROW File="README.txt" Component_="DeployApplication.ps1" FileName="README.txt" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\README.txt" SelfReg="false"/>
+    <ROW File="FFmpegSetup.ps1" Component_="FFmpegSetup.ps1" FileName="FFMPEG~1.PS1|FFmpegSetup.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\SupportFiles\FFmpegSetup.ps1" SelfReg="false"/>
+    <ROW File="ytdlpSetup.ps1" Component_="FFmpegSetup.ps1" FileName="YT-DLP~1.PS1|yt-dlpSetup.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\SupportFiles\yt-dlpSetup.ps1" SelfReg="false"/>
+    <ROW File="VideoDownloaderSetup.exe" Component_="VideoDownloaderSetup.exe" FileName="VIDEOD~1.EXE|VideoDownloader-Setup.exe" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\VideoDownloader-Setup.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="AppDeployToolkitBanner.png" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~1.PNG|AppDeployToolkitBanner.png" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitBanner.png" SelfReg="false"/>
+    <ROW File="AppDeployToolkitConfig.xml" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~1.XML|AppDeployToolkitConfig.xml" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitConfig.xml" SelfReg="false"/>
+    <ROW File="AppDeployToolkitExtensions.ps1" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~1.PS1|AppDeployToolkitExtensions.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitExtensions.ps1" SelfReg="false"/>
+    <ROW File="AppDeployToolkitHelp.ps1" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~2.PS1|AppDeployToolkitHelp.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitHelp.ps1" SelfReg="false"/>
+    <ROW File="AppDeployToolkitLogo.ico" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~1.ICO|AppDeployToolkitLogo.ico" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitLogo.ico" SelfReg="false"/>
+    <ROW File="AppDeployToolkitLogo.png" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~2.PNG|AppDeployToolkitLogo.png" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitLogo.png" SelfReg="false"/>
+    <ROW File="AppDeployToolkitMain.cs" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~1.CS|AppDeployToolkitMain.cs" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitMain.cs" SelfReg="false"/>
+    <ROW File="AppDeployToolkitMain.ps1" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~3.PS1|AppDeployToolkitMain.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitMain.ps1" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BootstrOptComponent">
     <ROW BootstrOptKey="GlobalOptions" DownloadFolder="[AppDataFolder][|Manufacturer]\[|ProductName]\prerequisites" Options="2"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BuildComponent">
-    <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="." PackageFileName="VideoDownloader" Languages="de" InstallationType="4" UseLargeSchema="true"/>
+    <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="..\yt_dlp_autohotkey_gui_files\library\setup\Files" PackageFileName="VideoDownloaderInstaller" Languages="de" InstallationType="4" UseLargeSchema="true"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.DictionaryComponent">
     <ROW Path="&lt;AI_DICTS&gt;ui.ail"/>
@@ -140,6 +156,7 @@
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCreateFolderComponent">
     <ROW Directory_="APPDIR" Component_="APPDIR" ManualDelete="true"/>
     <ROW Directory_="yt_dlp_autohotkey_gui_files_Dir" Component_="yt_dlp_autohotkey_gui_files" ManualDelete="false"/>
+    <ROW Directory_="Files_Dir" Component_="Files" ManualDelete="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCustActComponent">
     <ROW Action="AI_ApplyShortcutFlags" Type="3073" Source="ShortcutFlags.dll" Target="UpdateShortcutFlags" WithoutSeq="true"/>
@@ -158,7 +175,6 @@
     <ROW Action="AI_ResolveKnownFolders" Type="1" Source="aicustact.dll" Target="AI_ResolveKnownFolders"/>
     <ROW Action="AI_SHOW_LOG" Type="65" Source="aicustact.dll" Target="LaunchLogFile" WithoutSeq="true"/>
     <ROW Action="AI_STORE_LOCATION" Type="51" Source="ARPINSTALLLOCATION" Target="[APPDIR]"/>
-    <ROW Action="AI_SelectAutoPinOption" Type="51" Source="AiPreventAutoPin" Target="System.AppUserModel.StartPinOption"/>
     <ROW Action="AI_UnpinFromStartScreen" Type="1025" Source="ShortcutFlags.dll" Target="UnpinFromStartScreen" WithoutSeq="true"/>
     <ROW Action="AI_UnpinFromTaskbar" Type="1025" Source="ShortcutFlags.dll" Target="UnpinFromTaskbar" WithoutSeq="true"/>
     <ROW Action="AI_UnpinShortcuts" Type="1" Source="ShortcutFlags.dll" Target="UnpinShortcuts"/>
@@ -173,17 +189,21 @@
     <ROW Feature_="MainFeature" Component_="scriptBaseFilesLocation_2"/>
     <ROW Feature_="MainFeature" Component_="Version"/>
     <ROW Feature_="MainFeature" Component_="VideoDownloader.exe"/>
-    <ROW Feature_="MainFeature" Component_="AddYTDLPToPath.ps1"/>
     <ROW Feature_="MainFeature" Component_="booleanSetupRequired"/>
     <ROW Feature_="MainFeature" Component_="booleanFirstTimeLaunch"/>
-    <ROW Feature_="MainFeature" Component_="VideoDownloaderSetup.exe"/>
     <ROW Feature_="MainFeature" Component_="DownloadOptionsGUITooltips.ahk"/>
     <ROW Feature_="MainFeature" Component_="DownloadOptionsGUITooltips.exe"/>
     <ROW Feature_="MainFeature" Component_="green_arrow_icon.ico"/>
+    <ROW Feature_="MainFeature" Component_="DeployApplication.ps1"/>
+    <ROW Feature_="MainFeature" Component_="Files"/>
+    <ROW Feature_="MainFeature" Component_="FFmpegSetup.ps1"/>
+    <ROW Feature_="MainFeature" Component_="VideoDownloaderSetup.exe"/>
+    <ROW Feature_="MainFeature" Component_="videoDownloaderWorkingDirectory"/>
+    <ROW Feature_="MainFeature" Component_="AppDeployToolkitBanner.png"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
-    <ROW Name="SystemFoldermsiexec.exe" SourcePath="&lt;AI_RES&gt;uninstall.ico" Index="0"/>
     <ROW Name="green_arrow_icon_1.exe" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\green_arrow_icon.ico" Index="0"/>
+    <ROW Name="setup_Dir.exe" SourcePath="C:\Windows\System32\shell32.dll" Index="40"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiInstExSeqComponent">
     <ROW Action="AI_DOWNGRADE" Condition="AI_NEWERPRODUCTFOUND AND (UILevel &lt;&gt; 5)" Sequence="210"/>
@@ -195,7 +215,6 @@
     <ROW Action="AI_PrepareShortcutFlags" Condition="(VersionNT &gt; 501) AND ((NOT Installed) OR (Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;)))" Sequence="4501"/>
     <ROW Action="AI_PinShortcuts" Condition="(VersionNT &gt; 600) AND ((NOT Installed) OR (Installed AND (REMOVE&lt;&gt;&quot;ALL&quot;) AND (AI_INSTALL_MODE&lt;&gt;&quot;Remove&quot;)))" Sequence="6499"/>
     <ROW Action="AI_UnpinShortcuts" Condition="(VersionNT &gt; 600) AND (REMOVE = &quot;ALL&quot;)" Sequence="3199"/>
-    <ROW Action="AI_SelectAutoPinOption" Condition="VersionNT &gt; 601" Sequence="1401"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiInstallUISequenceComponent">
     <ROW Action="AI_PRESERVE_INSTALL_TYPE" Sequence="199"/>
@@ -214,14 +233,14 @@
     <ROW Registry="Manufacturer_1" Root="1" Key="Software\[Manufacturer]" Name="\"/>
     <ROW Registry="ProductName_1" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="\"/>
     <ROW Registry="Software_1" Root="1" Key="Software" Name="\"/>
-    <ROW Registry="Version_2" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="version" Value="[ProductVersion]" Component_="Version"/>
+    <ROW Registry="Version_2" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="videoDownloaderVersion" Value="[ProductVersion]" Component_="Version"/>
     <ROW Registry="booleanFirstTimeLaunch" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="booleanFirstTimeLaunch" Value="#0" Component_="booleanFirstTimeLaunch" VirtualValue="#"/>
     <ROW Registry="booleanSetupRequired" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="booleanSetupRequired" Value="#1" Component_="booleanSetupRequired" VirtualValue="#"/>
-    <ROW Registry="scriptBaseFilesLocation_2" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="scriptBaseFilesLocation" Value="[APPDIR]yt_dlp_autohotkey_gui_files" Component_="scriptBaseFilesLocation_2"/>
+    <ROW Registry="scriptBaseFilesLocation_2" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="videoDownloaderInstallationDirectory" Value="[APPDIR]" Component_="scriptBaseFilesLocation_2"/>
+    <ROW Registry="videoDownloaderWorkingDirectory" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="videoDownloaderWorkingDirectory" Value="[AppDataFolder][Manufacturer]\[ProductName]\yt_dlp_autohotkey_gui_files" Component_="videoDownloaderWorkingDirectory"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiShortsComponent">
-    <ROW Shortcut="DeinstallProductNameProductVersion" Directory_="APPDIR" Name="UNINST~2|Uninstall [|ProductName] - Version [|ProductVersion]" Component_="Version" Target="[setup_Dir]VideoDownloaderSetup.exe" Arguments="/run-uninstall-[ProductCode]" Description="Uninstalls the VideoDownloader and the dependencies." Hotkey="0" Icon_="SystemFoldermsiexec.exe" IconIndex="0" ShowCmd="1" CustomFlags="1"/>
-    <ROW Shortcut="UninstallProductNameVersionProductV" Directory_="setup_Dir" Name="UNINST~2|uninstall_shortcut" Component_="AddYTDLPToPath.ps1" Target="[setup_Dir]VideoDownloaderSetup.exe" Arguments="/run-uninstall-[ProductCode]" Description="Uninstall shortcut for the main GUI." Hotkey="0" Icon_="SystemFoldermsiexec.exe" IconIndex="0" ShowCmd="1" CustomFlags="1"/>
+    <ROW Shortcut="DeinstallProductNameProductVersion" Directory_="APPDIR" Name="REPAIR~1.0|Repair &amp; Uninstall [|ProductName] - Version [|ProductVersion]" Component_="Version" Target="[setup_1_Dir]VideoDownloader-Setup.exe" Description="Uninstalls or repairs VideoDownloader and the dependencies." Hotkey="0" Icon_="setup_Dir.exe" IconIndex="0" ShowCmd="1"/>
     <ROW Shortcut="Verknpfungzu" Directory_="DesktopFolder" Name="VIDEOD~1|VideoDownloader" Component_="VideoDownloader.exe" Target="[#VideoDownloader.exe]" Description="A simple GUI for yt-dlp." Hotkey="0" Icon_="green_arrow_icon_1.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR" CustomFlags="2"/>
     <ROW Shortcut="VideoDownloader" Directory_="ProgramMenuFolder" Name="VIDEOD~1|VideoDownloader" Component_="VideoDownloader.exe" Target="[#VideoDownloader.exe]" Description="A simple GUI for yt-dlp." Hotkey="0" Icon_="green_arrow_icon_1.exe" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
   </COMPONENT>
@@ -229,7 +248,7 @@
     <ATTRIBUTE name="UsedTheme" value="classic"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiUpgradeComponent">
-    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="0.0.1" VersionMax="[|ProductVersion]" Attributes="257" ActionProperty="OLDPRODUCTS"/>
-    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="[|ProductVersion]" Attributes="2" ActionProperty="AI_NEWERPRODUCTFOUND"/>
+    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="0.0.1" VersionMax="255.255.6555.6555" Attributes="769" ActionProperty="OLDPRODUCTS"/>
+    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="255.255.6555.6555" Attributes="2" ActionProperty="AI_NEWERPRODUCTFOUND"/>
   </COMPONENT>
 </DOCUMENT>
