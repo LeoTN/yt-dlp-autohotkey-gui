@@ -6,8 +6,7 @@ body:
 - type: checkboxes
   attributes:
     label: "Is there an existing request for this?"
-    description: |
-      Please search to see if a request already exists or if this feature is already implemented. 
+    description: "Please search to see if a request already exists or if this feature is already implemented."
     options:
     - label: "This request is unique."
       required: true
@@ -27,8 +26,8 @@ body:
     required: true
 - type: textarea
   attributes:
-    label: "Additional information"
+    label: "Additional Information"
     description: "You can provide additional details here."
-    placeholder: "Space for additional information"
+    placeholder: "Space for additional information..."
   validations:
     required: false
