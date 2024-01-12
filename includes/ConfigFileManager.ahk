@@ -339,6 +339,7 @@ checkConfigFileIntegrity()
         }
     }
 }
+
 /*
 Verfies the integrity of a given path or file location.
 NOTE: pBooleanAskForPathCreation and pBooleanCreatePathSilent cannot be true at the same time.

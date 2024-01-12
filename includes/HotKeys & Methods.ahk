@@ -244,6 +244,7 @@ startDownload(pCommandString, pBooleanSilent := unset)
         isDownloading := false
     }
 }
+
 /*
 Executes a given string with the command prompt.
 @param pCommand [String] The command (most likely the download command string).

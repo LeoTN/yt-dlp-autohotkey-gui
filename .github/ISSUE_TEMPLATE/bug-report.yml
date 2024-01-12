@@ -1,0 +1,50 @@
+name: Bug Report
+description: Report a software bug
+title: "Bug Report"
+labels: ["bug"]
+body:
+- type: text
+  attributes:
+    label: "Operating System"
+    description: "Specify your operating system (e.g. Windows 10)"
+    placeholder: "Enter your operating system"
+  validations:
+    required: true
+- type: text
+  attributes:
+    label: "Software Version"
+    description: "Provide the version of VideoDownloader you are using"
+    placeholder: "Enter software version"
+  validations:
+    required: true
+- type: checkboxes
+  attributes:
+    label: "Issue Type"
+    description: "Select the type of issue you encountered"
+    options:
+    - label: "Crash"
+    - label: "Warning Message"
+    - label: "Other Issue"
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: "Action Leading to the Issue"
+    description: "Describe the specific actions you took that led to the problem"
+    placeholder: "For example: I performed the following steps..."
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: "Error Message"
+    description: "If there's an error message, provide it here"
+    placeholder: "Enter the error message (if any)"
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: "Additional Information"
+    description: "Share any extra details or context that might help in understanding the issue"
+    placeholder: "Additional information (optional)"
+  validations:
+    required: false

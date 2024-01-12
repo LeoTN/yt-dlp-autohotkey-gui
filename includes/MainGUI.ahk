@@ -187,6 +187,7 @@ handleMainGUI_MenuUncheckAll(pMenuName)
         }
     }
 }
+
 /*
 This function stores all menu items check states. In other words if there is a checkmark next to an option.
 Leave only pBooleanState ommited to receive the current value of a submenu item or every parameter to receive the complete array.
@@ -232,6 +233,7 @@ handleMainGUI_MenuCheckHandler(pMenuName := unset, pSubMenuPosition := unset, pB
         displayErrorMessage(error)
     }
 }
+
 /*
 Applies the checkmarks stored in the config file so that they become visible to the user in the GUI.
 @param pMenuName [String] Should be a valid menu name for example "activeHotkeyMenu".
@@ -315,6 +317,10 @@ handleMainGUI_uninstallScript()
     }
 }
 
+/*
+Runs the script setup to repair the application.
+@param pBooleanAllowRefuse [boolean] If set to true, the user can cancel the setup and run the script anyway.
+*/
 handleMainGUI_repairScript(pBooleanAllowRefuse := true)
 {
     videoDownloaderSetupExecutableLocation := scriptBaseFilesLocation . "\library\setup\VideoDownloader-Setup.exe"
