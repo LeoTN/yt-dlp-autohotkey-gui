@@ -1,4 +1,4 @@
-; NOTE: This is the main .ahk file which has to be started !!!
+; NOTE: This is the main .ahk file which has to be started!!!
 #SingleInstance Force
 #MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
@@ -13,6 +13,7 @@ CoordMode "Mouse", "Client"
 #Include "FileManager.ahk"
 #Include "MainGUI.ahk"
 #Include "DownloadOptionsGUI.ahk"
+#Include "Acc.ahk"
 
 onInit()
 
@@ -39,13 +40,13 @@ onInit()
     If (!FileExist(downloadOptionsGUITooltipFileLocation))
     {
         result := MsgBox("Missing tooltip executable file.`n`nNote: Although this file is not mandatory, it is recommended "
-            . "to run the setup executable file to repair the application.`n`nPrepare for setup?", "Corrupted / Missing Files", "YN Icon!")
+            . "to run the setup executable file to repair the application.`n`nPrepare for setup?", "VD - Corrupted / Missing Files!", "YN Icon! 262144")
         Switch (result)
         {
             Case "Yes":
                 {
-                    MsgBox("Terminating script. You can now run the installer file.",
-                        "Ready for Setup", "Iconi T5")
+                    MsgBox("You can now run the installer file.`nScript terminated.", "VD - Ready for Setup", "Iconi T5")
+                    handleMainGUI_repairScript()
                     ExitApp()
                 }
             Case "No":
@@ -54,7 +55,7 @@ onInit()
                 }
             Default:
                 {
-                    MsgBox("Terminating script.", "Script Status", "O Iconi T1.5")
+                    MsgBox("Script terminated.", "VD - Script Status", "O Iconi T1.5")
                     ExitApp()
                 }
         }
@@ -62,13 +63,13 @@ onInit()
     If (!FileExist(youTubeBackGroundLocation) || !FileExist(scriptIconLocation))
     {
         result := MsgBox("Missing graphic files.`n`nNote: Although these files are not mandatory, it is recommended "
-            . "to run the setup executable file to repair the application.`n`nPrepare for setup?", "Corrupted / Missing Files", "YN Icon!")
+            . "to run the setup executable file to repair the application.`n`nPrepare for setup?", "VD - Corrupted / Missing Files!", "YN Icon! 262144")
         Switch (result)
         {
             Case "Yes":
                 {
-                    MsgBox("Terminating script. You can now run the installer file.",
-                        "Ready for Setup", "Iconi T5")
+                    MsgBox("You can now run the installer file.`nScript terminated.", "VD - Ready for Setup", "Iconi T5")
+                    handleMainGUI_repairScript()
                     ExitApp()
                 }
             Case "No":
@@ -77,7 +78,7 @@ onInit()
                 }
             Default:
                 {
-                    MsgBox("Terminating script.", "Script Status", "O Iconi T1.5")
+                    MsgBox("Script terminated.", "VD - Script Status", "O Iconi T1.5")
                     ExitApp()
                 }
         }
@@ -93,11 +94,11 @@ onInit()
     mainGUI_onInit()
     optionsGUI_onInit()
     ; Shows a small tutorial to guide the user.
-    If (readConfigFile("ASK_FOR_TUTORIAL") = true)
+    If (readConfigFile("ASK_FOR_TUTORIAL"))
     {
         scriptTutorial()
     }
-    If (readConfigFile("SHOW_OPTIONS_GUI_ON_LAUNCH") = true)
+    If (readConfigFile("SHOW_OPTIONS_GUI_ON_LAUNCH"))
     {
         If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
         {
@@ -108,7 +109,7 @@ onInit()
             WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
         }
     }
-    If (readConfigFile("SHOW_MAIN_GUI_ON_LAUNCH") = true)
+    If (readConfigFile("SHOW_MAIN_GUI_ON_LAUNCH"))
     {
         If (!WinExist("ahk_id " . mainGUI.Hwnd))
         {
@@ -155,7 +156,7 @@ onInit_checkIfSetupIsRequired()
     }
     If (regValue = "1")
     {
-        onInit_executeSetup(false)
+        handleMainGUI_repairScript(false)
     }
     Else
     {
@@ -177,7 +178,7 @@ onInit_checkIfSetupIsRequired()
             }
             result := MsgBox("Would you like to change the script's working directory?`n`nThe default path is"
                 "`n[" . defaultWorkingDirectory . "]`n`nThis will be the place for downloaded files, settings and presets."
-                "`n`nNote: You can only change this now.", "Change Working Directory?", "YN Icon? 8192")
+                "`n`nNote: You can only change this now.", "VD - Change Working Directory?", "YN Icon? 262144")
             Switch (result)
             {
                 Case "Yes":
@@ -186,66 +187,6 @@ onInit_checkIfSetupIsRequired()
                     }
             }
         }
-    }
-}
-
-onInit_executeSetup(pBooleanAllowRefuse := true)
-{
-    booleanAllowRefuse := pBooleanAllowRefuse
-    videoDownloaderSetupExecutableLocation := scriptBaseFilesLocation . "\library\setup\VideoDownloader-Setup.exe"
-
-    If (A_IsCompiled)
-    {
-        If (booleanAllowRefuse)
-        {
-            result := MsgBox("Repair VideoDownloader now?", "Repair Action Advised", "YN Icon?")
-            Switch (result)
-            {
-                Case "Yes":
-                    {
-                        If (FileExist(videoDownloaderSetupExecutableLocation))
-                        {
-                            Run(videoDownloaderSetupExecutableLocation . ' -deploymentType "Repair"')
-                        }
-                        Else
-                        {
-                            MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
-                                . "]`nScript terminated.", "Execute Repair Setup - Error!", "O Icon!")
-                        }
-                        ExitApp()
-                    }
-            }
-        }
-        Else
-        {
-            result := MsgBox("Repair VideoDownloader now?", "Repair Action Required", "YN Icon?")
-            Switch (result)
-            {
-                Case "Yes":
-                    {
-                        If (FileExist(videoDownloaderSetupExecutableLocation))
-                        {
-                            Run(videoDownloaderSetupExecutableLocation . ' -deploymentType "Repair"')
-                        }
-                        Else
-                        {
-                            MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
-                                . "]`nScript terminated.", "Execute Repair Setup - Error!", "O Icon!")
-                        }
-                    }
-                Default:
-                    {
-                        MsgBox("You can repair VideoDownloader at any time.`nScript terminated.", "Repair Action Required - Canceled", "O Iconi T5")
-                    }
-            }
-            ExitApp()
-        }
-    }
-    Else
-    {
-        MsgBox("You are using a non compiled version of this script."
-            "`n`nYou cannot repair VideoDownloader now.`nScript terminated.", "Repair Action Advised - Error!", "O IconX 262144 T5")
-        ExitApp()
     }
 }
 
@@ -262,7 +203,7 @@ onInit_handleVideoDownloaderWorkingDirectory()
         defaultWorkingDirectory := A_AppData . "\LeoTN\VideoDownloader\yt_dlp_autohotkey_gui_files"
 
         result := MsgBox("Invalid working directory found in the registry editor. The working directory will contain downloaded "
-            . "files, settings and presets.`n`nPress [Retry] to select it manually.", "Invalid Working Directory", "RC Icon!")
+            . "files, settings and presets.`n`nPress [Retry] to select it manually.", "VD - Invalid Working Directory!", "RC Icon! 262144")
         Switch (result)
         {
             Case "Retry":
@@ -272,7 +213,7 @@ onInit_handleVideoDownloaderWorkingDirectory()
                 }
             Default:
                 {
-                    MsgBox("Terminating script.", "Script Status", "O Iconi T1.5")
+                    MsgBox("Script terminated.", "VD - Script Status", "O Iconi T1.5")
                     ExitApp()
                 }
         }
@@ -308,7 +249,7 @@ Add debug hotkeys here.
 ; Debug hotkey template.
 F5::
 {
-    If (readConfigFile("booleanDebugMode") = true)
+    If (readConfigFile("booleanDebugMode"))
     {
         ; Enter code below.
         A_Clipboard := A_ComSpec ' /k ' . buildCommandString() . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") . '"'
@@ -317,7 +258,7 @@ F5::
 
 F6::
 {
-    If (readConfigFile("booleanDebugMode") = true)
+    If (readConfigFile("booleanDebugMode"))
     {
         ; Enter code below.
         handleDownloadOptionsGUI_ResolveElementConflicts()
@@ -326,7 +267,7 @@ F6::
 
 F7::
 {
-    If (readConfigFile("booleanDebugMode") = true)
+    If (readConfigFile("booleanDebugMode"))
     {
         ; Enter code below
         handleDownloadOptionsGUI_ProcessCommandStringInputs()
