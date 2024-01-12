@@ -10,6 +10,7 @@ body:
     options:
     - label: "This request is unique."
       required: true
+
 - type: input
   attributes:
     label: "Operating System"
@@ -17,13 +18,15 @@ body:
     placeholder: "Enter your operating system"
   validations:
     required: true
+
 - type: input
   attributes:
     label: "Software Version"
-    description: "Provide the version of VideoDownloader you are using (e.g. 1.3.0)."
+    description: "Provide the version of VideoDownloader you were using (e.g. 1.3.0)."
     placeholder: "Enter software version"
   validations:
     required: true
+
 - type: checkboxes
   attributes:
     label: "Issue Type"
@@ -34,6 +37,7 @@ body:
     - label: "Other Issue"
   validations:
     required: true
+
 - type: textarea
   attributes:
     label: "Action(s) Leading to the Issue"
@@ -41,6 +45,7 @@ body:
     placeholder: "For example: I performed the following steps..."
   validations:
     required: true
+
 - type: textarea
   attributes:
     label: "Error Message"
@@ -48,6 +53,7 @@ body:
     placeholder: "Enter the error message (if any)"
   validations:
     required: false
+
 - type: textarea
   attributes:
     label: "Additional Information"

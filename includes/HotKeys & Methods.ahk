@@ -916,7 +916,7 @@ deleteFilePrompt(pFileName)
 reloadScriptPrompt()
 {
     ; Number in seconds.
-    i := 3
+    i := 4
 
     reloadScriptGUI := Gui()
     textField := reloadScriptGUI.Add("Text", "r3 w260 x20 y40", "The script will be`n reloaded in " . i . " seconds.")
@@ -965,7 +965,7 @@ reloadScriptPrompt()
 terminateScriptPrompt()
 {
     ; Number in seconds.
-    i := 3
+    i := 4
 
     terminateScriptGUI := Gui()
     textField := terminateScriptGUI.Add("Text", "r3 w260 x20 y40", "The script will be`n terminated in " . i . " seconds.")
