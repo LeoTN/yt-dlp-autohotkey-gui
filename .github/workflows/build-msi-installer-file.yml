@@ -154,6 +154,8 @@ jobs:
         artifacts: ${{ github.workspace }}/${{ env.FINAL_INSTALLER_ARCHIVE_NAME }}
         artifactErrorsFailBuild: true
         artifactContentType: "application/executable"
+        removeArtifacts: true
+        replacesArtifacts: true
         body: "Download the ${{ env.FINAL_INSTALLER_ARCHIVE_NAME }} file, extract it and execute VideoDownloader-Setup.exe. Have fun :)"
         generateReleaseNotes: true
         makeLatest: true

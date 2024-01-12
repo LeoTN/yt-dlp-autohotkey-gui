@@ -241,7 +241,7 @@ checkBlackListFile(pItemToCompare, pBooleanShowPrompt := true)
     ; This content will be added to the new created blacklist file.
     ; You can add content to the ignore list by adding it to the .txt file
     ; or directly to the template array.
-    templateArray := ["https://www.youtube.com"]
+    templateArray := ["https://www.youtube.com", "https://www.youtube.com/"]
     If (!FileExist(readConfigFile("BLACKLIST_FILE_LOCATION")))
     {
         ; This creates the blacklist file silently because it is the script setup.
