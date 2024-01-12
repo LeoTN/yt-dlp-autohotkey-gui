@@ -6,10 +6,11 @@ body:
 - type: checkboxes
   attributes:
     label: "Is there an existing request for this?"
-    description: "Please search to see if a request already exists or if this feature is already implemented."
+    description: "Please search to see if a request already exists or if this feature is already implemented in the latest version."
     options:
     - label: "This request is unique."
       required: true
+
 - type: textarea
   attributes:
     label: "Encountered Problem(s)"
@@ -17,6 +18,7 @@ body:
     placeholder: "For example: I always have the problem that..."
   validations:
     required: true
+
 - type: textarea
   attributes:
     label: "Offered Feature / Solution"
@@ -24,6 +26,7 @@ body:
     placeholder: "For example: I would suggest that..."
   validations:
     required: true
+    
 - type: textarea
   attributes:
     label: "Additional Information"
