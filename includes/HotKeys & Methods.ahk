@@ -1051,7 +1051,7 @@ scriptTutorial()
         "VideoDownloader Tutorial", "YN Iconi 262144")
     If (result = "No")
     {
-        result := MsgBox("Press YES if you want to disable the tutorial`nfor the next time you run this script.",
+        result := MsgBox("Press [Yes] if you want to disable the tutorial`nfor the next time you run this script.",
             "VideoDownloader Tutorial", "YN Iconi 262144")
         If (result = "Yes")
         {
