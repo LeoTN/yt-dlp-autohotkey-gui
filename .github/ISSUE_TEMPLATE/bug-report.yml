@@ -5,25 +5,28 @@ labels: ["bug"]
 body:
 - type: checkboxes
   attributes:
-    label: "Is there an existing request for this?"
+    label: "Is there an existing report for this?"
     description: "Please search to see if this bug is already reported."
     options:
-    - label: "This request is unique."
+    - label: "This report is unique."
       required: true
-- type: textarea
+
+- type: input
   attributes:
     label: "Operating System"
     description: "Specify your operating system (e.g. Windows 10)."
     placeholder: "Enter your operating system"
   validations:
     required: true
+
 - type: textarea
   attributes:
     label: "Software Version"
-    description: "Provide the version of VideoDownloader you are using."
+    description: "Provide the version of VideoDownloader you were using."
     placeholder: "Enter software version"
   validations:
     required: true
+
 - type: checkboxes
   attributes:
     label: "Issue Type"
@@ -34,6 +37,7 @@ body:
     - label: "Other Issue"
   validations:
     required: true
+
 - type: textarea
   attributes:
     label: "Action Leading to the Issue"
@@ -41,6 +45,7 @@ body:
     placeholder: "For example: I performed the following steps..."
   validations:
     required: true
+
 - type: textarea
   attributes:
     label: "Error Message"
@@ -48,6 +53,7 @@ body:
     placeholder: "Enter the error message (if any)"
   validations:
     required: false
+
 - type: textarea
   attributes:
     label: "Additional Information"
