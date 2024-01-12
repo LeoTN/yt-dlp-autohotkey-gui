@@ -135,7 +135,7 @@ optionsGUI_onInit()
     buildCommandString()
     Sleep(1000)
     ; Checks for the last settings file to restore settings from the last download.
-    If (loadGUISettingsFromPreset("last_settings", true, true) = false)
+    If (!loadGUISettingsFromPreset("last_settings", true, true))
     {
         ; Load the default file instead.
         Loop Files (readConfigFile("DOWNLOAD_PRESET_LOCATION") . "\*.ini")
@@ -153,23 +153,29 @@ optionsGUI_onInit()
     {
         ProcessClose("DownloadOptionsGUITooltips.exe")
     }
-    Try
+    ; If the tooltip executable startup is disabled or the script is not compiled, the tooltip executable won't start.
+    If (!readConfigFile("disableTooltipStartup") && A_IsCompiled)
     {
-        If (readConfigFile("disableTooltipStartup") = false)
+        Try
         {
             Run(downloadOptionsGUITooltipFileLocation . " " . downloadOptionsGUI.Hwnd)
+        }
+        Catch As error
+        {
+            displayErrorMessage(error, "This is not a fatal error.", , 10)
         }
     }
 }
 
 cancelDownload()
 {
-    result := MsgBox("Do you really want to cancel the running download process ?"
-        , "Cancel Download Process", "YN Icon! 4096 T10")
+    global booleanDownloadTerminated
+
+    result := MsgBox("Do you really want to cancel the running download process ?", "VD - Cancel Download Process?", "YN Icon! 262144")
 
     If (result = "Yes")
     {
-        global booleanDownloadTerminated := true
+        booleanDownloadTerminated := true
         Try
         {
             ProcessClose(("ahk_pid " . hiddenConsolePID))
@@ -245,7 +251,7 @@ handleDownloadOptionsGUI_ResolveElementConflicts()
         }
         Case false:
         {
-            If (ignoreAllOptionsCheckbox.Value = false)
+            If (!ignoreAllOptionsCheckbox.Value)
             {
                 ; Enables time consuming parameters.
                 useEmbeddingCheckbox.Opt("-Disabled")
@@ -267,7 +273,7 @@ handleDownloadOptionsGUI_ResolveElementConflicts()
         Case true:
         {
             ; You can only choose a format when not using fast download options.
-            If (enableFastDownloadModeCheckbox.Value = false && ignoreAllOptionsCheckbox.Value = false)
+            If (!enableFastDownloadModeCheckbox.Value && !ignoreAllOptionsCheckbox.Value)
             {
                 chooseAudioFormatDropDownList.Opt("-Disabled")
             }
@@ -278,7 +284,7 @@ handleDownloadOptionsGUI_ResolveElementConflicts()
         }
         Case false:
         {
-            If (enableFastDownloadModeCheckbox.Value = false && ignoreAllOptionsCheckbox.Value = false)
+            If (!enableFastDownloadModeCheckbox.Value && !ignoreAllOptionsCheckbox.Value)
             {
                 chooseVideoFormatDropDownList.Opt("-Disabled")
                 chooseAudioFormatDropDownList.Opt("+Disabled")
@@ -287,15 +293,14 @@ handleDownloadOptionsGUI_ResolveElementConflicts()
                 prioritiseAudioQualityCheckbox.Opt("-Disabled")
             }
             ; This prevents the other options from beeing enabled while on of the checkboxes below is ticked.
-            Else If (enableFastDownloadModeCheckbox.Value = true || ignoreAllOptionsCheckbox.Value = true)
+            Else If (enableFastDownloadModeCheckbox.Value || ignoreAllOptionsCheckbox.Value)
             {
                 chooseAudioFormatDropDownList.Opt("+Disabled")
             }
         }
     }
     ; Prioritizing options will only be enabled when the options below are disabled.
-    If (enableFastDownloadModeCheckbox.Value = false && ignoreAllOptionsCheckbox.Value = false
-        && downloadAudioOnlyCheckbox.Value = false)
+    If (!enableFastDownloadModeCheckbox.Value && !ignoreAllOptionsCheckbox.Value && !downloadAudioOnlyCheckbox.Value)
     {
         Switch (prioritiseVideoQualityCheckbox.Value)
         {
@@ -386,13 +391,13 @@ handleDownloadOptionsGUI_ProcessCommandStringInputs()
             commandString .= "--extract-audio "
             ; Only extracts the audio with a specific format when there are now fast download options used.
             If (downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] != "Best format for quality"
-                && enableFastDownloadModeCheckbox.Value = false && ignoreAllOptionsCheckbox.Value = false)
+                && !enableFastDownloadModeCheckbox.Value && !ignoreAllOptionsCheckbox.Value)
             {
                 commandString .= '--audio-format "' . downloadAudioFormatArray[chooseAudioFormatDropDownList.Value] . '" '
             }
         }
     }
-    If (ignoreAllOptionsCheckbox.Value = true)
+    If (ignoreAllOptionsCheckbox.Value)
     {
         ; All other options are considered to be ignored.
         Return
@@ -427,7 +432,7 @@ handleDownloadOptionsGUI_ProcessCommandStringInputs()
             commandString .= '--download-archive "' . readConfigFile("DOWNLOAD_ARCHIVE_LOCATION") . '" '
         }
     }
-    If (enableFastDownloadModeCheckbox.Value = true)
+    If (enableFastDownloadModeCheckbox.Value)
     {
         ; All other options are considered to be ignored.
         Return
@@ -444,7 +449,7 @@ handleDownloadOptionsGUI_ProcessCommandStringInputs()
         {
             ; Add the video description to a .DESCRIPTION file.
             commandString .= "--write-description "
-            If (useDefaultDownloadLocationCheckbox.Value = true)
+            If (useDefaultDownloadLocationCheckbox.Value)
             {
                 commandString .= '--paths "description:' . tmpConfig . '\' . downloadTime . '\description(s)" '
             }
@@ -481,11 +486,11 @@ handleDownloadOptionsGUI_ProcessCommandStringInputs()
         {
             ; Download the video thumbnail and add it to the downloaded video.
             commandString .= "--write-thumbnail "
-            If (useEmbeddingCheckbox.Value = true)
+            If (useEmbeddingCheckbox.Value)
             {
                 commandString .= "--embed-thumbnail "
             }
-            If (useDefaultDownloadLocationCheckbox.Value = true)
+            If (useDefaultDownloadLocationCheckbox.Value)
             {
                 commandString .= '--paths "thumbnail:' . tmpConfig . '\' . downloadTime . '\thumbnail(s)" '
             }
@@ -506,11 +511,11 @@ handleDownloadOptionsGUI_ProcessCommandStringInputs()
             ; Download the video's subtitles and embed them into the downloaded video.
             commandString .= "--write-subs "
             commandString .= '--sub-langs "all" '
-            If (useEmbeddingCheckbox.Value = true)
+            If (useEmbeddingCheckbox.Value)
             {
                 commandString .= "--embed-subs "
             }
-            If (useDefaultDownloadLocationCheckbox.Value = true)
+            If (useDefaultDownloadLocationCheckbox.Value)
             {
                 commandString .= '--paths "subtitle:' . tmpConfig . '\' . downloadTime . '\subtitle(s)" '
             }
@@ -596,7 +601,7 @@ handleDownloadOptionsGUI_CustomDownloadPath()
         }
         If (newDownloadFolderLocal = "")
         {
-            MsgBox("Invalid folder selection.", "Error!", "O IconX T1.5")
+            MsgBox("Invalid folder selection.", "VD - Invalid Path!", "O IconX T1.5")
             ; Checks the default download location checkbox so that the user loses focus on the input field.
             ; Therefore he can click on it again and the "focus" event will be triggered.
             useDefaultDownloadLocationCheckbox.Value := 1
@@ -610,10 +615,11 @@ handleDownloadOptionsGUI_CustomDownloadPath()
     }
 }
 
-
-; This function parses through all values of the GUI and builds a command string
-; which bill be given to the yt-dlp command prompt.
-; Returns the string to it's caller.
+/*
+This function parses through all values of the GUI and builds a command string,
+which bill be given to the yt-dlp command prompt.
+@returns [String] A command string ready to execute with yt-dlp.
+*/
 buildCommandString()
 {
     ; Formats the value of A_Now to give each folder a unique time stamp.
@@ -658,6 +664,7 @@ buildCommandString()
     Return commandString
 }
 
+; The function is used to generate necessary information for the download options GUI tooltip executable.
 generateHWNDArrayFile()
 {
     global downloadOptionsGUI
@@ -698,20 +705,23 @@ generateHWNDArrayFile()
     }
 }
 
-; Saves all options from the download options GUI into a text file for future use.
-; Returns true when the file has been saved successfully.
+/*
+Saves all options from the download options GUI into a text file for future use.
+@param pPresetName [String] The name of the preset to create.
+@param pBooleanTemporary [boolean] If set to true, the preset will created as temporary and deleted once it has been loaded.
+@param pBooleanDefault [boolean] If set to true, will make the created preset the default one, which will be loaded
+when the script is launched.
+@returns [boolean] Depending on the preset creation success.
+*/
 saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault := false)
 {
-    presetName := pPresetName
-    booleanTemporary := pBooleanTemporary
-    booleanDefault := pBooleanDefault
     presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
     presetFileArray := handleDownloadOptionsGUI_RefreshPresetArray()
 
     ; In case the user wants to accidentally create a preset with an empty name.
-    If (presetName = "")
+    If (pPresetName = "")
     {
-        Return MsgBox("Please provide a name for your preset.", "Warning!", "O Icon! T2")
+        Return MsgBox("Please provide a name for your preset.", "VD - No Preset Name!", "O Icon! T2")
     }
     Loop (presetFileArray.Length)
     {
@@ -727,32 +737,32 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
             booleanDefaultPresetExist := false
         }
     }
-    If (booleanTemporary = true)
+    If (pBooleanTemporary)
     {
-        If (!InStr(presetName, "_(TEMP)", true))
+        If (!InStr(pPresetName, "_(TEMP)", true))
         {
-            presetName .= "_(TEMP)"
+            pPresetName .= "_(TEMP)"
         }
     }
-    Else If (booleanDefault = true)
+    Else If (pBooleanDefault)
     {
         ; This avoids double "_(DEFAULT)" pieces.
-        If (!InStr(presetName, "_(DEFAULT)", true))
+        If (!InStr(pPresetName, "_(DEFAULT)", true))
         {
-            presetName .= "_(DEFAULT)"
+            pPresetName .= "_(DEFAULT)"
         }
     }
-    presetLocationComplete := presetLocation . "\" . presetName . ".ini"
+    presetLocationComplete := presetLocation . "\" . pPresetName . ".ini"
     i_Input := 1
     i_DropDownList := 1
 
     If (FileExist(presetLocationComplete))
     {
         ; This avoids showing the overwrite prompt for _(TEMP) presets.
-        If (booleanTemporary = false)
+        If (!pBooleanTemporary)
         {
-            result := MsgBox("The preset name: " . presetName . " already exists."
-                "`n`nDo you want to overwrite it ?", "Warning!", "YN Icon! 4096 T10")
+            result := MsgBox("The preset name: " . pPresetName . " already exists."
+                "`n`nDo you want to overwrite it ?", "VD - Overwrite Existing Preset?", "YN Icon! 262144")
             If (result != "Yes")
             {
                 Return false
@@ -762,15 +772,14 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
         {
             FileDelete(presetLocationComplete)
         }
-        Return saveGUISettingsAsPreset(presetName, booleanTemporary, booleanDefault)
+        Return saveGUISettingsAsPreset(pPresetName, pBooleanTemporary, pBooleanDefault)
     }
     Else
     {
-        If (booleanDefaultPresetExist = true && booleanDefault = true)
+        If (booleanDefaultPresetExist && pBooleanDefault)
         {
-            result := MsgBox("An existing default file has been found."
-                "`n`nReplace " . defaultPresetOld . " with " . presetName . " ?", "Warning!",
-                "YN Icon! 4096 T10")
+            result := MsgBox("An existing default file has been found.`n`nReplace " . defaultPresetOld . " with " . pPresetName . " ?",
+                "VD - Replace Default Preset File?", "YN Icon! 262144")
             If (result != "Yes")
             {
                 Return false
@@ -788,7 +797,7 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
             }
             Else
             {
-                Return saveGUISettingsAsPreset(presetName, booleanTemporary, booleanDefault)
+                Return saveGUISettingsAsPreset(pPresetName, pBooleanTemporary, pBooleanDefault)
             }
         }
         Else If (FileExist(presetLocation . "\" . pPresetName . ".ini"))
@@ -832,27 +841,30 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
     }
 }
 
-; Loads the saved settings from the preset files.
-; Returns true or false based on the success.
+/*
+Loads the saved settings from the preset files.
+@param pPresetName [String] The name of the preset to load.
+@param pBooleanTemporary [boolean] If set to true, the preset will treated as temporary and deleted once it has been loaded.
+@param pBooleanSupressWarning [boolean] If set to true, the warning message will be hidden in case a preset does not exist.
+@returns [boolean] Depending on the preset load success.
+*/
 loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupressWarning := false)
 {
-    presetName := pPresetName
-    booleanTemporary := pBooleanTemporary
-    booleanSupressWarning := pBooleanSupressWarning
     presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
-    If (booleanTemporary = true)
+
+    If (pBooleanTemporary)
     {
-        presetName .= "_(TEMP)"
+        pPresetName .= "_(TEMP)"
     }
-    presetLocationComplete := presetLocation . "\" . presetName . ".ini"
+    presetLocationComplete := presetLocation . "\" . pPresetName . ".ini"
     i_Input := 1
     i_DropDownList := 1
 
     If (!FileExist(presetLocationComplete))
     {
-        If (booleanSupressWarning = false)
+        If (!pBooleanSupressWarning)
         {
-            MsgBox("The preset: " . presetName . " does not exist.", "Warning!", "O Icon! T2")
+            MsgBox("The preset: " . pPresetName . " does not exist.", "VD - Preset Not Found!", "O Icon! T2")
         }
         Return false
     }
@@ -868,7 +880,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
             }
             Catch
             {
-                MsgBox("Failed to set value of: " . GuiCtrlObj.Text . ".", "Warning!", "O Icon! T3")
+                MsgBox("Failed to set value of: " . GuiCtrlObj.Text . ".", "VD - Preset Value - Warning!", "O Icon! T3")
             }
         }
         If (InStr(GuiCtrlObj.Type, "Edit"))
@@ -881,7 +893,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
             }
             Catch
             {
-                MsgBox("Failed to set value of: {Input_ " . i_Input . "}.", "Warning!", "O Icon! T3")
+                MsgBox("Failed to set value of: {Input_ " . i_Input . "}.", "VD - Preset Value - Warning!", "O Icon! T3")
             }
         }
         If (InStr(GuiCtrlObj.Type, "DDL"))
@@ -894,7 +906,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
             }
             Catch
             {
-                MsgBox("Failed to set value of: {DropDownList_ " . i_DropDownList . "}.", "Warning!", "O Icon! T3")
+                MsgBox("Failed to set value of: {DropDownList_ " . i_DropDownList . "}.", "VD - Preset Value - Warning!", "O Icon! T3")
             }
         }
         ; Counts the number of elements parsed. When it reaches 37 this means that all relevant settings have been loaded.
@@ -905,7 +917,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
         }
     }
     ; Deletes the preset when it has been used.
-    If (booleanTemporary = true)
+    If (pBooleanTemporary)
     {
         Try
         {
@@ -919,7 +931,10 @@ loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupre
     Return true
 }
 
-; Returns an array to use for the preset combo box.
+/*
+Refreshes the download options GUI's preset drop down menu array.
+@returns [Array] An array containing all preset names.
+*/
 handleDownloadOptionsGUI_RefreshPresetArray()
 {
     presetArray := []
@@ -936,6 +951,7 @@ handleDownloadOptionsGUI_RefreshPresetArray()
     Return presetArray
 }
 
+; Enables the save preset button to have two functions, if either double clicked or single clicked.
 handleDownloadOptionsGUI_Button_savePreset_waitForSecondClick()
 {
     static click_amount := 0

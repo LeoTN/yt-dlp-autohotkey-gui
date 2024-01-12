@@ -1,0 +1,34 @@
+name: Feature Request
+description: Request a new / change (to) a feature
+title: "Feature Request"
+labels: ["enhancement"]
+body:
+- type: checkboxes
+  attributes:
+    label: "Is there an existing request for this?"
+    description: |
+      Please search to see if a request already exists or if this feature is already implemented. 
+    options:
+    - label: "This request is unique."
+      required: true
+- type: textarea
+  attributes:
+    label: "Encountered Problem(s)"
+    description: "Describe what problem this feature is going to fix. Please be very specific about what exactly you want."
+    placeholder: "For example: I always have the problem that..."
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: "Offered Feature / Solution"
+    description: "Describe a possible solution for your problem. Please be very specific about what exactly you want."
+    placeholder: "For example: I would suggest that..."
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: "Additional information"
+    description: "You can provide additional details here."
+    placeholder: "Space for additional information"
+  validations:
+    required: false

@@ -82,14 +82,12 @@ createMainGUI()
     optionsMenu.Add("&Active Hotkeys...", activeHotkeyMenu)
     optionsMenu.SetIcon("&Active Hotkeys...", "shell32.dll", 177)
     optionsMenu.Add()
-    optionsMenu.Add("Clear URL File", (*) => manageURLFile())
+    optionsMenu.Add("Clear URL File", (*) => clearURLFile())
     optionsMenu.SetIcon("Clear URL File", "shell32.dll", 43)
     optionsMenu.Add("Restore URL File from Backup", (*) => restoreURLFile())
     optionsMenu.SetIcon("Restore URL File from Backup", "shell32.dll", 240)
     optionsMenu.Add("Open Download Options GUI", (*) => hotkey_openOptionsGUI())
     optionsMenu.SetIcon("Open Download Options GUI", "shell32.dll", 123)
-    optionsMenu.Add("Change Browser Information", (*) => createBrowserInformationGUI())
-    optionsMenu.SetIcon("Change Browser Information", "shell32.dll", 243)
     optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
     optionsMenu.SetIcon("Terminate Script", "shell32.dll", 28)
     optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())
@@ -137,110 +135,122 @@ mainGUI_onInit()
     handleMainGUI_ApplyCheckmarksFromConfigFile("activeHotkeyMenu")
 }
 
-; Necessary in place for the normal way of toggeling the checkmark.
-; This function also flips the checkMarkArrays values to keep track of the checkmarks.
+/*
+Necessary in place for the normal way of toggeling the checkmark.
+This function also flips the checkMarkArrays values to keep track of the checkmarks.
+@param pMenuName [String] Should be a valid menu name for example "activeHotkeyMenu".
+@param pMenuItemName [String] Should be a valid menu item name from the menu mentioned above.
+@param pMenuItemPosition [int] Should be a valid menu item position. See AHK help for more info about this topic.
+*/
 handleMainGUI_ToggleCheck(pMenuName, pMenuItemName, pMenuItemPosition)
 {
-    menuName := pMenuName
-    menuItemName := pMenuItemName
-    menuItemPosition := pMenuItemPosition
-
     ; Executes the command so that the checkmark becomes visible for the user.
-    %menuName%.ToggleCheck(menuItemName)
+    %pMenuName%.ToggleCheck(pMenuItemName)
     ; Registers the change in the matching array.
-    handleMainGUI_MenuCheckHandler(menuName, menuItemPosition, "toggle")
+    handleMainGUI_MenuCheckHandler(pMenuName, pMenuItemPosition, "toggle")
 }
 
+/*
+Checks all menu options from the (most likely) hotkey menu.
+@param pMenuName [String] Should be a valid menu name for example "activeHotkeyMenu".
+*/
 handleMainGUI_MenuCheckAll(pMenuName)
 {
-    menuName := pMenuName
-    menuItemCount := DllCall("GetMenuItemCount", "ptr", %menuName%.Handle)
+    menuItemCount := DllCall("GetMenuItemCount", "ptr", %pMenuName%.Handle)
+
     Loop (MenuItemCount - 2)
     {
-        %menuName%.Check(A_Index . "&")
+        %pMenuName%.Check(A_Index . "&")
         ; Protects the code from the invalid index error caused by the check array further on.
         Try
         {
-            handleMainGUI_MenuCheckHandler(menuName, A_Index, true)
+            handleMainGUI_MenuCheckHandler(pMenuName, A_Index, true)
         }
     }
 }
 
+/*
+Unchecks all menu options from the (most likely) hotkey menu.
+@param pMenuName [String] Should be a valid menu name for example "activeHotkeyMenu".
+*/
 handleMainGUI_MenuUncheckAll(pMenuName)
 {
-    menuName := pMenuName
-    menuItemCount := DllCall("GetMenuItemCount", "ptr", %menuName%.Handle)
+    menuItemCount := DllCall("GetMenuItemCount", "ptr", %pMenuName%.Handle)
+
     Loop (MenuItemCount - 2)
     {
-        %menuName%.Uncheck(A_Index . "&")
+        %pMenuName%.Uncheck(A_Index . "&")
         ; Protects the code from the invalid index error caused by the check array further on.
         Try
         {
-            handleMainGUI_MenuCheckHandler(menuName, A_Index, false)
+            handleMainGUI_MenuCheckHandler(pMenuName, A_Index, true)
         }
     }
 }
 
-; This function stores all menu items check states. In other words
-; if there is a checkmark next to an option.
-; The parameter menuName defines which menu's submenus will be changed.
-; Enter "toggle" as pBooleanState to toggle a menu option's boolean value.
-; Leave only booleanState ommited to receive the current value of a submenu item or
-; every parameter to receive the complete array.
+/*
+This function stores all menu items check states. In other words if there is a checkmark next to an option.
+Leave only pBooleanState ommited to receive the current value of a submenu item or every parameter to receive the complete array.
+@param pMenuName [String] Should be a valid menu name for example "activeHotkeyMenu".
+@param pSubMenuPosition [int] Should be the position of a sub menu element from the main menu mentioned above.
+@param pBooleanState [boolean] / [String] Defines the state of the checkmarks to set. Pass "toggle" to invert the checkmark's
+current state.
+*/
 handleMainGUI_MenuCheckHandler(pMenuName := unset, pSubMenuPosition := unset, pBooleanState := unset)
 {
     menuCheckArray_activeHotKeyMenu := stringToArray(readConfigFile("HOTKEY_STATE_ARRAY"))
-    Try
-    {
-        menuName := pMenuName
-        subMenuPosition := pSubMenuPosition
-    }
-    Catch
+
+    ; Returns the menu check array if those parameters are omitted.
+    If (!IsSet(pMenuName) || !isSet(pSubMenuPosition))
     {
         Return menuCheckArray_activeHotKeyMenu
     }
     Try
     {
-        booleanState := pBooleanState
-
-        If (menuName = "activeHotkeyMenu")
+        If (pMenuName = "activeHotkeyMenu")
         {
-            If (booleanState = "toggle")
+            If (pBooleanState = "toggle")
             {
                 ; Toggles the boolean value at a specific position.
-                menuCheckArray_activeHotKeyMenu[subMenuPosition] := !menuCheckArray_activeHotKeyMenu[subMenuPosition]
+                menuCheckArray_activeHotKeyMenu[pSubMenuPosition] := !menuCheckArray_activeHotKeyMenu[pSubMenuPosition]
                 editConfigFile("HOTKEY_STATE_ARRAY", menuCheckArray_activeHotKeyMenu)
             }
             ; Only if there is a state given to apply to a menu.
-            Else If (booleanState = true || booleanState = false)
+            Else If (pBooleanState || !pBooleanState)
             {
-                menuCheckArray_activeHotKeyMenu[subMenuPosition] := booleanState
+                menuCheckArray_activeHotKeyMenu[pSubMenuPosition] := pBooleanState
                 editConfigFile("HOTKEY_STATE_ARRAY", menuCheckArray_activeHotKeyMenu)
             }
             Else
             {
-                Return menuCheckArray_activeHotKeyMenu[subMenuPosition]
+                Return menuCheckArray_activeHotKeyMenu[pSubMenuPosition]
             }
             toggleHotkey(menuCheckArray_activeHotKeyMenu)
         }
     }
+    Catch As error
+    {
+        displayErrorMessage(error)
+    }
 }
 
-; Applies the checkmarks stored in the config file so that they become visible to the user in the GUI.
+/*
+Applies the checkmarks stored in the config file so that they become visible to the user in the GUI.
+@param pMenuName [String] Should be a valid menu name for example "activeHotkeyMenu".
+*/
 handleMainGUI_ApplyCheckmarksFromConfigFile(pMenuName)
 {
-    menuName := pMenuName
     stateArray := stringToArray(readConfigFile("HOTKEY_STATE_ARRAY"))
 
-    If (menuName = "activeHotkeyMenu")
+    If (pMenuName = "activeHotkeyMenu")
     {
         Loop (stateArray.Length)
         {
-            If (stateArray.Get(A_Index) = true)
+            If (stateArray.Get(A_Index))
             {
                 activeHotkeyMenu.Check(A_Index . "&")
             }
-            Else If (stateArray.Get(A_Index) = false)
+            Else If (!stateArray.Get(A_Index))
             {
                 activeHotkeyMenu.Uncheck(A_Index . "&")
             }
@@ -254,6 +264,7 @@ handleMainGUI_ApplyCheckmarksFromConfigFile(pMenuName)
     }
 }
 
+; Opens the explorer
 handleMainGUI_openDownloadLocation()
 {
     Try
@@ -270,9 +281,9 @@ handleMainGUI_openDownloadLocation()
             }
         }
     }
-    Catch
+    Catch As error
     {
-        MsgBox("No downloaded files from`ncurrent session found.", "Warning!", "O Icon! T1.5")
+        displayErrorMessage(error)
     }
 }
 
@@ -282,7 +293,7 @@ handleMainGUI_uninstallScript()
 
     If (A_IsCompiled)
     {
-        result := MsgBox("Uninstall VideoDownloader now?", "Uninstall VideoDownloader", "YN Icon?")
+        result := MsgBox("Uninstall VideoDownloader now?", "VD - Uninstall VideoDownloader", "YN Icon? 262144")
         Switch (result)
         {
             Case "Yes":
@@ -294,7 +305,7 @@ handleMainGUI_uninstallScript()
                     Else
                     {
                         MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
-                            . "].", "Execute Uninstall Setup - Error!", "O Icon!")
+                            . "].", "VD - Execute Uninstall Setup - Error!", "O Icon! 262144")
                     }
                 }
         }
@@ -302,36 +313,69 @@ handleMainGUI_uninstallScript()
     Else
     {
         MsgBox("You are using a non compiled version of this script."
-            "`n`nYou cannot uninstall VideoDownloader now.", "Uninstall VideoDownloader - Error!", "O IconX 262144 T5")
+            "`n`nYou cannot uninstall VideoDownloader now.", "VD - Uninstall VideoDownloader - Error!", "O IconX 262144 T10")
     }
 }
 
-handleMainGUI_repairScript()
+/*
+Runs the script setup to repair the application.
+@param pBooleanAllowRefuse [boolean] If set to true, the user can cancel the setup and run the script anyway.
+*/
+handleMainGUI_repairScript(pBooleanAllowRefuse := true)
 {
     videoDownloaderSetupExecutableLocation := scriptBaseFilesLocation . "\library\setup\VideoDownloader-Setup.exe"
 
     If (A_IsCompiled)
     {
-        result := MsgBox("Repair VideoDownloader now?", "Repair VideoDownloader", "YN Icon?")
-        Switch (result)
+        If (pBooleanAllowRefuse)
         {
-            Case "Yes":
-                {
-                    If (FileExist(videoDownloaderSetupExecutableLocation))
+            result := MsgBox("Repair VideoDownloader now?", "VD - Repair Action Advised!", "YN Icon? 262144")
+            Switch (result)
+            {
+                Case "Yes":
                     {
-                        Run(videoDownloaderSetupExecutableLocation . ' -deploymentType "Repair"')
+                        If (FileExist(videoDownloaderSetupExecutableLocation))
+                        {
+                            Run(videoDownloaderSetupExecutableLocation . ' -deploymentType "Repair"')
+                        }
+                        Else
+                        {
+                            MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
+                                . "]`nScript terminated.", "VD - Execute Repair Setup - Error!", "O Icon! 262144")
+                        }
+                        ExitApp()
                     }
-                    Else
+            }
+        }
+        Else
+        {
+            result := MsgBox("Repair VideoDownloader now?", "VD - Repair Action Required!", "YN Icon? 262144")
+            Switch (result)
+            {
+                Case "Yes":
                     {
-                        MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
-                            . "].", "Execute Repair Setup - Error!", "O Icon!")
+                        If (FileExist(videoDownloaderSetupExecutableLocation))
+                        {
+                            Run(videoDownloaderSetupExecutableLocation . ' -deploymentType "Repair"')
+                        }
+                        Else
+                        {
+                            MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
+                                . "]`nScript terminated.", "VD - Execute Repair Setup - Error!", "O Icon! 262144")
+                        }
                     }
-                }
+                Default:
+                    {
+                        MsgBox("You can repair VideoDownloader at any time.`nScript terminated.", "VD - Repair Action Required! - Canceled", "O Iconi T5")
+                    }
+            }
+            ExitApp()
         }
     }
     Else
     {
         MsgBox("You are using a non compiled version of this script."
-            "`n`nYou cannot repair VideoDownloader now.", "Repair VideoDownloader - Error!", "O IconX 262144 T5")
+            "`n`nYou cannot repair VideoDownloader now.`nScript terminated.", "VD - Repair Action Advised! - Error!", "O IconX 262144 T10")
+        ExitApp()
     }
 }
