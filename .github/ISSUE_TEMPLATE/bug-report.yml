@@ -3,14 +3,14 @@ description: Report a software bug
 title: "Bug Report"
 labels: ["bug"]
 body:
-- type: text
+- type: textarea
   attributes:
     label: "Operating System"
     description: "Specify your operating system (e.g. Windows 10)"
     placeholder: "Enter your operating system"
   validations:
     required: true
-- type: text
+- type: textarea
   attributes:
     label: "Software Version"
     description: "Provide the version of VideoDownloader you are using"
