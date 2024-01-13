@@ -690,8 +690,8 @@ Try {
         ## <Perform Post-Repair tasks here>
 
         # Disables the forced setup and tells the main script to create any necessary files without prompt.
-        Set-RegistryKey -Key $videoDownloaderRegistryDirectory -Name "booleanSetupRequired" -Value 0 -Type "Binary"
-        Set-RegistryKey -Key $videoDownloaderRegistryDirectory -Name "booleanFirstTimeLaunch" -Value 1 -Type "Binary"
+        Set-RegistryKey -Key $videoDownloaderRegistryDirectory -Name "booleanSetupRequired" -Value 0 -Type "DWord"
+        Set-RegistryKey -Key $videoDownloaderRegistryDirectory -Name "booleanFirstTimeLaunch" -Value 1 -Type "Dword"
         Write-Log "`n`n[INFO] Changed registry entries:`n[booleanSetupRequired = 0 and booleanFirstTimeLaunch = 1] at`n[$videoDownloaderRegistryDirectory].`n`n"
         # Language support needed.
         If ($booleanSetupErrorOccurred) {
