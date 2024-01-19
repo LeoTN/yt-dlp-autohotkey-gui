@@ -132,7 +132,8 @@ jobs:
 
     - name: Compress Installer Archive
       run: |
-        cd "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup" && zip -r "${{ github.workspace }}/${{ env.FINAL_INSTALLER_ARCHIVE_NAME }}" .
+        cd "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup"
+        zip -r "${{ github.workspace }}/${{ env.FINAL_INSTALLER_ARCHIVE_NAME }}" .
 
     - name: Set Release Name
       id: set-release-name

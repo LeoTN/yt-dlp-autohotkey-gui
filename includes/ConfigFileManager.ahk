@@ -167,7 +167,7 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBooleanShowPrompt := fals
             FileMove(configFileLocation, configFileLocation . "_old", true)
         }
     }
-    FileAppend("#Important note: When changing the config file the script has to be reloaded for the changes to take effect!`n"
+    FileAppend("#Important note: When changing the config file, the script has to be reloaded for the changes to take effect!`n"
         . "#You can find a hotkey list here: (https://www.autohotkey.com/docs/v2/Hotkeys.htm#Symbols)", configFileLocation)
     ; In case you forget to specify a section for EACH new config file entry this will remind you to do so :D
     If (configVariableNameArray.Length != configSectionNameArray.Length)
@@ -304,6 +304,8 @@ editConfigFile(pOptionName, pData)
 ; Reads the whole config file and throws an error when something is not right.
 checkConfigFileIntegrity()
 {
+    global booleanFirstTimeLaunch
+
     Loop (configVariableNameArray.Length)
     {
         Try
