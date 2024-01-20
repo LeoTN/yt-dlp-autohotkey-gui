@@ -188,6 +188,9 @@ function installPython($pPythonInstallDirectory, $pBooleanQuiet = $false) {
                     Write-Log "`n`n[installPython()] [INFO] Found $($exePath32.FullName), now attempting to install Python 3.12.0 (32-bit).`n`n"     
                     Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (32-bit). This might take some time. Please wait..." -TopMost $false
                     Execute-ProcessAsUser -Path "$exePath32" -Parameters $parameterString -Wait
+                }
+                Else {
+                    Return $false
                 }     
             }
             Else {
@@ -198,11 +201,8 @@ function installPython($pPythonInstallDirectory, $pBooleanQuiet = $false) {
                     Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (64-bit). This might take some time. Please wait..." -TopMost $false
                     Execute-ProcessAsUser -Path "$exePath64" -Parameters $parameterString -Wait
                 }
-                # Install Python 3.12 (32-bit) if 64-bit installer is not available.     
-                ElseIf ($exePath32.Exists) {
-                    Write-Log "`n`n[installPython()] [INFO] Found $($exePath32.FullName), now attempting to install Python 3.12.0 (32-bit).`n`n"     
-                    Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (32-bit). This might take some time. Please wait..." -TopMost $false
-                    Execute-ProcessAsUser -Path "$exePath32" -Parameters $parameterString -Wait
+                Else {
+                    Return $false
                 }
             }
             Return $true
@@ -373,7 +373,7 @@ function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false
                 Return $false
             }
             Try {
-                Show-InstallationProgress -StatusMessage "Downloading Python installer. Please wait..." -TopMost $false
+                Show-InstallationProgress -StatusMessage "Downloading Python 32 bit installer. Please wait..." -TopMost $false
                 Invoke-WebRequest -Uri $pythonInstaller32DownloadLink -OutFile "$pythonInstallerFinaDirectory\$pythonInstaller32Name"
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Downloaded 32 bit executable to`n[$pythonInstallerFinaDirectory].`n`n"
             }
@@ -392,7 +392,7 @@ function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false
         If ($pBooleanNoDownload) {
             Return $false
         }
-        ElseIf ($booleanIs64BitArchitecture) {
+        ElseIf (-not ($booleanIs64BitArchitecture)) {
             Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Skipping download because the 64 bit setup executable is irrelevant due to the wrong system architecture."
         }
         Else {
@@ -406,7 +406,7 @@ function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false
                 Return $false
             }
             Try {
-                Show-InstallationProgress -StatusMessage "Downloading Python installer. Please wait..." -TopMost $false
+                Show-InstallationProgress -StatusMessage "Downloading Python 64 bit installer. Please wait..." -TopMost $false
                 Invoke-WebRequest -Uri $pythonInstaller64DownloadLink -OutFile "$pythonInstallerFinaDirectory\$pythonInstaller64Name"
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Downloaded 64 bit executable to`n[$pythonInstallerFinaDirectory].`n`n"
             }
