@@ -1090,7 +1090,7 @@ changeWorkingDirectory()
     }
     Else
     {
-        result := MsgBox("This path cannot be used because it requires administrative permissions to write in.`n`n"
+        result := MsgBox("This path cannot be used.`n`n"
             "Please select another path or press [Ignore] to use the default directory which is`n"
             "[" . defaultWorkingDirectory . "].",
             "VD - Invalid Working Directory!", "ARI Icon! Default2")

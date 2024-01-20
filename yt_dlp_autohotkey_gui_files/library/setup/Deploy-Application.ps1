@@ -256,7 +256,7 @@ Try {
         $result = Show-InstallationPrompt -Title "Select Setup Option" -Message "Choose a setup option below." -ButtonLeftText $selectDeploymentTypeButtonOption_1 -ButtonMiddleText $selectDeploymentTypeButtonOption_2 -ButtonRightText $selectDeploymentTypeButtonOption_3
         If ($result -eq $selectDeploymentTypeButtonOption_1) {
             # Get the versions.
-            $videoDownloaderInstalledObject = Get-InstalledApplication -Name $appName -Exact $true
+            $videoDownloaderInstalledObject = Get-InstalledApplication -Name $appName -Exact
             If ($videoDownloaderInstalledObject) {
                 # This is a weird work-arround because the method getMSIFileVersion returns a weird object with weird properties.
                 $tmp = $videoDownloaderInstalledObject.DisplayVersion

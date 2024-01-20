@@ -48,7 +48,7 @@ function installVideoDownloader($pVideoDownloaderInstallationDirectory, $pBoolea
     Write-Log "`n`n[installVideoDownloader()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
     Show-InstallationProgress -StatusMessage "Installing VideoDownloader. Please wait..." -TopMost $false
 
-    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact $true
+    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact
     If ($installedVideoDownloaderObject) {
         $installedVideoDownloaderLocation = $installedVideoDownloaderObject.InstallLocation
         Write-Log "`n`n[installVideoDownloader()] [INFO] Other potentially useful information:`n[$installedVideoDownloaderObject].`n`n"
@@ -90,16 +90,16 @@ function uninstallVideoDownloader($pBooleanQuiet = $false) {
     Write-Log "`n`n[uninstallVideoDownloader()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
     Show-InstallationProgress -StatusMessage "Uninstalling VideoDownloader. Please wait..." -TopMost $false
 
-    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact $true
+    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact
     If ($installedVideoDownloaderObject) {
         $installedVideoDownloaderLocation = $installedVideoDownloaderObject.InstallLocation
         Write-Log "`n`n[uninstallVideoDownloader()] [INFO] Other potentially useful information:`n[$installedVideoDownloaderObject].`n`n"
         Write-Log "`n`n[uninstallVideoDownloader()] [INFO] Found VideoDownloader installation at:`n[$installedVideoDownloaderLocation].`n`n"
         If ($pBooleanQuiet) {
-            Execute-MSI -Action "Uninstall" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/quiet /norestart REBOOT=ReallySppress"
+            Remove-MSIApplications -Name "VideoDownloader" -Exact -Parameters "/quiet /norestart REBOOT=ReallySppress"
         }
         Else {
-            Execute-MSI -Action "Uninstall" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/passive /norestart /qb REBOOT=ReallySppress"
+            Remove-MSIApplications -Name "VideoDownloader" -Exact -Parameters "/passive /norestart /qb REBOOT=ReallySppress"
         }
         # Remove the .MSI installer from the target directory.
         $copiedInstallerTargetDirectory = "$pVideoDownloaderInstallationDirectory\yt_dlp_autohotkey_gui_files\library\setup\Files\VideoDownloaderInstaller.msi"
@@ -123,7 +123,7 @@ function repairVideoDownloader($pBooleanQuiet = $false) {
     Write-Log "`n`n[repairVideoDownloader()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
     Show-InstallationProgress -StatusMessage "Repairing VideoDownloader. Please wait..." -TopMost $false
 
-    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact $true
+    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact
     If ($installedVideoDownloaderObject) {
         $installedVideoDownloaderLocation = $installedVideoDownloaderObject.InstallLocation
         Write-Log "`n`n[repairVideoDownloader()] [INFO] Other potentially useful information:`n[$installedVideoDownloaderObject].`n`n"
@@ -913,7 +913,7 @@ function repairFFmpeg($pVideoDownloaderInstallationDirectory, $pBooleanQuiet = $
     Else {
         Write-Log "`n`n[repairFFmpeg()] [INFO] FFmpeg is not installed. Trying to find VideoDownloader instance for FFmpeg installation.`n`n"
 
-        $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact $true
+        $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact
         If ($installedVideoDownloaderObject) {
             $tmpLocation = $installedVideoDownloaderObject.InstallLocation
             $installedVideoDownloaderLocation = $tmpLocation.TrimEnd("\")
