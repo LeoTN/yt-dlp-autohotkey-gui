@@ -362,7 +362,7 @@ restoreURLFile()
     If (FileExist(tmpConfig))
     {
         result := MsgBox("The URL File already exists."
-            "`nPress YES to overwrite or NO to append the`nbackup file to the original file.", "VD - Existing URL File - Warning!", "YNC Icon! 262144")
+            "`nPress [Yes] to overwrite or [No] to append the`nbackup file to the original file.", "VD - Existing URL File - Warning!", "YNC Icon! 262144")
         Switch (result)
         {
             Case "Yes":

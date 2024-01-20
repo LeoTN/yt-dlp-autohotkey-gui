@@ -118,7 +118,7 @@ createMainGUI()
     mainGUI := Gui(, "VD - Control Panel")
     Try
     {
-        mainGUI.Add("Picture", "w320 h-1 x-10 y-10", youTubeBackGroundLocation)
+        mainGUI.Add("Picture", "w320 h-1 x-10 y-10 Center", mainGUIBackGroundLocation)
     }
     mainGUI.MenuBar := allMenus
 }
@@ -305,7 +305,7 @@ handleMainGUI_uninstallScript()
                     Else
                     {
                         MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
-                            . "].", "VD - Execute Uninstall Setup - Error!", "O Icon! 262144")
+                            . "].", "VD - Uninstall VideoDownloader - Error!", "O Icon! 262144")
                     }
                 }
         }
@@ -329,7 +329,7 @@ handleMainGUI_repairScript(pBooleanAllowRefuse := true)
     {
         If (pBooleanAllowRefuse)
         {
-            result := MsgBox("Repair VideoDownloader now?", "VD - Repair Action Advised!", "YN Icon? 262144")
+            result := MsgBox("Repair VideoDownloader now?", "VD - Execute Repair Action", "YN Icon? 262144")
             Switch (result)
             {
                 Case "Yes":
@@ -341,7 +341,7 @@ handleMainGUI_repairScript(pBooleanAllowRefuse := true)
                         Else
                         {
                             MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
-                                . "]`nScript terminated.", "VD - Execute Repair Setup - Error!", "O Icon! 262144")
+                                . "]`nScript terminated.", "VD - Execute Repair Action - Error!", "O Icon! 262144")
                         }
                         ExitApp()
                     }
@@ -361,7 +361,7 @@ handleMainGUI_repairScript(pBooleanAllowRefuse := true)
                         Else
                         {
                             MsgBox("Unable to find setup executable at`n[" . videoDownloaderSetupExecutableLocation
-                                . "]`nScript terminated.", "VD - Execute Repair Setup - Error!", "O Icon! 262144")
+                                . "]`nScript terminated.", "VD - Repair Action Required! - Error!", "O Icon! 262144")
                         }
                     }
                 Default:
@@ -375,7 +375,7 @@ handleMainGUI_repairScript(pBooleanAllowRefuse := true)
     Else
     {
         MsgBox("You are using a non compiled version of this script."
-            "`n`nYou cannot repair VideoDownloader now.`nScript terminated.", "VD - Repair Action Advised! - Error!", "O IconX 262144 T10")
+            "`n`nYou cannot repair VideoDownloader now.`nScript terminated.", "VD - Execute Repair Action - Error!", "O IconX 262144 T10")
         ExitApp()
     }
 }
