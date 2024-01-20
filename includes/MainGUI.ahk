@@ -99,9 +99,15 @@ createMainGUI()
     optionsMenu.SetIcon("Repair script", "shell32.dll", 41)
 
     helpMenu := Menu()
+    regValue := RegRead(videoDownloaderRegistryDirectory, "videoDownloaderVersion", "")
+    If (regValue != "")
+    {
+        helpMenu.Add("Version - " . regValue, (*) => 0)
+    }
     helpMenu.Add("This repository (yt-dlp-autohotkey-gui)",
         (*) => Run("https://github.com/LeoTN/yt-dlp-autohotkey-gui#readme"))
-    helpMenu.Add("Used repository (yt-dlp)", (*) => Run("https://github.com/yt-dlp/yt-dlp"))
+    helpMenu.Add("Used repository (yt-dlp)",
+        (*) => Run("https://github.com/yt-dlp/yt-dlp"))
     helpMenu.Add("Original repository (youtube-downloader-using-ahk)",
         (*) => Run("https://github.com/LeoTN/youtube-downloader-using-ahk"))
     helpMenu.Add("Built in Tutorial", (*) => scriptTutorial())

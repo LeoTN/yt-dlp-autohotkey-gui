@@ -301,9 +301,9 @@ Try {
                 }
                 ElseIf ($videoDownloaderInstalledVersion -lt $videoDownloaderInstallerVersion) {
                     Show-InstallationProgress -StatusMessage "Found installed VideoDownloader [$videoDownloaderInstalledVersion], which is lower than the current installer [$videoDownloaderInstallerVersion]. Starting update..."
+                    Start-Sleep -Seconds 4
                     uninstallVideoDownloader
                     $deploymentType = "Install"
-                    Start-Sleep -Seconds 4
                 }
                 ElseIf ($videoDownloaderInstalledVersion -eq $videoDownloaderInstallerVersion) {
                     Show-InstallationProgress -StatusMessage "Found installed VideoDownloader [$videoDownloaderInstalledVersion], which is equal to the current installer [$videoDownloaderInstallerVersion]. Starting repair..."
