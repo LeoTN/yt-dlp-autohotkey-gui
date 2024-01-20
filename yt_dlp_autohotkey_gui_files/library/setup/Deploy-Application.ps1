@@ -231,11 +231,14 @@ Try {
         $result = Show-InstallationPrompt -Title "Select Setup Visibility" -Message "Would you like to enable the quiet setup?`nThis will hide most setup windows and notifications." -ButtonLeftText $selectQuietBooleanButtonOption_1 -ButtonMiddleText $selectQuietBooleanButtonOption_2 -ButtonRightText $selectQuietBooleanButtonOption_3
         If ($result -eq $selectQuietBooleanButtonOption_1) {
             $booleanRunSetupActionsQuiet = $true
-        }
+        }  
         ElseIf ($result -eq $selectQuietBooleanButtonOption_2) {
             $balloonText = "$deploymentTypeName $configBalloonTextAbort"
             Show-BalloonTip -BalloonTipText $balloonText
             Exit-Script
+        }
+        ElseIf ($result -eq $selectQuietBooleanButtonOption_3) {
+            $booleanRunSetupActionsQuiet = $false
         }
     }
 
@@ -298,13 +301,14 @@ Try {
                 }
                 ElseIf ($videoDownloaderInstalledVersion -lt $videoDownloaderInstallerVersion) {
                     Show-InstallationProgress -StatusMessage "Found installed VideoDownloader [$videoDownloaderInstalledVersion], which is lower than the current installer [$videoDownloaderInstallerVersion]. Starting update..."
+                    uninstallVideoDownloader
                     $deploymentType = "Install"
-                    Start-Sleep -Seconds 2
+                    Start-Sleep -Seconds 4
                 }
                 ElseIf ($videoDownloaderInstalledVersion -eq $videoDownloaderInstallerVersion) {
                     Show-InstallationProgress -StatusMessage "Found installed VideoDownloader [$videoDownloaderInstalledVersion], which is equal to the current installer [$videoDownloaderInstallerVersion]. Starting repair..."
                     $deploymentType = "Repair"
-                    Start-Sleep -Seconds 2
+                    Start-Sleep -Seconds 4
                 }
             }
         }
