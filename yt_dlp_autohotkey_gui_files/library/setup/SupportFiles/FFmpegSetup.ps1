@@ -121,7 +121,7 @@ function installFFmpeg([string]$pBooleanForceInstall = $false) {
             Start-Sleep -Seconds 5
             Exit 71504
         }
-        ElseIf ($pBooleanForceInstall -eq $true) {
+        ElseIf ($pBooleanForceInstall) {
             uninstallFFmpeg
         }
     }

@@ -61,7 +61,7 @@ function installVideoDownloader($pVideoDownloaderInstallationDirectory, $pBoolea
             Execute-MSI -Action "Install" -Path $videoDownloaderInstallerLocation -Parameters "/quiet /norestart REBOOT=ReallySppress APPDIR=""$pVideoDownloaderInstallationDirectory"""
         }
         Else {
-            Execute-MSI -Action "Install" -Path $videoDownloaderInstallerLocation -Parameters "/passive /norestart /qb REBOOT=ReallySppress APPDIR=""$pVideoDownloaderInstallationDirectory"""
+            Execute-MSI -Action "Install" -Path $videoDownloaderInstallerLocation -Parameters "/passive /norestart /qb! REBOOT=ReallySppress APPDIR=""$pVideoDownloaderInstallationDirectory"""
         }
         # Copy the .MSI installer to the target directory.
         $copyInstallerTargetDirectory = "$pVideoDownloaderInstallationDirectory\yt_dlp_autohotkey_gui_files\library\setup\Files\VideoDownloaderInstaller.msi"
@@ -96,10 +96,10 @@ function uninstallVideoDownloader($pBooleanQuiet = $false) {
         Write-Log "`n`n[uninstallVideoDownloader()] [INFO] Other potentially useful information:`n[$installedVideoDownloaderObject].`n`n"
         Write-Log "`n`n[uninstallVideoDownloader()] [INFO] Found VideoDownloader installation at:`n[$installedVideoDownloaderLocation].`n`n"
         If ($pBooleanQuiet) {
-            Remove-MSIApplications -Name "VideoDownloader" -Exact -Parameters "/quiet /norestart REBOOT=ReallySppress"
+            Execute-MSI -Action "Uninstall" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/quiet /norestart REBOOT=ReallySppress"
         }
         Else {
-            Remove-MSIApplications -Name "VideoDownloader" -Exact -Parameters "/passive /norestart /qb REBOOT=ReallySppress"
+            Execute-MSI -Action "Uninstall" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/passive /norestart /qb! REBOOT=ReallySppress"
         }
         # Remove the .MSI installer from the target directory.
         $copiedInstallerTargetDirectory = "$pVideoDownloaderInstallationDirectory\yt_dlp_autohotkey_gui_files\library\setup\Files\VideoDownloaderInstaller.msi"
@@ -132,7 +132,7 @@ function repairVideoDownloader($pBooleanQuiet = $false) {
             Execute-MSI -Action "Repair" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/quiet /norestart REBOOT=ReallySppress"
         }
         Else {
-            Execute-MSI -Action "Repair" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/passive /norestart /qb REBOOT=ReallySppress"
+            Execute-MSI -Action "Repair" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/passive /norestart /qb! REBOOT=ReallySppress"
         }
         Return $true
     }
@@ -333,6 +333,15 @@ function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false
     $pythonInstaller64Name = "python-3.12.0-amd64.exe"
     $pythonInstaller32DownloadLink = "https://www.python.org/ftp/python/3.12.0/python-3.12.0.exe"
     $pythonInstaller64DownloadLink = "https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe"
+    If ($ENV:PROCESSOR_ARCHITECTURE -eq "x86") {
+        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Detected 32-bit OS architecture.`n`n"
+        $booleanIs64BitArchitecture = $false
+                    
+    }
+    Else {
+        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Detected 64-bit OS architecture.`n`n"
+        $booleanIs64BitArchitecture = $true
+    }
     Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] pBooleanNoDownload = $pBooleanNoDownload)`n`n"
     Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] pythonInstallerFinalPath = $pythonInstallerFinaDirectory)`n`n"
     Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] pythonInstaller32Name = $pythonInstaller32Name`n`n"
@@ -344,13 +353,17 @@ function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false
         Return $false
     }
     # Test if both the 32 and 64 bit executables are present and starts the download if not.
+    # 32 bit section.
     If (-not (Test-Path -Path "$pythonInstallerFinaDirectory\$pythonInstaller32Name")) {
-        If ($pBooleanNoDownload -eq $true) {
-            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] Missing Python 32 bit setup executable."
+        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] Missing Python 32 bit setup executable."
+        If ($pBooleanNoDownload) {
             Return $false
         }
+        ElseIf ($booleanIs64BitArchitecture) {
+            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Skipping download because the 32 bit setup executable is irrelevant due to the wrong system architecture."
+        }
         Else {
-            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Missing Python 32 bit setup executable. Starting download...`n`n"
+            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Starting python 32 bit setup executable download...`n`n"
             If (-not (getBooleanReturn(checkInternetConnectionStatus))) {
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] No active Internet connection found for downloading installer.`n`n"
                 # Language support needed.
@@ -373,14 +386,20 @@ function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false
     Else {
         Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Found 32 bit executable at`n[$pythonInstallerFinaDirectory\$pythonInstaller32Name].`n`n"
     }
+    # 64 bit section.
     If (-not (Test-Path -Path "$pythonInstallerFinaDirectory\$pythonInstaller64Name")) {
-        If ($pBooleanNoDownload -eq $true) {
-            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] Missing Python 64 bit setup executable.`n`n"
+        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] Missing Python 64 bit setup executable."
+        If ($pBooleanNoDownload) {
             Return $false
         }
+        ElseIf ($booleanIs64BitArchitecture) {
+            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Skipping download because the 64 bit setup executable is irrelevant due to the wrong system architecture."
+        }
         Else {
+            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Starting python 64 bit setup executable download...`n`n"
             If (-not (getBooleanReturn(checkInternetConnectionStatus))) {
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] No active Internet connection found for downloading installer.`n`n"
+                # Language support needed.
                 $balloonText = "No Internet connection found. Operation could not complete."
                 $balloonTitle = "Python Installation Status"
                 Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipTime 5000 -BalloonTipIcon "Warning"
@@ -394,11 +413,11 @@ function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false
             Catch {
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] Error while downloading 64 bit setup executable!`n`n"
                 Return $false
-            }  
+            } 
         }
     }
     Else {
-        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Found 64 bit executable at`n[$pythonInstallerFinaDirectory\$pythonInstaller64Name].`n`n"
+        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Found 64 bit executable at`n[$pythonInstallerFinaDirectory\$pythonInstaller32Name].`n`n"
     }
     Return $true
 }

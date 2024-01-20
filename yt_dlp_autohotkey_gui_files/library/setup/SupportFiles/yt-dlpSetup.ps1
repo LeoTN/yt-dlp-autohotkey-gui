@@ -125,7 +125,7 @@ function installYTDLP([string]$pBooleanForceInstall = $false) {
             Start-Sleep -Seconds 5
             Exit 71005
         }
-        ElseIf ($pBooleanForceInstall -eq $true) {
+        ElseIf ($pBooleanForceInstall) {
             uninstallYTDLP
         }
     }
@@ -137,7 +137,7 @@ function installYTDLP([string]$pBooleanForceInstall = $false) {
             log($tmpLog)
             $global:mainExitCode = 71101
         }
-        ElseIf ($pBooleanForceInstall -eq $true) {
+        ElseIf ($pBooleanForceInstall) {
             $tmpLog = "[installYTDLP()] [INFO] Successfully re-installed yt-dlp."
             log($tmpLog)
             $global:mainExitCode = 71107
@@ -149,7 +149,7 @@ function installYTDLP([string]$pBooleanForceInstall = $false) {
             log($tmpLog)
             $global:mainExitCode = 71102
         }
-        ElseIf ($pBooleanForceInstall -eq $true) {
+        ElseIf ($pBooleanForceInstall) {
             $tmpLog = "[installYTDLP()] [WARNING] There was an error while re-installing yt-dlp."
             log($tmpLog)
             $global:mainExitCode = 71108

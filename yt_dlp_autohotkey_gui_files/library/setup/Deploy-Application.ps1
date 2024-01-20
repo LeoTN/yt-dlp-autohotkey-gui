@@ -245,6 +245,9 @@ Try {
     ##* NO SETUP VISIBILITY GIVEN SECTION END
     ##*===============================================
 
+    # Makes sure all possibly affected applications are closed.
+    Show-InstallationWelcome -AllowDefer -PersistPrompt -CloseApps 'VideoDownloader,python,python_d,pythonw,pythonw_d'
+
     ##*===============================================
     ##* NO DEPLOYMENT TYPE GIVEN SECTION
     ##*===============================================
@@ -406,8 +409,6 @@ Try {
             Exit-Script
         }
 
-        Show-InstallationWelcome -AllowDefer -PersistPrompt -CloseApps 'VideoDownloader,python,python_d,pythonw,pythonw_d'
-
         ##*===============================================
         ##* INSTALLATION
         ##*===============================================
@@ -494,10 +495,10 @@ Try {
         Write-Log "`n`n[INFO] Changed registry entries:`n[booleanSetupRequired = 0 and booleanFirstTimeLaunch = 1] at`n[$videoDownloaderRegistryDirectory].`n`n"
         # Language support needed.
         If ($booleanSetupErrorOccurred) {
-            Show-InstallationPrompt -Message "$appName installation completed with errors.`n`nIt is recommended to repair the installation." -ButtonRightText "OK" -Icon "Warning"
+            Show-InstallationPrompt -Message "$appName installation completed with errors. It is recommended to repair the installation." -ButtonRightText "OK" -Icon "Warning"
         }
         Else {
-            Show-InstallationPrompt -Message "$appName installation completed.`n`nHave fun with the application :)" -ButtonRightText "OK" -Icon "Information"
+            Show-InstallationPrompt -Message "$appName installation completed. Have fun with the application :)" -ButtonRightText "OK" -Icon "Information"
         }
     }
     ElseIf ($deploymentType -ieq 'Uninstall') {
@@ -507,8 +508,6 @@ Try {
         [String]$installPhase = 'Pre-Uninstallation'
 
         ## <Perform Pre-Uninstallation tasks here>
-
-        Show-InstallationWelcome -AllowDefer -PersistPrompt -CloseApps 'VideoDownloader,python,python_d,pythonw,pythonw_d'
 
         ##*===============================================
         ##* UNINSTALLATION
@@ -593,10 +592,10 @@ Try {
         ## <Perform Post-Uninstallation tasks here>
         # Language support needed.
         If ($booleanSetupErrorOccurred) {
-            Show-InstallationPrompt -Message "$appName uninstallation completed with errors.`n`nErrors may also occur when components were previously uninstalled." -ButtonRightText "OK" -Icon "Warning"
+            Show-InstallationPrompt -Message "$appName uninstallation completed with errors. Errors may also occur when components were previously uninstalled." -ButtonRightText "OK" -Icon "Warning"
         }
         Else {
-            Show-InstallationPrompt -Message "$appName uninstallation completed.`n`nUntil next time :')" -ButtonRightText "OK" -Icon "Information"
+            Show-InstallationPrompt -Message "$appName uninstallation completed. Until next time :')" -ButtonRightText "OK" -Icon "Information"
         }
     }
     ElseIf ($deploymentType -ieq 'Repair') {
@@ -695,10 +694,10 @@ Try {
         Write-Log "`n`n[INFO] Changed registry entries:`n[booleanSetupRequired = 0 and booleanFirstTimeLaunch = 1] at`n[$videoDownloaderRegistryDirectory].`n`n"
         # Language support needed.
         If ($booleanSetupErrorOccurred) {
-            Show-InstallationPrompt -Message "$appName repair completed with errors.`n`nIt is recommended to repair the installation again. If this error persists, please uninstall and re-install all components or report the issue on the GitHub page." -ButtonRightText "OK" -Icon "Warning"
+            Show-InstallationPrompt -Message "$appName repair completed with errors. It is recommended to repair the installation again. If this error persists, please uninstall and re-install all components or report the issue on the GitHub page." -ButtonRightText "OK" -Icon "Warning"
         }
         Else {
-            Show-InstallationPrompt -Message "$appName repair completed.`n`nHave fun with the repaired application :D" -ButtonRightText "OK" -Icon "Information"
+            Show-InstallationPrompt -Message "$appName repair completed. Have fun with the repaired application :D" -ButtonRightText "OK" -Icon "Information"
         }
     }
     ##*===============================================
