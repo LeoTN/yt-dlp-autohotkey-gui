@@ -1,0 +1,48 @@
+name: Update Latest Beta Release
+
+on:
+    push:
+        branches: 
+            - development
+
+env:
+    FINAL_BETA_VERSION: "0.0.0"
+
+jobs:
+    figure_out_release_version:
+        runs-on: windows-latest
+
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v2
+
+            - name: Get Latest Release Version
+              id: get_latest_release_version_id
+              run: |
+                $latestTag = git describe --tags --abbrev=0
+                Write-Host "##vso[task.setvariable variable=latestTag]$latestTag"
+
+            - name: Figure Out Beta Release Version
+              id: set_version
+              run: |
+                $currentVersion = [String]$env:latestTag
+                $finalVersion = "0.0.0"
+                if ($currentVersion -like "*-beta") {
+                    $currentVersion = $currentVersion.Replace("-beta", "")  
+                }
+                $finalVersion = $currentVersion
+                Write-Host "The beta version is $finalVersion"
+                echo "FINAL_BETA_VERSION=$finalVersion" >> $GITHUB_ENV
+    
+    start_ci_workflow:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v2
+
+            - name: Start CI Workflow
+              uses: LeoTN/yt-dlp-autohotkey-gui/.github/workflows/build-installer-archive.yml@development
+              with:
+                version: ${{ env.FINAL_BETA_VERSION }}
+                is_pre_release: true
