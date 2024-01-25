@@ -52,4 +52,4 @@ Link to my original project, which will most likely not be developed anymore: [y
 
 ## Licence
 
-[GNU Affero General Public License v3.0](https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENCE)
+[MIT License](https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENCE)
