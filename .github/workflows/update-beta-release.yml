@@ -20,7 +20,7 @@ jobs:
             - name: Get Latest Release Version
               id: get_latest_release_version_id
               run: |
-                $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$env:GITHUB_REPOSITORY/tags" -Method Get
+                $response = Invoke-WebRequest -Uri "https://api.github.com/repos/LeoTN/yt-dlp-autohotkey-gui/tags" -Method Get
                 $latestTag = ($response.Content | ConvertFrom-Json)[0].name
                 Write-Host "##vso[task.setvariable variable=latestTag]$latestTag"
 
@@ -34,6 +34,10 @@ jobs:
                 }
                 $finalVersion = $currentVersion
                 Write-Host "The beta version is $finalVersion"
+                if ($finalVersion -eq "") {
+                  echo "Empty version! Exiting workflow..."   
+                  throw
+                }
                 echo "FINAL_BETA_VERSION=$finalVersion" >> $GITHUB_ENV
     
     start_ci_workflow:
