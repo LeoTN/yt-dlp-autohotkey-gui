@@ -35,14 +35,7 @@ jobs:
                 echo "FINAL_BETA_VERSION=$finalVersion" >> $GITHUB_ENV
     
     start_ci_workflow:
-        runs-on: ubuntu-latest
-
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v2
-
-            - name: Start CI Workflow
-              uses: LeoTN/yt-dlp-autohotkey-gui/.github/workflows/build-installer-archive.yml@development
-              with:
-                version: ${{ env.FINAL_BETA_VERSION }}
-                is_pre_release: true
+        uses: ./.github/workflows/build-installer-archive.yml@development
+        with:
+            version: ${{ env.FINAL_BETA_VERSION }}
+            is_pre_release: true
