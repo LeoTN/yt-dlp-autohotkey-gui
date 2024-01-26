@@ -2,6 +2,19 @@ name: Build VideoDownloader Installer Archive
 
 on:
   workflow_call:
+    inputs:
+      version:
+        description: "Release Version"
+        type: string
+        default: "0.0.0"
+        required: true
+
+      is_pre_release:
+        type: boolean
+        description: "Pre-Release"
+        default: true
+        required: true
+        
   workflow_dispatch:
     inputs:
       version:
