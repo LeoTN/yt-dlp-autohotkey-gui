@@ -35,6 +35,8 @@ jobs:
                 echo "FINAL_BETA_VERSION=$finalVersion" >> $GITHUB_ENV
     
     start_ci_workflow:
+        permissions:
+          contents: write
         uses: ./.github/workflows/build-installer-archive.yml
         with:
           version: ${{ needs.figure_out_release_version.outputs.version_id }}
