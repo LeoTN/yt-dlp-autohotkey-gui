@@ -20,7 +20,8 @@ jobs:
             - name: Get Latest Release Version
               id: get_latest_release_version_id
               run: |
-                $latestTag = $latestTag = Invoke-RestMethod -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/latest" -Headers @{"Authorization"="Bearer $env:GITHUB_TOKEN"} | Select-Object -ExpandProperty tag_name
+                $response = Invoke-WebRequest -Uri "https://api.github.com/repos/${{ env.GITHUB_REPOSITORY }}/tags" -Method Get
+                $latestTag = ($response.Content | ConvertFrom-Json)[0].name
                 Write-Host "##vso[task.setvariable variable=latestTag]$latestTag"
 
             - name: Figure Out Beta Release Version
