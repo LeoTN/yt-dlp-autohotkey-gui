@@ -7,6 +7,7 @@ on:
 
 jobs:
     figure_out_release_version:
+        name: Evaluate Correct Beta Release Version
         runs-on: windows-latest
         outputs:
           id: version_id
@@ -19,7 +20,7 @@ jobs:
             - name: Get Latest Release Version
               id: get_latest_release_version_id
               run: |
-                $latestTag = git describe --tags --abbrev=0
+                $latestTag = $latestTag = Invoke-RestMethod -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/latest" -Headers @{"Authorization"="Bearer $env:GITHUB_TOKEN"} | Select-Object -ExpandProperty tag_name
                 Write-Host "##vso[task.setvariable variable=latestTag]$latestTag"
 
             - name: Figure Out Beta Release Version
@@ -35,6 +36,8 @@ jobs:
                 echo "FINAL_BETA_VERSION=$finalVersion" >> $GITHUB_ENV
     
     start_ci_workflow:
+        name: Launch Release Workflow
+        needs: figure_out_release_version
         permissions:
           contents: write
         uses: ./.github/workflows/build-installer-archive.yml
