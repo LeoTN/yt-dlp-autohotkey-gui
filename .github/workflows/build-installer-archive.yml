@@ -1,17 +1,20 @@
 name: Build VideoDownloader Installer Archive
 
 on:
-    workflow_dispatch:
-      inputs:
-        version :
-          description: "Release Version"
-          default: "0.0.0"
-          required: true
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release Version"
+        type: string
+        default: "0.0.0"
+        required: true
 
-        is_pre_release :
-          description: "Pre-Release"
-          default: "true"
-          required: true
+      is_pre_release:
+        type: boolean
+        description: "Pre-Release"
+        default: true
+        required: true
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
