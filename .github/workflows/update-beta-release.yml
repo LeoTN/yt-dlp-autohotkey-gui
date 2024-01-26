@@ -35,7 +35,7 @@ jobs:
                 echo "FINAL_BETA_VERSION=$finalVersion" >> $GITHUB_ENV
     
     start_ci_workflow:
-        uses: ./.github/workflows/build-installer-archive.yml@development
+        uses: ./.github/workflows/build-installer-archive.yml
         with:
             version: ${{ env.FINAL_BETA_VERSION }}
             is_pre_release: true
