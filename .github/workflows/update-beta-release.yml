@@ -5,12 +5,12 @@ on:
         branches: 
             - development
 
-env:
-    FINAL_BETA_VERSION: "0.0.0"
-
 jobs:
     figure_out_release_version:
         runs-on: windows-latest
+        outputs:
+          id: version_id
+          value: ${{ steps.set_latest_release_version_id.outputs.FINAL_BETA_VERSION }}
 
         steps:
             - name: Checkout Repository
@@ -23,7 +23,7 @@ jobs:
                 Write-Host "##vso[task.setvariable variable=latestTag]$latestTag"
 
             - name: Figure Out Beta Release Version
-              id: set_version
+              id: set_latest_release_version_id
               run: |
                 $currentVersion = [String]$env:latestTag
                 $finalVersion = "0.0.0"
@@ -37,5 +37,5 @@ jobs:
     start_ci_workflow:
         uses: ./.github/workflows/build-installer-archive.yml
         with:
-            version: ${{ env.FINAL_BETA_VERSION }}
+            version: ${{ needs.figure_out_release_version.outputs.version_id }}
             is_pre_release: true
