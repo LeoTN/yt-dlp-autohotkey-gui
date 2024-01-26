@@ -37,5 +37,5 @@ jobs:
     start_ci_workflow:
         uses: ./.github/workflows/build-installer-archive.yml
         with:
-            version: ${{ needs.figure_out_release_version.outputs.version_id }}
-            is_pre_release: true
+          version: ${{ needs.figure_out_release_version.outputs.version_id }}
+          is_pre_release: true
