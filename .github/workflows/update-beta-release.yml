@@ -9,19 +9,6 @@ env:
   LATEST_TAG_NAME: "null"
 
 jobs:
-    test:
-      runs-on: ubuntu-latest
-      steps:
-      - name: Set the value
-        id: step_one
-        run: |
-          echo "action_state=yellow" >> "$GITHUB_ENV"
-
-      - name: Use the value
-        id: step_two
-        run: |
-          printf '%s\n' "$action_state" # This will output 'yellow'
-
     figure_out_release_version:
         name: Evaluate Correct Beta Release Version
         runs-on: windows-2019
@@ -43,8 +30,7 @@ jobs:
                   echo "Empty tag received! Exiting workflow..."   
                   throw
                 }
-                # REMOVE
-                echo "LATEST_TAG_NAME=TEST" >> $GITHUB_OUTPUT
+                echo "LATEST_TAG_NAME=$latestTag" >> $env:GITHUB_OUTPUT
 
             - name: Figure Out Beta Release Version
               id: set_latest_release_version_id
@@ -61,7 +47,7 @@ jobs:
                   echo "Invalid beta version! Exiting workflow..."   
                   throw
                 }
-                echo "FINAL_BETA_VERSION=$finalVersion" >> $GITHUB_OUTPUT
+                echo "FINAL_BETA_VERSION=$finalVersion" >> $env:GITHUB_OUTPUT
     
     start_ci_workflow:
         name: Launch Release Workflow
