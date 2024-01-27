@@ -150,7 +150,7 @@ jobs:
 
     - name: Set Release Name
       run: |
-        if [ "${{ github.event.inputs.IS_PRE_RELEASE }}" == "true" ]; then
+        if [ "${{ env.IS_PRE_RELEASE }}" == "true" ]; then
           releaseName="v${{ env.RELEASE_VERSION }}-beta"
         else
           releaseName="v${{ env.RELEASE_VERSION }}"
