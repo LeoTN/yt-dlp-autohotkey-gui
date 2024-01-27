@@ -37,10 +37,8 @@ jobs:
               run: |
                 $currentVersion = "${{ steps.get_latest_release_version_id.outputs.LATEST_TAG_NAME }}"
                 # Remove unwanted letters.
-                if ($currentVersion -like "*-beta") {
-                    $currentVersion = $currentVersion.Replace("-beta", "")
-                    $currentVersion = $currentVersion.Replace("v", "") 
-                }
+                $currentVersion = $currentVersion.Replace("-beta", "")
+                $currentVersion = $currentVersion.Replace("v", "") 
                 $finalVersion = $currentVersion
                 Write-Host "The beta version will be [$finalVersion]."
                 if (-not ($finalVersion -match '^\d+\.\d+\.\d+$')) {
