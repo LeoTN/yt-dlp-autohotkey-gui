@@ -11,6 +11,8 @@ env:
 jobs:
     figure_out_release_version:
         name: Evaluate Correct Beta Release Version
+        permissions:
+          contents: write
         runs-on: windows-2019
         outputs:
           beta_version: ${{ steps.set_latest_release_version_id.outputs.FINAL_BETA_VERSION }}
