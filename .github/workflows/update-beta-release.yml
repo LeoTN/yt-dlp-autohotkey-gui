@@ -9,6 +9,19 @@ env:
   LATEST_TAG_NAME: "null"
 
 jobs:
+    test:
+      runs-on: windows-2019
+      steps:
+      - name: Set the value
+        id: step_one
+        run: |
+          echo "action_state=yellow" >> "$GITHUB_ENV"
+
+      - name: Use the value
+        id: step_two
+        run: |
+          Write-Host "VALUE IS ${{ env.action_state }}"
+
     figure_out_release_version:
         name: Evaluate Correct Beta Release Version
         runs-on: windows-2019
