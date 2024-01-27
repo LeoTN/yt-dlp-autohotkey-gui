@@ -1,7 +1,7 @@
 name: Build VideoDownloader Installer Archive
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       version:
         description: "Release Version"
@@ -15,7 +15,7 @@ on:
         default: true
         required: true
         
-  workflow_dispatch:
+  workflow_call:
     inputs:
       version:
         description: "Release Version"
@@ -91,8 +91,6 @@ jobs:
 
   build_msi_file:
     runs-on: windows-2019
-    outputs:
-      release_name: ${{  steps.set_release_name_id.outputs.RELEASE_VERSION  }}
     name: Build and Upload MSI Installer File
     needs: build_exe_files
     steps:
@@ -140,7 +138,6 @@ jobs:
       uses: actions/checkout@v3
      
     - name: Download Installer Artifact
-      id: download_installer_artifact_id
       uses: actions/download-artifact@v3
       with:
         name: ${{ env.FINAL_INSTALLER_NAME }}
@@ -152,7 +149,6 @@ jobs:
         zip -r "${{ github.workspace }}/${{ env.FINAL_INSTALLER_ARCHIVE_NAME }}" .
 
     - name: Set Release Name
-      id: set-release-name
       run: |
         if [ "${{ github.event.inputs.IS_PRE_RELEASE }}" == "true" ]; then
           releaseName="v${{ env.RELEASE_VERSION }}-beta"
