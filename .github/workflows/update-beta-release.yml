@@ -22,7 +22,7 @@ jobs:
                 # Calling GitHub API for the latest tag name.
                 $response = Invoke-WebRequest -Uri "https://api.github.com/repos/LeoTN/yt-dlp-autohotkey-gui/tags" -Method Get
                 $latestTag = ($response.Content | ConvertFrom-Json)[0].name
-                if ($latestTag -eq "") {
+                if ($latestTag -like "") {
                   echo "Empty tag received! Exiting workflow..."   
                   throw
                 }
@@ -31,16 +31,18 @@ jobs:
 
             - name: Figure Out Beta Release Version
               id: set_latest_release_version_id
+              env:
+                LATEST_TAG_NAME: ${{ steps.get_latest_release_version_id.outputs.LATEST_TAG_NAME }}
               run: |
-                $currentVersion = ${{ steps.get_latest_release_version_id.outputs.LATEST_TAG_NAME }}
+                $currentVersion = $env:LATEST_TAG_NAME
                 # Remove unwanted letters.
                 if ($currentVersion -like "*-beta") {
                     $currentVersion = $currentVersion.Replace("-beta", "")
                     $currentVersion = $currentVersion.Replace("v", "") 
                 }
                 $finalVersion = $currentVersion
-                if ($finalVersion -eq "") {
-                  echo "Empty version! Exiting workflow..."   
+                if (-not ($finalVersion -match '^\d+\.\d+\.\d+$')) {
+                  echo "Invalid beta version! Exiting workflow..."   
                   throw
                 }
                 Write-Host "The beta version will be [$finalVersion]."
