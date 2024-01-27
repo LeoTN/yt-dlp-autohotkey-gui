@@ -8,30 +8,30 @@ createMainGUI()
 {
     Global
     fileSelectionMenuOpen := Menu()
-    fileSelectionMenuOpen.Add("URL-File`tF2", (*) => openURLFile())
-    fileSelectionMenuOpen.SetIcon("URL-File`tF2", "shell32.dll", 104)
-    fileSelectionMenuOpen.Add("URL-Backup-File`tShift+F2", (*) => openURLBackupFile())
-    fileSelectionMenuOpen.SetIcon("URL-Backup-File`tShift+F2", "shell32.dll", 46)
-    fileSelectionMenuOpen.Add("URL-Blacklist-File`tCTRL+F2", (*) => openURLBlacklistFile())
-    fileSelectionMenuOpen.SetIcon("URL-Blacklist-File`tCTRL+F2", "shell32.dll", 110)
-    fileSelectionMenuOpen.Add("Config-File`tAlt+F2", (*) => openConfigFile())
-    fileSelectionMenuOpen.SetIcon("Config-File`tAlt+F2", "shell32.dll", 70)
-    fileSelectionMenuOpen.Add("Download destination", (*) => handleMainGUI_openDownloadLocation())
-    fileSelectionMenuOpen.SetIcon("Download destination", "shell32.dll", 116)
+    fileSelectionMenuOpen.Add("URL-File`t1", (*) => openURLFile())
+    fileSelectionMenuOpen.SetIcon("URL-File`t1", "shell32.dll", 104)
+    fileSelectionMenuOpen.Add("URL-Backup-File`t2", (*) => openURLBackupFile())
+    fileSelectionMenuOpen.SetIcon("URL-Backup-File`t2", "shell32.dll", 46)
+    fileSelectionMenuOpen.Add("URL-Blacklist-File`t3", (*) => openURLBlacklistFile())
+    fileSelectionMenuOpen.SetIcon("URL-Blacklist-File`t3", "shell32.dll", 110)
+    fileSelectionMenuOpen.Add("Config-File`t4", (*) => openConfigFile())
+    fileSelectionMenuOpen.SetIcon("Config-File`t4", "shell32.dll", 70)
+    fileSelectionMenuOpen.Add("Download destination`t5", (*) => handleMainGUI_openDownloadLocation())
+    fileSelectionMenuOpen.SetIcon("Download destination`t5", "shell32.dll", 116)
 
     fileSelectionMenuDelete := Menu()
-    fileSelectionMenuDelete.Add("URL-File", (*) => deleteFilePrompt("URL-File"))
-    fileSelectionMenuDelete.SetIcon("URL-File", "shell32.dll", 104)
-    fileSelectionMenuDelete.Add("URL-Backup-File", (*) => deleteFilePrompt("URL-Backup-File"))
-    fileSelectionMenuDelete.SetIcon("URL-Backup-File", "shell32.dll", 46)
-    fileSelectionMenuDelete.Add("Latest download", (*) => deleteFilePrompt("latest download"))
-    fileSelectionMenuDelete.SetIcon("Latest download", "shell32.dll", 116)
+    fileSelectionMenuDelete.Add("URL-File`tShift+1", (*) => deleteFilePrompt("URL-File"))
+    fileSelectionMenuDelete.SetIcon("URL-File`tShift+1", "shell32.dll", 104)
+    fileSelectionMenuDelete.Add("URL-Backup-File`tShift+2", (*) => deleteFilePrompt("URL-Backup-File"))
+    fileSelectionMenuDelete.SetIcon("URL-Backup-File`tShift+2", "shell32.dll", 46)
+    fileSelectionMenuDelete.Add("Latest download`tShift+5", (*) => deleteFilePrompt("latest download"))
+    fileSelectionMenuDelete.SetIcon("Latest download`tShift+5", "shell32.dll", 116)
 
     fileSelectionMenuReset := Menu()
-    fileSelectionMenuReset.Add("URL-Blacklist-File", (*) => openURLBlacklistFile(true))
-    fileSelectionMenuReset.SetIcon("URL-Blacklist-File", "shell32.dll", 110)
-    fileSelectionMenuReset.Add("Config-File", (*) => createDefaultConfigFile(, true))
-    fileSelectionMenuReset.SetIcon("Config-File", "shell32.dll", 70)
+    fileSelectionMenuReset.Add("URL-Blacklist-File`tShift+3", (*) => openURLBlacklistFile(true))
+    fileSelectionMenuReset.SetIcon("URL-Blacklist-File`tShift+3", "shell32.dll", 110)
+    fileSelectionMenuReset.Add("Config-File`tShift+4", (*) => createDefaultConfigFile(, true))
+    fileSelectionMenuReset.SetIcon("Config-File`tShift+4", "shell32.dll", 70)
 
     fileMenu := Menu()
     fileMenu.Add("&Open...", fileSelectionMenuOpen)
@@ -50,25 +50,25 @@ createMainGUI()
         (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Reload Script → " .
             expandHotkey(readConfigFile("RELOAD_SCRIPT_HK")), 2), "+Radio")
 
-    activeHotkeyMenu.Add("Currently not used → " . expandHotkey(readConfigFile("NOT_USED_HK")),
-        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Currently not used → " .
-            expandHotkey(readConfigFile("NOT_USED_HK")), 3), "+Radio")
-
     activeHotkeyMenu.Add("Start Download → " . expandHotkey(readConfigFile("DOWNLOAD_HK")),
         (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Start Download → " .
-            expandHotkey(readConfigFile("DOWNLOAD_HK")), 4), "+Radio")
+            expandHotkey(readConfigFile("DOWNLOAD_HK")), 3), "+Radio")
 
     activeHotkeyMenu.Add("Collect URL Searchbar → " . expandHotkey(readConfigFile("URL_COLLECT_HK")),
         (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Collect URL Searchbar → " .
-            expandHotkey(readConfigFile("URL_COLLECT_HK")), 5), "+Radio")
+            expandHotkey(readConfigFile("URL_COLLECT_HK")), 4), "+Radio")
 
     activeHotkeyMenu.Add("Collect URL Thumbnail → " . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")),
         (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Collect URL Thumbnail → " .
-            expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")), 6), "+Radio")
+            expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")), 5), "+Radio")
 
     activeHotkeyMenu.Add("Clear URL File → " . expandHotkey(readConfigFile("CLEAR_URL_FILE_HK")),
         (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Clear URL File → " .
-            expandHotkey(readConfigFile("CLEAR_URL_FILE_HK")), 7), "+Radio")
+            expandHotkey(readConfigFile("CLEAR_URL_FILE_HK")), 6), "+Radio")
+
+    activeHotkeyMenu.Add("Restore URL File → " . expandHotkey(readConfigFile("RESTORE_URL_FILE_HK")),
+        (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Restore URL File → " .
+            expandHotkey(readConfigFile("RESTORE_URL_FILE_HK")), 7), "+Radio")
 
     activeHotkeyMenu.Add()
     activeHotkeyMenu.Add("Enable All", (*) => handleMainGUI_MenuCheckAll("activeHotkeyMenu"))
@@ -162,7 +162,7 @@ handleMainGUI_MenuCheckAll(pMenuName)
 {
     menuItemCount := DllCall("GetMenuItemCount", "ptr", %pMenuName%.Handle)
 
-    Loop (MenuItemCount - 2)
+    Loop (MenuItemCount - 3)
     {
         %pMenuName%.Check(A_Index . "&")
         ; Protects the code from the invalid index error caused by the check array further on.
@@ -181,7 +181,7 @@ handleMainGUI_MenuUncheckAll(pMenuName)
 {
     menuItemCount := DllCall("GetMenuItemCount", "ptr", %pMenuName%.Handle)
 
-    Loop (MenuItemCount - 2)
+    Loop (MenuItemCount - 3)
     {
         %pMenuName%.Uncheck(A_Index . "&")
         ; Protects the code from the invalid index error caused by the check array further on.

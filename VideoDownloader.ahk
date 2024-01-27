@@ -261,7 +261,6 @@ F6::
     If (readConfigFile("booleanDebugMode"))
     {
         ; Enter code below.
-        handleDownloadOptionsGUI_ResolveElementConflicts()
     }
 }
 
@@ -269,8 +268,7 @@ F7::
 {
     If (readConfigFile("booleanDebugMode"))
     {
-        ; Enter code below
-        handleDownloadOptionsGUI_ProcessCommandStringInputs()
+        ; Enter code below.
     }
 }
 

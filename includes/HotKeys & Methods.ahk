@@ -42,7 +42,7 @@ registerHotkeys()
     Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), "Off")
 
     ; Hotkey that is currently not used.
-    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet", , "T2"), "Off")
+    Hotkey(readConfigFile("RESTORE_URL_FILE_HK"), (*) => MsgBox("Not implemented yet", , "T2"), "Off")
 
     ; Hotkey for clearing the URL file.
     Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), "Off")
@@ -698,11 +698,11 @@ toggleHotkey(pStateArray)
 
     Hotkey(readConfigFile("TERMINATE_SCRIPT_HK"), (*) => terminateScriptPrompt(), onOffArray.Get(1))
     Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), onOffArray.Get(2))
-    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet", , "T2"), onOffArray.Get(3))
-    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray.Get(4))
-    Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray.Get(5))
-    Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray.Get(6))
-    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), onOffArray.Get(7))
+    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray.Get(3))
+    Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray.Get(4))
+    Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray.Get(5))
+    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), onOffArray.Get(6))
+    Hotkey(readConfigFile("RESTORE_URL_FILE_HK"), (*) => restoreURLFile(), onOffArray.Get(7))
 }
 
 reloadScriptPrompt()
