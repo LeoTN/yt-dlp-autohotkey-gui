@@ -118,42 +118,60 @@ getBrowserURLUnderMouseCursor()
             videoElementAccOrigin := Acc.ElementFromPoint()
         }
         videoElementAccOriginParent := videoElementAccOrigin.Parent
-
+        ; Child and origin section.
+        Try
+        {
+            ; Added to check if the element directly under the cursor contains an URL.
+            videoURL := videoElementAccOrigin.Value
+            ; The /@ is located in the youtuber channel link, which should not be selected.
+            If ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@"))
+            {
+                Return videoURL
+            }
+        }
         Try
         {
             ; Looks for the URL in the originally selected element.
             videoElementValue := videoElementAccOrigin.Normalize({ Role: role_Shortcut, not: { Value: "" } })
             videoURL := videoElementValue.Value
+            ; The /@ is located in the youtuber channel link, which should not be selected.
+            If ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@"))
+            {
+                Return videoURL
+            }
         }
         Try
         {
             ; Looks for the URL in the originally selected element.
             videoElementValue := videoElementAccOrigin.Normalize({ Role: role_Text, not: { Value: "" } })
             videoURL := videoElementValue.Value
+            ; The /@ is located in the youtuber channel link, which should not be selected.
+            If ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@"))
+            {
+                Return videoURL
+            }
         }
         ; Parent section.
         Try
         {
             ; Tries to find matching childs in the parent of the originally selected element.
             videoElementAccChildShortcut := videoElementAccOriginParent.FindElement({ Role: role_Shortcut, not: { Value: "" } })
-        }
-        Try
-        {
             ; Looks for the URL in the "brothers" of the originally selected element.
             videoElementValue := videoElementAccChildShortcut.Normalize({ Role: role_Shortcut, not: { Value: "" } })
             videoURL := videoElementValue.Value
+            ; The /@ is located in the youtuber channel link, which should not be selected.
+            If ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@"))
+            {
+                Return videoURL
+            }
         }
         Try
         {
             ; Looks for the URL in the "brothers" of the originally selected element.
             videoElementValue := videoElementAccChildShortcut.Normalize({ Role: role_Text, not: { Value: "" } })
             videoURL := videoElementValue.Value
-        }
-
-        If (IsSet(videoURL))
-        {
             ; The /@ is located in the youtuber channel link, which should not be selected.
-            If (InStr(videoURL, "https://") && !InStr(videoURL, "/@"))
+            If ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@"))
             {
                 Return videoURL
             }

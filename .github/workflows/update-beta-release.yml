@@ -56,5 +56,5 @@ jobs:
           contents: write
         uses: ./.github/workflows/build-installer-archive.yml
         with:
-          version: ${{ needs.figure_out_release_version.outputs.beta_version }}
+          version: "${{ needs.figure_out_release_version.outputs.beta_version }}"
           is_pre_release: true
