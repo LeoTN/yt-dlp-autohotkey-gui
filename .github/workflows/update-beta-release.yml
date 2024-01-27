@@ -10,7 +10,7 @@ env:
 
 jobs:
     test:
-      runs-on: windows-2019
+      runs-on: ubuntu-latest
       steps:
       - name: Set the value
         id: step_one
@@ -20,7 +20,7 @@ jobs:
       - name: Use the value
         id: step_two
         run: |
-          Write-Host "VALUE IS ${{ env.action_state }}"
+          printf '%s\n' "$action_state" # This will output 'yellow'
 
     figure_out_release_version:
         name: Evaluate Correct Beta Release Version
