@@ -27,14 +27,12 @@ jobs:
                   echo "Empty tag received! Exiting workflow..."   
                   throw
                 }
-                echo "LATEST_TAG_NAME=$latestTag" >> "$GITHUB_OUTPUT"
+                echo "LATEST_TAG_NAME=$latestTag" >> $GITHUB_ENV
 
             - name: Figure Out Beta Release Version
               id: set_latest_release_version_id
-              env:
-                LATEST_TAG_NAME: ${{ steps.get_latest_release_version_id.outputs.LATEST_TAG_NAME }}
               run: |
-                $currentVersion = $LATEST_TAG_NAME
+                $currentVersion = ${{ env.LATEST_TAG_NAME }}
                 # Remove unwanted letters.
                 if ($currentVersion -like "*-beta") {
                     $currentVersion = $currentVersion.Replace("-beta", "")
@@ -46,7 +44,7 @@ jobs:
                   echo "Invalid beta version! Exiting workflow..."   
                   throw
                 }
-                echo "FINAL_BETA_VERSION=$finalVersion" >> "$GITHUB_OUTPUT"
+                echo "FINAL_BETA_VERSION=$finalVersion" >> $GITHUB_OUTPUT
     
     start_ci_workflow:
         name: Launch Release Workflow
