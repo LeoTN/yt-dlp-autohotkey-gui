@@ -5,29 +5,22 @@ Clear-Host
 $logfile = $env:temp + "\yt_dlp_download_log.txt"
 Write-Host "Terminal ready..."
 
-$result = Test-Path $logfile
-while (-not($result)) {
+while (-not (Test-Path -Path $logfile)) {
     Write-Host "Waiting for hook file..."
     Start-Sleep -Seconds 3
-    $result = Test-Path -Path $logfile
 }
 
 $currentLineCount = 0
+Get-Content -Path $logfile -Wait | ForEach-Object {
+    $newLineCount = (Get-Content -Path $logfile).Count
 
-While ($true) {
-    $content = Get-Content -Path $logfile
-    $newLineCount = $content.Count
-
-    If ($newLineCount -gt $currentLineCount) {
-        $newLines = $content[$currentLineCount..($newLineCount - 1)]
-        Foreach ($line in $newLines) {
-            If ($line -ne "") {
-                Write-Host $line
+    if ($newLineCount -gt $currentLineCount) {
+        $newLines = Get-Content -Path $logfile | Select-Object -Skip $currentLineCount
+        $newLines | ForEach-Object {
+            if ($_ -ne "") {
+                Write-Host $_
             }
         }
         $currentLineCount = $newLineCount
-    }
-    Else {
-        Start-Sleep -Seconds 0.1
     }
 }
