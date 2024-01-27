@@ -35,7 +35,7 @@ jobs:
             - name: Figure Out Beta Release Version
               id: set_latest_release_version_id
               run: |
-                $currentVersion = ${{ steps.get_latest_release_version_id.outputs.LATEST_TAG_NAME }}
+                $currentVersion = "${{ steps.get_latest_release_version_id.outputs.LATEST_TAG_NAME }}"
                 # Remove unwanted letters.
                 if ($currentVersion -like "*-beta") {
                     $currentVersion = $currentVersion.Replace("-beta", "")
