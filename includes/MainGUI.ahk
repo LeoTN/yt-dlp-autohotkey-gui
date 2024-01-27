@@ -24,8 +24,6 @@ createMainGUI()
     fileSelectionMenuDelete.SetIcon("URL-File", "shell32.dll", 104)
     fileSelectionMenuDelete.Add("URL-Backup-File", (*) => deleteFilePrompt("URL-Backup-File"))
     fileSelectionMenuDelete.SetIcon("URL-Backup-File", "shell32.dll", 46)
-    fileSelectionMenuDelete.Add("URL-Blacklist-File", (*) => deleteFilePrompt("URL-Blacklist-File"))
-    fileSelectionMenuDelete.SetIcon("URL-Blacklist-File", "shell32.dll", 110)
     fileSelectionMenuDelete.Add("Latest download", (*) => deleteFilePrompt("latest download"))
     fileSelectionMenuDelete.SetIcon("Latest download", "shell32.dll", 116)
 

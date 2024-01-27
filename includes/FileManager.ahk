@@ -407,11 +407,12 @@ openURLFile()
             Run(tmpConfig)
             Return true
         }
-    }
-    Catch
-    {
         MsgBox("The URL file does not exist!`n`nIt was probably already cleared.", "VD - Missing URL File!", "O Icon! T3")
         Return false
+    }
+    Catch As error
+    {
+        displayErrorMessage(error)
     }
 }
 
@@ -430,11 +431,12 @@ openURLBackupFile()
             Run(tmpConfig)
             Return true
         }
-    }
-    Catch
-    {
         MsgBox("The URL backup file does not exist!`n`nIt was probably not generated yet.", "VD - Missing URL Backup File!", "O Icon! T3")
         Return false
+    }
+    Catch As error
+    {
+        displayErrorMessage(error)
     }
 }
 
@@ -469,11 +471,13 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
             {
                 ; Calls checkBlackListFile() in order to create a new blacklist file.
                 checkBlackListFile("generateFile", false)
+                openURLBlacklistFile(pBooleanShowPrompt)
                 Return true
             }
         }
         Else
         {
+            MsgBox("The URL blacklist file does not exist!`n`nIt was probably not generated yet.", "VD - Missing URL Blacklist File!", "O Icon! T3")
             Return false
         }
     }
@@ -488,12 +492,12 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
         {
             ; Calls checkBlackListFile() in order to create a new blacklist file.
             checkBlackListFile("generateFile")
+            openURLBlacklistFile(pBooleanShowPrompt)
         }
     }
-    Catch
+    Catch As error
     {
-        MsgBox("The URL blacklist file does not exist!`n`nIt was probably not generated yet.", "VD - Missing URL Blacklist File!", "O Icon! T3")
-        Return false
+        displayErrorMessage(error)
     }
 }
 
@@ -555,12 +559,6 @@ deleteFilePrompt(pFileName)
                         c := "URL_BACKUP_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_BACKUP_FILE_LOCATION"), &outFileName)
                         FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), scriptBaseFilesLocation . "\deleted\" . outFileName, true)
-                    }
-                Case "URL-Blacklist-File":
-                    {
-                        c := "BLACKLIST_FILE_LOCATION"
-                        SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), scriptBaseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "latest download":
                     {
