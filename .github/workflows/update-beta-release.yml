@@ -17,26 +17,33 @@ jobs:
               uses: actions/checkout@v2
 
             - name: Get Latest Release Version
+              id: get_latest_release_version_id
               run: |
+                # Calling GitHub API for the latest tag name.
                 $response = Invoke-WebRequest -Uri "https://api.github.com/repos/LeoTN/yt-dlp-autohotkey-gui/tags" -Method Get
                 $latestTag = ($response.Content | ConvertFrom-Json)[0].name
-                echo "The received tag name is $latestTag"
-                Write-Host "##vso[task.setvariable variable=latestTag]$latestTag"
+                if ($latestTag -eq "") {
+                  echo "Empty tag received! Exiting workflow..."   
+                  throw
+                }
+                echo "The received tag name is [$latestTag]."
+                echo "LATEST_TAG_NAME=$latestTag" >> $GITHUB_OUTPUT
 
             - name: Figure Out Beta Release Version
               id: set_latest_release_version_id
               run: |
-                $currentVersion = [String]$env:latestTag
-                $finalVersion = "0.0.0"
+                $currentVersion = ${{ steps.get_latest_release_version_id.outputs.LATEST_TAG_NAME }}
+                # Remove unwanted letters.
                 if ($currentVersion -like "*-beta") {
-                    $currentVersion = $currentVersion.Replace("-beta", "")  
+                    $currentVersion = $currentVersion.Replace("-beta", "")
+                    $currentVersion = $currentVersion.Replace("v", "") 
                 }
                 $finalVersion = $currentVersion
-                Write-Host "The beta version will be $finalVersion"
                 if ($finalVersion -eq "") {
                   echo "Empty version! Exiting workflow..."   
                   throw
                 }
+                Write-Host "The beta version will be [$finalVersion]."
                 echo "FINAL_BETA_VERSION=$finalVersion" >> $GITHUB_OUTPUT
     
     start_ci_workflow:
