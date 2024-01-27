@@ -36,7 +36,7 @@ env:
   FINAL_INSTALLER_ARCHIVE_NAME: VideoDownloaderInstaller.zip
   RELEASE_VERSION: ${{ github.event.inputs.version }}
   RELEASE_NAME: ""
-  IS_PRE_RELEASE: ${{ github.event.inputs.is_pre_release }}
+  IS_PRE_RELEASE: ${{ inputs.is_pre_release }}
 
 jobs:
   build_exe_files:
@@ -44,6 +44,9 @@ jobs:
     runs-on: windows-2019
 
     steps:
+    - name: #REMOVE
+      run: echo "The release name is ${{ env.RELEASE_NAME }}"
+
     - name: Checkout Repository
       uses: actions/checkout@v2
 
