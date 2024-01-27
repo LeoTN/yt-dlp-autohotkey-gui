@@ -11,8 +11,6 @@ env:
 jobs:
     figure_out_release_version:
         name: Evaluate Correct Beta Release Version
-        permissions:
-          contents: write
         runs-on: windows-2019
         outputs:
           beta_version: ${{ steps.set_latest_release_version_id.outputs.FINAL_BETA_VERSION }}
@@ -22,6 +20,7 @@ jobs:
               uses: actions/checkout@v2
 
             - name: Get Latest Release Version
+              id: get_latest_release_version_id
               run: |
                 # Calling GitHub API for the latest tag name.
                 $response = Invoke-WebRequest -Uri "https://api.github.com/repos/LeoTN/yt-dlp-autohotkey-gui/tags" -Method Get
@@ -32,12 +31,12 @@ jobs:
                   throw
                 }
                 # REMOVE
-                echo "LATEST_TAG_NAME=TEST" >> "$GITHUB_ENV"
+                echo "LATEST_TAG_NAME=TEST" >> $GITHUB_OUTPUT
 
             - name: Figure Out Beta Release Version
               id: set_latest_release_version_id
               run: |
-                $currentVersion = ${{ env.LATEST_TAG_NAME }}
+                $currentVersion = ${{ steps.get_latest_release_version_id.outputs.LATEST_TAG_NAME }}
                 # Remove unwanted letters.
                 if ($currentVersion -like "*-beta") {
                     $currentVersion = $currentVersion.Replace("-beta", "")
@@ -49,7 +48,7 @@ jobs:
                   echo "Invalid beta version! Exiting workflow..."   
                   throw
                 }
-                echo "FINAL_BETA_VERSION=$finalVersion" >> "$GITHUB_OUTPUT"
+                echo "FINAL_BETA_VERSION=$finalVersion" >> $GITHUB_OUTPUT
     
     start_ci_workflow:
         name: Launch Release Workflow
