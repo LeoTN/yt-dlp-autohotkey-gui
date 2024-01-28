@@ -52,7 +52,7 @@ config_onInit()
     ; This option controls if empty download folders with no media inside should be automatically deleted.
     global DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD := true
     ; Stores which hotkeys are enabled / disabled via the GUI.
-    global HOTKEY_STATE_ARRAY := "[1, 1, 0, 1, 1, 1, 0]"
+    global HOTKEY_STATE_ARRAY := "[1, 1, 1, 1, 1, 0, 0]"
     ; Just a list of all standard hotkeys.
     global DOWNLOAD_HK := "+^!D"
     global URL_COLLECT_HK := "+^!S"
@@ -60,7 +60,7 @@ config_onInit()
     global MAIN_GUI_HK := "+^!G"
     global TERMINATE_SCRIPT_HK := "+^!T"
     global RELOAD_SCRIPT_HK := "+^!R"
-    global NOT_USED_HK := "+^!P"
+    global RESTORE_URL_FILE_HK := "!F2"
     global CLEAR_URL_FILE_HK := "!F1"
     global OPTIONS_GUI_HK := "+^!A"
     ;------------------------------------------------
@@ -99,7 +99,7 @@ config_onInit()
             "OPTIONS_GUI_HK",
             "TERMINATE_SCRIPT_HK",
             "RELOAD_SCRIPT_HK",
-            "NOT_USED_HK",
+            "RESTORE_URL_FILE_HK",
             "CLEAR_URL_FILE_HK"
         ]
     ; Create an array including the matching section name for EACH item in the configVariableNameArray.

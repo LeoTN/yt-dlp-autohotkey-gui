@@ -11008,7 +11008,7 @@ https://psappdeploytoolkit.com
     Param (
         [Parameter(Mandatory = $false)]
         [ValidateRange(1, 60)]
-        [Int32]$WaitingTime = 3
+        [Int32]$WaitingTime = 1
     )
 
     Begin {

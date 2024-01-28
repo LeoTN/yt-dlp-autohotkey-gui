@@ -30,7 +30,7 @@ onInit()
     onInit_checkIfSetupIsRequired()
     global downloadOptionsGUITooltipFileLocation := scriptBaseFilesLocation . "\library\scripts\DownloadOptionsGUITooltips.exe"
     global ffmpegLocation := RegRead(videoDownloaderRegistryDirectory, "ffmpegLocation", "")
-    global youTubeBackGroundLocation := scriptBaseFilesLocation . "\library\assets\YouTubeBackground.jpg"
+    global mainGUIBackGroundLocation := scriptBaseFilesLocation . "\library\assets\main_gui_background.png"
     local scriptIconLocation := scriptBaseFilesLocation . "\library\assets\green_arrow_icon.ico"
 
     Try
@@ -60,7 +60,7 @@ onInit()
                 }
         }
     }
-    If (!FileExist(youTubeBackGroundLocation) || !FileExist(scriptIconLocation))
+    If (!FileExist(mainGUIBackGroundLocation) || !FileExist(scriptIconLocation))
     {
         result := MsgBox("Missing graphic files.`n`nNote: Although these files are not mandatory, it is recommended "
             . "to run the setup executable file to repair the application.`n`nPrepare for setup?", "VD - Corrupted / Missing Files!", "YN Icon! 262144")
@@ -261,7 +261,6 @@ F6::
     If (readConfigFile("booleanDebugMode"))
     {
         ; Enter code below.
-        handleDownloadOptionsGUI_ResolveElementConflicts()
     }
 }
 
@@ -269,8 +268,7 @@ F7::
 {
     If (readConfigFile("booleanDebugMode"))
     {
-        ; Enter code below
-        handleDownloadOptionsGUI_ProcessCommandStringInputs()
+        ; Enter code below.
     }
 }
 

@@ -48,7 +48,7 @@ function installVideoDownloader($pVideoDownloaderInstallationDirectory, $pBoolea
     Write-Log "`n`n[installVideoDownloader()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
     Show-InstallationProgress -StatusMessage "Installing VideoDownloader. Please wait..." -TopMost $false
 
-    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact $true
+    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact
     If ($installedVideoDownloaderObject) {
         $installedVideoDownloaderLocation = $installedVideoDownloaderObject.InstallLocation
         Write-Log "`n`n[installVideoDownloader()] [INFO] Other potentially useful information:`n[$installedVideoDownloaderObject].`n`n"
@@ -61,7 +61,7 @@ function installVideoDownloader($pVideoDownloaderInstallationDirectory, $pBoolea
             Execute-MSI -Action "Install" -Path $videoDownloaderInstallerLocation -Parameters "/quiet /norestart REBOOT=ReallySppress APPDIR=""$pVideoDownloaderInstallationDirectory"""
         }
         Else {
-            Execute-MSI -Action "Install" -Path $videoDownloaderInstallerLocation -Parameters "/passive /norestart /qb REBOOT=ReallySppress APPDIR=""$pVideoDownloaderInstallationDirectory"""
+            Execute-MSI -Action "Install" -Path $videoDownloaderInstallerLocation -Parameters "/passive /norestart /qb! REBOOT=ReallySppress APPDIR=""$pVideoDownloaderInstallationDirectory"""
         }
         # Copy the .MSI installer to the target directory.
         $copyInstallerTargetDirectory = "$pVideoDownloaderInstallationDirectory\yt_dlp_autohotkey_gui_files\library\setup\Files\VideoDownloaderInstaller.msi"
@@ -90,7 +90,7 @@ function uninstallVideoDownloader($pBooleanQuiet = $false) {
     Write-Log "`n`n[uninstallVideoDownloader()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
     Show-InstallationProgress -StatusMessage "Uninstalling VideoDownloader. Please wait..." -TopMost $false
 
-    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact $true
+    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact
     If ($installedVideoDownloaderObject) {
         $installedVideoDownloaderLocation = $installedVideoDownloaderObject.InstallLocation
         Write-Log "`n`n[uninstallVideoDownloader()] [INFO] Other potentially useful information:`n[$installedVideoDownloaderObject].`n`n"
@@ -99,7 +99,7 @@ function uninstallVideoDownloader($pBooleanQuiet = $false) {
             Execute-MSI -Action "Uninstall" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/quiet /norestart REBOOT=ReallySppress"
         }
         Else {
-            Execute-MSI -Action "Uninstall" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/passive /norestart /qb REBOOT=ReallySppress"
+            Execute-MSI -Action "Uninstall" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/passive /norestart /qb! REBOOT=ReallySppress"
         }
         # Remove the .MSI installer from the target directory.
         $copiedInstallerTargetDirectory = "$pVideoDownloaderInstallationDirectory\yt_dlp_autohotkey_gui_files\library\setup\Files\VideoDownloaderInstaller.msi"
@@ -123,7 +123,7 @@ function repairVideoDownloader($pBooleanQuiet = $false) {
     Write-Log "`n`n[repairVideoDownloader()] [INFO] pBooleanQuiet = $pBooleanQuiet`n`n"
     Show-InstallationProgress -StatusMessage "Repairing VideoDownloader. Please wait..." -TopMost $false
 
-    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact $true
+    $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact
     If ($installedVideoDownloaderObject) {
         $installedVideoDownloaderLocation = $installedVideoDownloaderObject.InstallLocation
         Write-Log "`n`n[repairVideoDownloader()] [INFO] Other potentially useful information:`n[$installedVideoDownloaderObject].`n`n"
@@ -132,7 +132,7 @@ function repairVideoDownloader($pBooleanQuiet = $false) {
             Execute-MSI -Action "Repair" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/quiet /norestart REBOOT=ReallySppress"
         }
         Else {
-            Execute-MSI -Action "Repair" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/passive /norestart /qb REBOOT=ReallySppress"
+            Execute-MSI -Action "Repair" -Path $installedVideoDownloaderObject.ProductCode -Parameters "/passive /norestart /qb! REBOOT=ReallySppress"
         }
         Return $true
     }
@@ -188,6 +188,9 @@ function installPython($pPythonInstallDirectory, $pBooleanQuiet = $false) {
                     Write-Log "`n`n[installPython()] [INFO] Found $($exePath32.FullName), now attempting to install Python 3.12.0 (32-bit).`n`n"     
                     Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (32-bit). This might take some time. Please wait..." -TopMost $false
                     Execute-ProcessAsUser -Path "$exePath32" -Parameters $parameterString -Wait
+                }
+                Else {
+                    Return $false
                 }     
             }
             Else {
@@ -198,11 +201,8 @@ function installPython($pPythonInstallDirectory, $pBooleanQuiet = $false) {
                     Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (64-bit). This might take some time. Please wait..." -TopMost $false
                     Execute-ProcessAsUser -Path "$exePath64" -Parameters $parameterString -Wait
                 }
-                # Install Python 3.12 (32-bit) if 64-bit installer is not available.     
-                ElseIf ($exePath32.Exists) {
-                    Write-Log "`n`n[installPython()] [INFO] Found $($exePath32.FullName), now attempting to install Python 3.12.0 (32-bit).`n`n"     
-                    Show-InstallationProgress -StatusMessage "Installing Python 3.12.0 (32-bit). This might take some time. Please wait..." -TopMost $false
-                    Execute-ProcessAsUser -Path "$exePath32" -Parameters $parameterString -Wait
+                Else {
+                    Return $false
                 }
             }
             Return $true
@@ -333,6 +333,15 @@ function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false
     $pythonInstaller64Name = "python-3.12.0-amd64.exe"
     $pythonInstaller32DownloadLink = "https://www.python.org/ftp/python/3.12.0/python-3.12.0.exe"
     $pythonInstaller64DownloadLink = "https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe"
+    If ($ENV:PROCESSOR_ARCHITECTURE -eq "x86") {
+        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Detected 32-bit OS architecture.`n`n"
+        $booleanIs64BitArchitecture = $false
+                    
+    }
+    Else {
+        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Detected 64-bit OS architecture.`n`n"
+        $booleanIs64BitArchitecture = $true
+    }
     Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] pBooleanNoDownload = $pBooleanNoDownload)`n`n"
     Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] pythonInstallerFinalPath = $pythonInstallerFinaDirectory)`n`n"
     Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] pythonInstaller32Name = $pythonInstaller32Name`n`n"
@@ -344,13 +353,17 @@ function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false
         Return $false
     }
     # Test if both the 32 and 64 bit executables are present and starts the download if not.
+    # 32 bit section.
     If (-not (Test-Path -Path "$pythonInstallerFinaDirectory\$pythonInstaller32Name")) {
-        If ($pBooleanNoDownload -eq $true) {
-            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] Missing Python 32 bit setup executable."
+        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] Missing Python 32 bit setup executable."
+        If ($pBooleanNoDownload) {
             Return $false
         }
+        ElseIf ($booleanIs64BitArchitecture) {
+            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Skipping download because the 32 bit setup executable is irrelevant due to the wrong system architecture."
+        }
         Else {
-            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Missing Python 32 bit setup executable. Starting download...`n`n"
+            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Starting python 32 bit setup executable download...`n`n"
             If (-not (getBooleanReturn(checkInternetConnectionStatus))) {
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] No active Internet connection found for downloading installer.`n`n"
                 # Language support needed.
@@ -360,7 +373,7 @@ function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false
                 Return $false
             }
             Try {
-                Show-InstallationProgress -StatusMessage "Downloading Python installer. Please wait..." -TopMost $false
+                Show-InstallationProgress -StatusMessage "Downloading Python 32 bit installer. Please wait..." -TopMost $false
                 Invoke-WebRequest -Uri $pythonInstaller32DownloadLink -OutFile "$pythonInstallerFinaDirectory\$pythonInstaller32Name"
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Downloaded 32 bit executable to`n[$pythonInstallerFinaDirectory].`n`n"
             }
@@ -373,32 +386,38 @@ function checkPythonInstallerFilesPresence([boolean]$pBooleanNoDownload = $false
     Else {
         Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Found 32 bit executable at`n[$pythonInstallerFinaDirectory\$pythonInstaller32Name].`n`n"
     }
+    # 64 bit section.
     If (-not (Test-Path -Path "$pythonInstallerFinaDirectory\$pythonInstaller64Name")) {
-        If ($pBooleanNoDownload -eq $true) {
-            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] Missing Python 64 bit setup executable.`n`n"
+        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] Missing Python 64 bit setup executable."
+        If ($pBooleanNoDownload) {
             Return $false
         }
+        ElseIf (-not ($booleanIs64BitArchitecture)) {
+            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Skipping download because the 64 bit setup executable is irrelevant due to the wrong system architecture."
+        }
         Else {
+            Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Starting python 64 bit setup executable download...`n`n"
             If (-not (getBooleanReturn(checkInternetConnectionStatus))) {
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] No active Internet connection found for downloading installer.`n`n"
+                # Language support needed.
                 $balloonText = "No Internet connection found. Operation could not complete."
                 $balloonTitle = "Python Installation Status"
                 Show-BalloonTip -BalloonTipText $balloonText -BalloonTipTitle $balloonTitle -BalloonTipTime 5000 -BalloonTipIcon "Warning"
                 Return $false
             }
             Try {
-                Show-InstallationProgress -StatusMessage "Downloading Python installer. Please wait..." -TopMost $false
+                Show-InstallationProgress -StatusMessage "Downloading Python 64 bit installer. Please wait..." -TopMost $false
                 Invoke-WebRequest -Uri $pythonInstaller64DownloadLink -OutFile "$pythonInstallerFinaDirectory\$pythonInstaller64Name"
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Downloaded 64 bit executable to`n[$pythonInstallerFinaDirectory].`n`n"
             }
             Catch {
                 Write-Log "`n`n[checkPythonInstallerFilesPresence()] [WARNING] Error while downloading 64 bit setup executable!`n`n"
                 Return $false
-            }  
+            } 
         }
     }
     Else {
-        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Found 64 bit executable at`n[$pythonInstallerFinaDirectory\$pythonInstaller64Name].`n`n"
+        Write-Log "`n`n[checkPythonInstallerFilesPresence()] [INFO] Found 64 bit executable at`n[$pythonInstallerFinaDirectory\$pythonInstaller32Name].`n`n"
     }
     Return $true
 }
@@ -913,7 +932,7 @@ function repairFFmpeg($pVideoDownloaderInstallationDirectory, $pBooleanQuiet = $
     Else {
         Write-Log "`n`n[repairFFmpeg()] [INFO] FFmpeg is not installed. Trying to find VideoDownloader instance for FFmpeg installation.`n`n"
 
-        $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact $true
+        $installedVideoDownloaderObject = Get-InstalledApplication -Name "VideoDownloader" -Exact
         If ($installedVideoDownloaderObject) {
             $tmpLocation = $installedVideoDownloaderObject.InstallLocation
             $installedVideoDownloaderLocation = $tmpLocation.TrimEnd("\")

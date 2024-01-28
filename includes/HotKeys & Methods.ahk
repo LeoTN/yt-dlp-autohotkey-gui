@@ -42,7 +42,7 @@ registerHotkeys()
     Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), "Off")
 
     ; Hotkey that is currently not used.
-    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet", , "T2"), "Off")
+    Hotkey(readConfigFile("RESTORE_URL_FILE_HK"), (*) => MsgBox("Not implemented yet", , "T2"), "Off")
 
     ; Hotkey for clearing the URL file.
     Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), "Off")
@@ -267,7 +267,7 @@ executeAndLogConsoleCommand(pCommand, pBooleanSilent)
             FileDelete(A_Temp . "\yt_dlp_download_log.txt")
         }
         ; The powershell script now waits for the hook file.
-        Run('powershell.exe -noExit -executionPolicy bypass -file "' . scriptBaseFilesLocation . '\library\scripts\MonitorHookFile.ps1"'
+        Run('powershell.exe -noLogo -noProfile -executionPolicy bypass -file "' . scriptBaseFilesLocation . '\library\scripts\MonitorHookFile.ps1"'
             , , "Min", &visualPowershellPID)
         WinWait("ahk_pid " . visualPowershellPID)
         WinActivate("ahk_pid " . visualPowershellPID)
@@ -698,11 +698,11 @@ toggleHotkey(pStateArray)
 
     Hotkey(readConfigFile("TERMINATE_SCRIPT_HK"), (*) => terminateScriptPrompt(), onOffArray.Get(1))
     Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), onOffArray.Get(2))
-    Hotkey(readConfigFile("NOT_USED_HK"), (*) => MsgBox("Not implemented yet", , "T2"), onOffArray.Get(3))
-    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray.Get(4))
-    Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray.Get(5))
-    Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray.Get(6))
-    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), onOffArray.Get(7))
+    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray.Get(3))
+    Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray.Get(4))
+    Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray.Get(5))
+    Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), onOffArray.Get(6))
+    Hotkey(readConfigFile("RESTORE_URL_FILE_HK"), (*) => restoreURLFile(), onOffArray.Get(7))
 }
 
 reloadScriptPrompt()
@@ -829,7 +829,7 @@ findProcessWithWildcard(pWildcard)
             tmp := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
             result := MsgBox("There is currently another instance of this script running."
                 "`nName: [" . v . "]`nPath: [" . tmp . "]`nContinue at your own risk!"
-                "`nPress Retry to terminate the other instance.", "VD - Multiple Script Instances Found!", "ARI Icon! 262144")
+                "`nPress [Retry] to terminate the other instance.", "VD - Multiple Script Instances Found!", "ARI Icon! 262144")
 
             Switch (result)
             {
@@ -872,94 +872,94 @@ scriptTutorial()
 {
     result := MsgBox("Would you like to have a short tutorial on how to select videos and some basic functionality?",
         "VideoDownloader Tutorial - Start Tutorial?", "YN Iconi 262144")
-    If (result = "No")
-    {
-        result := MsgBox("Press YES if you want to disable the tutorial`nfor the next time you run this script.",
-            "VideoDownloader Tutorial - Disable For Next Time?", "YN Iconi 262144")
-        If (result = "Yes")
-        {
-            editConfigFile("ASK_FOR_TUTORIAL", false)
-        }
-        Return
-    }
-
-    MsgBox("Hello there... General Kenobi!`n`nWelcome to the tutorial."
-        "`nIt will try to teach you the basic functionality of this script but keep this in mind: "
-        "`n`nFirstly this script is still in development phase so bugs are to be expected."
-        "`nSecondly PLEASE be patient and do not spam buttons like a maniac. Wait for the script to process and if"
-        "`nnothing happens even after 3-5 seconds, you could try pressing the button or hotkey again."
-        "`n`nWith that being said, let's begin with the tutorial."
-        "`n`nPress Okay to continue.",
-        "VideoDownloader Tutorial - Important", "O Iconi 262144")
-
-    MsgBox("This script acts as a simple GUI for yt-dlp.`n`nYou can open the main GUI by pressing: "
-        "`n" . expandHotkey(readConfigFile("MAIN_GUI_HK"))
-        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144")
-    If (WinWaitActive("ahk_id " . mainGUI.Hwnd, , 5) = 0)
-    {
-        hotkey_openMainGUI()
-        MsgBox("The script opened the main GUI for you.`n`nNo worries, you will get the hang of it soon :)",
-            "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144 T3")
-    }
-    MsgBox("The main GUI contains a lot of features and menus.`nYou can take some time to explore them by yourself."
-        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
-    If (!WinExist("ahk_id " . mainGUI.Hwnd))
-    {
-        hotkey_openMainGUI()
-    }
-    Else
-    {
-        WinActivate("ahk_id " . mainGUI.Hwnd)
-    }
-    MsgBox("As you may have noticed, there is a submenu called`n[Active Hotkeys...] when you expand the [Options] menu."
-        "`n`nOn the one hand, it provides a useful list`nof most available hotkeys"
-        "`nand on the other hand, it enables you to select which hotkeys you want to activate or deactivate."
-        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
-    MsgBox("If you want to select a video there are multiple options.`nYou either open the video and press: "
-        "`n[" . expandHotkey(readConfigFile("URL_COLLECT_HK")) . "].`n`nAlternatively hover over the video thumbnail and press: "
-        "`n[" . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")) . "]."
-        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Select Video(s)", "O Iconi 262144")
-    MsgBox("It is possible to manually open the URL file`n(with the main GUI) and edit the saved URLs."
-        "`n`nThe current location of the URL file is: [" . readConfigFile("URL_FILE_LOCATION") . "]."
-        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Find Selected Video(s)", "O Iconi 262144")
-    MsgBox("To download the URLs saved in the file this script uses`na Python command line application called yt-dlp."
-        "`nThe download options GUI is used to pass the parameters`nto the console and specify various download options."
-        "`n`nPress [" . expandHotkey(readConfigFile("OPTIONS_GUI_HK")) . "] to open the download options GUI."
-        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Download Selected Video(s)", "O Iconi 262144")
-    If (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 5) = 0)
-    {
-        hotkey_openOptionsGUI()
-        MsgBox("The script opened the download options GUI for you.`n`nNo worries, you will get the hang of it soon :)",
-            "VideoDownloader Tutorial - Open Download Options GUI", "O Iconi 262144 T3")
-    }
-    MsgBox("If you see the download options GUI for the very first time,`nit might be a bit overwhelming, but once you have"
-        "`nused this script a few times it will become more familiar.`n`nQuick tip: "
-        "`nHover over an option with the mouse cursor`nto gain extra information."
-        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Use Download Options GUI", "O Iconi 262144")
-    MsgBox("Take a look at the top right corner of the download options GUI."
-        "`nPresets can be used to store the current configuration`nand load it later on."
-        "`n`nPressing the save button twice will store the current preset"
-        "`nas the default one which will be loaded at the beginning."
-        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Use Download Options GUI", "O Iconi 262144")
-    MsgBox("Depending on your selected options the script will`nclear the URL file and save the content to a backup"
-        "`nfile to possibly restore it."
-        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - After the Finished Download", "O Iconi 262144")
-    MsgBox("To change the script hotkeys and script file paths`nyou can use the config file to do so."
-        "`n`nThe location of the config file is always :`n[" . configFileLocation . "]"
-        "`n`nPress Okay to continue.", "VideoDownloader Tutorial - Using the Config File", "O Iconi 262144")
-    result := MsgBox("You have reached the end of the tutorial.`n`nRemember that you can access all important files"
-        "`nfrom the main GUI window.`n`nWould you like to disable this tutorial for the`nnext time you run this script ?"
-        "`n`nPress Cancel to start the tutorial again.", "VideoDownloader Tutorial - End", "YNC Iconi 262144")
     Switch (result)
     {
         Case "Yes":
             {
-                editConfigFile("ASK_FOR_TUTORIAL", false)
+                MsgBox("Hello there... General Kenobi!`n`nWelcome to the tutorial."
+                    "`nIt will try to teach you the basic functionality of this script but keep this in mind:"
+                    "`n`nThis script is still in development phase. This means it might crash or become unresponsive "
+                    . "from time to time.`n`nWith that being said, let's begin with the tutorial."
+                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Important", "O Iconi 262144")
+                MsgBox("This script acts as a simple GUI for yt-dlp.`n`nYou can open the main GUI by pressing: "
+                    "`n[" . expandHotkey(readConfigFile("MAIN_GUI_HK")) . "]."
+                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144")
+                If (WinWaitActive("ahk_id " . mainGUI.Hwnd, , 5) = 0)
+                {
+                    hotkey_openMainGUI()
+                    MsgBox("The script opened the main GUI for you.`n`nNo worries, you will get the hang of it soon :)",
+                        "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144 T3")
+                }
+                MsgBox("The main GUI contains a lot of features and menus.`nYou can take some time to explore them by yourself."
+                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
+                If (!WinExist("ahk_id " . mainGUI.Hwnd))
+                {
+                    hotkey_openMainGUI()
+                }
+                Else
+                {
+                    WinActivate("ahk_id " . mainGUI.Hwnd)
+                }
+                MsgBox("As you may have noticed, there is a submenu called`n[Active Hotkeys...] when you expand the [Options] menu."
+                    "`n`nOn the one hand, it provides a useful list`nof most available hotkeys"
+                    "`nand on the other hand, it enables you to select which hotkeys you want to activate or deactivate."
+                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
+                MsgBox("If you want to select a video there are multiple options.`nYou either open the video and press: "
+                    "`n[" . expandHotkey(readConfigFile("URL_COLLECT_HK")) . "].`n`nAlternatively hover over the video thumbnail and press: "
+                    "`n[" . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")) . "]."
+                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Select Video(s)", "O Iconi 262144")
+                MsgBox("It is possible to manually open the URL file`n(with the main GUI) and edit the saved URLs."
+                    "`n`nThe current location of the URL file is: [" . readConfigFile("URL_FILE_LOCATION") . "]."
+                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Find Selected Video(s)", "O Iconi 262144")
+                MsgBox("To download the URLs saved in the file this script uses`na Python command line application called yt-dlp."
+                    "`nThe download options GUI is used to pass the parameters`nto the console and specify various download options."
+                    "`n`nPress [" . expandHotkey(readConfigFile("OPTIONS_GUI_HK")) . "] to open the download options GUI."
+                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Download Selected Video(s)", "O Iconi 262144")
+                If (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 5) = 0)
+                {
+                    hotkey_openOptionsGUI()
+                    MsgBox("The script opened the download options GUI for you.`n`nNo worries, you will get the hang of it soon :)",
+                        "VideoDownloader Tutorial - Open Download Options GUI", "O Iconi 262144 T3")
+                }
+                MsgBox("If you see the download options GUI for the very first time,`nit might be a bit overwhelming, but once you have"
+                    "`nused this script a few times it will become more familiar.`n`nQuick tip: "
+                    "`nHover over an option with the mouse cursor`nto gain extra information."
+                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Download Options GUI", "O Iconi 262144")
+                MsgBox("Take a look at the top right corner of the download options GUI."
+                    "`nPresets can be used to store the current configuration`nand load it later on."
+                    "`n`nPressing the save button twice will store the current preset"
+                    "`nas the default one which will be loaded when launching this script."
+                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Download Options GUI", "O Iconi 262144")
+                MsgBox("Depending on your selected options the script will`nclear the URL file and save the content to a backup"
+                    "`nfile to possibly restore it."
+                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - After the Finished Download", "O Iconi 262144")
+                MsgBox("To change the script hotkeys and script file paths`nyou can use the config file to do so."
+                    "`n`nThe location of the config file is always:`n[" . configFileLocation . "]"
+                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Using the Config File", "O Iconi 262144")
+                result := MsgBox("You have reached the end of the tutorial.`n`nRemember that you can access all important files"
+                    "`nfrom the main GUI window.`n`nPress [Yes] to start the tutorial again.",
+                    "VideoDownloader Tutorial - End", "YN Iconi 262144")
+                Switch (result)
+                {
+                    Case "Yes":
+                        {
+                            scriptTutorial
+                        }
+                }
             }
-        Case "Cancel":
-            {
-                scriptTutorial()
-            }
+    }
+    ; The dialog to disable the tutorial for the next time is only shown when the config file entry mentioned below is true.
+    If (readConfigFile("ASK_FOR_TUTORIAL"))
+    {
+        result := MsgBox("Press [Yes] if you want to disable the tutorial`nfor the next time you run this script.",
+            "VideoDownloader Tutorial - Disable For Next Time?", "YN Iconi 262144")
+        Switch (result)
+        {
+            Case "Yes":
+                {
+                    editConfigFile("ASK_FOR_TUTORIAL", false)
+                }
+        }
     }
 }
 
@@ -1090,7 +1090,7 @@ changeWorkingDirectory()
     }
     Else
     {
-        result := MsgBox("This path cannot be used because it requires administrative permissions to write in.`n`n"
+        result := MsgBox("This path cannot be used.`n`n"
             "Please select another path or press [Ignore] to use the default directory which is`n"
             "[" . defaultWorkingDirectory . "].",
             "VD - Invalid Working Directory!", "ARI Icon! Default2")
@@ -1257,10 +1257,11 @@ stringToArray(pString)
 */
 expandHotkey(pHotkey)
 {
-    hotkeyString := StrReplace(pHotkey, "+", "SHIFT + ")
-    hotkeyString := StrReplace(pHotkey, "^", "CTRL + ")
-    hotkeyString := StrReplace(pHotkey, "!", "ALT + ")
-    hotkeyString := StrReplace(pHotkey, "#", "WIN + ")
+    hotkeyString := pHotkey
+    hotkeyString := StrReplace(hotkeyString, "+", "SHIFT + ")
+    hotkeyString := StrReplace(hotkeyString, "^", "CTRL + ")
+    hotkeyString := StrReplace(hotkeyString, "!", "ALT + ")
+    hotkeyString := StrReplace(hotkeyString, "#", "WIN + ")
 
     Return hotkeyString
 }

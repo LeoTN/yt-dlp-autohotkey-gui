@@ -52,7 +52,7 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
     <ROW Component="APPDIR" ComponentId="{C58A7097-A45E-45D7-B9D2-CF2C72CAC188}" Directory_="APPDIR" Attributes="0"/>
-    <ROW Component="AppDeployToolkitBanner.png" ComponentId="{CAB5EC50-D709-4E57-922C-88104E079112}" Directory_="AppDeployToolkit_Dir" Attributes="0" KeyPath="AppDeployToolkitBanner.png" Type="0"/>
+    <ROW Component="AppDeployToolkitBanner.png" ComponentId="{A4123D0D-1954-4561-B791-3EAC56B92942}" Directory_="AppDeployToolkit_Dir" Attributes="0" KeyPath="AppDeployToolkitBanner.png" Type="0"/>
     <ROW Component="DeployApplication.ps1" ComponentId="{95D84860-954A-4BFE-8AC8-63C5AAC9D87E}" Directory_="setup_1_Dir" Attributes="0" KeyPath="DeployApplication.ps1" Type="0"/>
     <ROW Component="DownloadOptionsGUITooltips.ahk" ComponentId="{5DAD288A-DC85-48BE-A0D4-1CEB5285CCBC}" Directory_="scripts_Dir" Attributes="0" KeyPath="MonitorHookFile.ps1" Type="0"/>
     <ROW Component="DownloadOptionsGUITooltips.exe" ComponentId="{9F118F35-6151-4BDE-A870-E0A171760A5C}" Directory_="scripts_Dir" Attributes="256" KeyPath="DownloadOptionsGUITooltips.exe"/>
@@ -63,9 +63,9 @@
     <ROW Component="VideoDownloaderSetup.exe" ComponentId="{736516C7-82F3-428E-A3C8-8C66F8CC1841}" Directory_="setup_1_Dir" Attributes="0" KeyPath="VideoDownloaderSetup.exe"/>
     <ROW Component="booleanFirstTimeLaunch" ComponentId="{077D7FB4-BCFC-438F-A2FF-03E2EE3697C8}" Directory_="APPDIR" Attributes="4" KeyPath="booleanFirstTimeLaunch"/>
     <ROW Component="booleanSetupRequired" ComponentId="{B2A7A298-9C96-4772-B466-9DAF5A813DFE}" Directory_="APPDIR" Attributes="4" KeyPath="booleanSetupRequired"/>
-    <ROW Component="browserLanguage" ComponentId="{23CE2369-9E7D-4648-BFFB-7CD840A04BFB}" Directory_="APPDIR" Attributes="4" KeyPath="browserLanguage"/>
-    <ROW Component="browserType" ComponentId="{5130466E-5E48-48F1-BACD-A06161D2E77B}" Directory_="APPDIR" Attributes="4" KeyPath="browserType"/>
-    <ROW Component="green_arrow_icon.ico" ComponentId="{6E6C028D-CFD2-49B3-B6B1-453405EE30D0}" Directory_="assets_Dir" Attributes="0" KeyPath="YouTubeBackground1.jpg" Type="0"/>
+    <ROW Component="browserLanguage" ComponentId="{23CE2369-9E7D-4648-BFFB-7CD840A04BFB}" Directory_="APPDIR" Attributes="0"/>
+    <ROW Component="browserType" ComponentId="{5130466E-5E48-48F1-BACD-A06161D2E77B}" Directory_="APPDIR" Attributes="0"/>
+    <ROW Component="green_arrow_icon.ico" ComponentId="{C82F0AEF-DB66-4D51-84A8-ED8CB60B77F5}" Directory_="assets_Dir" Attributes="0" KeyPath="green_arrow_icon.ico" Type="0"/>
     <ROW Component="scriptBaseFilesLocation_2" ComponentId="{5FD8B8B3-205B-4B8A-8120-B1EBD6857D62}" Directory_="APPDIR" Attributes="4" KeyPath="scriptBaseFilesLocation_2"/>
     <ROW Component="videoDownloaderWorkingDirectory" ComponentId="{2F57433B-BE69-4182-B900-3390918C20BD}" Directory_="APPDIR" Attributes="4" KeyPath="videoDownloaderWorkingDirectory"/>
     <ROW Component="yt_dlp_autohotkey_gui_files" ComponentId="{53C94CAA-C918-4A3A-B981-BE25263F98B1}" Directory_="yt_dlp_autohotkey_gui_files_Dir" Attributes="0"/>
@@ -76,8 +76,6 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
     <ROW File="VideoDownloader.exe" Component_="VideoDownloader.exe" FileName="VIDEOD~1.EXE|VideoDownloader.exe" Version="[|ProductVersion]" Attributes="0" SourcePath="..\VideoDownloader.exe" SelfReg="false" DigSign="true"/>
-    <ROW File="YouTubeBackground1.jpg" Component_="green_arrow_icon.ico" FileName="YOUTUB~1.JPG|YouTubeBackground.jpg" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\YouTubeBackground.jpg" SelfReg="false"/>
-    <ROW File="green_arrow_icon1.ico" Component_="green_arrow_icon.ico" FileName="GREEN_~1.ICO|green_arrow_icon.ico" Version="[|ProductVersion]" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\green_arrow_icon.ico" SelfReg="false"/>
     <ROW File="MonitorHookFile.ps1" Component_="DownloadOptionsGUITooltips.ahk" FileName="MONITO~1.PS1|MonitorHookFile.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\scripts\MonitorHookFile.ps1" SelfReg="false"/>
     <ROW File="DownloadOptionsGUITooltips.exe" Component_="DownloadOptionsGUITooltips.exe" FileName="DOWNLO~1.EXE|DownloadOptionsGUITooltips.exe" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\scripts\DownloadOptionsGUITooltips.exe" SelfReg="false" DigSign="true"/>
     <ROW File="DeployApplication.ps1" Component_="DeployApplication.ps1" FileName="DEPLOY~1.PS1|Deploy-Application.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\Deploy-Application.ps1" SelfReg="false"/>
@@ -93,6 +91,9 @@
     <ROW File="AppDeployToolkitLogo.png" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~2.PNG|AppDeployToolkitLogo.png" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitLogo.png" SelfReg="false"/>
     <ROW File="AppDeployToolkitMain.cs" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~1.CS|AppDeployToolkitMain.cs" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitMain.cs" SelfReg="false"/>
     <ROW File="AppDeployToolkitMain.ps1" Component_="AppDeployToolkitBanner.png" FileName="APPDEP~3.PS1|AppDeployToolkitMain.ps1" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\setup\AppDeployToolkit\AppDeployToolkitMain.ps1" SelfReg="false"/>
+    <ROW File="green_arrow_icon.ico" Component_="green_arrow_icon.ico" FileName="GREEN_~1.ICO|green_arrow_icon.ico" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\green_arrow_icon.ico" SelfReg="false"/>
+    <ROW File="main_gui_background.png" Component_="green_arrow_icon.ico" FileName="MAIN_G~1.PNG|main_gui_background.png" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\main_gui_background.png" SelfReg="false"/>
+    <ROW File="repository_icon.png" Component_="green_arrow_icon.ico" FileName="REPOSI~1.PNG|repository_icon.png" Attributes="0" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\repository_icon.png" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BootstrOptComponent">
     <ROW BootstrOptKey="GlobalOptions" DownloadFolder="[AppDataFolder][|Manufacturer]\[|ProductName]\prerequisites" Options="2"/>
@@ -193,13 +194,13 @@
     <ROW Feature_="MainFeature" Component_="booleanFirstTimeLaunch"/>
     <ROW Feature_="MainFeature" Component_="DownloadOptionsGUITooltips.ahk"/>
     <ROW Feature_="MainFeature" Component_="DownloadOptionsGUITooltips.exe"/>
-    <ROW Feature_="MainFeature" Component_="green_arrow_icon.ico"/>
     <ROW Feature_="MainFeature" Component_="DeployApplication.ps1"/>
     <ROW Feature_="MainFeature" Component_="Files"/>
     <ROW Feature_="MainFeature" Component_="FFmpegSetup.ps1"/>
     <ROW Feature_="MainFeature" Component_="VideoDownloaderSetup.exe"/>
     <ROW Feature_="MainFeature" Component_="videoDownloaderWorkingDirectory"/>
     <ROW Feature_="MainFeature" Component_="AppDeployToolkitBanner.png"/>
+    <ROW Feature_="MainFeature" Component_="green_arrow_icon.ico"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="green_arrow_icon_1.exe" SourcePath="..\yt_dlp_autohotkey_gui_files\library\assets\green_arrow_icon.ico" Index="0"/>

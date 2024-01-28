@@ -118,42 +118,60 @@ getBrowserURLUnderMouseCursor()
             videoElementAccOrigin := Acc.ElementFromPoint()
         }
         videoElementAccOriginParent := videoElementAccOrigin.Parent
-
+        ; Child and origin section.
+        Try
+        {
+            ; Added to check if the element directly under the cursor contains an URL.
+            videoURL := videoElementAccOrigin.Value
+            ; The /@ is located in the youtuber channel link, which should not be selected.
+            If ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@"))
+            {
+                Return videoURL
+            }
+        }
         Try
         {
             ; Looks for the URL in the originally selected element.
             videoElementValue := videoElementAccOrigin.Normalize({ Role: role_Shortcut, not: { Value: "" } })
             videoURL := videoElementValue.Value
+            ; The /@ is located in the youtuber channel link, which should not be selected.
+            If ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@"))
+            {
+                Return videoURL
+            }
         }
         Try
         {
             ; Looks for the URL in the originally selected element.
             videoElementValue := videoElementAccOrigin.Normalize({ Role: role_Text, not: { Value: "" } })
             videoURL := videoElementValue.Value
+            ; The /@ is located in the youtuber channel link, which should not be selected.
+            If ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@"))
+            {
+                Return videoURL
+            }
         }
         ; Parent section.
         Try
         {
             ; Tries to find matching childs in the parent of the originally selected element.
             videoElementAccChildShortcut := videoElementAccOriginParent.FindElement({ Role: role_Shortcut, not: { Value: "" } })
-        }
-        Try
-        {
             ; Looks for the URL in the "brothers" of the originally selected element.
             videoElementValue := videoElementAccChildShortcut.Normalize({ Role: role_Shortcut, not: { Value: "" } })
             videoURL := videoElementValue.Value
+            ; The /@ is located in the youtuber channel link, which should not be selected.
+            If ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@"))
+            {
+                Return videoURL
+            }
         }
         Try
         {
             ; Looks for the URL in the "brothers" of the originally selected element.
             videoElementValue := videoElementAccChildShortcut.Normalize({ Role: role_Text, not: { Value: "" } })
             videoURL := videoElementValue.Value
-        }
-
-        If (IsSet(videoURL))
-        {
             ; The /@ is located in the youtuber channel link, which should not be selected.
-            If (InStr(videoURL, "https://") && !InStr(videoURL, "/@"))
+            If ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@"))
             {
                 Return videoURL
             }
@@ -362,7 +380,7 @@ restoreURLFile()
     If (FileExist(tmpConfig))
     {
         result := MsgBox("The URL File already exists."
-            "`nPress YES to overwrite or NO to append the`nbackup file to the original file.", "VD - Existing URL File - Warning!", "YNC Icon! 262144")
+            "`nPress [Yes] to overwrite or [No] to append the`nbackup file to the original file.", "VD - Existing URL File - Warning!", "YNC Icon! 262144")
         Switch (result)
         {
             Case "Yes":
@@ -407,11 +425,12 @@ openURLFile()
             Run(tmpConfig)
             Return true
         }
-    }
-    Catch
-    {
         MsgBox("The URL file does not exist!`n`nIt was probably already cleared.", "VD - Missing URL File!", "O Icon! T3")
         Return false
+    }
+    Catch As error
+    {
+        displayErrorMessage(error)
     }
 }
 
@@ -430,11 +449,12 @@ openURLBackupFile()
             Run(tmpConfig)
             Return true
         }
-    }
-    Catch
-    {
         MsgBox("The URL backup file does not exist!`n`nIt was probably not generated yet.", "VD - Missing URL Backup File!", "O Icon! T3")
         Return false
+    }
+    Catch As error
+    {
+        displayErrorMessage(error)
     }
 }
 
@@ -469,11 +489,13 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
             {
                 ; Calls checkBlackListFile() in order to create a new blacklist file.
                 checkBlackListFile("generateFile", false)
+                openURLBlacklistFile(pBooleanShowPrompt)
                 Return true
             }
         }
         Else
         {
+            MsgBox("The URL blacklist file does not exist!`n`nIt was probably not generated yet.", "VD - Missing URL Blacklist File!", "O Icon! T3")
             Return false
         }
     }
@@ -488,12 +510,12 @@ openURLBlacklistFile(pBooleanShowPrompt := false)
         {
             ; Calls checkBlackListFile() in order to create a new blacklist file.
             checkBlackListFile("generateFile")
+            openURLBlacklistFile(pBooleanShowPrompt)
         }
     }
-    Catch
+    Catch As error
     {
-        MsgBox("The URL blacklist file does not exist!`n`nIt was probably not generated yet.", "VD - Missing URL Blacklist File!", "O Icon! T3")
-        Return false
+        displayErrorMessage(error)
     }
 }
 
@@ -555,12 +577,6 @@ deleteFilePrompt(pFileName)
                         c := "URL_BACKUP_FILE_LOCATION"
                         SplitPath(readConfigFile("URL_BACKUP_FILE_LOCATION"), &outFileName)
                         FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), scriptBaseFilesLocation . "\deleted\" . outFileName, true)
-                    }
-                Case "URL-Blacklist-File":
-                    {
-                        c := "BLACKLIST_FILE_LOCATION"
-                        SplitPath(readConfigFile("BLACKLIST_FILE_LOCATION"), &outFileName)
-                        FileMove(readConfigFile("BLACKLIST_FILE_LOCATION"), scriptBaseFilesLocation . "\deleted\" . outFileName, true)
                     }
                 Case "latest download":
                     {

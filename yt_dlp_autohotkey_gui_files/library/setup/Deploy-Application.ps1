@@ -231,11 +231,14 @@ Try {
         $result = Show-InstallationPrompt -Title "Select Setup Visibility" -Message "Would you like to enable the quiet setup?`nThis will hide most setup windows and notifications." -ButtonLeftText $selectQuietBooleanButtonOption_1 -ButtonMiddleText $selectQuietBooleanButtonOption_2 -ButtonRightText $selectQuietBooleanButtonOption_3
         If ($result -eq $selectQuietBooleanButtonOption_1) {
             $booleanRunSetupActionsQuiet = $true
-        }
+        }  
         ElseIf ($result -eq $selectQuietBooleanButtonOption_2) {
             $balloonText = "$deploymentTypeName $configBalloonTextAbort"
             Show-BalloonTip -BalloonTipText $balloonText
             Exit-Script
+        }
+        ElseIf ($result -eq $selectQuietBooleanButtonOption_3) {
+            $booleanRunSetupActionsQuiet = $false
         }
     }
 
@@ -244,6 +247,9 @@ Try {
     ##*===============================================
     ##* NO SETUP VISIBILITY GIVEN SECTION END
     ##*===============================================
+
+    # Makes sure all possibly affected applications are closed.
+    Show-InstallationWelcome -AllowDefer -PersistPrompt -CloseApps 'VideoDownloader,python,python_d,pythonw,pythonw_d'
 
     ##*===============================================
     ##* NO DEPLOYMENT TYPE GIVEN SECTION
@@ -256,7 +262,7 @@ Try {
         $result = Show-InstallationPrompt -Title "Select Setup Option" -Message "Choose a setup option below." -ButtonLeftText $selectDeploymentTypeButtonOption_1 -ButtonMiddleText $selectDeploymentTypeButtonOption_2 -ButtonRightText $selectDeploymentTypeButtonOption_3
         If ($result -eq $selectDeploymentTypeButtonOption_1) {
             # Get the versions.
-            $videoDownloaderInstalledObject = Get-InstalledApplication -Name $appName -Exact $true
+            $videoDownloaderInstalledObject = Get-InstalledApplication -Name $appName -Exact
             If ($videoDownloaderInstalledObject) {
                 # This is a weird work-arround because the method getMSIFileVersion returns a weird object with weird properties.
                 $tmp = $videoDownloaderInstalledObject.DisplayVersion
@@ -295,13 +301,14 @@ Try {
                 }
                 ElseIf ($videoDownloaderInstalledVersion -lt $videoDownloaderInstallerVersion) {
                     Show-InstallationProgress -StatusMessage "Found installed VideoDownloader [$videoDownloaderInstalledVersion], which is lower than the current installer [$videoDownloaderInstallerVersion]. Starting update..."
+                    Start-Sleep -Seconds 4
+                    uninstallVideoDownloader
                     $deploymentType = "Install"
-                    Start-Sleep -Seconds 2
                 }
                 ElseIf ($videoDownloaderInstalledVersion -eq $videoDownloaderInstallerVersion) {
                     Show-InstallationProgress -StatusMessage "Found installed VideoDownloader [$videoDownloaderInstalledVersion], which is equal to the current installer [$videoDownloaderInstallerVersion]. Starting repair..."
                     $deploymentType = "Repair"
-                    Start-Sleep -Seconds 2
+                    Start-Sleep -Seconds 4
                 }
             }
         }
@@ -406,8 +413,6 @@ Try {
             Exit-Script
         }
 
-        Show-InstallationWelcome -AllowDefer -PersistPrompt -CloseApps 'VideoDownloader,python,python_d,pythonw,pythonw_d'
-
         ##*===============================================
         ##* INSTALLATION
         ##*===============================================
@@ -494,10 +499,10 @@ Try {
         Write-Log "`n`n[INFO] Changed registry entries:`n[booleanSetupRequired = 0 and booleanFirstTimeLaunch = 1] at`n[$videoDownloaderRegistryDirectory].`n`n"
         # Language support needed.
         If ($booleanSetupErrorOccurred) {
-            Show-InstallationPrompt -Message "$appName installation completed with errors.`n`nIt is recommended to repair the installation." -ButtonRightText "OK" -Icon "Warning"
+            Show-InstallationPrompt -Message "$appName installation completed with errors. It is recommended to repair the installation." -ButtonRightText "OK" -Icon "Warning"
         }
         Else {
-            Show-InstallationPrompt -Message "$appName installation completed.`n`nHave fun with the application :)" -ButtonRightText "OK" -Icon "Information"
+            Show-InstallationPrompt -Message "$appName installation completed. Have fun with the application :)" -ButtonRightText "OK" -Icon "Information"
         }
     }
     ElseIf ($deploymentType -ieq 'Uninstall') {
@@ -507,8 +512,6 @@ Try {
         [String]$installPhase = 'Pre-Uninstallation'
 
         ## <Perform Pre-Uninstallation tasks here>
-
-        Show-InstallationWelcome -AllowDefer -PersistPrompt -CloseApps 'VideoDownloader,python,python_d,pythonw,pythonw_d'
 
         ##*===============================================
         ##* UNINSTALLATION
@@ -593,10 +596,10 @@ Try {
         ## <Perform Post-Uninstallation tasks here>
         # Language support needed.
         If ($booleanSetupErrorOccurred) {
-            Show-InstallationPrompt -Message "$appName uninstallation completed with errors.`n`nErrors may also occur when components were previously uninstalled." -ButtonRightText "OK" -Icon "Warning"
+            Show-InstallationPrompt -Message "$appName uninstallation completed with errors. Errors may also occur when components were previously uninstalled." -ButtonRightText "OK" -Icon "Warning"
         }
         Else {
-            Show-InstallationPrompt -Message "$appName uninstallation completed.`n`nUntil next time :')" -ButtonRightText "OK" -Icon "Information"
+            Show-InstallationPrompt -Message "$appName uninstallation completed. Until next time :')" -ButtonRightText "OK" -Icon "Information"
         }
     }
     ElseIf ($deploymentType -ieq 'Repair') {
@@ -695,10 +698,10 @@ Try {
         Write-Log "`n`n[INFO] Changed registry entries:`n[booleanSetupRequired = 0 and booleanFirstTimeLaunch = 1] at`n[$videoDownloaderRegistryDirectory].`n`n"
         # Language support needed.
         If ($booleanSetupErrorOccurred) {
-            Show-InstallationPrompt -Message "$appName repair completed with errors.`n`nIt is recommended to repair the installation again. If this error persists, please uninstall and re-install all components or report the issue on the GitHub page." -ButtonRightText "OK" -Icon "Warning"
+            Show-InstallationPrompt -Message "$appName repair completed with errors. It is recommended to repair the installation again. If this error persists, please uninstall and re-install all components or report the issue on the GitHub page." -ButtonRightText "OK" -Icon "Warning"
         }
         Else {
-            Show-InstallationPrompt -Message "$appName repair completed.`n`nHave fun with the repaired application :D" -ButtonRightText "OK" -Icon "Information"
+            Show-InstallationPrompt -Message "$appName repair completed. Have fun with the repaired application :D" -ButtonRightText "OK" -Icon "Information"
         }
     }
     ##*===============================================
