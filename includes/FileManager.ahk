@@ -112,6 +112,8 @@ getBrowserURLUnderMouseCursor()
 
     Try
     {
+        ; Currently used to prevent a bug which causes the URL to be invalid.
+        static tmp := Acc.ElementFromPoint()
         Loop (3)
         {
             ; Get the video element.
