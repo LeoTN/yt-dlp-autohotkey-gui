@@ -133,6 +133,7 @@ handleDownloadOptionsGUI_toolTipLoop()
         tmp29 := "Presets allow for settings to be saved and loaded later on again."
             . "`nSingle click to save a preset or double click to save as default.`nThe presets are saved in the working directory."
         tmp30 := "The default preset will be loaded when no previous temporary preset is found."
+            . "`nSingle click to load a preset or double click to delete it."
 
         Loop (30)
         {

@@ -123,7 +123,7 @@ createDownloadOptionsGUI()
     startDownloadButton.OnEvent("Click", (*) => startDownload(buildCommandString()))
     cancelDownloadButton.OnEvent("Click", (*) => cancelDownload())
     savePresetButton.OnEvent("Click", (*) => handleDownloadOptionsGUI_Button_savePreset_waitForSecondClick())
-    loadPresetButton.OnEvent("Click", (*) => loadGUISettingsFromPreset(selectAndAddPresetsComboBox.Text))
+    loadPresetButton.OnEvent("Click", (*) => handleDownloadOptionsGUI_Button_loadPreset_waitForSecondClick())
 }
 
 ; Runs a few commands when the script is executed.
@@ -135,7 +135,7 @@ optionsGUI_onInit()
     buildCommandString()
     Sleep(1000)
     ; Checks for the last settings file to restore settings from the last download.
-    If (!loadGUISettingsFromPreset("last_settings", true, true))
+    If (!loadGUISettingsFromPreset("last_settings_(TEMP)", , true))
     {
         ; Load the default file instead.
         Loop Files (readConfigFile("DOWNLOAD_PRESET_LOCATION") . "\*.ini")
@@ -674,13 +674,13 @@ generateHWNDArrayFile()
     arrayCounter := 1
     fileLocation := A_Temp . "\download_options_GUI_HWND_File.txt"
     ; Saves the HWND of all GUI elements into the HWND array.
-    For (GuiCtrlObj in downloadOptionsGUI)
+    For (GUICtrlObj in downloadOptionsGUI)
     {
         ; This condition ignore all other GUI elements except of checkboxes, edits and lists.
-        If (InStr(GuiCtrlObj.Type, "Checkbox") || InStr(GuiCtrlObj.Type, "Edit")
-            || InStr(GuiCtrlObj.Type, "DDL") || InStr(GuiCtrlObj.Type, "Button"))
+        If (InStr(GUICtrlObj.Type, "Checkbox") || InStr(GUICtrlObj.Type, "Edit")
+            || InStr(GUICtrlObj.Type, "DDL") || InStr(GUICtrlObj.Type, "Button"))
         {
-            tmpArray.InsertAt(arrayCounter, GuiCtrlObj.Hwnd)
+            tmpArray.InsertAt(arrayCounter, GUICtrlObj.Hwnd)
             arrayCounter++
         }
     }
@@ -707,6 +707,7 @@ generateHWNDArrayFile()
 
 /*
 Saves all options from the download options GUI into a text file for future use.
+NOTE: pBooleanTemporary and pBooleanDefault cannot be true at the same time.
 @param pPresetName [String] The name of the preset to create.
 @param pBooleanTemporary [boolean] If set to true, the preset will created as temporary and deleted once it has been loaded.
 @param pBooleanDefault [boolean] If set to true, will make the created preset the default one, which will be loaded
@@ -715,6 +716,12 @@ when the script is launched.
 */
 saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault := false)
 {
+    If (pBooleanTemporary && pBooleanDefault)
+    {
+        MsgBox("[" . A_ThisFunc . "()] [WARNING] pBooleanTemporary and pBooleanDefault cannot be true at the "
+            . "same time.", "VD - [" . A_ThisFunc . "()]", "Icon! 262144")
+        Return false
+    }
     presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
     presetFileArray := handleDownloadOptionsGUI_RefreshPresetArray()
 
@@ -723,6 +730,30 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
     {
         Return MsgBox("Please provide a name for your preset.", "VD - No Preset Name!", "O Icon! T2")
     }
+    Else If (pBooleanTemporary)
+    {
+        ; This avoids double "_(TEMP)" pieces.
+        If (!InStr(pPresetName, "_(TEMP)", true))
+        {
+            presetNameWithTag := pPresetName . "_(TEMP)"
+        }
+    }
+    Else If (pBooleanDefault)
+    {
+        ; This avoids double "_(DEFAULT)" pieces.
+        If (!InStr(pPresetName, "_(DEFAULT)", true))
+        {
+            presetNameWithTag := pPresetName . "_(DEFAULT)"
+        }
+    }
+    ; If there is no special option given.
+    Else
+    {
+        presetNameWithTag := pPresetName
+    }
+    presetLocationComplete := presetLocation . "\" . pPresetName . ".ini"
+    presetLocationCompleteWithTag := presetLocation . "\" . presetNameWithTag . ".ini"
+
     Loop (presetFileArray.Length)
     {
         ; Searches for an existing default file.
@@ -737,31 +768,13 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
             booleanDefaultPresetExist := false
         }
     }
-    If (pBooleanTemporary)
-    {
-        If (!InStr(pPresetName, "_(TEMP)", true))
-        {
-            pPresetName .= "_(TEMP)"
-        }
-    }
-    Else If (pBooleanDefault)
-    {
-        ; This avoids double "_(DEFAULT)" pieces.
-        If (!InStr(pPresetName, "_(DEFAULT)", true))
-        {
-            pPresetName .= "_(DEFAULT)"
-        }
-    }
-    presetLocationComplete := presetLocation . "\" . pPresetName . ".ini"
-    i_Input := 1
-    i_DropDownList := 1
 
-    If (FileExist(presetLocationComplete))
+    If (FileExist(presetLocationCompleteWithTag))
     {
         ; This avoids showing the overwrite prompt for _(TEMP) presets.
         If (!pBooleanTemporary)
         {
-            result := MsgBox("The preset name: " . pPresetName . " already exists."
+            result := MsgBox("The preset name [" . presetNameWithTag . "] already exists."
                 "`n`nDo you want to overwrite it ?", "VD - Overwrite Existing Preset?", "YN Icon! 262144")
             If (result != "Yes")
             {
@@ -770,164 +783,174 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
         }
         Try
         {
-            FileDelete(presetLocationComplete)
+            FileDelete(presetLocationCompleteWithTag)
+        }
+        Catch As error
+        {
+            displayErrorMessage(error, "This is not a fatal error.", , 10)
         }
         Return saveGUISettingsAsPreset(pPresetName, pBooleanTemporary, pBooleanDefault)
     }
+    If (booleanDefaultPresetExist && pBooleanDefault)
+    {
+        result := MsgBox("An existing default file has been found.`n`nChange default preset file from ["
+            . defaultPresetOld . "] to [" . presetNameWithTag . "]?",
+            "VD - Change Default Preset File?", "YN Icon! 262144")
+        If (result != "Yes")
+        {
+            Return false
+        }
+        ; Removes the "_(DEFAULT)" part from the old default preset file.
+        tmp1 := presetLocation . "\" . defaultPresetOld . ".ini"
+        tmp2 := presetLocation . "\" . StrReplace(defaultPresetOld, "_(DEFAULT)", "", true) . ".ini"
+        FileMove(tmp1, tmp2, true)
+
+    }
+    ; Important because this means that an existing file will be used to be stored as the new default preset file.
+    If (FileExist(presetLocation . "\" . pPresetName . ".ini"))
+    {
+        FileMove(presetLocationComplete, presetLocationCompleteWithTag, true)
+    }
     Else
     {
-        If (booleanDefaultPresetExist && pBooleanDefault)
+        i_Input := 1
+        i_DropDownList := 1
+        ; Creates a new preset file.
+        For (GUICtrlObj in downloadOptionsGUI)
         {
-            result := MsgBox("An existing default file has been found.`n`nReplace " . defaultPresetOld . " with " . pPresetName . " ?",
-                "VD - Replace Default Preset File?", "YN Icon! 262144")
-            If (result != "Yes")
+            ; Makes sure only checkbox values are extracted.
+            If (InStr(GUICtrlObj.Type, "Checkbox"))
             {
-                Return false
+                IniWrite(GUICtrlObj.Value, presetLocationCompleteWithTag, "Checkboxes", "{" . GUICtrlObj.Text . "}")
             }
-            ; Removes the "_(DEFAULT)" part from the old default preset file.
-            tmp1 := presetLocation . "\" . defaultPresetOld . ".ini"
-            tmp2 := presetLocation . "\" . StrReplace(defaultPresetOld, "_(DEFAULT)", "", true) . ".ini"
-            FileMove(tmp1, tmp2, true)
-            ; Important because this means that an existing file will be used.
-            If (FileExist(presetLocation . "\" . pPresetName . ".ini"))
+            If (InStr(GUICtrlObj.Type, "Edit"))
             {
-                tmp1 := presetLocation . "\" . pPresetName . ".ini"
-                tmp2 := presetLocationComplete
-                FileMove(tmp1, tmp2, true)
+                IniWrite(GUICtrlObj.Value, presetLocationCompleteWithTag, "Edits", "{Input_" . i_Input . "}")
+                i_Input++
             }
-            Else
+            If (InStr(GUICtrlObj.Type, "DDL"))
             {
-                Return saveGUISettingsAsPreset(pPresetName, pBooleanTemporary, pBooleanDefault)
+                IniWrite(GUICtrlObj.Value, presetLocationCompleteWithTag, "DropDownLists", "{DropDownList_" . i_DropDownList . "}")
+                i_DropDownList++
+            }
+            ; Counts the number of elements parsed. When it reaches 38 this means that all relevant settings have been saved.
+            ; All remaining GUI elements belong to the preset section and are not meant to be saved.
+            If (A_Index >= 38)
+            {
+                Break
             }
         }
-        Else If (FileExist(presetLocation . "\" . pPresetName . ".ini"))
-        {
-            tmp1 := presetLocation . "\" . pPresetName . ".ini"
-            tmp2 := presetLocationComplete
-            FileMove(tmp1, tmp2, true)
-        }
-        Else
-        {
-            ; Creates a new preset file.
-            For (GuiCtrlObj in downloadOptionsGUI)
-            {
-                ; Makes sure only checkbox values are extracted.
-                If (InStr(GuiCtrlObj.Type, "Checkbox"))
-                {
-                    IniWrite(GuiCtrlObj.Value, presetLocationComplete, "Checkboxes", "{" . GuiCtrlObj.Text . "}")
-                }
-                If (InStr(GuiCtrlObj.Type, "Edit"))
-                {
-                    IniWrite(GuiCtrlObj.Value, presetLocationComplete, "Edits", "{Input_" . i_Input . "}")
-                    i_Input++
-                }
-                If (InStr(GuiCtrlObj.Type, "DDL"))
-                {
-                    IniWrite(GuiCtrlObj.Value, presetLocationComplete, "DropDownLists", "{DropDownList_" . i_DropDownList . "}")
-                    i_DropDownList++
-                }
-                ; Counts the number of elements parsed. When it reaches 38 this means that all relevant settings have been saved.
-                ; All remaining GUI elements belong to the preset section and are not meant to be saved.
-                If (A_Index >= 38)
-                {
-                    Break
-                }
-            }
-        }
-        ; This ensures that the new added preset is visible in the combo box.
-        selectAndAddPresetsComboBox.Delete()
-        selectAndAddPresetsComboBox.Add(handleDownloadOptionsGUI_RefreshPresetArray())
-        Return true
     }
+    ; This ensures that the new added preset is visible in the combo box.
+    selectAndAddPresetsComboBox.Delete()
+    selectAndAddPresetsComboBox.Add(handleDownloadOptionsGUI_RefreshPresetArray())
+    Return true
 }
 
 /*
 Loads the saved settings from the preset files.
 @param pPresetName [String] The name of the preset to load.
-@param pBooleanTemporary [boolean] If set to true, the preset will treated as temporary and deleted once it has been loaded.
+@param pBooleanDeletePreset [boolean] If set to true, tries to delete the preset file.
 @param pBooleanSupressWarning [boolean] If set to true, the warning message will be hidden in case a preset does not exist.
 @returns [boolean] Depending on the preset load success.
 */
-loadGUISettingsFromPreset(pPresetName, pBooleanTemporary := false, pBooleanSupressWarning := false)
+loadGUISettingsFromPreset(pPresetName, pBooleanDeletePreset := false, pBooleanSupressWarning := false)
 {
     presetLocation := readConfigFile("DOWNLOAD_PRESET_LOCATION")
-
-    If (pBooleanTemporary)
-    {
-        pPresetName .= "_(TEMP)"
-    }
     presetLocationComplete := presetLocation . "\" . pPresetName . ".ini"
     i_Input := 1
     i_DropDownList := 1
 
-    If (!FileExist(presetLocationComplete))
+    If (pPresetName = "")
     {
         If (!pBooleanSupressWarning)
         {
-            MsgBox("The preset: " . pPresetName . " does not exist.", "VD - Preset Not Found!", "O Icon! T2")
+            MsgBox("Please enter a valid preset.", "VD - No Preset Name!", "O Icon! T2")
         }
         Return false
     }
-    For (GuiCtrlObj in downloadOptionsGUI)
+    Else If (!FileExist(presetLocationComplete))
     {
-        ; Makes sure only checkbox values are extracted.
-        If (InStr(GuiCtrlObj.Type, "Checkbox"))
+        If (!pBooleanSupressWarning)
         {
-            Try
-            {
-                newCheckboxValue := IniRead(presetLocationComplete, "Checkboxes", "{" . GuiCtrlObj.Text . "}")
-                GuiCtrlObj.Value := newCheckboxValue
-            }
-            Catch
-            {
-                MsgBox("Failed to set value of: " . GuiCtrlObj.Text . ".", "VD - Preset Value - Warning!", "O Icon! T3")
-            }
+            MsgBox("The preset [" . pPresetName . "] does not exist.", "VD - Preset Not Found!", "O Icon! T2")
         }
-        If (InStr(GuiCtrlObj.Type, "Edit"))
+        Return false
+    }
+    ; Only tries to load the preset if there is no delete instruction.
+    Else If (!pBooleanDeletePreset)
+    {
+        For (GUICtrlObj in downloadOptionsGUI)
         {
-            Try
+            ; Makes sure only checkbox values are extracted.
+            If (InStr(GUICtrlObj.Type, "Checkbox"))
             {
-                newEditValue := IniRead(presetLocationComplete, "Edits", "{Input_" . i_Input . "}")
-                GuiCtrlObj.Value := newEditValue
-                i_Input++
+                Try
+                {
+                    newCheckboxValue := IniRead(presetLocationComplete, "Checkboxes", "{" . GUICtrlObj.Text . "}")
+                    GUICtrlObj.Value := newCheckboxValue
+                }
+                Catch
+                {
+                    MsgBox("Failed to set value of: " . GUICtrlObj.Text . ".", "VD - Preset Value - Warning!", "O Icon! T3")
+                }
             }
-            Catch
+            If (InStr(GUICtrlObj.Type, "Edit"))
             {
-                MsgBox("Failed to set value of: {Input_ " . i_Input . "}.", "VD - Preset Value - Warning!", "O Icon! T3")
+                Try
+                {
+                    newEditValue := IniRead(presetLocationComplete, "Edits", "{Input_" . i_Input . "}")
+                    GUICtrlObj.Value := newEditValue
+                    i_Input++
+                }
+                Catch
+                {
+                    MsgBox("Failed to set value of: {Input_ " . i_Input . "}.", "VD - Preset Value - Warning!", "O Icon! T3")
+                }
             }
-        }
-        If (InStr(GuiCtrlObj.Type, "DDL"))
-        {
-            Try
+            If (InStr(GUICtrlObj.Type, "DDL"))
             {
-                newDropDownListValue := IniRead(presetLocationComplete, "DropDownLists", "{DropDownList_" . i_DropDownList . "}")
-                GuiCtrlObj.Value := newDropDownListValue
-                i_DropDownList++
+                Try
+                {
+                    newDropDownListValue := IniRead(presetLocationComplete, "DropDownLists", "{DropDownList_" . i_DropDownList . "}")
+                    GUICtrlObj.Value := newDropDownListValue
+                    i_DropDownList++
+                }
+                Catch
+                {
+                    MsgBox("Failed to set value of: {DropDownList_ " . i_DropDownList . "}.", "VD - Preset Value - Warning!", "O Icon! T3")
+                }
             }
-            Catch
+            ; Counts the number of elements parsed. When it reaches 37 this means that all relevant settings have been loaded.
+            ; All remaining GUI elements belong to the preset section and are not meant to be loaded.
+            ; REMOVE
+            If (A_Index >= 38)
             {
-                MsgBox("Failed to set value of: {DropDownList_ " . i_DropDownList . "}.", "VD - Preset Value - Warning!", "O Icon! T3")
+                Break
             }
-        }
-        ; Counts the number of elements parsed. When it reaches 37 this means that all relevant settings have been loaded.
-        ; All remaining GUI elements belong to the preset section and are not meant to be loaded.
-        If (A_Index >= 37)
-        {
-            Break
         }
     }
-    ; Deletes the preset when it has been used.
-    If (pBooleanTemporary)
+    ; Deletes the preset either if it is temporary or the instruction to delete it is given.
+    If (InStr(pPresetName, "_(TEMP)", true) || pBooleanDeletePreset)
     {
         Try
         {
             FileDelete(presetLocationComplete)
+        }
+        Catch As error
+        {
+            displayErrorMessage(error, "This is not a fatal error.", , 10)
         }
     }
     handleDownloadOptionsGUI_ResolveElementConflicts()
     ; This ensures that the preset list is updated in the combo box.
     selectAndAddPresetsComboBox.Delete()
     selectAndAddPresetsComboBox.Add(handleDownloadOptionsGUI_RefreshPresetArray())
+    ; Returns false because deleting a preset should not be counted as a loading success.
+    If (pBooleanDeletePreset)
+    {
+        Return false
+    }
     Return true
 }
 
@@ -973,6 +996,33 @@ handleDownloadOptionsGUI_Button_savePreset_waitForSecondClick()
         Else If (click_amount = 2)
         {
             saveGUISettingsAsPreset(selectAndAddPresetsComboBox.Text, , true)
+        }
+        click_amount := 0
+    }
+}
+
+; Enables the load preset button to have two functions, if either double clicked or single clicked.
+handleDownloadOptionsGUI_Button_loadPreset_waitForSecondClick()
+{
+    static click_amount := 0
+    If (click_amount > 0)
+    {
+        click_amount += 1
+        Return
+    }
+
+    click_amount := 1
+    SetTimer(After500, -500)
+
+    After500()
+    {
+        If (click_amount = 1)
+        {
+            loadGUISettingsFromPreset(selectAndAddPresetsComboBox.Text)
+        }
+        Else If (click_amount = 2)
+        {
+            loadGUISettingsFromPreset(selectAndAddPresetsComboBox.Text, true)
         }
         click_amount := 0
     }

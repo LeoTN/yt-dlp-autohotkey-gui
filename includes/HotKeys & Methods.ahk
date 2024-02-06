@@ -48,7 +48,7 @@ registerHotkeys()
     Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), "Off")
 
     ; Debug hotkey
-    Hotkey("F1", (*) => hotkey_toggleDebugMode(), "On")
+    Hotkey("+^!F1", (*) => hotkey_toggleDebugMode(), "On")
 }
 
 ; Hotkey support function to open the script GUI.
@@ -937,7 +937,8 @@ scriptTutorial()
                     "`n`nThe location of the config file is always:`n[" . configFileLocation . "]"
                     "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Using the Config File", "O Iconi 262144")
                 result := MsgBox("You have reached the end of the tutorial.`n`nRemember that you can access all important files"
-                    "`nfrom the main GUI window.`n`nPress [Yes] to start the tutorial again.",
+                    "`nfrom the main GUI window.`nIf you want further information about a button, just hover your mouse "
+                    . "above it for a small tooltip.`n`nPress [Yes] to start the tutorial again.",
                     "VideoDownloader Tutorial - End", "YN Iconi 262144")
                 Switch (result)
                 {
