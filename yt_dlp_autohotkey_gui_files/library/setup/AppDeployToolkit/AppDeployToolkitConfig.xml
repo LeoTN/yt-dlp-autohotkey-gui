@@ -54,7 +54,7 @@
     <!--Toast Notification Options-->
     <Toast_Options>
         <Toast_Disable>True</Toast_Disable>
-        <Toast_AppName>PSAppDeployToolkit</Toast_AppName>
+        <Toast_AppName>VideoDownloaderSetup</Toast_AppName>
     </Toast_Options>
     <!--Toast Notification Options-->
         
@@ -136,13 +136,13 @@
     <!-- UI Messages - English -->
     <UI_Messages_EN>
         <!-- Close Program Prompt Text -->
-        <DiskSpace_Message>You do not have enough disk space to complete the installation of:
+        <DiskSpace_Message>You do not have enough disk space to complete the action:
             {0}
 
             Space required: {1}MB
             Space available: {2}MB
 
-            Please free up enough disk space in order to proceed with the installation.</DiskSpace_Message>
+            Please free up enough disk space in order to proceed with the action.</DiskSpace_Message>
         <ClosePrompt_ButtonContinue>Continue</ClosePrompt_ButtonContinue>
         <!-- Text displayed on the continue button when prompting to close running programs. -->
         <ClosePrompt_ButtonContinueTooltip>Only select "Continue" after closing the above listed application(s).</ClosePrompt_ButtonContinueTooltip>
@@ -151,7 +151,7 @@
         <!-- Text displayed on the close button when prompting to close running programs. -->
         <ClosePrompt_ButtonDefer>Defer</ClosePrompt_ButtonDefer>
         <!-- Text displayed on the defer button when prompting to close running programs. -->
-        <ClosePrompt_Message>The following programs must be closed before the installation can proceed.
+        <ClosePrompt_Message>The following programs must be closed before the action can proceed.
 
             Please save your work, close the programs, and then continue.
             Alternatively, save your work and click "Close Programs".</ClosePrompt_Message>
@@ -160,7 +160,7 @@
         <!-- Text displayed when counting down to automatically closing applications. -->
         <DeferPrompt_WelcomeMessage>The following application is about to be installed:</DeferPrompt_WelcomeMessage>
         <!-- Text displayed when only the deferral dialog is to be displayed and there are no applications to close. -->
-        <DeferPrompt_ExpiryMessage>You can choose to defer the installation until the deferral expires:</DeferPrompt_ExpiryMessage>
+        <DeferPrompt_ExpiryMessage>You can choose to defer the action until the deferral expires:</DeferPrompt_ExpiryMessage>
         <!-- Text displayed when a deferral option is available. -->
         <DeferPrompt_WarningMessage>Once the deferral has expired, you will no longer have the option to defer.</DeferPrompt_WarningMessage>
         <!-- Text displayed after the deferral options. -->
@@ -201,11 +201,11 @@
         <!-- Default text displayed in the progress bar for uninstallations. -->
         <Progress_MessageRepair>Repair in progress. Please wait...</Progress_MessageRepair>
         <!-- Default text displayed in the progress bar for repairs. -->
-        <BlockExecution_Message>Launching this application has been temporarily blocked so that an installation operation can complete.</BlockExecution_Message>
+        <BlockExecution_Message>Launching this application has been temporarily blocked so that the operation can complete.</BlockExecution_Message>
         <!-- Text displayed when prompting user that an application has been blocked. -->
         <RestartPrompt_Title>Restart Required</RestartPrompt_Title>
         <!-- Text displayed in the title of the restart prompt which helps the script identify whether there is already a restart prompt being displayed and not to duplicate it. -->
-        <RestartPrompt_Message>In order for the installation to complete, you must restart your computer.</RestartPrompt_Message>
+        <RestartPrompt_Message>In order for the action to complete, you must restart your computer.</RestartPrompt_Message>
         <RestartPrompt_MessageTime>Please save your work and restart within the allotted time.</RestartPrompt_MessageTime>
         <RestartPrompt_MessageRestart>Your computer will be automatically restarted at the end of the countdown.</RestartPrompt_MessageRestart>
         <!-- Text displayed on the restart prompt. -->
@@ -313,25 +313,25 @@
 
     <!-- UI Messages - German -->
     <UI_Messages_DE>
-        <DiskSpace_Message>Sie haben nicht genug freien Speicherplatz um die Installation abzuschließen:
+        <DiskSpace_Message>Sie haben nicht genug freien Speicherplatz um die Aktion abzuschließen:
             {0}
 
             Platzbedarf: {1}MB
             Freier Speicherplatz: {2}MB
 
-            Bitte geben Sie ausreichend Speicherplatz frei, um mit der Installation fortzufahren.</DiskSpace_Message>
+            Bitte geben Sie ausreichend Speicherplatz frei, um mit der Aktion fortzufahren.</DiskSpace_Message>
         <ClosePrompt_ButtonContinue>Weiter</ClosePrompt_ButtonContinue>
         <ClosePrompt_ButtonContinueTooltip>Klicken Sie erst auf „Weiter“, nachdem Sie die obigen Anwendung(en) geschlossen haben.</ClosePrompt_ButtonContinueTooltip>
         <ClosePrompt_ButtonClose>Programme Schließen</ClosePrompt_ButtonClose>
         <ClosePrompt_ButtonDefer>Aufschieben</ClosePrompt_ButtonDefer>
-        <ClosePrompt_Message>Die folgenden Programme müssen geschlossen werden, bevor die Installation fortgesetzt werden kann.
+        <ClosePrompt_Message>Die folgenden Programme müssen geschlossen werden, bevor die Aktion fortgesetzt werden kann.
 
             Bitte speichern Sie Ihre Arbeit, schließen Sie die Programme und fahren Sie dann fort.
         Alternativ können Sie Ihre Arbeit speichern und dann auf „Programme Schließen“ klicken.</ClosePrompt_Message>
         <ClosePrompt_CountdownMessage>HINWEIS: Diese Programme werden automatisch geschlossen:</ClosePrompt_CountdownMessage>
         <DeferPrompt_WelcomeMessage>Die folgende Anwendung soll installiert werden:</DeferPrompt_WelcomeMessage>
-        <DeferPrompt_ExpiryMessage>Sie können die Installation verzögern, bis die Rückstellung abläuft:</DeferPrompt_ExpiryMessage>
-        <DeferPrompt_WarningMessage>Sobald die Rückstellung abgelaufen ist, werden Sie keine Möglichkeit mehr haben die Installation zu verschieben.</DeferPrompt_WarningMessage>
+        <DeferPrompt_ExpiryMessage>Sie können die Aktion verzögern, bis die Rückstellung abläuft:</DeferPrompt_ExpiryMessage>
+        <DeferPrompt_WarningMessage>Sobald die Rückstellung abgelaufen ist, werden Sie keine Möglichkeit mehr haben die Aktion zu verschieben.</DeferPrompt_WarningMessage>
         <DeferPrompt_RemainingDeferrals>Verbleibende Rückstellungen:</DeferPrompt_RemainingDeferrals>
         <DeferPrompt_Deadline>Termin:</DeferPrompt_Deadline>
 
@@ -350,9 +350,9 @@
         <Progress_MessageInstall>Installation wird durchgeführt. Bitte warten...</Progress_MessageInstall>
         <Progress_MessageUninstall>Deinstallation wird durchgeführt. Bitte warten...</Progress_MessageUninstall>
         <Progress_MessageRepair>Reparatur wird durchgeführt. Bitte warten...</Progress_MessageRepair>
-        <BlockExecution_Message>Das Starten dieser Anwendung(en) wurde vorübergehend blockiert, damit der Installationsvorgang erfolgreich durchgeführt werden kann.</BlockExecution_Message>
+        <BlockExecution_Message>Das Starten dieser Anwendung(en) wurde vorübergehend blockiert, damit die Aktion erfolgreich durchgeführt werden kann.</BlockExecution_Message>
         <RestartPrompt_Title>Neustart Erforderlich</RestartPrompt_Title>
-        <RestartPrompt_Message>Zum Abschluss der Installation müssen Sie Ihren Computer neu starten.</RestartPrompt_Message>
+        <RestartPrompt_Message>Zum Abschluss der Aktion müssen Sie Ihren Computer neu starten.</RestartPrompt_Message>
         <RestartPrompt_MessageTime>Bitte speichern Sie Ihre Arbeit und starten Sie den Computer innerhalb der vorgegebenen Zeit neu.</RestartPrompt_MessageTime>
         <RestartPrompt_MessageRestart>Am Ende des Countdowns wird Ihr Computer automatisch neu gestartet.</RestartPrompt_MessageRestart>
         <RestartPrompt_TimeRemaining>Verbleibende Zeit:</RestartPrompt_TimeRemaining>
