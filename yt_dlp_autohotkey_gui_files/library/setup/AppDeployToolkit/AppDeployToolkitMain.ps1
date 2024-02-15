@@ -94,7 +94,7 @@ Param (
     [Int32]$CountdownNoHideSeconds = 30,
     [Switch]$NoCountdown = $false,
     [Switch]$AsyncToolkitLaunch = $false,
-    [Boolean]$TopMost = $true
+    [Boolean]$TopMost = $false # Manual change!
 )
 
 ##*=============================================
@@ -2161,7 +2161,7 @@ https://psappdeploytoolkit.com
         [Boolean]$ExitOnTimeout = $true,
         [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
-        [Boolean]$TopMost = $true
+        [Boolean]$TopMost = $false # Manual change!
     )
 
     Begin {
@@ -2641,7 +2641,7 @@ https://psappdeploytoolkit.com
         [ValidateNotNullorEmpty()]
         [String]$Timeout = $configInstallationUITimeout,
         [Parameter(Mandatory = $false)]
-        [Boolean]$TopMost = $true
+        [Boolean]$TopMost = $false # Manual change!
     )
 
     Begin {
@@ -8859,11 +8859,11 @@ https://psappdeploytoolkit.com
         ## Specify whether to minimize other windows when displaying prompt
         [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
-        [Boolean]$MinimizeWindows = $true,
+        [Boolean]$MinimizeWindows = $false, # Manual change!
         ## Specifies whether the window is the topmost window
         [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
-        [Boolean]$TopMost = $true,
+        [Boolean]$TopMost = $false, # Manual change!
         ## Specify a countdown to display before automatically proceeding with the installation when a deferral is enabled
         [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
@@ -9340,10 +9340,10 @@ https://psappdeploytoolkit.com
         [String]$DeferDeadline,
         [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
-        [Boolean]$MinimizeWindows = $true,
+        [Boolean]$MinimizeWindows = $false, # Manual change!
         [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
-        [Boolean]$TopMost = $true,
+        [Boolean]$TopMost = $false, # Manual change!
         [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
         [Int32]$ForceCountdown = 0,
@@ -10045,7 +10045,7 @@ https://psappdeploytoolkit.com
         [Int32]$SilentCountdownSeconds = 5,
         [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
-        [Boolean]$TopMost = $true
+        [Boolean]$TopMost = $false # Manual change!
     )
 
     Begin {
@@ -10746,7 +10746,7 @@ https://psappdeploytoolkit.com
         [String]$WindowLocation = 'Default',
         [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
-        [Boolean]$TopMost = $true
+        [Boolean]$TopMost = $false # Manual change!
     )
 
     Begin {

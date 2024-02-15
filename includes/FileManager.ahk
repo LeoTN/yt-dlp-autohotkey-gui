@@ -12,22 +12,25 @@ Save search bar contents to text file.
 */
 saveSearchBarContentsToFile()
 {
-    Loop (3)
+    A_Clipboard := ""
+    Send("^{l}")
+    Sleep(150)
+    Send("^{c}")
+    If (!ClipWait(0.5))
     {
-        Send("^{l}")
-        Sleep(100)
-        Send("^{c}")
-
-        If (ClipWait(0.5))
-        {
-            clipboardContent := A_Clipboard
-            Sleep(100)
-            Send("{Escape}")
-            Break
-        }
+        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1.5")
+        Return false
     }
+    clipboardContent := A_Clipboard
+    Sleep(150)
+    Send("{Escape}")
     If (IsSet(clipboardContent))
     {
+        If (!(InStr(clipboardContent, "https://") || (InStr(clipboardContent, "http://"))))
+        {
+            MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1.5")
+            Return false
+        }
         result := writeToURLFile(clipboardContent)
         Switch (result)
         {
@@ -56,6 +59,7 @@ saveSearchBarContentsToFile()
     Else
     {
         MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1.5")
+        Return false
     }
 }
 
@@ -112,11 +116,15 @@ getBrowserURLUnderMouseCursor()
 
     Try
     {
-        Loop (3)
+        ; Currently used to prevent a bug which causes the URL to be invalid.
+        static tmp := true
+        If (tmp)
         {
-            ; Get the video element.
-            videoElementAccOrigin := Acc.ElementFromPoint()
+            tmp := false
+            getBrowserURLUnderMouseCursor()
         }
+        ; Get the video element.
+        videoElementAccOrigin := Acc.ElementFromPoint()
         videoElementAccOriginParent := videoElementAccOrigin.Parent
         ; Child and origin section.
         Try

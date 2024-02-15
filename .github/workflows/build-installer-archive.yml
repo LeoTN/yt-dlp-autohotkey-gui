@@ -127,7 +127,7 @@ jobs:
           path: ${{ github.workspace }}\${{ env.FINAL_INSTALLER_NAME }}
  
   create_release:
-    name: Download Executable Artifact and Create Draft Release
+    name: Download Executable Artifact and Create Release
     needs: build_msi_file
     runs-on: ubuntu-latest
     permissions:
@@ -167,7 +167,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Create Draft Main Release
+    - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true
