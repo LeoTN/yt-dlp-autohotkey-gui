@@ -13,7 +13,7 @@ for users who do not want to spend time learning every single command line optio
 
 **How to use**
 
-> 1. Open the video you wish to download. For example [this](https://www.youtube.com/watch?v=xvFZjo5PgG0) one.
+> 1. Open the video you wish to download in your browser. For example [this](https://www.youtube.com/watch?v=xvFZjo5PgG0) one.
 > 2. Press **SHIFT + CTRL + ALT + S** in order to save the URL.
 > 3. Alternatively, you can hover over the video thumbnail, for example on the YouTube homepage,
 > and press **SHIFT + CTRL + ALT + F** to capture the URL directly.

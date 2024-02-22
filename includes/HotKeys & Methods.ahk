@@ -710,7 +710,7 @@ reloadScriptPrompt()
     ; Number in seconds.
     i := 4
 
-    reloadScriptGUI := Gui()
+    reloadScriptGUI := Gui(, "VD - Reloading Script")
     textField := reloadScriptGUI.Add("Text", "r3 w260 x20 y40", "The script will be`n reloaded in " . i . " seconds.")
     textField.SetFont("s12")
     textField.SetFont("bold")
@@ -759,7 +759,7 @@ terminateScriptPrompt()
     ; Number in seconds.
     i := 4
 
-    terminateScriptGUI := Gui()
+    terminateScriptGUI := Gui(, "VD - Terminating Script")
     textField := terminateScriptGUI.Add("Text", "r3 w260 x20 y40", "The script will be`n terminated in " . i . " seconds.")
     textField.SetFont("s12")
     textField.SetFont("bold")
