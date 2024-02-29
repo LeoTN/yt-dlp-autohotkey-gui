@@ -151,7 +151,7 @@ jobs:
           releaseName="v${{ env.RELEASE_VERSION }}"
         fi
           echo "RELEASE_NAME=$releaseName" >> $GITHUB_ENV
-          cat <<EOF > "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/version.txt"
+          cat <<"EOF" > "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/version.txt"
            _____                                                                                            _____ 
           ( ___ )                                                                                          ( ___ )
            |   |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|   | 
