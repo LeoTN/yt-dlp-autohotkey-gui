@@ -151,7 +151,8 @@ jobs:
           releaseName="v${{ env.RELEASE_VERSION }}"
         fi
           echo "RELEASE_NAME=$releaseName" >> $GITHUB_ENV
-          echo -e " _____                                                                                            _____ 
+          cat <<'EOF' > "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/version.txt"
+           _____                                                                                            _____ 
           ( ___ )                                                                                          ( ___ )
            |   |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|   | 
            |   |                                                                                            |   | 
@@ -173,7 +174,8 @@ jobs:
            |___|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|___| 
           (_____)                                                                                          (_____)
 
-          This installer will install version $releaseName." > "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/version.txt"
+          This installer will install version $releaseName."
+          EOF
           
     - name: Compress Installer Archive
       run: |
