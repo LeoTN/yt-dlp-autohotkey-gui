@@ -151,7 +151,7 @@ jobs:
           releaseName="v${{ env.RELEASE_VERSION }}"
         fi
           echo "RELEASE_NAME=$releaseName" >> $GITHUB_ENV
-          cat <<'This' > "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/version.txt"
+          cat <<'EOF' > "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/version.txt"
            _____                                                                                            _____ 
           ( ___ )                                                                                          ( ___ )
            |   |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|   | 
@@ -174,7 +174,8 @@ jobs:
            |___|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|___| 
           (_____)                                                                                          (_____)
 
-          This installer archive will install version ${{ env.RELEASE_NAME }} of VideoDownloader.
+          EOF
+          sed -i "s/EOF/This installer archive will install version $releaseName of VideoDownloader./g" "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/version.txt"
           
     - name: Compress Installer Archive
       run: |
