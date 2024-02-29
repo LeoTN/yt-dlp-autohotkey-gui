@@ -1,6 +1,6 @@
 # Video Downloader with basic AutoHotkey GUI
 
-![Logo](yt_dlp_autohotkey_gui_files\library\assets\repository_icon.png)
+![Logo](yt_dlp_autohotkey_gui_files/library/assets/repository_icon.png)
 
 A simple AutoHotkey script which acts as a basic GUI to make downloading videos more accessible
 for users who do not want to spend time learning every single command line option from the famous downloading script [yt-dlp](https://github.com/yt-dlp/yt-dlp).
