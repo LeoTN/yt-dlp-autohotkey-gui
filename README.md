@@ -7,12 +7,12 @@ This program lets users easily download videos without having to learn the comma
 
 <div>
   <div style="display: inline-block; text-align: center; margin-right: 10px;">
-    <img src="yt_dlp_autohotkey_gui_files/library/assets/main_gui_readme.png" alt="Main GUI" style="width: 100%;">
+    <img src="yt_dlp_autohotkey_gui_files/library/assets/main_gui_readme.png" alt="Main GUI" style="width: 25%;">
     <br>
     This is the main GUI <i>aka</i> Control Panel
   </div>
   <div style="display: inline-block; text-align: center; margin-left: 10px;">
-    <img src="yt_dlp_autohotkey_gui_files/library/assets/download_options_gui_readme.png" alt="Download Options Menu" style="width: 100%;">
+    <img src="yt_dlp_autohotkey_gui_files/library/assets/download_options_gui_readme.png" alt="Download Options Menu" style="width: 25%;">
     <br>
     You can customize your download settings here
   </div>
