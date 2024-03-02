@@ -1,57 +1,60 @@
-# Video Downloader with basic AutoHotkey GUI
 
-![Logo](yt_dlp_autohotkey_gui_files/library/assets/repository_icon.png)
+# **Video Downloader with basic AutoHotkey GUI**
 
-A simple AutoHotkey script which acts as a basic GUI to make downloading videos more accessible
-for users who do not want to spend time learning every single command line option from the famous downloading script [yt-dlp](https://github.com/yt-dlp/yt-dlp).
+**A video downloader with graphical user interface and hotkey control.**
 
-**How to install**
+This program lets users easily download videos without having to learn the command-line options of yt-dlp. The program can be conveniently controlled via hotkeys.
 
-> 1. Download the latest installer [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest/download/VideoDownloaderInstaller.zip).
-> 2. Extract the folder and execute *VideoDownloader-Setup.exe*.
-> 3. Click your way through the prompts.
-> 4. Depending on your system and the pre-installed dependencies, the installation (start) may take longer.
-> 5. You will be notified once the setup has completed.
+<div>
+  <div style="display: inline-block; text-align: center; margin-right: 10px;">
+    <img src="yt_dlp_autohotkey_gui_files/library/assets/main_gui_readme.png" alt="Main GUI" style="width: 100%;">
+    <br>
+    This is the main GUI <i>aka</i> Control Panel
+  </div>
+  <div style="display: inline-block; text-align: center; margin-left: 10px;">
+    <img src="yt_dlp_autohotkey_gui_files/library/assets/download_options_gui_readme.png" alt="Download Options Menu" style="width: 100%;">
+    <br>
+    You can customize your download settings here
+  </div>
+  <br>
+</div>
 
-**How to use**
+## Installation
 
-> 1. Open the video you wish to download in your browser. For example [this](https://www.youtube.com/watch?v=xvFZjo5PgG0) one.
-> 2. Press **SHIFT + CTRL + ALT + S** in order to save the URL.
-> 3. Alternatively, you can hover over the video thumbnail, for example on the YouTube homepage,
-> and press **SHIFT + CTRL + ALT + F** to capture the URL directly.
-> 4. Select your preferred downloading options using the **Download Options GUI**
-> (Press **SHIFT + CTRL + ALT + A** to open).
-> 5. Use the hotkey **SHIFT + CTRL + ALT + D** to start the download process.
-> 6. Depending on the settings, the URL file is deleted and a backup is created.
+> 1. Download the installer from [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest/download/VideoDownloaderInstaller.zip).
+> 2. Extract the folder and run **VideoDownloader-Setup.exe**.
+> 3. Follow the on-screen instructions.
+> 4. Depending on your system and installed dependencies, the installation may take longer.
+> 5. You will be notified once the installation is complete.
 
-**Features**
+## Tutorial
 
-- Easy to use and simple to understand.
-- Various options provided by yt-dlp are available to fit your needs.
-- Archive file to keep track of already downloaded videos.
-- Small **Control Panel GUI** (Press **SHIFT + CTRL + ALT + G** to open) for easy access to script functions.
-- Many customizable settings in the configuration file, for example changing the script hotkeys, custom paths for files and downloads or personal script launch options.
+> 1. Open the video you want to download in your browser. For example, this video: [https://www.youtube.com/watch?v=xvFZjo5PgG0](https://www.youtube.com/watch?v=xvFZjo5PgG0).
+> 2. Press **SHIFT + CTRL + ALT + S** to save the URL.
+> 3. Alternatively, you can hover over the video thumbnail (e.g. on the YouTube homepage) and press **SHIFT + CTRL + ALT + F** to capture the URL directly.
+> 4. Select your preferred download options in the **Download Options Menu** (**SHIFT + CTRL + ALT + A** to open).
+> 5. Press **SHIFT + CTRL + ALT + D** to start the download.
 
-**Planed features**
+## Features
 
-- Adding more functionality and options to the script.
-- Fixing issues and improve the code.
+* **Convenient hotkey control** for all core functions.
+* Various options provided by *yt-dlp* are available to fit your needs.
+* **Control Panel GUI** (**SHIFT + CTRL + ALT + G**) for easy access to script functions.
+* **Download Options Menu** (**SHIFT + CTRL + ALT + A**) to change download options, for instance the desired media format.
+* Many customizable settings in the configuration file, for example, changing the hotkeys, custom paths for files and downloads or personal script launch options.
 
-## Important
+## Notes
 
-> This is my first script using the [PowerShell AppDeploymentToolkit](https://github.com/PSAppDeployToolkit/PSAppDeployToolkit), so expect bugs and errors.  
-All the good stuff :)
+* The easiest way to install the script is via the installer in the [latest release](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest).
+* Developers who want to use the repository need to compile parts of the script and may need to install components like Python or FFmpeg.
+* Clone the repository and run **VideoDownloader-Setup.exe** from the installer archive to install the application. Select the repository folder *yt-dlp-autohotkey-gui* as the target folder.
 
-**NOTE :** The best way of installing this script is the installer archive file included in the [latest release](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest). You can find all releases [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases).
+* I appreciate your **constructive** and **honest** feedback. Feel free to create an issue or feature request.
 
-If you are a developer and would like to use the repository, please note, that parts of this script need to be compiled and components such as Python or FFmpeg may need to be installed first.
+## Credits & License
 
-Therefore, I recommend cloning the repository first and afterwards executing the **VideDownloader-Setup.exe** file located in the [installer archive](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest/download/VideoDownloaderInstaller.zip) to install the application. Select the repository folder *yt-dlp-autohotkey-gui* as the installation target folder and you're done.
+* **yt-dlp** (https://github.com/yt-dlp/yt-dlp) for providing such an incredibly useful application.
+* **FFmpeg** (https://ffmpeg.org/) for additional functionality for yt-dlp.
+* **Acc library** (https://library.austincc.edu/) for important functions regarding URL capture.
 
-**I appreciate [yt-dlp](https://github.com/yt-dlp/yt-dlp) for providing such an incredibly useful repository for everyone free to use. Your or rather [these guys](https://github.com/ytdl-org/youtube-dl) work is the reason, why this script can even exist. I would also like to thank the team behind the [FFmpeg](https://ffmpeg.org) software, which is used to provide more functionality for yt-dlp. Shoutout to the guy who made the [Acc library](https://github.com/Descolada/Acc-v2)! Thank you!**
-
-Link to my original project, which will most likely not be developed anymore: [youtube-downloader-using-ahk](https://github.com/LeoTN/youtube-downloader-using-ahk)
-
-## Licence
-
-[MIT License](https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENCE)
+This repository is licensed under the [MIT License](https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENCE).

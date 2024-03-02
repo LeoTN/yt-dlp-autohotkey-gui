@@ -177,7 +177,7 @@ jobs:
           REPLACE_HERE
         EOF
 
-          sed -i "s/REPLACE_HERE/  This installer archive will install version $releaseName of VideoDownloader./g" "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/version.txt"
+          sed -i "s/REPLACE_HERE/This installer archive will install version $releaseName of VideoDownloader./g" "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/version.txt"
           
     - name: Compress Installer Archive
       run: |
