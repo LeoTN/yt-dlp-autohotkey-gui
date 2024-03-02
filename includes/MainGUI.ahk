@@ -268,7 +268,7 @@ handleMainGUI_ApplyCheckmarksFromConfigFile(pMenuName)
     }
 }
 
-; Opens the explorer
+; Opens the explorer.
 handleMainGUI_openDownloadLocation()
 {
     Try

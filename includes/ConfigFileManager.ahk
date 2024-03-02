@@ -47,7 +47,7 @@ config_onInit()
     global ASK_FOR_TUTORIAL := true
     ; Toggle if the main GUI should be shown on launch.
     global SHOW_MAIN_GUI_ON_LAUNCH := true
-    ; Toggle if the downnload options GUI should be shown on launch.
+    ; Toggle if the download options GUI should be shown on launch.
     global SHOW_OPTIONS_GUI_ON_LAUNCH := true
     ; This option controls if empty download folders with no media inside should be automatically deleted.
     global DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD := true
@@ -142,7 +142,7 @@ Creates, reads and manages the script's config file.
 */
 
 /*
-Checks a given input if it exists on the blacklist.
+Does what the name implies.
 @param pBooleanCreateBackup [boolean] If set to true, the old config file will be saved.
 @param pBooleanShowPrompt [boolean] Show a prompt to create the config file or do it silent.
 */
