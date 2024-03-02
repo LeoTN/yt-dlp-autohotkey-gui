@@ -40,8 +40,8 @@ This program lets users easily download videos without having to learn the comma
 
 * **Convenient hotkey control** for all core functions.
 * Various options provided by *yt-dlp* are available to fit your needs.
-* **Control Panel GUI** (**SHIFT + CTRL + ALT + G**) for easy access to script functions.
-* **Download Options Menu** (**SHIFT + CTRL + ALT + A**) to change download options, for instance the desired media format.
+* *Control Panel Menu* (**SHIFT + CTRL + ALT + G**) for easy access to script functions.
+* *Download Options Menu* (**SHIFT + CTRL + ALT + A**) to change download options, for instance the desired media format.
 * Many customizable settings in the configuration file, for example, changing the hotkeys, custom paths for files and downloads or personal script launch options.
 
 ## Notes
