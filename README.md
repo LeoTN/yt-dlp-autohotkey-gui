@@ -1,4 +1,3 @@
-
 # **Video Downloader with basic AutoHotkey GUI**
 
 **A video downloader with graphical user interface and hotkey control.**

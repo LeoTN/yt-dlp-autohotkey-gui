@@ -1087,7 +1087,7 @@ function updatePATH() {
 
 function checkInternetConnectionStatus() {
     Try {
-        $pingResult = Test-Connection -ComputerName "www.google.com" -Count 1 -ErrorAction Stop
+        Test-Connection -ComputerName "www.google.com" -Count 1 -ErrorAction Stop
         Write-Log "`n`n[checkInternetConnectionStatus()] [INFO] Computer is connected to the Internet.`n`n"
         Return $true
     }
