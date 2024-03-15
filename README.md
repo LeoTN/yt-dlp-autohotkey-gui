@@ -53,8 +53,9 @@ This program lets users easily download videos without having to learn the comma
 
 ## Credits & License
 
-* **yt-dlp** (https://github.com/yt-dlp/yt-dlp) for providing such an incredibly useful application.
-* **FFmpeg** (https://ffmpeg.org/) for additional functionality for yt-dlp.
-* **Acc library** (https://library.austincc.edu/) for important functions regarding URL capture.
+* **yt-dlp** (<https://github.com/yt-dlp/yt-dlp>) for providing such an incredibly useful application.
+* **FFmpeg** (<https://ffmpeg.org/>) for additional functionality for yt-dlp.
+* **Acc library** (<https://github.com/Descolada/Acc-v2>) for important functions regarding URL capture.
+* **PSAppDeployToolkit** (<https://github.com/PSAppDeployToolkit/PSAppDeployToolkit>)
 
 This repository is licensed under the [MIT License](https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENCE).
