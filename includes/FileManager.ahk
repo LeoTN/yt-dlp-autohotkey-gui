@@ -199,7 +199,8 @@ Writes entries to the URL file. It will also create one, if it doesn't exist.
 */
 writeToURLFile(pContent)
 {
-    tmpConfig := readConfigFile("URL_FILE_LOCATION")
+    ; We do not need to read the config file each time.
+    static tmpConfig := readConfigFile("URL_FILE_LOCATION")
     If (!FileExist(tmpConfig))
     {
         FileAppend("#Made by Donnerbaer`n", tmpConfig)
@@ -218,7 +219,22 @@ writeToURLFile(pContent)
     {
         Return "already_in_blacklist_file"
     }
-    FileAppend(pContent . "`n", tmpConfig)
+    Try
+    {
+        FileAppend(pContent . "`n", tmpConfig)
+    }
+    Catch As error
+    {
+        ; Avoids a bug where the URL file seems to be already accessed by something else.
+        If (InStr(error.Message, "(32)"))
+        {
+            Return writeToURLFile(pContent)
+        }
+        Else
+        {
+            displayErrorMessage(error)
+        }
+    }
     Return true
 }
 
@@ -598,9 +614,9 @@ deleteFilePrompt(pFileName)
                         }
                     }
                 Default:
-                    {
-                        MsgBox("Invalid delete request.", "VD - Delete File Status - Error!", "O IconX T2 262144")
-                    }
+                {
+                    MsgBox("Invalid delete request.", "VD - Delete File Status - Error!", "O IconX T2 262144")
+                }
             }
         }
         ; In case something goes wrong this will try to resolve the issue.
