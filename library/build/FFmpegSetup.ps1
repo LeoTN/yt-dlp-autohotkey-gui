@@ -16,7 +16,7 @@ function onInit() {
     $global:mainExitCode = 71500
     $global:applicationRegistryPath = "HKCU:\SOFTWARE\LeoTN\VideoDownloader"
     $global:ffmpegRegistryVariableName = "ffmpegLocation"
-    $global:ffmpegFinalPath = "$pVideoDownloaderInstallationDirectory\yt_dlp_autohotkey_gui_files\library\FFmpeg"
+    $global:ffmpegFinalPath = "$pVideoDownloaderInstallationDirectory\VideoDownloader\library\FFmpeg"
     # This variable is used to store information about the current FFmpeg location.
     $global:ffmpegPath = ""
     $global:logCounter = 0

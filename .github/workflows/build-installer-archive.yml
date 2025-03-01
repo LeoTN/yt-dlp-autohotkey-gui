@@ -70,7 +70,7 @@ jobs:
     - name: Compile Autohotkey Tooltip Script
       run: |
         # Set the paths to execute more easily.
-        $scriptPathIn = "${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\scripts\DownloadOptionsGUITooltips.ahk"
+        $scriptPathIn = "${{ github.workspace }}\library\scripts\DownloadOptionsGUITooltips.ahk"
         $scriptPathOut = "${{ github.workspace }}\$env:FINAL_TOOLTIP_EXECUTABLE_NAME"
 
         # Compile the script.
@@ -107,7 +107,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
          name: ${{ env.FINAL_TOOLTIP_EXECUTABLE_NAME }}
-         path: ${{ github.workspace }}\yt_dlp_autohotkey_gui_files\library\scripts
+         path: ${{ github.workspace }}\library\scripts
         
       - name: Build .AIP Project
         uses: caphyon/advinst-github-action@main
@@ -141,7 +141,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ${{ env.FINAL_INSTALLER_NAME }}
-        path: ${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/Files
+        path: ${{ github.workspace }}/library/setup/Files
 
     - name: Set Release Name
       run: |
@@ -151,7 +151,7 @@ jobs:
           releaseName="v${{ env.RELEASE_VERSION }}"
         fi
           echo "RELEASE_NAME=$releaseName" >> $GITHUB_ENV
-          cat <<"EOF" > "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/version.txt"
+          cat <<"EOF" > "${{ github.workspace }}/library/setup/version.txt"
            _____                                                                                            _____ 
           ( ___ )                                                                                          ( ___ )
            |   |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|   | 
@@ -177,11 +177,11 @@ jobs:
           REPLACE_HERE
         EOF
 
-          sed -i "s/REPLACE_HERE/This installer archive will install version $releaseName of VideoDownloader./g" "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup/version.txt"
+          sed -i "s/REPLACE_HERE/This installer archive will install version $releaseName of VideoDownloader./g" "${{ github.workspace }}/library/setup/version.txt"
           
     - name: Compress Installer Archive
       run: |
-        cd "${{ github.workspace }}/yt_dlp_autohotkey_gui_files/library/setup"
+        cd "${{ github.workspace }}/library/setup"
         zip -r "${{ github.workspace }}/${{ env.FINAL_INSTALLER_ARCHIVE_NAME }}" .
 
     - name: Print Release Name
