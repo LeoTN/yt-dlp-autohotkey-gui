@@ -5,14 +5,14 @@
     Special thanks to Lexikos for many tips about v2
 
     Short introduction:
-        Acc v2 in not a port of v1, but instead a complete redesign to incorporate more object-oriented approaches. 
+        Acc v2 in not a port of v1, but instead a complete redesign to incorporate more object-oriented approaches.
 
         Notable changes:
         1) All Acc elements are now array-like objects, where the "Length" property contains the number of children, any nth children can be accessed with element[n], and children can be iterated over with for loops.
         2) Acc main functions are contained in the global Acc object
         3) Element methods are contained inside element objects
         4) Element properties can be used without the "acc" prefix
-        5) ChildIds have been removed (are handled in the backend), but can be accessed through 
+        5) ChildIds have been removed (are handled in the backend), but can be accessed through
            Element.ChildId
         6) Additional methods have been added for elements, such as FindElement, FindElements, Click
         7) Acc constants are included in the main Acc object
@@ -23,11 +23,11 @@
         Constants can be accessed as properties (eg Acc.ObjId.Caret), or the property name can be
         fetched by getting as an item (eg Acc.ObjId[0xFFFFFFF8])
 
-        ObjId - object identifiers that identify categories of accessible objects within a window. 
+        ObjId - object identifiers that identify categories of accessible objects within a window.
         State - used to describe the state of objects in an application UI. These are returned by Element.State or Element.StateText.
         Role - used to describe the roles of various UI objects in an application. These are returned by Element.Role or Element.RoleText.
-        NavDir - indicate the spatial (up, down, left, and right) or logical (first child, 
-            last, next, and previous) direction used with Element.Navigate() to navigate from one 
+        NavDir - indicate the spatial (up, down, left, and right) or logical (first child,
+            last, next, and previous) direction used with Element.Navigate() to navigate from one
             user interface element to another within the same container.
         SelectionFlag - used to specify how an accessible object becomes selected or takes the focus.
             These are used by Element.Select().
@@ -36,38 +36,38 @@
 
         More thorough explanations for the constants are available in Microsoft documentation:
         https://docs.microsoft.com/en-us/windows/win32/winauto/constants-and-enumerated-types
-    
+
     Acc methods:
         ElementFromPoint(x:=unset, y:=unset, activateChromium := True)
             Gets an Acc element from screen coordinates X and Y (NOT relative to the active window).
         ElementFromHandle(hWnd:="", idObject := "Window", activateChromium := True)
-            Gets an Acc element from a WinTitle, by default the Last Found Window. 
+            Gets an Acc element from a WinTitle, by default the Last Found Window.
             Additionally idObject can be specified from Acc.ObjId constants (eg to get the Caret location).
         ElementFromChromium(hWnd:="", activateChromium := True)
             Gets an Acc element for the Chromium render control, by default for the Last Found Window.
         GetRootElement()
             Gets the Acc element for the Desktop
-        ActivateChromiumAccessibility(hWnd:="") 
-            Sends the WM_GETOBJECT message to the Chromium document element and waits for the 
-            app to be accessible to Acc. This is called when ElementFromPoint or ElementFromHandle 
-            activateChromium flag is set to True. A small performance increase may be gotten 
+        ActivateChromiumAccessibility(hWnd:="")
+            Sends the WM_GETOBJECT message to the Chromium document element and waits for the
+            app to be accessible to Acc. This is called when ElementFromPoint or ElementFromHandle
+            activateChromium flag is set to True. A small performance increase may be gotten
             if that flag is set to False when it is not needed.
-        RegisterWinEvent(event, callback, PID:=0) 
+        RegisterWinEvent(event, callback, PID:=0)
         RegisterWinEvent(eventMin, eventMax, callback, PID:=0)
             Registers an event or event range from Acc.Event to a callback function and returns
                 a new object containing the WinEventHook
             EventMax is an optional variable: if only eventMin and callback are provided, then
                 only that single event is registered. If all three arguments are provided, then
                 an event range from eventMin to eventMax are registered to the callback function.
-            The callback function needs to have two arguments: 
+            The callback function needs to have two arguments:
                 CallbackFunction(oAcc, EventInfo)
 
                 When the callback function is called:
                 oAcc will be the Acc element that called the event
-                EventInfo will be an object containing the following properties: 
+                EventInfo will be an object containing the following properties:
                     Event - an Acc.Event constant
                     EventTime - when the event was triggered in system time
-                    WinID - handle of the window that sent the event 
+                    WinID - handle of the window that sent the event
                     ControlID - handle of the control that sent the event, which depending on the
                         window will be the window itself or a control
                     ObjId - the object Id (Acc.ObjId) the event was called with
@@ -94,7 +94,7 @@
                                     Element["4,window2,4"] will select the second RoleText=window
                                With a path string "p" followed by a number n will return the nth parent.
                                     Element["p2,2"] will get the parent parents second child
-                               Conditions (see ValidateCondition) are supported: 
+                               Conditions (see ValidateCondition) are supported:
                                     Element[4,{Name:"Something"}] will select the fourth childs first child matching the name "Something"
                                Conditions also accept an index (or i) parameter to select from multiple similar elements
                                     Element[{Name:"Something", i:3}] selects the third element of elements with name "Something"
@@ -126,10 +126,10 @@
         WinID               => ID (hwnd) of the window the element belongs to
         accessible          => ComObject of the underlying IAccessible (for internal use)
         childId             => childId of the underlying IAccessible (for internal use)
-    
+
     IAccessible element methods:
         Select(flags)
-            Modifies the selection or moves the keyboard focus of the specified object. 
+            Modifies the selection or moves the keyboard focus of the specified object.
             flags can be any of the Acc.SelectionFlag constants
         DoDefaultAction()
             Performs the specified object's default action. Not all objects have a default action.
@@ -137,22 +137,22 @@
             This is equal to element[n]
         GetPath(oTarget)
             Returns the path from the current element to oTarget element.
-            The returned path is a comma-separated list of integers corresponding to the order the 
+            The returned path is a comma-separated list of integers corresponding to the order the
             Acc tree needs to be traversed to access oTarget element from this element.
             If no path is found then an empty string is returned.
         GetLocation(relativeTo:="")
-            Returns an object containing the x, y coordinates and width and height: {x:x coordinate, y:y coordinate, w:width, h:height}. 
+            Returns an object containing the x, y coordinates and width and height: {x:x coordinate, y:y coordinate, w:width, h:height}.
             relativeTo can be client, window or screen, default is A_CoordModeMouse.
         IsEqual(oCompare)
             Checks whether the element is equal to another element (oCompare)
-        FindElement(condition, scope:=4, index:=1, order:=0, depth:=-1) 
+        FindElement(condition, scope:=4, index:=1, order:=0, depth:=-1)
             Finds the first element matching the condition (see description under ValidateCondition).
             The returned element also has the "Path" property with the found elements path.
 
             Condition: A condition object (see ValidateCondition). This condition object can also contain named argument values:
                 FindElement({Name:"Something", scope:"Subtree"})
             Scope: the search scope (Acc.TreeScope value): Element, Children, Family (Element+Children), Descendants, SubTree (Element+Descendants). Default is Descendants.
-            Index: can be used to search for i-th element. 
+            Index: can be used to search for i-th element.
                 Like the other parameters, this can also be supplied in the condition with index or i:
                     FindElement({Name:"Something", i:3}) finds the third element with name "Something"
                 Negative index reverses the search direction:
@@ -160,7 +160,7 @@
                 Since index/i needs to be a key-value pair, then to use it with an "or" condition
                 it must be inside an object ("and" condition), for example with key "or":
                     FindElement({or:[{Name:"Something"}, {Name:"Something else"}], index:2})
-            Order: defines the order of tree traversal (Acc.TreeTraversalOptions value): 
+            Order: defines the order of tree traversal (Acc.TreeTraversalOptions value):
                 Default, PostOrder, LastToFirst. Default is FirstToLast and PreOrder.
         FindElements(condition:=True, scope:=4, depth:=-1)
             Returns an array of elements matching the condition (see description under ValidateCondition)
@@ -168,19 +168,19 @@
             By default matches any condition.
         WaitElement(conditionOrPath, timeOut:=-1, scope:=4, index:=1, order:=0, depth:=-1)
             Waits an element to be detectable in the Acc tree. This doesn't mean that the element
-            is visible or interactable, use WaitElementExist for that. 
+            is visible or interactable, use WaitElementExist for that.
             Timeout less than 1 waits indefinitely, otherwise is the wait time in milliseconds
             A timeout returns 0.
         WaitElementExist(conditionOrPath, timeOut:=-1, scope:=4, index:=1, order:=0, depth:=-1)
-            Waits an element exist that matches a condition or a path. 
+            Waits an element exist that matches a condition or a path.
             Timeout less than 1 waits indefinitely, otherwise is the wait time in milliseconds
             A timeout returns 0.
         WaitNotExist(timeOut:=-1)
-            Waits for the element to not exist. 
+            Waits for the element to not exist.
             Timeout less than 1 waits indefinitely, otherwise is the wait time in milliseconds
             A timeout returns 0.
         Normalize(condition)
-            Checks whether the current element or any of its ancestors match the condition, 
+            Checks whether the current element or any of its ancestors match the condition,
             and returns that element. If no element is found, an error is thrown.
         ValidateCondition(condition)
             Checks whether the element matches a provided condition.
@@ -225,34 +225,34 @@
             d sets the border width
         Click(WhichButton:="left", ClickCount:=1, DownOrUp:="", Relative:="", NoActivate:=False)
             Click the center of the element.
-            If WhichButton is a number, then Sleep will be called with that number. 
+            If WhichButton is a number, then Sleep will be called with that number.
                 Eg Click(200) will sleep 200ms after clicking
-            If ClickCount is a number >=10, then Sleep will be called with that number. To click 10+ times and sleep after, specify "ClickCount SleepTime". Ex: Click("left", 200) will sleep 200ms after clicking. 
+            If ClickCount is a number >=10, then Sleep will be called with that number. To click 10+ times and sleep after, specify "ClickCount SleepTime". Ex: Click("left", 200) will sleep 200ms after clicking.
                 Ex: Click("left", "20 200") will left-click 20 times and then sleep 200ms.
             Relative can be offset values for the click (eg "-5 10" would offset the click from the center, X by -5 and Y by +10).
             NoActivate will cause the window not to be brought to focus before clicking if the clickable point is not visible on the screen.
         ControlClick(WhichButton:="left", ClickCount:=1, Options:="")
-            ControlClicks the element after getting relative coordinates with GetLocation("client"). 
+            ControlClicks the element after getting relative coordinates with GetLocation("client").
             If WhichButton is a number, then a Sleep will be called afterwards. Ex: ControlClick(200) will sleep 200ms after clicking. Same for ControlClick("ahk_id 12345", 200)
         Navigate(navDir)
-            Navigates in one of the directions specified by Acc.NavDir constants. Not all elements implement this method. 
+            Navigates in one of the directions specified by Acc.NavDir constants. Not all elements implement this method.
         HitTest(x, y)
             Retrieves the child element or child object that is displayed at a specific point on the screen.
             This shouldn't be used, since Acc.ElementFromPoint uses this internally
-    
+
 
     Comments about design choices:
-        1)  In this library accessing non-existant properties will cause an error to be thrown. 
+        1)  In this library accessing non-existant properties will cause an error to be thrown.
             This means that if AccViewer reports N/A as a value then the property doesn't exist,
             which is different from the property being "" or 0. Because of this, we have another
             way of differentiating/filtering elements, which may or may not be useful.
-        2)  Methods that have Hwnd as an argument have the default value of Last Found Window. 
-            This is to be consistent with AHK overall. 
+        2)  Methods that have Hwnd as an argument have the default value of Last Found Window.
+            This is to be consistent with AHK overall.
         3)  Methods that will return a starting point Acc element usually have the activateChromium
-            option set to True. This is because Chromium-based applications are quite common, but 
-            interacting with them via Acc require accessibility to be turned on. It makes sense to 
+            option set to True. This is because Chromium-based applications are quite common, but
+            interacting with them via Acc require accessibility to be turned on. It makes sense to
             detect those windows automatically and activate by default (if needed).
-        4)  ElementFromHandle: in AHK it may make more sense for idObject to have the default value of 
+        4)  ElementFromHandle: in AHK it may make more sense for idObject to have the default value of
             -4 (Acc.ObjId.Client), but using that by default will prevent access from the window title bar,
             which might be useful to have. Usually though, ObjId.Client will be enough, and when
             using control Hwnds then it must be used (otherwise the object for the window will be returned).
@@ -261,7 +261,7 @@
 #DllLoad oleacc
 ;DllCall("SetThreadDpiAwarenessContext", "ptr", -4, "ptr") ; For multi-monitor setups, otherwise coordinates might be reported wrong.
 
-if (!A_IsCompiled and A_LineFile=A_ScriptFullPath)
+if (!A_IsCompiled and A_LineFile = A_ScriptFullPath)
     Acc.Viewer()
 
 class Acc {
@@ -271,178 +271,178 @@ class Acc {
                 return k
         throw UnsetItemError("Property item `"" value "`" not found!", -1)
     }
-    static PropertyValueGetter := {get: (obj, value) => Acc.PropertyFromValue(obj, value)}
+    static PropertyValueGetter := { get: (obj, value) => Acc.PropertyFromValue(obj, value) }
     static RegisteredWinEvents := Map()
 
     ; MatchMode constants used in condition objects
     static MatchMode := {
-        StartsWith:1,
-        Substring:2,
-        Exact:3,
-        RegEx:"Regex"
+        StartsWith: 1,
+        Substring: 2,
+        Exact: 3,
+        RegEx: "Regex"
     }
 
     ; Used wherever the scope variable is needed (eg Dump, FindElement, FindElements)
     static TreeScope := {
-        Element:1,
-        Children:2,
-        Family:3,
-        Descendants:4,
-        Subtree:7
+        Element: 1,
+        Children: 2,
+        Family: 3,
+        Descendants: 4,
+        Subtree: 7
     }
 
-    Static TreeTraversalOptions := {
-        Default:0,
-        PostOrder:1,
-        LastToFirst:2,
-        PostOrderLastToFirst:3
+    static TreeTraversalOptions := {
+        Default: 0,
+        PostOrder: 1,
+        LastToFirst: 2,
+        PostOrderLastToFirst: 3
     }
 
     ;Https://Msdn.Microsoft.Com/En-Us/Library/Windows/Desktop/Dd373606(V=Vs.85).Aspx
-    Static ObjId := {
-        Window:0x00000000, 
-        SysMenu:0xffffffff, 
-        TitleBar:0xfffffffe, 
-        Menu:0xfffffffd, 
-        Client:0xfffffffc, 
-        VScroll:0xfffffffb, 
-        HScroll:0xfffffffa, 
-        SizeGrip:0xfffffff9, 
-        Caret:0xfffffff8, 
-        Cursor:0xfffffff7, 
-        Alert:0xfffffff6, 
-        Sound:0xfffffff5, 
-        QueryClassNameIdx:0xfffffff4, 
-        NativeOM:0xfffffff0
+    static ObjId := {
+        Window: 0x00000000,
+        SysMenu: 0xffffffff,
+        TitleBar: 0xfffffffe,
+        Menu: 0xfffffffd,
+        Client: 0xfffffffc,
+        VScroll: 0xfffffffb,
+        HScroll: 0xfffffffa,
+        SizeGrip: 0xfffffff9,
+        Caret: 0xfffffff8,
+        Cursor: 0xfffffff7,
+        Alert: 0xfffffff6,
+        Sound: 0xfffffff5,
+        QueryClassNameIdx: 0xfffffff4,
+        NativeOM: 0xfffffff0
     }.Defineprop("__Item", This.PropertyValueGetter)
 
     ;Https://Msdn.Microsoft.Com/En-Us/Library/Windows/Desktop/Dd373609(V=Vs.85).Aspx
-    Static State := {
-        Normal:0, 
-        Unavailable:0x1, 
-        Selected:0x2, 
-        Focused:0x4, 
-        Pressed:0x8, 
-        Checked:0x10, 
-        Mixed:0x20, 
-        Indeterminate:0x20, 
-        ReadOnly:0x40, 
-        HotTracked:0x80, 
-        Default:0x100, 
-        Expanded:0x200, 
-        Collapsed:0x400, 
-        Busy:0x800, 
-        Floating:0x1000, 
-        Marqueed:0x2000, 
-        Animated:0x4000, 
-        Invisible:0x8000, 
-        Offscreen:0x10000, 
-        Sizeable:0x20000, 
-        Moveable:0x40000, 
-        SelfVoicing:0x80000, 
-        Focusable:0x100000, 
-        Selectable:0x200000, 
-        Linked:0x400000, 
-        Traversed:0x800000, 
-        MultiSelectable:0x1000000, 
-        ExtSelectable:0x2000000, 
-        Alert_Low:0x4000000, 
-        Alert_Medium:0x8000000, 
-        Alert_High:0x10000000, 
-        Protected:0x20000000, 
-        Valid:0x7fffffff
+    static State := {
+        Normal: 0,
+        Unavailable: 0x1,
+        Selected: 0x2,
+        Focused: 0x4,
+        Pressed: 0x8,
+        Checked: 0x10,
+        Mixed: 0x20,
+        Indeterminate: 0x20,
+        ReadOnly: 0x40,
+        HotTracked: 0x80,
+        Default: 0x100,
+        Expanded: 0x200,
+        Collapsed: 0x400,
+        Busy: 0x800,
+        Floating: 0x1000,
+        Marqueed: 0x2000,
+        Animated: 0x4000,
+        Invisible: 0x8000,
+        Offscreen: 0x10000,
+        Sizeable: 0x20000,
+        Moveable: 0x40000,
+        SelfVoicing: 0x80000,
+        Focusable: 0x100000,
+        Selectable: 0x200000,
+        Linked: 0x400000,
+        Traversed: 0x800000,
+        MultiSelectable: 0x1000000,
+        ExtSelectable: 0x2000000,
+        Alert_Low: 0x4000000,
+        Alert_Medium: 0x8000000,
+        Alert_High: 0x10000000,
+        Protected: 0x20000000,
+        Valid: 0x7fffffff
     }.Defineprop("__Item", This.PropertyValueGetter)
 
     ;Https://Msdn.Microsoft.Com/En-Us/Library/Windows/Desktop/Dd373608(V=Vs.85).Aspx
-    Static Role := {
-        TitleBar:0x1,
-        MenuBar:0x2, 
-        ScrollBar:0x3, 
-        Grip:0x4, 
-        Sound:0x5, 
-        Cursor:0x6, 
-        Caret:0x7, 
-        Alert:0x8, 
-        Window:0x9, 
-        Client:0xa, 
-        MenuPopup:0xb, 
-        MenuItem:0xc, 
-        ToolTip:0xd, 
-        Application:0xe, 
-        Document:0xf, 
-        Pane:0x10, 
-        Chart:0x11, 
-        Dialog:0x12, 
-        Border:0x13, 
-        Grouping:0x14, 
-        Separator:0x15, 
-        Toolbar:0x16, 
-        StatusBar:0x17, 
-        Table:0x18, 
-        ColumnHeader:0x19, 
-        RowHeader:0x1a, 
-        Column:0x1b, 
-        Row:0x1c, 
-        Cell:0x1d, 
-        Link:0x1e, 
-        HelpBalloon:0x1f, 
-        Character:0x20, 
-        List:0x21, 
-        ListItem:0x22, 
-        Outline:0x23, 
-        OutlineItem:0x24, 
-        PageTab:0x25, 
-        PropertyPage:0x26, 
-        Indicator:0x27, 
-        Graphic:0x28, 
-        StaticText:0x29, 
-        Text:0x2a, 
-        PushButton:0x2b, 
-        CheckButton:0x2c, 
-        RadioButton:0x2d, 
-        ComboBox:0x2e, 
-        Droplist:0x2f, 
-        Progressbar:0x30, 
-        Dial:0x31, 
-        HotkeyField:0x32, 
-        Slider:0x33, 
-        SpinButton:0x34, 
-        Diagram:0x35, 
-        Animation:0x36, 
-        Equation:0x37, 
-        ButtonDropdown:0x38, 
-        ButtonMenu:0x39, 
-        ButtonDropdownGrid:0x3a, 
-        Whitespace:0x3b, 
-        PageTabList:0x3c, 
-        Clock:0x3d, 
-        SplitButton:0x3e, 
-        IPAddress:0x3f, 
-        OutlineButton:0x40
+    static Role := {
+        TitleBar: 0x1,
+        MenuBar: 0x2,
+        ScrollBar: 0x3,
+        Grip: 0x4,
+        Sound: 0x5,
+        Cursor: 0x6,
+        Caret: 0x7,
+        Alert: 0x8,
+        Window: 0x9,
+        Client: 0xa,
+        MenuPopup: 0xb,
+        MenuItem: 0xc,
+        ToolTip: 0xd,
+        Application: 0xe,
+        Document: 0xf,
+        Pane: 0x10,
+        Chart: 0x11,
+        Dialog: 0x12,
+        Border: 0x13,
+        Grouping: 0x14,
+        Separator: 0x15,
+        Toolbar: 0x16,
+        StatusBar: 0x17,
+        Table: 0x18,
+        ColumnHeader: 0x19,
+        RowHeader: 0x1a,
+        Column: 0x1b,
+        Row: 0x1c,
+        Cell: 0x1d,
+        Link: 0x1e,
+        HelpBalloon: 0x1f,
+        Character: 0x20,
+        List: 0x21,
+        ListItem: 0x22,
+        Outline: 0x23,
+        OutlineItem: 0x24,
+        PageTab: 0x25,
+        PropertyPage: 0x26,
+        Indicator: 0x27,
+        Graphic: 0x28,
+        StaticText: 0x29,
+        Text: 0x2a,
+        PushButton: 0x2b,
+        CheckButton: 0x2c,
+        RadioButton: 0x2d,
+        ComboBox: 0x2e,
+        Droplist: 0x2f,
+        Progressbar: 0x30,
+        Dial: 0x31,
+        HotkeyField: 0x32,
+        Slider: 0x33,
+        SpinButton: 0x34,
+        Diagram: 0x35,
+        Animation: 0x36,
+        Equation: 0x37,
+        ButtonDropdown: 0x38,
+        ButtonMenu: 0x39,
+        ButtonDropdownGrid: 0x3a,
+        Whitespace: 0x3b,
+        PageTabList: 0x3c,
+        Clock: 0x3d,
+        SplitButton: 0x3e,
+        IPAddress: 0x3f,
+        OutlineButton: 0x40
     }.Defineprop("__Item", This.PropertyValueGetter)
-   ;Https://, Msdn.Microsoft.Com/En-Us/Library/Windows/Desktop/Dd373600(V=Vs.85).Aspx
-    Static NavDir := {
-        Min:0x0, 
-        Up:0x1, 
-        Down:0x2, 
-        Left:0x3, 
-        Right:0x4, 
-        Next:0x5, 
-        Previous:0x6, 
-        FirstChild:0x7, 
-        LastChild:0x8, 
-        Max:0x9
+    ;Https://, Msdn.Microsoft.Com/En-Us/Library/Windows/Desktop/Dd373600(V=Vs.85).Aspx
+    static NavDir := {
+        Min: 0x0,
+        Up: 0x1,
+        Down: 0x2,
+        Left: 0x3,
+        Right: 0x4,
+        Next: 0x5,
+        Previous: 0x6,
+        FirstChild: 0x7,
+        LastChild: 0x8,
+        Max: 0x9
     }.Defineprop("__Item", This.PropertyValueGetter)
 
     ;Https://Msdn.Microsoft.Com/En-Us/Library/Windows/Desktop/Dd373634(V=Vs.85).Aspx
-    Static SelectionFlag := {
-        None:0x0, 
-        TakeFocus:0x1, 
-        TakeSelection:0x2, 
-        ExtendSelection:0x4, 
-        AddSelection:0x8, 
-        RemoveSelection:0x10, 
-        Valid:0x1f
+    static SelectionFlag := {
+        None: 0x0,
+        TakeFocus: 0x1,
+        TakeSelection: 0x2,
+        ExtendSelection: 0x4,
+        AddSelection: 0x8,
+        RemoveSelection: 0x10,
+        Valid: 0x1f
     }.Defineprop("__Item", This.PropertyValueGetter)
 
     ;Msaa Events List:
@@ -453,86 +453,86 @@ class Acc {
     ;    Https://Msdn.Microsoft.Com/En-Us/Library/Windows/Desktop/Dd373657(V=Vs.85).Aspx
     ;Console Accessibility:
     ;    Https://Msdn.Microsoft.Com/En-Us/Library/Ms971319.Aspx
-    Static Event := {
-        Min:0x00000001, 
-        Max:0x7fffffff, 
-        System_Sound:0x0001, 
-        System_Alert:0x0002, 
-        System_Foreground:0x0003, 
-        System_MenuStart:0x0004, 
-        System_MenuEnd:0x0005, 
-        System_MenuPopupStart:0x0006, 
-        System_MenuPopupEnd:0x0007, 
-        System_CaptureStart:0x0008, 
-        System_CaptureEnd:0x0009, 
-        System_MoveSizeStart:0x000a, 
-        System_MoveSizeEnd:0x000b, 
-        System_ContextHelpStart:0x000c, 
-        System_ContextHelpEnd:0x000d, 
-        System_DragDropStart:0x000e, 
-        System_DragDropEnd:0x000f, 
-        System_DialogStart:0x0010, 
-        System_DialogEnd:0x0011, 
-        System_ScrollingStart:0x0012, 
-        System_ScrollingEnd:0x0013, 
-        System_SwitchStart:0x0014, 
-        System_SwitchEnd:0x0015, 
-        System_MinimizeStart:0x0016, 
-        System_MinimizeEnd:0x0017, 
-        Console_Caret:0x4001, 
-        Console_Update_Region:0x4002, 
-        Console_Update_Simple:0x4003, 
-        Console_Update_Scroll:0x4004, 
-        Console_Layout:0x4005, 
-        Console_Start_Application:0x4006, 
-        Console_End_Application:0x4007, 
-        Object_Create:0x8000, 
-        Object_Destroy:0x8001, 
-        Object_Show:0x8002, 
-        Object_Hide:0x8003, 
-        Object_Reorder:0x8004, 
-        Object_Focus:0x8005, 
-        Object_Selection:0x8006, 
-        Object_SelectionAdd:0x8007, 
-        Object_SelectionRemove:0x8008, 
-        Object_SelectionWithin:0x8009, 
-        Object_StateChange:0x800a, 
-        Object_LocationChange:0x800b, 
-        Object_NameChange:0x800c, 
-        Object_DescriptionChange:0x800d, 
-        Object_ValueChange:0x800e, 
-        Object_ParentChange:0x800f, 
-        Object_HelpChange:0x8010, 
-        Object_DefactionChange:0x8011, 
-        Object_AcceleratorChange:0x8012,
-        Object_Invoked:0x8013,
-        Object_TextSelectionChanged:0x8014,
-        Object_ContentScrolled:0x8015,
-        System_ArrangmentPreview:0x8016,
-        Object_Cloaked:0x8017,
-        Object_Uncloaked:0x8018,
-        Object_LiveRegionChanged:0x8019,
-        Object_HostedObjectsInvalidated:0x8020,
-        Object_DragStart:0x8021,
-        Object_DragCancel:0x8022,
-        Object_DragComplete:0x8023,
-        Object_DragEnter:0x8024,
-        Object_DragLeave:0x8025,
-        Object_DragDropped:0x8026,
-        Object_IME_Show:0x8027,
-        Object_IME_Hide:0x8028,
-        Object_IME_Change:0x8029,
-        Object_TextEdit_ConversionTargetChanged:0x8030,
-        Object_End:0x80FF
+    static Event := {
+        Min: 0x00000001,
+        Max: 0x7fffffff,
+        System_Sound: 0x0001,
+        System_Alert: 0x0002,
+        System_Foreground: 0x0003,
+        System_MenuStart: 0x0004,
+        System_MenuEnd: 0x0005,
+        System_MenuPopupStart: 0x0006,
+        System_MenuPopupEnd: 0x0007,
+        System_CaptureStart: 0x0008,
+        System_CaptureEnd: 0x0009,
+        System_MoveSizeStart: 0x000a,
+        System_MoveSizeEnd: 0x000b,
+        System_ContextHelpStart: 0x000c,
+        System_ContextHelpEnd: 0x000d,
+        System_DragDropStart: 0x000e,
+        System_DragDropEnd: 0x000f,
+        System_DialogStart: 0x0010,
+        System_DialogEnd: 0x0011,
+        System_ScrollingStart: 0x0012,
+        System_ScrollingEnd: 0x0013,
+        System_SwitchStart: 0x0014,
+        System_SwitchEnd: 0x0015,
+        System_MinimizeStart: 0x0016,
+        System_MinimizeEnd: 0x0017,
+        Console_Caret: 0x4001,
+        Console_Update_Region: 0x4002,
+        Console_Update_Simple: 0x4003,
+        Console_Update_Scroll: 0x4004,
+        Console_Layout: 0x4005,
+        Console_Start_Application: 0x4006,
+        Console_End_Application: 0x4007,
+        Object_Create: 0x8000,
+        Object_Destroy: 0x8001,
+        Object_Show: 0x8002,
+        Object_Hide: 0x8003,
+        Object_Reorder: 0x8004,
+        Object_Focus: 0x8005,
+        Object_Selection: 0x8006,
+        Object_SelectionAdd: 0x8007,
+        Object_SelectionRemove: 0x8008,
+        Object_SelectionWithin: 0x8009,
+        Object_StateChange: 0x800a,
+        Object_LocationChange: 0x800b,
+        Object_NameChange: 0x800c,
+        Object_DescriptionChange: 0x800d,
+        Object_ValueChange: 0x800e,
+        Object_ParentChange: 0x800f,
+        Object_HelpChange: 0x8010,
+        Object_DefactionChange: 0x8011,
+        Object_AcceleratorChange: 0x8012,
+        Object_Invoked: 0x8013,
+        Object_TextSelectionChanged: 0x8014,
+        Object_ContentScrolled: 0x8015,
+        System_ArrangmentPreview: 0x8016,
+        Object_Cloaked: 0x8017,
+        Object_Uncloaked: 0x8018,
+        Object_LiveRegionChanged: 0x8019,
+        Object_HostedObjectsInvalidated: 0x8020,
+        Object_DragStart: 0x8021,
+        Object_DragCancel: 0x8022,
+        Object_DragComplete: 0x8023,
+        Object_DragEnter: 0x8024,
+        Object_DragLeave: 0x8025,
+        Object_DragDropped: 0x8026,
+        Object_IME_Show: 0x8027,
+        Object_IME_Hide: 0x8028,
+        Object_IME_Change: 0x8029,
+        Object_TextEdit_ConversionTargetChanged: 0x8030,
+        Object_End: 0x80FF
     }.Defineprop("__Item", This.PropertyValueGetter)
-    
-    Static WinEvent := {
-        OutOfContext:0, 
-        SkipOwnThread:1, 
-        SkipOwnProcess:2, 
-        InContext:3
+
+    static WinEvent := {
+        OutOfContext: 0,
+        SkipOwnThread: 1,
+        SkipOwnProcess: 2,
+        InContext: 3
     }.Defineprop("__Item", This.PropertyValueGetter)
-    
+
     static __HighlightGuis := Map()
 
     class IAccessible {
@@ -543,16 +543,16 @@ class Acc {
          * @param childId IAccessible childId
          * @param wId hWnd of the parent window
          */
-        __New(accessible, childId:=0, wId:=0) {
+        __New(accessible, childId := 0, wId := 0) {
             if ComObjType(accessible, "Name") != "IAccessible"
                 throw Error("Could not access an IAccessible Object")
-            this.DefineProp("ptr", {value:ComObjValue(accessible)})
-            this.DefineProp("accessible", {value:accessible})
-            this.DefineProp("childId", {value:childId})
-            if wId=0
+            this.DefineProp("ptr", { value: ComObjValue(accessible) })
+            this.DefineProp("accessible", { value: accessible })
+            this.DefineProp("childId", { value: childId })
+            if wId = 0
                 try wId := this.WinID
-            this.DefineProp("wId", {value:wId})
-            this.DefineProp("ObjPtr", {value:ObjPtr(this)})
+            this.DefineProp("wId", { value: wId })
+            this.DefineProp("ObjPtr", { value: ObjPtr(this) })
         }
         __Delete() {
             if Acc.__HighlightGuis.Has(this.ObjPtr) {
@@ -567,7 +567,7 @@ class Acc {
          * trying to access a property/method that is undefined in this library.
          */
         __Get(Name, Params) {
-            if !(SubStr(Name,3)="acc") {
+            if !(SubStr(Name, 3) = "acc") {
                 try return this.accessible.acc%Name%[this.childId]
                 try return this.accessible.acc%Name%(this.childId) ; try method with self
                 try return this.accessible.acc%Name% ; try property
@@ -626,7 +626,7 @@ class Acc {
          * Internal method. Enables setting IAccessible acc properties.
          */
         __Set(Name, Params, Value) {
-            if !(SubStr(Name,3)="acc")
+            if !(SubStr(Name, 3) = "acc")
                 try return this.accessible.acc%Name%[Params*] := Value
             return this.accessible.%Name%[Params*] := Value
         }
@@ -634,8 +634,8 @@ class Acc {
          * Internal method. Enables setting IAccessible acc properties.
          */
         __Call(Name, Params) {
-            if !(SubStr(Name,3)="acc")
-                try return this.accessible.acc%Name%(Params.Length?Params[1]:0)
+            if !(SubStr(Name, 3) = "acc")
+                try return this.accessible.acc%Name%(Params.Length ? Params[1] : 0)
             return this.accessible.%Name%(Params*)
         }
 
@@ -646,7 +646,7 @@ class Acc {
          * Objects that support selection or receive the keyboard focus should support this method.
          * @param flags One of the SelectionFlag constants
          */
-        Select(flags) => (this.accessible.accSelect(IsInteger(flags) ? flags : Acc.SelectionFlag.%flags%,this.childId)) 
+        Select(flags) => (this.accessible.accSelect(IsInteger(flags) ? flags : Acc.SelectionFlag.%flags%, this.childId))
         /**
          * Performs the specified object's default action. Not all objects have a default action.
          */
@@ -665,7 +665,7 @@ class Acc {
          */
         Navigate(navDir) {
             navDir := IsInteger(navDir) ? navDir : Acc.NavDir.%navDir%
-            varEndUpAt := this.accessible.accNavigate(navDir,this.childId)
+            varEndUpAt := this.accessible.accNavigate(navDir, this.childId)
             if Type(varEndUpAt) = "ComObject"
                 return Acc.IAccessible(Acc.Query(varEndUpAt))
             else if IsInteger(varEndUpAt)
@@ -676,11 +676,11 @@ class Acc {
         Name {
             get => (this.accessible.accName[this.childId])
             set => (this.accessible.accName[this.childId] := Value)
-        } 
+        }
         Value {
             get => (this.accessible.accValue[this.childId])
             set => (this.accessible.accValue[this.childId] := Value)
-        } 
+        }
         Role => (this.accessible.accRole[this.childId]) ; Returns an integer
         RoleText => (Acc.GetRoleText(this.Role)) ; Returns a string
         Help => (this.accessible.accHelp[this.childId])
@@ -690,16 +690,17 @@ class Acc {
         Description => (this.accessible.accDescription[this.childId]) ; Returns a string
         DefaultAction => (this.accessible.accDefaultAction[this.childId]) ; Returns a string
         ; Retrieves the Acc element child that has the keyboard focus.
-        Focus => (this.IAccessibleFromVariant(this.accessible.accFocus())) 
+        Focus => (this.IAccessibleFromVariant(this.accessible.accFocus()))
         ; Returns an array of Acc elements that are the selected children of this object.
         Selection => (this.IAccessibleFromVariant(this.accessible.accSelection()))
         ; Returns the parent of this object as an Acc element
-        Parent => (this.IsChild ? Acc.IAccessible(this.accessible,,this.wId) : Acc.IAccessible(Acc.Query(this.accessible.accParent)))
+        Parent => (this.IsChild ? Acc.IAccessible(this.accessible, , this.wId) : Acc.IAccessible(Acc.Query(this.accessible
+            .accParent)))
 
         ; Returns the Hwnd for the control corresponding to this object
         ControlID {
             get {
-                if DllCall("oleacc\WindowFromAccessibleObject", "Ptr", this, "uint*", &hWnd:=0) = 0
+                if DllCall("oleacc\WindowFromAccessibleObject", "Ptr", this, "uint*", &hWnd := 0) = 0
                     return hWnd
                 throw Error("WindowFromAccessibleObject failed", -1)
             }
@@ -707,7 +708,7 @@ class Acc {
         ; Returns the Hwnd for the window corresponding to this object
         WinID {
             get {
-                if DllCall("oleacc\WindowFromAccessibleObject", "Ptr", this, "uint*", &hWnd:=0) = 0
+                if DllCall("oleacc\WindowFromAccessibleObject", "Ptr", this, "uint*", &hWnd := 0) = 0
                     return DllCall("GetAncestor", "UInt", hWnd, "UInt", GA_ROOT := 2)
                 throw Error("WindowFromAccessibleObject failed", -1)
             }
@@ -715,7 +716,7 @@ class Acc {
         ; Checks whether internally this corresponds to a native IAccessible object or a childId
         IsChild => (this.childId == 0 ? False : True)
         ; Checks whether this object is selected. This is very slow, a better alternative is Element.Selection
-        IsSelected { 
+        IsSelected {
             get {
                 try oSel := this.Parent.Selection
                 return IsSet(oSel) && this.IsEqual(oSel)
@@ -727,7 +728,8 @@ class Acc {
         Exists {
             get {
                 try {
-                    if ((state := this.State) == 32768) || (state == 1) || (((pos := this.Location).x==0) && (pos.y==0) && (pos.w==0) && (pos.h==0))
+                    if ((state := this.State) == 32768) || (state == 1) || (((pos := this.Location).x == 0) && (pos.y ==
+                        0) && (pos.w == 0) && (pos.h == 0))
                         return 0
                 } catch
                     return 0
@@ -740,9 +742,10 @@ class Acc {
          */
         Location {
             get {
-                x:=Buffer(4, 0), y:=Buffer(4, 0), w:=Buffer(4, 0), h:=Buffer(4, 0)
-                this.accessible.accLocation(ComValue(0x4003, x.ptr, 1), ComValue(0x4003, y.ptr, 1), ComValue(0x4003, w.ptr, 1), ComValue(0x4003, h.ptr, 1), this.childId)
-                Return {x:NumGet(x,0,"int"), y:NumGet(y,0,"int"), w:NumGet(w,0,"int"), h:NumGet(h,0,"int")}
+                x := Buffer(4, 0), y := Buffer(4, 0), w := Buffer(4, 0), h := Buffer(4, 0)
+                this.accessible.accLocation(ComValue(0x4003, x.ptr, 1), ComValue(0x4003, y.ptr, 1), ComValue(0x4003, w.ptr,
+                    1), ComValue(0x4003, h.ptr, 1), this.childId)
+                return { x: NumGet(x, 0, "int"), y: NumGet(y, 0, "int"), w: NumGet(w, 0, "int"), h: NumGet(h, 0, "int") }
             }
         }
         ; Returns all children of this object as an array of Acc elements
@@ -750,16 +753,18 @@ class Acc {
             get {
                 if this.IsChild || !(cChildren := this.accessible.accChildCount)
                     return []
-                Children := Array(), varChildren := Buffer(cChildren * (8+2*A_PtrSize))
+                Children := Array(), varChildren := Buffer(cChildren * (8 + 2 * A_PtrSize))
                 try {
-                    if DllCall("oleacc\AccessibleChildren", "ptr", this, "int",0, "int", cChildren, "ptr", varChildren, "int*", cChildren) > -1 {
-                        Loop cChildren {
-                            i := (A_Index-1) * (A_PtrSize * 2 + 8) + 8
+                    if DllCall("oleacc\AccessibleChildren", "ptr", this, "int", 0, "int", cChildren, "ptr", varChildren,
+                        "int*", cChildren) > -1 {
+                        loop cChildren {
+                            i := (A_Index - 1) * (A_PtrSize * 2 + 8) + 8
                             child := NumGet(varChildren, i, "ptr")
-                            Children.Push(NumGet(varChildren, i-8, "ptr") = 9 ? Acc.IAccessible(Acc.Query(child),,this.wId) : Acc.IAccessible(this.accessible, child, this.wId))
-                            NumGet(varChildren, i-8, "ptr") = 9 ? ObjRelease(child) : ""
+                            Children.Push(NumGet(varChildren, i - 8, "ptr") = 9 ? Acc.IAccessible(Acc.Query(child), ,
+                            this.wId) : Acc.IAccessible(this.accessible, child, this.wId))
+                            NumGet(varChildren, i - 8, "ptr") = 9 ? ObjRelease(child) : ""
                         }
-                        Return Children
+                        return Children
                     }
                 }
                 throw Error("AccessibleChildren DllCall Failed", -1)
@@ -771,17 +776,17 @@ class Acc {
          */
         IAccessibleFromVariant(var) {
             if Type(var) = "ComObject"
-                return Acc.IAccessible(Acc.Query(var),,this.wId)
+                return Acc.IAccessible(Acc.Query(var), , this.wId)
             else if Type(var) = "Enumerator" {
                 oArr := []
-                Loop {
+                loop {
                     if var.Call(&childId)
                         oArr.Push(this.IAccessibleFromVariant(childId))
-                    else 
+                    else
                         return oArr
                 }
             } else if IsInteger(var)
-                return Acc.IAccessible(this.accessible,var,this.wId)
+                return Acc.IAccessible(this.accessible, var, this.wId)
             else
                 return var
         }
@@ -793,18 +798,20 @@ class Acc {
             cChildren := this.accessible.accChildCount
             if n > cChildren
                 throw IndexError("Child index " n " is out of bounds", -1)
-            varChildren := Buffer(cChildren * (8+2*A_PtrSize))
+            varChildren := Buffer(cChildren * (8 + 2 * A_PtrSize))
             try {
-                if DllCall("oleacc\AccessibleChildren", "ptr", this, "int",0, "int",cChildren, "ptr",varChildren, "int*",cChildren) > -1 {
+                if DllCall("oleacc\AccessibleChildren", "ptr", this, "int", 0, "int", cChildren, "ptr", varChildren,
+                    "int*", cChildren) > -1 {
                     if n < 1
                         n := cChildren + n + 1
                     if n < 1 || n > cChildren
                         throw IndexError("Child index " n " is out of bounds", -1)
-                    i := (n-1) * (A_PtrSize * 2 + 8) + 8
+                    i := (n - 1) * (A_PtrSize * 2 + 8) + 8
                     child := NumGet(varChildren, i, "ptr")
-                    oChild := NumGet(varChildren, i-8, "ptr") = 9 ? Acc.IAccessible(Acc.Query(child),,this.wId) : Acc.IAccessible(this.accessible, child, this.wId)
-                    NumGet(varChildren, i-8, "ptr") = 9 ? ObjRelease(child) : ""
-                    Return oChild
+                    oChild := NumGet(varChildren, i - 8, "ptr") = 9 ? Acc.IAccessible(Acc.Query(child), , this.wId) :
+                        Acc.IAccessible(this.accessible, child, this.wId)
+                    NumGet(varChildren, i - 8, "ptr") = 9 ? ObjRelease(child) : ""
+                    return oChild
                 }
             }
             throw Error("AccessibleChildren DllCall Failed", -1)
@@ -833,7 +840,7 @@ class Acc {
                 if Acc.ElementFromPath(path, this, False).IsEqual(oTarget)
                     return path
             }
-            oFind := this.FindElement({IsEqual:oTarget})
+            oFind := this.FindElement({ IsEqual: oTarget })
             return oFind ? oFind.Path : ""
         }
         /**
@@ -841,42 +848,43 @@ class Acc {
          * @param relativeTo Coordinate mode, which can be client, window or screen. Default is A_CoordModeMouse.
          * @returns {Object} {x: relative x-coordinate, y: relative y-coordinate, w: width, h: height}
          */
-        GetLocation(relativeTo:="") { 
+        GetLocation(relativeTo := "") {
             relativeTo := (relativeTo == "") ? A_CoordModeMouse : relativeTo, loc := this.Location
             if (relativeTo = "screen")
                 return loc
             else if (relativeTo = "window") {
                 RECT := Buffer(16)
                 DllCall("user32\GetWindowRect", "Int", this.wId, "Ptr", RECT)
-                return {x:(loc.x-NumGet(RECT, 0, "Int")), y:(loc.y-NumGet(RECT, 4, "Int")), w:loc.w, h:loc.h}
+                return { x: (loc.x - NumGet(RECT, 0, "Int")), y: (loc.y - NumGet(RECT, 4, "Int")), w: loc.w, h: loc.h }
             } else if (relativeTo = "client") {
-                pt := Buffer(8), NumPut("int",loc.x,pt), NumPut("int",loc.y,pt,4)
+                pt := Buffer(8), NumPut("int", loc.x, pt), NumPut("int", loc.y, pt, 4)
                 DllCall("ScreenToClient", "Int", this.wId, "Ptr", pt)
-                return {x:NumGet(pt,0,"int"), y:NumGet(pt,4,"int"), w:loc.w, h:loc.h}
+                return { x: NumGet(pt, 0, "int"), y: NumGet(pt, 4, "int"), w: loc.w, h: loc.h }
             } else
-                throw Error(relativeTo "is not a valid CoordMode",-1)
+                throw Error(relativeTo "is not a valid CoordMode", -1)
         }
         /**
          * Checks whether this element is equal to another element
          * @param oCompare The Acc element to be compared against.
          */
         IsEqual(oCompare) {
-            loc1 := {x:0,y:0,w:0,h:0}, loc2 := {x:0,y:0,w:0,h:0}
+            loc1 := { x: 0, y: 0, w: 0, h: 0 }, loc2 := { x: 0, y: 0, w: 0, h: 0 }
             try loc1 := this.Location
             catch { ; loc1 unset
-                loc1 := {x:0,y:0,w:0,h:0}
+                loc1 := { x: 0, y: 0, w: 0, h: 0 }
                 try return oCompare.Location && 0 ; if loc2 is set then code will return
             }
             try loc2 := oCompare.Location
             if (loc1.x != loc2.x) || (loc1.y != loc2.y) || (loc1.w != loc2.w) || (loc1.h != loc2.h)
                 return 0
-            for _, v in ((loc1.x = 0) && (loc1.y = 0) && (loc1.w = 0) && (loc1.h = 0)) ? ["Role", "Value", "Name", "State", "DefaultAction", "Description", "KeyboardShortcut", "Help"] : ["Role", "Name"] {
+            for _, v in ((loc1.x = 0) && (loc1.y = 0) && (loc1.w = 0) && (loc1.h = 0)) ? ["Role", "Value", "Name",
+                "State", "DefaultAction", "Description", "KeyboardShortcut", "Help"] : ["Role", "Name"] {
                 try v1 := this.%v%
                 catch { ; v1 unset
                     try v2 := oCompare.%v%
                     catch ; both unset, continue
                         continue
-                    return 0 ; v1 unset, v2 set 
+                    return 0 ; v1 unset, v2 set
                 }
                 try v2 := oCompare.%v%
                 catch ; v1 set, v2 unset
@@ -896,11 +904,11 @@ class Acc {
          * @param depth Maximum level of depth for the search. Default is no limit.
          * @returns {Acc.IAccessible}
          */
-        FindElement(condition, scope:=4, index:=1, order:=0, depth:=-1) {
+        FindElement(condition, scope := 4, index := 1, order := 0, depth := -1) {
             if IsObject(condition) {
                 for key in ["index", "scope", "depth", "order"]
-                if condition.HasOwnProp(key)
-                    %key% := condition.%key%
+                    if condition.HasOwnProp(key)
+                        %key% := condition.%key%
                 if condition.HasOwnProp("i")
                     index := condition.i
                 if index < 0
@@ -908,55 +916,62 @@ class Acc {
                 else if index = 0
                     throw Error("Condition index cannot be 0", -1)
             }
-            scope := IsInteger(scope) ? scope : Acc.TreeScope.%scope%, order := IsInteger(order) ? order : Acc.TreeTraversalOptions.%order%
+            scope := IsInteger(scope) ? scope : Acc.TreeScope.%scope%, order := IsInteger(order) ? order : Acc.TreeTraversalOptions
+                .%order%
 
-            if order&1
-                return order&2 ? PostOrderLastToFirstRecursiveFind(this, condition, scope,, ++depth) : PostOrderFirstToLastRecursiveFind(this, condition, scope,, ++depth)
-            if scope&1
+            if order & 1
+                return order & 2 ? PostOrderLastToFirstRecursiveFind(this, condition, scope, , ++depth) :
+                    PostOrderFirstToLastRecursiveFind(this, condition, scope, , ++depth)
+            if scope & 1
                 if this.ValidateCondition(condition) && (--index = 0)
-                    return this.DefineProp("Path", {value:""})
-            if scope>1
-                return order&2 ? PreOrderLastToFirstRecursiveFind(this, condition, scope,, depth) : PreOrderFirstToLastRecursiveFind(this, condition, scope,,depth)
+                    return this.DefineProp("Path", { value: "" })
+            if scope > 1
+                return order & 2 ? PreOrderLastToFirstRecursiveFind(this, condition, scope, , depth) :
+                    PreOrderFirstToLastRecursiveFind(this, condition, scope, , depth)
 
-            PreOrderFirstToLastRecursiveFind(element, condition, scope:=4, path:="", depth:=-1) {
+            PreOrderFirstToLastRecursiveFind(element, condition, scope := 4, path := "", depth := -1) {
                 --depth
                 for i, child in element.Children {
                     if child.ValidateCondition(condition) && (--index = 0)
-                        return child.DefineProp("Path", {value:path (path?",":"") i})
-                    else if (scope&4) && (depth != 0) && (rf := PreOrderFirstToLastRecursiveFind(child, condition,, path (path?",":"") i, depth))
-                        return rf 
+                        return child.DefineProp("Path", { value: path (path ? "," : "") i })
+                    else if (scope & 4) && (depth != 0) && (rf := PreOrderFirstToLastRecursiveFind(child, condition, ,
+                        path (path ? "," : "") i, depth))
+                        return rf
                 }
             }
-            PreOrderLastToFirstRecursiveFind(element, condition, scope:=4, path:="", depth:=-1) {
+            PreOrderLastToFirstRecursiveFind(element, condition, scope := 4, path := "", depth := -1) {
                 children := element.Children, length := children.Length + 1, --depth
-                Loop (length - 1) {
-                    child := children[length-A_index]
+                loop (length - 1) {
+                    child := children[length - A_index]
                     if child.ValidateCondition(condition) && (--index = 0)
-                        return child.DefineProp("Path", {value:path (path?",":"") (length-A_index)})
-                    else if scope&4 && (depth != 0) && (rf := PreOrderLastToFirstRecursiveFind(child, condition,, path (path?",":"") (length-A_index), depth))
-                        return rf 
+                        return child.DefineProp("Path", { value: path (path ? "," : "") (length - A_index) })
+                    else if scope & 4 && (depth != 0) && (rf := PreOrderLastToFirstRecursiveFind(child, condition, ,
+                        path (path ? "," : "") (length - A_index), depth))
+                        return rf
                 }
             }
-            PostOrderFirstToLastRecursiveFind(element, condition, scope:=4, path:="", depth:=-1) {
-                if (--depth != 0) && scope>1 {
+            PostOrderFirstToLastRecursiveFind(element, condition, scope := 4, path := "", depth := -1) {
+                if (--depth != 0) && scope > 1 {
                     for i, child in element.Children {
-                        if (rf := PostOrderFirstToLastRecursiveFind(child, condition, (scope & ~2)|1, path (path?",":"") i, depth))
-                            return rf 
+                        if (rf := PostOrderFirstToLastRecursiveFind(child, condition, (scope & ~2) | 1, path (path ?
+                            "," : "") i, depth))
+                            return rf
                     }
                 }
-                if scope&1 && element.ValidateCondition(condition) && (--index = 0)
-                    return element.DefineProp("Path", {value:path})
+                if scope & 1 && element.ValidateCondition(condition) && (--index = 0)
+                    return element.DefineProp("Path", { value: path })
             }
-            PostOrderLastToFirstRecursiveFind(element, condition, scope:=4, path:="", depth:=-1) {
-                if (--depth != 0) && scope>1 {
+            PostOrderLastToFirstRecursiveFind(element, condition, scope := 4, path := "", depth := -1) {
+                if (--depth != 0) && scope > 1 {
                     children := element.Children, length := children.Length + 1
-                    Loop (length - 1) {
-                        if (rf := PostOrderLastToFirstRecursiveFind(children[length-A_index], condition, (scope & ~2)|1, path (path?",":"") (length-A_index), depth))
-                            return rf 
+                    loop (length - 1) {
+                        if (rf := PostOrderLastToFirstRecursiveFind(children[length - A_index], condition, (scope & ~2) |
+                        1, path (path ? "," : "") (length - A_index), depth))
+                            return rf
                     }
                 }
-                if scope&1 && element.ValidateCondition(condition) && (--index = 0)
-                    return element.DefineProp("Path", {value:path})
+                if scope & 1 && element.ValidateCondition(condition) && (--index = 0)
+                    return element.DefineProp("Path", { value: path })
             }
         }
         FindFirst(args*) => this.FindElement(args*)
@@ -968,7 +983,7 @@ class Acc {
          * @param depth Maximum level of depth for the search. Default is no limit.
          * @returns {[Acc.IAccessible]}
          */
-        FindElements(condition:=True, scope:=4, depth:=-1) {
+        FindElements(condition := True, scope := 4, depth := -1) {
             if Type(condition) = "Object" {
                 if condition.HasOwnProp("scope")
                     scope := condition.scope
@@ -977,23 +992,23 @@ class Acc {
             }
 
             matches := [], ++depth, scope := IsInteger(scope) ? scope : Acc.TreeScope.%scope%
-            if scope&1
+            if scope & 1
                 if this.ValidateCondition(condition)
-                    matches.Push(this.DefineProp("Path", {value:""}))
-            if scope>1
-                RecursiveFind(this, condition, (scope|1)^1, &matches,, depth)
+                    matches.Push(this.DefineProp("Path", { value: "" }))
+            if scope > 1
+                RecursiveFind(this, condition, (scope | 1) ^ 1, &matches, , depth)
             return matches
-            RecursiveFind(element, condition, scope, &matches, path:="", depth:=-1) {
-                if scope>1 {
+            RecursiveFind(element, condition, scope, &matches, path := "", depth := -1) {
+                if scope > 1 {
                     --depth
                     for i, child in element {
                         if child.ValidateCondition(condition)
-                            matches.Push(child.DefineProp("Path", {value:path (path?",":"") i}))
-                        if scope&4 && (depth != 0)
-                            RecursiveFind(child, condition, scope, &matches, path (path?",":"") i, depth)
+                            matches.Push(child.DefineProp("Path", { value: path (path ? "," : "") i }))
+                        if scope & 4 && (depth != 0)
+                            RecursiveFind(child, condition, scope, &matches, path (path ? "," : "") i, depth)
                     }
                 }
-            }          
+            }
         }
         FindAll(args*) => this.FindElements(args*)
         /**
@@ -1008,12 +1023,13 @@ class Acc {
          * @param depth Maximum level of depth for the search. Default is no limit.
          * @returns {Acc.IAccessible}
          */
-        WaitElement(conditionOrPath, timeOut:=-1, scope:=4, index:=1, order:=0, depth:=-1) {
+        WaitElement(conditionOrPath, timeOut := -1, scope := 4, index := 1, order := 0, depth := -1) {
             if Type(conditionOrPath) = "Object" && conditionOrPath.HasOwnProp("timeOut")
                 timeOut := conditionOrPath.timeOut
             waitTime := A_TickCount + timeOut
             while ((timeOut < 1) ? 1 : (A_tickCount < waitTime)) {
-                try return IsObject(conditionOrPath) ? this.FindElement(conditionOrPath, scope, index, depth) : this[conditionOrPath]
+                try return IsObject(conditionOrPath) ? this.FindElement(conditionOrPath, scope, index, depth) : this[
+                    conditionOrPath]
                 Sleep 40
             }
         }
@@ -1027,13 +1043,14 @@ class Acc {
          * @param depth Maximum level of depth for the search. Default is no limit.
          * @returns {Acc.IAccessible}
          */
-         WaitElementExist(conditionOrPath, timeOut:=-1, scope:=4, index:=1, order:=0, depth:=-1) {
+        WaitElementExist(conditionOrPath, timeOut := -1, scope := 4, index := 1, order := 0, depth := -1) {
             if Type(conditionOrPath) = "Object" && conditionOrPath.HasOwnProp("timeOut")
-                    timeOut := conditionOrPath.timeOut
+                timeOut := conditionOrPath.timeOut
             waitTime := A_TickCount + timeOut
             while ((timeOut < 1) ? 1 : (A_tickCount < waitTime)) {
                 try {
-                    oFind := IsObject(conditionOrPath) ? this.FindElement(conditionOrPath, scope, index, depth) : this[conditionOrPath]
+                    oFind := IsObject(conditionOrPath) ? this.FindElement(conditionOrPath, scope, index, depth) : this[
+                        conditionOrPath]
                     if oFind.Exists
                         return oFind
                 }
@@ -1044,7 +1061,7 @@ class Acc {
          * Waits for this element to not exist. Returns True if the element disappears before the timeout.
          * @param timeOut Timeout in milliseconds. Default in indefinite waiting.
          */
-        WaitNotExist(timeOut:=-1) {
+        WaitNotExist(timeOut := -1) {
             waitTime := A_TickCount + timeOut
             while ((timeOut < 1) ? 1 : (A_tickCount < waitTime)) {
                 if !this.Exists
@@ -1062,7 +1079,7 @@ class Acc {
             if this.ValidateCondition(condition)
                 return this
             oEl := this
-            Loop {
+            loop {
                 try {
                     oEl := oEl.Parent
                     if oEl.ValidateCondition(condition)
@@ -1078,11 +1095,11 @@ class Acc {
             Everything inside {} is an "and" condition
             Everything inside [] is an "or" condition
             Object key "not" creates a not condition
-
+        
             matchmode key defines the MatchMode: StartsWith, Substring, Exact, RegEx (Acc.MATCHMODE values)
-
+        
             casesensitive key defines case sensitivity: True=case sensitive; False=case insensitive
-
+        
             {Name:"Something"} => Name must match "Something" (case sensitive)
             {Name:"Something", RoleText:"something else"} => Name must match "Something" and RoleText must match "something else"
             [{Name:"Something", Role:42}, {Name:"Something2", RoleText:"something else"}] => Name=="Something" and Role==42 OR Name=="Something2" and RoleText=="something else"
@@ -1117,7 +1134,8 @@ class Acc {
                                 if !InStr(propValue, cond, casesensitive)
                                     return 0
                             case 1:
-                                if !((casesensitive && (SubStr(propValue, 1, StrLen(cond)) == cond)) || (!casesensitive && (SubStr(propValue, 1, StrLen(cond)) = cond)))
+                                if !((casesensitive && (SubStr(propValue, 1, StrLen(cond)) == cond)) || (!casesensitive &&
+                                    (SubStr(propValue, 1, StrLen(cond)) = cond)))
                                     return 0
                             case "Regex":
                                 if !(propValue ~= cond)
@@ -1127,7 +1145,7 @@ class Acc {
                                     return 0
                         }
                     case "Acc.IAccessible":
-                        if (prop="IsEqual") ? !this.IsEqual(cond) : !this.ValidateCondition(cond)
+                        if (prop = "IsEqual") ? !this.IsEqual(cond) : !this.ValidateCondition(cond)
                             return 0
                     default:
                         if (HasProp(cond, "Length") ? cond.Length = 0 : ObjOwnPropCount(cond) = 0) {
@@ -1135,9 +1153,9 @@ class Acc {
                             catch
                                 return 1
                         } else if (prop = "Location") {
-                            try loc := cond.HasOwnProp("relative") ? this.GetLocation(cond.relative) 
-                                : cond.HasOwnProp("r") ? this.GetLocation(cond.r) 
-                                : this.Location
+                            try loc := cond.HasOwnProp("relative") ? this.GetLocation(cond.relative)
+                                : cond.HasOwnProp("r") ? this.GetLocation(cond.r)
+                                    : this.Location
                             catch
                                 return 0
                             for lprop, lval in cond.OwnProps() {
@@ -1157,26 +1175,35 @@ class Acc {
          * @param depth Maximum number of levels to dump. Default is no limit.
          * @returns {String}
          */
-        Dump(scope:=1, delimiter:=" ", depth:=-1) {
+        Dump(scope := 1, delimiter := " ", depth := -1) {
             out := "", scope := IsInteger(scope) ? scope : Acc.TreeScope.%scope%
-            if scope&1 {
-                RoleText := "N/A", Role := "N/A", Value := "N/A", Name := "N/A", StateText := "N/A", State := "N/A", DefaultAction := "N/A", Description := "N/A", KeyboardShortcut := "N/A", Help := "N/A", Location := {x:"N/A",y:"N/A",w:"N/A",h:"N/A"}
-                for _, v in ["RoleText", "Role", "Value", "Name", "StateText", "State", "DefaultAction", "Description", "KeyboardShortcut", "Help", "Location"]
+            if scope & 1 {
+                RoleText := "N/A", Role := "N/A", Value := "N/A", Name := "N/A", StateText := "N/A", State := "N/A",
+                    DefaultAction := "N/A", Description := "N/A", KeyboardShortcut := "N/A", Help := "N/A", Location := { x: "N/A",
+                        y: "N/A", w: "N/A", h: "N/A" }
+                for _, v in ["RoleText", "Role", "Value", "Name", "StateText", "State", "DefaultAction", "Description",
+                    "KeyboardShortcut", "Help", "Location"]
                     try %v% := this.%v%
-                out := "RoleText: " RoleText delimiter "Role: " Role delimiter "[Location: {x:" Location.x ",y:" Location.y ",w:" Location.w ",h:" Location.h "}]" delimiter "[Name: " Name "]" delimiter "[Value: " Value  "]" (StateText ? delimiter "[StateText: " StateText "]" : "") (State ? delimiter "[State: " State "]" : "") (DefaultAction ? delimiter "[DefaultAction: " DefaultAction "]" : "") (Description ? delimiter "[Description: " Description "]" : "") (KeyboardShortcut ? delimiter "[KeyboardShortcut: " KeyboardShortcut "]" : "") (Help ? delimiter "[Help: " Help "]" : "") (this.childId ? delimiter "ChildId: " this.childId : "") "`n"
+                out := "RoleText: " RoleText delimiter "Role: " Role delimiter "[Location: {x:" Location.x ",y:" Location
+                    .y ",w:" Location.w ",h:" Location.h "}]" delimiter "[Name: " Name "]" delimiter "[Value: " Value "]" (
+                        StateText ? delimiter "[StateText: " StateText "]" : "") (State ? delimiter "[State: " State "]" :
+                            "") (DefaultAction ? delimiter "[DefaultAction: " DefaultAction "]" : "") (Description ?
+                                delimiter "[Description: " Description "]" : "") (KeyboardShortcut ? delimiter "[KeyboardShortcut: " KeyboardShortcut "]" :
+                                    "") (Help ? delimiter "[Help: " Help "]" : "") (this.childId ? delimiter "ChildId: " this
+                                        .childId : "") "`n"
             }
-            if scope&4
-                return Trim(RecurseTree(this, out,, depth), "`n")
-            if scope&2 {
+            if scope & 4
+                return Trim(RecurseTree(this, out, , depth), "`n")
+            if scope & 2 {
                 for n, oChild in this.Children
                     out .= n ":" delimiter oChild.Dump() "`n"
             }
             return Trim(out, "`n")
 
-            RecurseTree(oAcc, tree, path:="", depth:=-1) {
+            RecurseTree(oAcc, tree, path := "", depth := -1) {
                 if depth > 0 {
-                    StrReplace(path, "," , , , &count)
-                    if count >= (depth-1)
+                    StrReplace(path, ",", , , &count)
+                    if count >= (depth - 1)
                         return tree
                 }
                 try {
@@ -1184,10 +1211,10 @@ class Acc {
                         return tree
                 } catch
                     return tree
-                
-                For i, oChild in oAcc.Children {
-                    tree .= path (path?",":"") i ":" delimiter oChild.Dump() "`n"
-                    tree := RecurseTree(oChild, tree, path (path?",":"") i, depth)
+
+                for i, oChild in oAcc.Children {
+                    tree .= path (path ? "," : "") i ":" delimiter oChild.Dump() "`n"
+                    tree := RecurseTree(oChild, tree, path (path ? "," : "") i, depth)
                 }
                 return tree
             }
@@ -1198,7 +1225,7 @@ class Acc {
          * @param depth Maximum number of levels to dump. Default is no limit.
          * @returns {String}
          */
-        DumpAll(delimiter:=" ", depth:=-1) => this.Dump(5, delimiter, depth)
+        DumpAll(delimiter := " ", depth := -1) => this.Dump(5, delimiter, depth)
         ; Same as Dump()
         ToString() => this.Dump()
 
@@ -1214,7 +1241,7 @@ class Acc {
          * @param d The border thickness of the highlighting in pixels. Default is 2.
          * @returns {Acc.IAccessible}
          */
-        Highlight(showTime:=unset, color:="Red", d:=2) {
+        Highlight(showTime := unset, color := "Red", d := 2) {
             if !Acc.__HighlightGuis.Has(this.ObjPtr)
                 Acc.__HighlightGuis[this.ObjPtr] := []
             if (!IsSet(showTime) && Acc.__HighlightGuis[this.ObjPtr].Length) || (IsSet(showTime) && showTime = "clear") {
@@ -1227,16 +1254,15 @@ class Acc {
             try loc := this.Location
             if !IsSet(loc) || !IsObject(loc)
                 return this
-            Loop 4 {
+            loop 4 {
                 Acc.__HighlightGuis[this.ObjPtr].Push(Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x08000000"))
             }
-            Loop 4
-            {
-                i:=A_Index
-                , x1:=(i=2 ? loc.x+loc.w : loc.x-d)
-                , y1:=(i=3 ? loc.y+loc.h : loc.y-d)
-                , w1:=(i=1 or i=3 ? loc.w+2*d : d)
-                , h1:=(i=2 or i=4 ? loc.h+2*d : d)
+            loop 4 {
+                i := A_Index
+                    , x1 := (i = 2 ? loc.x + loc.w : loc.x - d)
+                    , y1 := (i = 3 ? loc.y + loc.h : loc.y - d)
+                    , w1 := (i = 1 or i = 3 ? loc.w + 2 * d : d)
+                    , h1 := (i = 2 or i = 4 ? loc.h + 2 * d : d)
                 Acc.__HighlightGuis[this.ObjPtr][i].BackColor := color
                 Acc.__HighlightGuis[this.ObjPtr][i].Show("NA x" . x1 . " y" . y1 . " w" . w1 . " h" . h1)
             }
@@ -1266,8 +1292,8 @@ class Acc {
          * @param NoActivate Setting NoActivate to True will prevent the window from being brought to front if the clickable point is not visible on screen.
          * @returns {Acc.IAccessible}
          */
-        Click(WhichButton:="left", ClickCount:=1, DownOrUp:="", Relative:="", NoActivate:=False) {		
-            rel := [0,0], pos := this.Location, saveCoordMode := A_CoordModeMouse, cCount := 1, SleepTime := -1
+        Click(WhichButton := "left", ClickCount := 1, DownOrUp := "", Relative := "", NoActivate := False) {
+            rel := [0, 0], pos := this.Location, saveCoordMode := A_CoordModeMouse, cCount := 1, SleepTime := -1
             if (Relative && !InStr(Relative, "rel"))
                 rel := StrSplit(Relative, " "), Relative := ""
             if IsInteger(WhichButton)
@@ -1278,12 +1304,14 @@ class Acc {
             } else if ClickCount > 9 {
                 SleepTime := cCount, cCount := 1
             }
-            if (!NoActivate && (Acc.WindowFromPoint(pos.x+pos.w//2+rel[1], pos.y+pos.h//2+rel[2]) != this.wId)) {
+            if (!NoActivate && (Acc.WindowFromPoint(pos.x + pos.w // 2 + rel[1], pos.y + pos.h // 2 + rel[2]) != this.wId
+            )) {
                 WinActivate(this.wId)
                 WinWaitActive(this.wId)
             }
             CoordMode("Mouse", "Screen")
-            Click(pos.x+pos.w//2+rel[1] " " pos.y+pos.h//2+rel[2] " " WhichButton (ClickCount ? " " ClickCount : "") (DownOrUp ? " " DownOrUp : "") (Relative ? " " Relative : ""))
+            Click(pos.x + pos.w // 2 + rel[1] " " pos.y + pos.h // 2 + rel[2] " " WhichButton (ClickCount ? " " ClickCount :
+                "") (DownOrUp ? " " DownOrUp : "") (Relative ? " " Relative : ""))
             CoordMode("Mouse", saveCoordMode)
             Sleep(SleepTime)
             return this
@@ -1297,9 +1325,10 @@ class Acc {
          *     Ex: ControlClick(200) will sleep 200ms after clicking.
          * @returns {Acc.IAccessible}
          */
-        ControlClick(WhichButton:="left", ClickCount:=1, Options:="") { 
+        ControlClick(WhichButton := "left", ClickCount := 1, Options := "") {
             pos := this.GetLocation("client")
-            ControlClick("X" pos.x+pos.w//2 " Y" pos.y+pos.h//2, this.wId,, IsInteger(WhichButton) ? "left" : WhichButton, ClickCount, Options)
+            ControlClick("X" pos.x + pos.w // 2 " Y" pos.y + pos.h // 2, this.wId, , IsInteger(WhichButton) ? "left" :
+                WhichButton, ClickCount, Options)
             if IsInteger(WhichButton)
                 Sleep(WhichButton)
             return this
@@ -1314,23 +1343,22 @@ class Acc {
      * @param activateChromium Whether to turn on accessibility for Chromium-based windows. Default is True.
      * @returns {Acc.IAccessible}
      */
-    static ElementFromPoint(x:=unset, y:=unset, activateChromium:=True) {
+    static ElementFromPoint(x := unset, y := unset, activateChromium := True) {
         if !(IsSet(x) && IsSet(y))
-            DllCall("GetCursorPos", "int64P", &pt64:=0), x := 0xFFFFFFFF & pt64, y := pt64 >> 32
+            DllCall("GetCursorPos", "int64P", &pt64 := 0), x := 0xFFFFFFFF & pt64, y := pt64 >> 32
         else
             pt64 := y << 32 | (x & 0xFFFFFFFF)
-        wId := DllCall("GetAncestor", "UInt", DllCall("user32.dll\WindowFromPoint", "int64",  pt64), "UInt", 2) ; hwnd from point by SKAN. 2 = GA_ROOT
+        wId := DllCall("GetAncestor", "UInt", DllCall("user32.dll\WindowFromPoint", "int64", pt64), "UInt", 2) ; hwnd from point by SKAN. 2 = GA_ROOT
         if activateChromium
             Acc.ActivateChromiumAccessibility(wId)
         pvarChild := Buffer(8 + 2 * A_PtrSize)
-        if DllCall("oleacc\AccessibleObjectFromPoint", "int64",pt64, "ptr*",&ppAcc := 0, "ptr",pvarChild) = 0
-        {	; returns a pointer from which we get a Com Object
-            return Acc.IAccessible(ComValue(9, ppAcc), NumGet(pvarChild,8,"UInt"), wId)
+        if DllCall("oleacc\AccessibleObjectFromPoint", "int64", pt64, "ptr*", &ppAcc := 0, "ptr", pvarChild) = 0 {	; returns a pointer from which we get a Com Object
+            return Acc.IAccessible(ComValue(9, ppAcc), NumGet(pvarChild, 8, "UInt"), wId)
         }
     }
     ; Wrapper for native function name
     static ObjectFromPoint(args*) => Acc.ElementFromPoint(args*)
-    
+
     /**
      * Returns an Acc element corresponding to the provided window Hwnd. 
      * @param hWnd The window Hwnd. Default is Last Found Window.
@@ -1339,7 +1367,7 @@ class Acc {
      * @param activateChromium Whether to turn on accessibility for Chromium-based windows. Default is True.
      * @returns {Acc.IAccessible}
      */
-    static ElementFromHandle(hWnd:="", idObject := "Window", activateChromium:=True) {
+    static ElementFromHandle(hWnd := "", idObject := "Window", activateChromium := True) {
         if !IsInteger(idObject)
             try idObject := Acc.ObjId.%idObject%
         if !IsInteger(hWnd)
@@ -1349,10 +1377,11 @@ class Acc {
         if activateChromium
             Acc.ActivateChromiumAccessibility(hWnd)
         IID := Buffer(16)
-        if DllCall("oleacc\AccessibleObjectFromWindow", "ptr",hWnd, "uint",idObject &= 0xFFFFFFFF
-                , "ptr",-16 + NumPut("int64", idObject == 0xFFFFFFF0 ? 0x46000000000000C0 : 0x719B3800AA000C81, NumPut("int64", idObject == 0xFFFFFFF0 ? 0x0000000000020400 : 0x11CF3C3D618736E0, IID))
-                , "ptr*", ComObj := ComValue(9,0)) = 0
-            Return Acc.IAccessible(ComObj,,hWnd)
+        if DllCall("oleacc\AccessibleObjectFromWindow", "ptr", hWnd, "uint", idObject &= 0xFFFFFFFF
+            , "ptr", -16 + NumPut("int64", idObject == 0xFFFFFFF0 ? 0x46000000000000C0 : 0x719B3800AA000C81, NumPut(
+                "int64", idObject == 0xFFFFFFF0 ? 0x0000000000020400 : 0x11CF3C3D618736E0, IID))
+            , "ptr*", ComObj := ComValue(9, 0)) = 0
+            return Acc.IAccessible(ComObj, , hWnd)
     }
     ; Wrapper for native function name
     static ObjectFromWindow(args*) => Acc.ElementFromHandle(args*)
@@ -1362,7 +1391,7 @@ class Acc {
      * @param activateChromium Whether to turn on accessibility. Default is True.
      * @returns {Acc.IAccessible}
      */
-    static ElementFromChromium(hWnd:="", activateChromium:=True) {
+    static ElementFromChromium(hWnd := "", activateChromium := True) {
         if !IsInteger(hWnd)
             hWnd := WinExist(hWnd)
         if !hWnd
@@ -1371,7 +1400,7 @@ class Acc {
             Acc.ActivateChromiumAccessibility(hWnd)
         if !(cHwnd := ControlGetHwnd("Chrome_RenderWidgetHostHWND1", hWnd))
             throw Error("Chromium render element was not found", -1)
-        return Acc.ElementFromHandle(cHwnd, -4,False)
+        return Acc.ElementFromHandle(cHwnd, -4, False)
     }
     static ObjectFromChromium(args*) => Acc.ElementFromChromium(args*)
     /**
@@ -1382,7 +1411,7 @@ class Acc {
      * @param activateChromium Whether to turn on accessibility for Chromium-based windows. Default is True.
      * @returns {Acc.IAccessible}
      */
-    static ElementFromPath(ChildPath, hWnd:="", activateChromium:=True) {
+    static ElementFromPath(ChildPath, hWnd := "", activateChromium := True) {
         if Type(hWnd) = "Acc.IAccessible"
             oAcc := hWnd
         else {
@@ -1391,14 +1420,13 @@ class Acc {
             oAcc := Acc.ElementFromHandle(hWnd)
         }
         ChildPath := StrReplace(StrReplace(ChildPath, ".", ","), " ")
-        Loop Parse ChildPath, ","
-        {
+        loop parse ChildPath, "," {
             if IsInteger(A_LoopField)
                 oAcc := oAcc.GetNthChild(A_LoopField)
             else {
                 RegExMatch(A_LoopField, "(\D+)(\d*)", &m), i := m[2] || 1, c := 0
                 if m[1] = "p" {
-                    Loop i
+                    loop i
                         oAcc := oAcc.Parent
                     continue
                 }
@@ -1412,7 +1440,7 @@ class Acc {
                 }
             }
         }
-        Return oAcc
+        return oAcc
     }
     static ObjectFromPath(args*) => Acc.ElementFromPath(args*)
     /**
@@ -1424,12 +1452,12 @@ class Acc {
      */
     static ObjectFromEvent(hWnd, idObject, idChild) {
         if (DllCall("oleacc\AccessibleObjectFromEvent"
-                , "Ptr", hWnd
-                , "UInt", idObject
-                , "UInt", idChild
-                , "Ptr*", pacc := ComValue(9,0)
-                , "Ptr", varChild := Buffer(16)) = 0) {
-            return Acc.IAccessible(pacc, NumGet(varChild, 8, "UInt"),  DllCall("GetAncestor", "UInt", hWnd, "UInt", 2))
+            , "Ptr", hWnd
+            , "UInt", idObject
+            , "UInt", idChild
+            , "Ptr*", pacc := ComValue(9, 0)
+            , "Ptr", varChild := Buffer(16)) = 0) {
+            return Acc.IAccessible(pacc, NumGet(varChild, 8, "UInt"), DllCall("GetAncestor", "UInt", hWnd, "UInt", 2))
         }
         throw Error("ObjectFromEvent failed", -1)
     }
@@ -1449,22 +1477,22 @@ class Acc {
      * whether it was successful or not, later calls of this method with that Hwnd will simply return.
      * @returns True if accessibility was successfully turned on.
      */
-    static ActivateChromiumAccessibility(hWnd:="") {
+    static ActivateChromiumAccessibility(hWnd := "") {
         static activatedHwnds := Map()
-		if !IsInteger(hWnd)
-			hWnd := WinExist(hWnd)
+        if !IsInteger(hWnd)
+            hWnd := WinExist(hWnd)
         if activatedHwnds.Has(hWnd)
             return 1
         activatedHwnds[hWnd] := 1, cHwnd := 0
         try cHwnd := ControlGetHwnd("Chrome_RenderWidgetHostHWND1", hWnd)
         if !cHwnd
             return
-        SendMessage(WM_GETOBJECT := 0x003D, 0, 1,, cHwnd)
+        SendMessage(WM_GETOBJECT := 0x003D, 0, 1, , cHwnd)
         try {
-            rendererEl := Acc.ElementFromHandle(cHwnd,,False).FindElement({Role:15}, 5)
+            rendererEl := Acc.ElementFromHandle(cHwnd, , False).FindElement({ Role: 15 }, 5)
             _ := rendererEl.Name ; it doesn't work without calling CurrentName (at least in Skype)
         }
-        
+
         waitTime := A_TickCount + 500
         while IsSet(rendererEl) && (A_TickCount < waitTime) {
             try {
@@ -1478,32 +1506,32 @@ class Acc {
     static Query(pAcc) {
         oCom := ComObjQuery(pAcc, "{618736e0-3c3d-11cf-810c-00aa00389b71}")
         ObjAddRef(oCom.ptr)
-        Try Return ComValue(9, oCom.ptr)
+        try return ComValue(9, oCom.ptr)
     }
     ; Internal method to get the RoleText from Role integer
     static GetRoleText(nRole) {
         if !IsInteger(nRole) {
             if (Type(nRole) = "String") && (nRole != "")
                 return nRole
-            throw TypeError("The specified role is not an integer!",-1)
+            throw TypeError("The specified role is not an integer!", -1)
         }
         nRole := Integer(nRole)
         nSize := DllCall("oleacc\GetRoleText", "Uint", nRole, "Ptr", 0, "Uint", 0)
-        VarSetStrCapacity(&sRole, nSize+2)
-        DllCall("oleacc\GetRoleText", "Uint", nRole, "str", sRole, "Uint", nSize+2)
-        Return sRole
+        VarSetStrCapacity(&sRole, nSize + 2)
+        DllCall("oleacc\GetRoleText", "Uint", nRole, "str", sRole, "Uint", nSize + 2)
+        return sRole
     }
     ; Internal method to get the StateText from State integer
     static GetStateText(nState) {
         nSize := DllCall("oleacc\GetStateText"
-          , "Uint"	, nState
-          , "Ptr" 	, 0
-          , "Uint"	, 0)
-        VarSetStrCapacity(&sState, nSize+2)
+            , "Uint", nState
+            , "Ptr", 0
+            , "Uint", 0)
+        VarSetStrCapacity(&sState, nSize + 2)
         DllCall("oleacc\GetStateText"
-          , "Uint"	, nState
-          , "str" 	, sState
-          , "Uint"	, nSize+2)
+            , "Uint", nState
+            , "str", sState
+            , "Uint", nSize + 2)
         return sState
     }
     /**
@@ -1516,7 +1544,7 @@ class Acc {
      * @param PID Optional: Process ID from which to register events. Default is all processes.
      * @returns {Object}
      */
-    static RegisterWinEvent(callback, eventMin, eventMax?, PID:=0) {
+    static RegisterWinEvent(callback, eventMin, eventMax?, PID := 0) {
         if HasMethod(eventMin) ; Legacy support: if eventMin is a method, then the arguments are: event, callback, PID
             PID := eventMax ?? PID, eventMax := callback, callback := eventMin, eventMin := eventMax
         if IsSet(eventMax) && HasMethod(eventMax) ; Legacy support: if eventMax is a method, then the arguments are: eventMin, eventMax, callback, PID
@@ -1529,30 +1557,34 @@ class Acc {
             try eventMax := Acc.Event.%eventMax%
         pCallback := CallbackCreate(this.GetMethod("HandleWinEvent").Bind(this, callback), "F", 7)
         hook := Acc.SetWinEventHook(eventMin, eventMax, pCallback, PID)
-        return {__Hook:hook, __Callback:pCallback, __Delete:{ call: (*) => (this.UnhookWinEvent(hook), CallbackFree(pCallback)) }}
+        return { __Hook: hook, __Callback: pCallback, __Delete: { call: (*) => (this.UnhookWinEvent(hook), CallbackFree(
+            pCallback)) } }
     }
     ; Internal method. Calls the callback function after wrapping the IAccessible native object
     static HandleWinEvent(fCallback, hWinEventHook, Event, hWnd, idObject, idChild, dwEventThread, dwmsEventTime) {
         Critical
-        try return fCallback(oAcc := Acc.ObjectFromEvent(hWnd, idObject, idChild), {Event:Event, EventThread:dwEventThread, EventTime:dwmsEventTime&0x7FFFFFFF, ControlID:hWnd, WinID:oAcc.wId, ObjId:idObject})
+        try return fCallback(oAcc := Acc.ObjectFromEvent(hWnd, idObject, idChild), { Event: Event, EventThread: dwEventThread,
+            EventTime: dwmsEventTime & 0x7FFFFFFF, ControlID: hWnd, WinID: oAcc.wId, ObjId: idObject })
     }
     ; Internal method. Hooks a range of events to a callback function.
-    static SetWinEventHook(eventMin, eventMax, pCallback, PID:=0) {
+    static SetWinEventHook(eventMin, eventMax, pCallback, PID := 0) {
         DllCall("ole32\CoInitialize", "Uint", 0)
-        Return DllCall("SetWinEventHook", "Uint", eventMin, "Uint", eventMax, "Uint", 0, "UInt", pCallback, "Uint", PID, "Uint", 0, "Uint", 0)
+        return DllCall("SetWinEventHook", "Uint", eventMin, "Uint", eventMax, "Uint", 0, "UInt", pCallback, "Uint", PID,
+            "Uint", 0, "Uint", 0)
     }
     ; Internal method. Unhooks a WinEventHook.
     static UnhookWinEvent(hHook) {
-        Return DllCall("UnhookWinEvent", "Ptr", hHook)
+        return DllCall("UnhookWinEvent", "Ptr", hHook)
     }
     /**
      * Returns the Hwnd to a window from a set of screen coordinates
      * @param X Screen X-coordinate
      * @param Y Screen Y-coordinate
      */
-	static WindowFromPoint(X, Y) { ; by SKAN and Linear Spoon
-		return DllCall("GetAncestor", "UInt", DllCall("user32.dll\WindowFromPoint", "Int64", Y << 32 | (X & 0xFFFFFFFF)), "UInt", 2)
-	}
+    static WindowFromPoint(X, Y) { ; by SKAN and Linear Spoon
+        return DllCall("GetAncestor", "UInt", DllCall("user32.dll\WindowFromPoint", "Int64", Y << 32 | (X & 0xFFFFFFFF)),
+        "UInt", 2)
+    }
     /**
      * Removes all highlights created by Element.Highlight()
      */
@@ -1567,29 +1599,31 @@ class Acc {
     ; Internal class: AccViewer code
     class Viewer {
         __New() {
-            this.Stored := {mwId:0, FilteredTreeView:Map(), TreeView:Map()}
+            this.Stored := { mwId: 0, FilteredTreeView: Map(), TreeView: Map() }
             this.Capturing := False
-            this.gViewer := Gui("AlwaysOnTop Resize","AccViewer")
+            this.gViewer := Gui("AlwaysOnTop Resize", "AccViewer")
             this.gViewer.OnEvent("Close", (*) => ExitApp())
             this.gViewer.OnEvent("Size", this.GetMethod("gViewer_Size").Bind(this))
             this.gViewer.Add("Text", "w100", "Window Info").SetFont("bold")
             this.LVWin := this.gViewer.Add("ListView", "h140 w250", ["Property", "Value"])
             this.LVWin.OnEvent("ContextMenu", LV_CopyTextMethod := this.GetMethod("LV_CopyText").Bind(this))
-            this.LVWin.ModifyCol(1,60)
-            this.LVWin.ModifyCol(2,180)
+            this.LVWin.ModifyCol(1, 60)
+            this.LVWin.ModifyCol(2, 180)
             for _, v in ["Title", "Text", "Id", "Location", "Class(NN)", "Process", "PID"]
-                this.LVWin.Add(,v,"")
+                this.LVWin.Add(, v, "")
             this.gViewer.Add("Text", "w100", "Acc Info").SetFont("bold")
             this.LVProps := this.gViewer.Add("ListView", "h220 w250", ["Property", "Value"])
             this.LVProps.OnEvent("ContextMenu", LV_CopyTextMethod)
-            this.LVProps.ModifyCol(1,100)
-            this.LVProps.ModifyCol(2,140)
-            for _, v in ["RoleText", "Role", "Value", "Name", "Location", "StateText", "State", "DefaultAction", "Description", "KeyboardShortcut", "Help", "ChildId"]
-                this.LVProps.Add(,v,"")
+            this.LVProps.ModifyCol(1, 100)
+            this.LVProps.ModifyCol(2, 140)
+            for _, v in ["RoleText", "Role", "Value", "Name", "Location", "StateText", "State", "DefaultAction",
+                "Description", "KeyboardShortcut", "Help", "ChildId"]
+                this.LVProps.Add(, v, "")
             this.ButCapture := this.gViewer.Add("Button", "xp+60 y+10 w130", "Start capturing (F1)")
             this.ButCapture.OnEvent("Click", this.CaptureHotkeyFunc := this.GetMethod("ButCapture_Click").Bind(this))
             HotKey("~F1", this.CaptureHotkeyFunc)
-            this.SBMain := this.gViewer.Add("StatusBar",, "  Start capturing, then hold cursor still to construct tree")
+            this.SBMain := this.gViewer.Add("StatusBar", ,
+                "  Start capturing, then hold cursor still to construct tree")
             this.SBMain.OnEvent("Click", this.GetMethod("SBMain_Click").Bind(this))
             this.SBMain.OnEvent("ContextMenu", this.GetMethod("SBMain_Click").Bind(this))
             this.gViewer.Add("Text", "x278 y10 w100", "Acc Tree").SetFont("bold")
@@ -1605,12 +1639,12 @@ class Acc {
         ; Resizes window controls when window is resized
         gViewer_Size(GuiObj, MinMax, Width, Height) {
             this.TVAcc.GetPos(&TVAccX, &TVAccY, &TVAccWidth, &TVAccHeight)
-            this.TVAcc.Move(,,Width-TVAccX-10,Height-TVAccY-50)
-            this.TextFilterTVAcc.Move(TVAccX, Height-42)
-            this.EditFilterTVAcc.Move(TVAccX+30, Height-45)
+            this.TVAcc.Move(, , Width - TVAccX - 10, Height - TVAccY - 50)
+            this.TextFilterTVAcc.Move(TVAccX, Height - 42)
+            this.EditFilterTVAcc.Move(TVAccX + 30, Height - 45)
             this.TVAcc.GetPos(&LVPropsX, &LVPropsY, &LVPropsWidth, &LVPropsHeight)
-            this.LVProps.Move(,,,Height-LVPropsY-225)
-            this.ButCapture.Move(,Height -55)
+            this.LVProps.Move(, , , Height - LVPropsY - 225)
+            this.ButCapture.Move(, Height - 55)
         }
         ; Starts showing the element under the cursor with 200ms intervals with CaptureCallback
         ButCapture_Click(GuiCtrlObj?, Info?) {
@@ -1643,7 +1677,7 @@ class Acc {
             }
         }
         ; Stops capturing elements under mouse, unhooks CaptureCallback
-        StopCapture(GuiCtrlObj:=0, Info:=0) {
+        StopCapture(GuiCtrlObj := 0, Info := 0) {
             if this.Capturing {
                 this.Capturing := False
                 this.ButCapture.Text := "Start capturing (F1)"
@@ -1654,16 +1688,16 @@ class Acc {
                 return
             }
         }
-        ; Gets Acc element under mouse, updates the GUI. 
+        ; Gets Acc element under mouse, updates the GUI.
         ; If the mouse is not moved for 1 second then constructs the Acc tree.
         CaptureCycle() {
             MouseGetPos(&mX, &mY, &mwId)
             oAcc := Acc.ElementFromPoint()
             if this.Stored.HasOwnProp("oAcc") && IsObject(oAcc) && oAcc.IsEqual(this.Stored.oAcc) {
                 if this.FoundTime != 0 && ((A_TickCount - this.FoundTime) > 1000) {
-                    if (mX == this.Stored.mX) && (mY == this.Stored.mY) 
+                    if (mX == this.Stored.mX) && (mY == this.Stored.mY)
                         this.ConstructTreeView(), this.FoundTime := 0
-                    else 
+                    else
                         this.FoundTime := A_TickCount
                 }
                 this.Stored.mX := mX, this.Stored.mY := mY
@@ -1672,21 +1706,26 @@ class Acc {
             this.LVWin.Delete()
             WinGetPos(&mwX, &mwY, &mwW, &mwH, mwId)
             propsOrder := ["Title", "Text", "Id", "Location", "Class(NN)", "Process", "PID"]
-            props := Map("Title", WinGetTitle(mwId), "Text", WinGetText(mwId), "Id", mwId, "Location", "x: " mwX " y: " mwY " w: " mwW " h: " mwH, "Class(NN)", WinGetClass(mwId), "Process", WinGetProcessName(mwId), "PID", WinGetPID(mwId))
+            props := Map("Title", WinGetTitle(mwId), "Text", WinGetText(mwId), "Id", mwId, "Location", "x: " mwX " y: " mwY " w: " mwW " h: " mwH,
+            "Class(NN)", WinGetClass(mwId), "Process", WinGetProcessName(mwId), "PID", WinGetPID(mwId))
             for propName in propsOrder
-                this.LVWin.Add(,propName,props[propName])
+                this.LVWin.Add(, propName, props[propName])
             this.LVProps_Populate(oAcc)
-            this.Stored.mwId := mwId, this.Stored.oAcc := oAcc, this.Stored.mX := mX, this.Stored.mY := mY, this.FoundTime := A_TickCount
+            this.Stored.mwId := mwId, this.Stored.oAcc := oAcc, this.Stored.mX := mX, this.Stored.mY := mY, this.FoundTime :=
+                A_TickCount
         }
         ; Populates the listview with Acc element properties
         LVProps_Populate(oAcc) {
             Acc.ClearHighlights() ; Clear
             oAcc.Highlight(0) ; Indefinite show
             this.LVProps.Delete()
-            Location := {x:"N/A",y:"N/A",w:"N/A",h:"N/A"}, RoleText := "N/A", Role := "N/A", Value := "N/A", Name := "N/A", StateText := "N/A", State := "N/A", DefaultAction := "N/A", Description := "N/A", KeyboardShortcut := "N/A", Help := "N/A", ChildId := ""
-            for _, v in ["RoleText", "Role", "Value", "Name", "Location", "StateText", "State", "DefaultAction", "Description", "KeyboardShortcut", "Help", "ChildId"] {
+            Location := { x: "N/A", y: "N/A", w: "N/A", h: "N/A" }, RoleText := "N/A", Role := "N/A", Value := "N/A",
+            Name := "N/A", StateText := "N/A", State := "N/A", DefaultAction := "N/A", Description := "N/A",
+            KeyboardShortcut := "N/A", Help := "N/A", ChildId := ""
+            for _, v in ["RoleText", "Role", "Value", "Name", "Location", "StateText", "State", "DefaultAction",
+                "Description", "KeyboardShortcut", "Help", "ChildId"] {
                 try %v% := oAcc.%v%
-                this.LVProps.Add(,v, v = "Location" ? ("x: " %v%.x " y: " %v%.y " w: " %v%.w " h: " %v%.h) : %v%)
+                this.LVProps.Add(, v, v = "Location" ? ("x: " %v%.x " y: " %v%.y " w: " %v%.w " h: " %v%.h) : %v%)
             }
         }
         ; Handles selecting elements in the Acc tree, highlights the selected element
@@ -1733,12 +1772,14 @@ class Acc {
             this.TVAcc.Opt("-Redraw")
             this.TVAcc.Delete()
             for index, oAcc in this.Stored.TreeView {
-                for _, prop in ["RoleText", "Role", "Value", "Name", "StateText", "State", "DefaultAction", "Description", "KeyboardShortcut", "Help", "ChildId"] {
+                for _, prop in ["RoleText", "Role", "Value", "Name", "StateText", "State", "DefaultAction",
+                    "Description", "KeyboardShortcut", "Help", "ChildId"] {
                     try {
                         if InStr(oAcc.%Prop%, searchPhrase) {
                             if !parents.Has(prop)
-                                parents[prop] := this.TVAcc.Add(prop,, "Expand")
-                            this.Stored.FilteredTreeView[this.TVAcc.Add(this.GetShortDescription(oAcc), parents[prop], "Expand")] := oAcc
+                                parents[prop] := this.TVAcc.Add(prop, , "Expand")
+                            this.Stored.FilteredTreeView[this.TVAcc.Add(this.GetShortDescription(oAcc), parents[prop],
+                            "Expand")] := oAcc
                         }
                     }
                 }
@@ -1763,10 +1804,11 @@ class Acc {
                     this.TVAcc.Modify(k, "Vis Select"), this.SBMain.SetText("  Path: " v.Path)
         }
         ; Stores the Acc tree with corresponding path values for each element
-        RecurseTreeView(oAcc, parent:=0, path:="") {
-            this.Stored.TreeView[TWEl := this.TVAcc.Add(this.GetShortDescription(oAcc), parent, "Expand")] := oAcc.DefineProp("Path", {value:path})
+        RecurseTreeView(oAcc, parent := 0, path := "") {
+            this.Stored.TreeView[TWEl := this.TVAcc.Add(this.GetShortDescription(oAcc), parent, "Expand")] := oAcc.DefineProp(
+                "Path", { value: path })
             for k, v in oAcc
-                this.RecurseTreeView(v, TWEl, path (path?",":"") k)
+                this.RecurseTreeView(v, TWEl, path (path ? "," : "") k)
         }
         ; Creates a short description string for the Acc tree elements
         GetShortDescription(oAcc) {
