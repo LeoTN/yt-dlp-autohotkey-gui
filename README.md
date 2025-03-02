@@ -29,7 +29,7 @@ This program lets users easily download videos without having to learn the comma
 
 ## Installation
 
-> 1. Download the latest installer from [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest.zip).
+> 1. Download the latest installer from [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest).
 > 2. Follow the on-screen instructions.
 > 3. Start downloading.
 
