@@ -974,6 +974,69 @@ checkForWritingRights(pPath) {
 }
 
 /*
+Checks all GitHub Repository tags to find new versions.
+@returns [boolean] Returns true, when an update is available. False otherwise.
+*/
+checkForAvailableUpdates() {
+    global psUpdateScriptLocation
+    global scriptRegistryDirectory
+
+    ; Does not check for updates, if there is no Internet connection or the script isn't compiled.
+    if (!checkInternetConnection() || !A_IsCompiled) {
+        return false
+    }
+    /*
+    Changes "HKCU\SOFTWARE\LeoTN\VideoDownloader" to "HKCU:SOFTWARE\LeoTN\VideoDownloader"
+    to make the path compatible with PowerShell.
+    */
+    psCompatibleScriptRegistryPath := StrReplace(scriptRegistryDirectory, "\", ":", , , 1)
+    parameterString :=
+        '-pGitHubRepositoryLink "https://github.com/LeoTN/yt-dlp-autohotkey-gui"' .
+        ' -pRegistryDirectory "' . psCompatibleScriptRegistryPath . '"'
+
+    if (readConfigFile("UPDATE_TO_BETA_VERSIONS")) {
+        parameterString .= " -pSwitchConsiderBetaReleases"
+    }
+    ; Calls the PowerShell script to check for available updates.
+    exitCode := RunWait('powershell.exe -executionPolicy bypass -file "'
+        . psUpdateScriptLocation . '" ' . parameterString, , "Hide")
+    switch (exitCode) {
+        ; Available update found.
+        case 101:
+        {
+            ; Extracts the available update from the registry.
+            updateVersion := RegRead(scriptRegistryDirectory, "AVAILABLE_UPDATE", "v0.0.0.1")
+            if (updateVersion == "no_available_update") {
+                return false
+            }
+            createUpdateGUI(updateVersion)
+            return true
+        }
+    }
+    ; Maybe more cases in the future.
+}
+
+/*
+Copies all files from the old version into a backup folder using robocopy.
+@param pBackupParentDirectory [String] Usually the script directory with an additional folder called "VideoDownloader_old_version_backups" at the end.
+*/
+backupOldVersionFiles(pBackupParentDirectory) {
+    global versionFullName
+
+    oldVersion := versionFullName
+    backupDate := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
+    backupFolderName := "VideoDownloader_backup_from_version_" . oldVersion . "_at_" . backupDate
+    sourceDirectory := A_ScriptDir
+    destinationDirectory := pBackupParentDirectory . "\" . backupFolderName
+    ; All subdirectories and files are copied. The folder "VideoDownloader_old_version_backups" is excluded.
+    parameterString := "`"" . sourceDirectory . "`" `"" . destinationDirectory . "`" /E /XD `"" . sourceDirectory .
+        "\VideoDownloader_old_version_backups`""
+    ; Waits 3 seconds before starting the backup process to ensure that the main script has exited already.
+    Run('cmd.exe /c "timeout /t 3 /nobreak && robocopy ' . parameterString . '"', , "Hide")
+    exitScriptWithNotification()
+}
+
+/*
 Tries to ping google.com to determine the computer's Internet connection status.
 @returns [boolean] True, if the computer is connected to the Internet. False otherwise.
 */

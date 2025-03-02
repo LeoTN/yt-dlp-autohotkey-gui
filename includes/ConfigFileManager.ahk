@@ -42,6 +42,10 @@ config_onInit() {
     ; Standard download path.
     global DOWNLOAD_PATH := scriptWorkingDirectory . "\download"
 
+    ; Checks out the GitHub page for a new release.
+    global CHECK_FOR_UPDATES_AT_LAUNCH := true
+    ; Decide if you would like to receive beta versions as available updates.
+    global UPDATE_TO_BETA_VERSIONS := false
     ; Defines if the script should ask the user for a brief explaination of it's core functions.
     global ASK_FOR_TUTORIAL := true
     ; Toggle if the main GUI should be shown on launch.
@@ -50,6 +54,7 @@ config_onInit() {
     global SHOW_OPTIONS_GUI_ON_LAUNCH := true
     ; This option controls if empty download folders with no media inside should be automatically deleted.
     global DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD := true
+
     ; Stores which hotkeys are enabled / disabled via the GUI.
     global HOTKEY_STATE_ARRAY := "[1, 1, 1, 1, 1, 0, 0]"
     ; Just a list of all standard hotkeys.
@@ -86,6 +91,8 @@ config_onInit() {
             "DOWNLOAD_ARCHIVE_LOCATION",
             "DOWNLOAD_PRESET_LOCATION",
             "DOWNLOAD_PATH",
+            "CHECK_FOR_UPDATES_AT_LAUNCH",
+            "UPDATE_TO_BETA_VERSIONS",
             "ASK_FOR_TUTORIAL",
             "SHOW_MAIN_GUI_ON_LAUNCH",
             "SHOW_OPTIONS_GUI_ON_LAUNCH",
@@ -115,6 +122,8 @@ config_onInit() {
             "FileLocations",
             "FileLocations",
             "FileLocations",
+            "GeneralSettings",
+            "GeneralSettings",
             "GeneralSettings",
             "GeneralSettings",
             "GeneralSettings",

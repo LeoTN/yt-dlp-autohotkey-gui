@@ -18,12 +18,13 @@ CoordMode "Mouse", "Client"
 #Include "HotKeys & Methods.ahk"
 #Include "MainGUI.ahk"
 #Include "Setup.ahk"
+#Include "UpdateGUI.ahk"
 
 onInit()
 
 onInit() {
     ; When this value is true, certain functions will behave differently and do not show unnecessary prompts.
-    global booleanFirstTimeLaunch := false
+    global booleanFirstTimeLaunch := true ; REMOVE [CHANGED TEMPORARILY TO ALWAYS TRUE]
 
     global scriptRegistryDirectory := "HKCU\SOFTWARE\LeoTN\VideoDownloader"
     ; This folder will contain all other files.
@@ -85,6 +86,9 @@ onInit() {
         else {
             WinActivate("ahk_id " . mainGUI.Hwnd)
         }
+    }
+    if (readConfigFile("CHECK_FOR_UPDATES_AT_LAUNCH") && !booleanFirstTimeLaunch) {
+        checkForAvailableUpdates()
     }
 }
 
