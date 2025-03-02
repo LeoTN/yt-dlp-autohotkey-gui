@@ -37,7 +37,7 @@ handleUpdateGUI_downloadMSIButton(pMSIDownloadURL) {
     result := MsgBox(
         "This instance of VideoDownloader will exit now.`n`nSimply run the installer and follow the instructions."
         "`n`nIt is recommended to use the same installation directory as the previous version. " .
-        "Otherwise you have to manually move macro and config files to the new location."
+        "Otherwise you have to manually move the config files to the new location."
         "`n`nA backup of the old version will be created at`n[" . backupDirectory . "].",
         "VideoDownloader - Update Process", "OC Icon! 262144")
 

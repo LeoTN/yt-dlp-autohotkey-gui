@@ -11,7 +11,7 @@
     <ROW Property="ARPCOMMENTS" Value="This installer will install [|ProductName] on your system." ValueLocId="*"/>
     <ROW Property="ARPPRODUCTICON" Value="green_arrow_icon.exe" Type="8"/>
     <ROW Property="ARPURLUPDATEINFO" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui"/>
-    <ROW Property="AiLicenseAgreementLink" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENCE" Type="4"/>
+    <ROW Property="AiLicenseAgreementLink" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENSE" Type="4"/>
     <ROW Property="CTRLS" Value="2"/>
     <ROW Property="IAgree" Value="No" Type="4"/>
     <ROW Property="Manufacturer" Value="LeoTN"/>
