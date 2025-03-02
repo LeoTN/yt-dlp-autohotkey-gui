@@ -66,7 +66,7 @@ onInit() {
     optionsGUI_onInit()
     ; Shows a small tutorial to guide the user.
     if (readConfigFile("ASK_FOR_TUTORIAL")) {
-        scriptTutorial()
+        ; scriptTutorial() ; REMOVE [TEMPORARILY DISABLED UNTIL TUTORIAL REWORK]
     }
     if (readConfigFile("SHOW_OPTIONS_GUI_ON_LAUNCH")) {
         if (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd)) {

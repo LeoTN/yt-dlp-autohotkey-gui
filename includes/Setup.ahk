@@ -8,6 +8,7 @@ setup_onInit() {
     createSetupGUI()
     createRequiredFolders()
     checkIfMSISetupIsRequired()
+    ; The script won't continue until the required dependencies are installed or the GUI is closed.
     while (checkIfFFmpegOrYTDLPSetupIsRequired()) {
         setupGUI.Show()
         Sleep(2000)
@@ -17,8 +18,6 @@ setup_onInit() {
 createSetupGUI() {
     global
     setupGUI := Gui("+AlwaysOnTop", "VideoDownloader - Dependency Setup")
-    ; When the window is closed without installing the required dependencies, the script must exit.
-    setupGUI.OnEvent("Close", (*) => exitScriptWithNotification(true))
     setupGUI.MarginX := 0
     setupGUI.MarginY := 0
     ; Add a background image to the GUI.
@@ -29,24 +28,27 @@ createSetupGUI() {
 
     ffmpegCheckbox := setupGUI.Add("CheckBox", "yp+25 wp R1.5 +Border", "FFmpeg")
     ffmpegCheckbox.SetFont("bold")
-    ; This does not allow the user to change the value of the checkbox.
-    ffmpegCheckbox.OnEvent("Click", (*) => ffmpegCheckbox.Value := !ffmpegCheckbox.Value)
 
     YTDLPCheckbox := setupGUI.Add("CheckBox", "yp+20 wp R1.5 +Border", "yt-dlp")
     YTDLPCheckbox.SetFont("bold")
-    ; This does not allow the user to change the value of the checkbox.
-    YTDLPCheckbox.OnEvent("Click", (*) => YTDLPCheckbox.Value := !YTDLPCheckbox.Value)
     updateDependencyCheckboxes()
 
     cancelSetupButton := setupGUI.Add("Button", "yp+120 w140 R2", "Cancel")
-    cancelSetupButton.OnEvent("Click", (*) => exitScriptWithNotification(true))
     startSetupButton := setupGUI.Add("Button", "xp+160 w140 R2 +Default", "Install Dependencies")
-    startSetupButton.OnEvent("Click", (*) => handleSetupGUI_startSetupButton())
 
     setupProgressBar := setupGUI.Add("Progress", "xp-120 x0 yp+50 w320")
     setupGUIStatusBar := setupGUI.Add("StatusBar", "-Theme BackgroundSilver")
     setupGUIStatusBar.SetIcon("shell32.dll", 222) ; REMOVE USE ICON DLL HERE
     setupGUIStatusBar.SetText("Please start the setup process.")
+
+    ; When the window is closed without installing the required dependencies, the script must exit.
+    setupGUI.OnEvent("Close", (*) => exitScriptWithNotification(true))
+    ; This does not allow the user to change the value of the checkbox.
+    ffmpegCheckbox.OnEvent("Click", (*) => ffmpegCheckbox.Value := !ffmpegCheckbox.Value)
+    ; This does not allow the user to change the value of the checkbox.
+    YTDLPCheckbox.OnEvent("Click", (*) => YTDLPCheckbox.Value := !YTDLPCheckbox.Value)
+    cancelSetupButton.OnEvent("Click", (*) => exitScriptWithNotification(true))
+    startSetupButton.OnEvent("Click", (*) => handleSetupGUI_startSetupButton())
 }
 
 updateDependencyCheckboxes() {
@@ -70,8 +72,8 @@ updateDependencyCheckboxes() {
     }
 }
 
+; Creates all folders in case they do not exist.
 createRequiredFolders() {
-    ; Creates all folders in case they do not exist.
     requiredFolders := [
         scriptMainDirectory,
         scriptWorkingDirectory,
@@ -98,11 +100,10 @@ checkIfMSISetupIsRequired() {
     ]
     for (i, requiredFile in requiredFiles) {
         if (!FileExist(requiredFile)) {
-            MsgBox( ; REMOVE
-                "The following file is missing or corrupted:`n[" . requiredFile . "]`n`n"
-                "Please repair the program by executing the MSI installer for version [VERSION_HERE]" .
-                " or installing another version of VideoDownloader.",
-                "VideoDownloader - Missing or Corrupted Files", "O Icon! 262144")
+            MsgBox("The file [" . requiredFile .
+                "] is missing.`n`nPlease reinstall or repair the software using the .MSI installer.",
+                "VideoDownloader - Reinstallation required",
+                "Icon! 262144")
             exitScriptWithNotification(true)
         }
     }
