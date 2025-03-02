@@ -1066,7 +1066,7 @@ exitScriptWithNotification(pBooleanUseFallbackMessage := false) {
         TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
     }
     else {
-        TrayTip("VideoDownloader terminated. (NO LANGUAGE LOADED)", "VideoDownloader - Status", "Iconi Mute") ; REMOVE
+        TrayTip("VideoDownloader terminated. (NO LANGUAGE LOADED)", "VideoDownloader - Status", "Iconi Mute") ; REMOVE [ADD LANGUAGE OPTION]
     }
     ; Using ExitApp() twice ensures that the script will be terminated entirely.
     ExitApp()

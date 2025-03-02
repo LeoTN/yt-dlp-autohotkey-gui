@@ -844,7 +844,6 @@ loadGUISettingsFromPreset(pPresetName, pBooleanDeletePreset := false, pBooleanSu
             }
             ; Counts the number of elements parsed. When it reaches 37 this means that all relevant settings have been loaded.
             ; All remaining GUI elements belong to the preset section and are not meant to be loaded.
-            ; REMOVE
             if (A_Index >= 38) {
                 break
             }

@@ -53,12 +53,13 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
     <ROW Component="APPDIR" ComponentId="{C58A7097-A45E-45D7-B9D2-CF2C72CAC188}" Directory_="APPDIR" Attributes="0"/>
+    <ROW Component="AVAILABLE_UPDATE" ComponentId="{423E75C7-67CB-4F7F-A6AA-2B658BBF264B}" Directory_="APPDIR" Attributes="4" KeyPath="AVAILABLE_UPDATE"/>
+    <ROW Component="CURRENT_VERSION_LAST_UPDATED" ComponentId="{A51E2E73-382F-4B1F-B656-0F5FC4179BF4}" Directory_="APPDIR" Attributes="4" KeyPath="CURRENT_VERSION_LAST_UPDATED"/>
     <ROW Component="DownloadOptionsGUITooltips.exe" ComponentId="{A9576DB6-B4AA-4984-B688-376E63D8B677}" Directory_="scripts_Dir" Attributes="256" KeyPath="DownloadOptionsGUITooltips.exe"/>
     <ROW Component="SHORTCUTDIR" ComponentId="{2A2AF60B-B8C7-4CB8-A55A-90753369C198}" Directory_="SHORTCUTDIR" Attributes="0"/>
     <ROW Component="Version" ComponentId="{B4B1F4F9-F536-49F6-BF8C-9033207F33D8}" Directory_="APPDIR" Attributes="4" KeyPath="Version_2"/>
     <ROW Component="VideoDownloader.exe" ComponentId="{4434CF81-CED8-4261-9875-8E9A44DCB8D9}" Directory_="APPDIR" Attributes="256" KeyPath="VideoDownloader.exe"/>
     <ROW Component="booleanFirstTimeLaunch" ComponentId="{077D7FB4-BCFC-438F-A2FF-03E2EE3697C8}" Directory_="APPDIR" Attributes="4" KeyPath="booleanFirstTimeLaunch"/>
-    <ROW Component="booleanSetupRequired" ComponentId="{B2A7A298-9C96-4772-B466-9DAF5A813DFE}" Directory_="APPDIR" Attributes="4" KeyPath="booleanSetupRequired"/>
     <ROW Component="browserLanguage" ComponentId="{23CE2369-9E7D-4648-BFFB-7CD840A04BFB}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="browserType" ComponentId="{5130466E-5E48-48F1-BACD-A06161D2E77B}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="downloadProgressVisualizer.ps1" ComponentId="{B60DE057-8B94-4393-92DE-D1B13B0EB2ED}" Directory_="scripts_Dir" Attributes="0" KeyPath="downloadProgressVisualizer.ps1" Type="0"/>
@@ -198,7 +199,6 @@
     <ROW Feature_="MainFeature" Component_="APPDIR"/>
     <ROW Feature_="MainFeature" Component_="scriptBaseFilesLocation_2"/>
     <ROW Feature_="MainFeature" Component_="Version"/>
-    <ROW Feature_="MainFeature" Component_="booleanSetupRequired"/>
     <ROW Feature_="MainFeature" Component_="booleanFirstTimeLaunch"/>
     <ROW Feature_="MainFeature" Component_="ffmpeg"/>
     <ROW Feature_="MainFeature" Component_="ytdlp"/>
@@ -209,6 +209,8 @@
     <ROW Feature_="MainFeature" Component_="SHORTCUTDIR"/>
     <ROW Feature_="MainFeature" Component_="working_directory"/>
     <ROW Feature_="MainFeature" Component_="DownloadOptionsGUITooltips.exe"/>
+    <ROW Feature_="MainFeature" Component_="CURRENT_VERSION_LAST_UPDATED"/>
+    <ROW Feature_="MainFeature" Component_="AVAILABLE_UPDATE"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="green_arrow_icon.exe" SourcePath="..\library\assets\icons\green_arrow_icon.ico" Index="0"/>
@@ -244,12 +246,13 @@
     <ROW Condition="VersionNT" Description="[ProductName] kann nicht auf [WindowsType9XDisplay] installiert werden." DescriptionLocId="AI.LaunchCondition.No9X" IsPredefined="true" Builds="DefaultBuild"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiRegsComponent">
+    <ROW Registry="AVAILABLE_UPDATE" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="AVAILABLE_UPDATE" Component_="AVAILABLE_UPDATE"/>
+    <ROW Registry="CURRENT_VERSION_LAST_UPDATED" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="CURRENT_VERSION_LAST_UPDATED" Component_="CURRENT_VERSION_LAST_UPDATED"/>
     <ROW Registry="Manufacturer_1" Root="1" Key="Software\[Manufacturer]" Name="\"/>
     <ROW Registry="ProductName_1" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="\"/>
     <ROW Registry="Software_1" Root="1" Key="Software" Name="\"/>
     <ROW Registry="Version_2" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="CURRENT_VERSION" Value="v[ProductVersion]" Component_="Version"/>
-    <ROW Registry="booleanFirstTimeLaunch" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="booleanFirstTimeLaunch" Value="#0" Component_="booleanFirstTimeLaunch" VirtualValue="#"/>
-    <ROW Registry="booleanSetupRequired" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="booleanSetupRequired" Value="#1" Component_="booleanSetupRequired" VirtualValue="#"/>
+    <ROW Registry="booleanFirstTimeLaunch" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="booleanFirstTimeLaunch" Value="#1" Component_="booleanFirstTimeLaunch" VirtualValue="#"/>
     <ROW Registry="scriptBaseFilesLocation_2" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="videoDownloaderInstallationDirectory" Value="[APPDIR]" Component_="scriptBaseFilesLocation_2"/>
     <ROW Registry="videoDownloaderWorkingDirectory" Root="1" Key="Software\[Manufacturer]\[ProductName]" Name="videoDownloaderWorkingDirectory" Value="[working_directory_Dir]" Component_="videoDownloaderWorkingDirectory"/>
   </COMPONENT>

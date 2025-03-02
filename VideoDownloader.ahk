@@ -12,10 +12,10 @@ CoordMode "Mouse", "Client"
 ; Sets the directory for all following files.
 #Include "includes\"
 #Include "Acc.ahk"
-#Include "ConfigFileManager.ahk"
+#Include "ConfigFile.ahk"
 #Include "DownloadOptionsGUI.ahk"
 #Include "FileManager.ahk"
-#Include "HotKeys & Methods.ahk"
+#Include "HotKeys & Functions.ahk"
 #Include "MainGUI.ahk"
 #Include "Setup.ahk"
 #Include "UpdateGUI.ahk"
@@ -23,9 +23,6 @@ CoordMode "Mouse", "Client"
 onInit()
 
 onInit() {
-    ; When this value is true, certain functions will behave differently and do not show unnecessary prompts.
-    global booleanFirstTimeLaunch := true ; REMOVE [CHANGED TEMPORARILY TO ALWAYS TRUE]
-
     global scriptRegistryDirectory := "HKCU\SOFTWARE\LeoTN\VideoDownloader"
     ; This folder will contain all other files.
     global scriptMainDirectory := A_ScriptDir . "\VideoDownloader"
@@ -48,6 +45,9 @@ onInit() {
 
     global YTDLPDirectory := assetDirectory . "\yt-dlp"
     global YTDLPFileLocation := YTDLPDirectory . "\yt-dlp.exe"
+
+    ; When this value is true, certain functions will behave differently and do not show unnecessary prompts.
+    global booleanFirstTimeLaunch := RegRead(scriptRegistryDirectory, "booleanFirstTimeLaunch", false)
     ; The version of this script. For example "v1.2.3.4".
     global versionFullName := getCorrectScriptVersionFromRegistry()
 
@@ -89,6 +89,10 @@ onInit() {
     }
     if (readConfigFile("CHECK_FOR_UPDATES_AT_LAUNCH") && !booleanFirstTimeLaunch) {
         checkForAvailableUpdates()
+    }
+    ; Disables the firstTimeLaunch at the end of the first run.
+    if (booleanFirstTimeLaunch) {
+        RegWrite(false, "REG_DWORD", scriptRegistryDirectory, "booleanFirstTimeLaunch")
     }
 }
 
