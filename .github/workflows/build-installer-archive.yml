@@ -69,7 +69,7 @@ jobs:
     - name: Compile Autohotkey Tooltip Script
       run: |
         # Set the paths to execute more easily.
-        $scriptPathIn = "${{ github.workspace }}\library\scripts\DownloadOptionsGUITooltips.ahk"
+        $scriptPathIn = "${{ github.workspace }}\library\build\DownloadOptionsGUITooltips.ahk"
         $scriptPathOut = "${{ github.workspace }}\$env:FINAL_TOOLTIP_EXECUTABLE_NAME"
 
         # Compile the script.
