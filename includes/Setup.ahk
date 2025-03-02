@@ -5,7 +5,13 @@ SendMode "Input"
 CoordMode "Mouse", "Window"
 
 setup_onInit() {
-    checkIfSetupIsRequired()
+    createSetupGUI()
+    createRequiredFolders()
+    checkIfMSISetupIsRequired()
+    while (checkIfFFmpegOrYTDLPSetupIsRequired()) {
+        setupGUI.Show()
+        Sleep(2000)
+    }
 }
 
 createSetupGUI() {
@@ -64,7 +70,7 @@ updateDependencyCheckboxes() {
     }
 }
 
-checkIfSetupIsRequired() {
+createRequiredFolders() {
     ; Creates all folders in case they do not exist.
     requiredFolders := [
         scriptMainDirectory,
@@ -80,7 +86,10 @@ checkIfSetupIsRequired() {
             DirCreate(requiredFolder)
         }
     }
-    ; Checks if all required files are present.
+}
+
+; Checks if all required files are present. In case a file is missing, the script will exit after informing the user.
+checkIfMSISetupIsRequired() {
     requiredFiles := [
         psUpdateScriptLocation,
         downloadOptionsGUITooltipFileLocation,
@@ -96,10 +105,6 @@ checkIfSetupIsRequired() {
                 "VideoDownloader - Missing or Corrupted Files", "O Icon! 262144")
             exitScriptWithNotification(true)
         }
-    }
-    if (!getFFmpegInstallionStatus() || !getYTDLPInstallionStatus()) {
-        createSetupGUI()
-        setupGUI.Show()
     }
 }
 
@@ -178,6 +183,17 @@ installYTDLP() {
     Download(YTDLPDownloadLink, downloadedFileLocation)
     ; Update the GUI.
     setupProgressBar.Value += 25
+}
+
+/*
+Checks if the FFmpeg and yt-dlp executables are present.
+@Returns [boolean] True, if the files are not present. False otherwise.
+*/
+checkIfFFmpegOrYTDLPSetupIsRequired() {
+    if (!getFFmpegInstallionStatus() || !getYTDLPInstallionStatus()) {
+        return true
+    }
+    return false
 }
 
 /*
