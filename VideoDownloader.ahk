@@ -25,7 +25,7 @@ onInit() {
     ; When this value is true, certain functions will behave differently and do not show unnecessary prompts.
     global booleanFirstTimeLaunch := false
 
-    global scriptRegistryDirectory := "HKEY_CURRENT_USER\SOFTWARE\LeoTN\VideoDownloader"
+    global scriptRegistryDirectory := "HKCU\SOFTWARE\LeoTN\VideoDownloader"
     ; This folder will contain all other files.
     global scriptMainDirectory := A_ScriptDir . "\VideoDownloader"
     ; Working directory for downloads, settings and presets.
@@ -47,6 +47,8 @@ onInit() {
 
     global YTDLPDirectory := assetDirectory . "\yt-dlp"
     global YTDLPFileLocation := YTDLPDirectory . "\yt-dlp.exe"
+    ; The version of this script. For example "v1.2.3.4".
+    global versionFullName := getCorrectScriptVersionFromRegistry()
 
     try
     {

@@ -875,30 +875,35 @@ scriptTutorial() {
 }
 
 /*
-Tries to determine wheter Python is installed on the current system or not.
-@returns [boolean] True, if Python is installed.
+Reads the registry and extracts the current script version.
+If the version in the registry has a build version other than 0, it will append the word "-beta".
+@Returns [String] The version from the registry or "v0.0.0.1" in case the registry value is invalid.
 */
-getPythonInstallionStatus() {
-    try
-    {
-        ; "python" changed to "py" because the recommended Python version is 3.12.
-        RunWait(A_ComSpec ' /c py --version > "' . A_Temp . '\tmp.txt"', , "Hide")
-        if (FileExist(A_Temp . "\tmp.txt")) {
-            ; This means that the command could not be found and Python is not installed.
-            if (FileRead(A_Temp . "\tmp.txt") = "") {
-                return false
-            }
-            else {
-                return true
-            }
+getCorrectScriptVersionFromRegistry() {
+    global scriptRegistryDirectory
+
+    regValue := RegRead(scriptRegistryDirectory, "CURRENT_VERSION", "v0.0.0.1")
+    ; Finds versions matching this format [v1.2.3.4]
+    if (RegExMatch(regValue, "^v\d+\.\d+\.\d+\.(\d+)$", &match)) {
+        buildVersionNumber := match[1]
+        ; A version number with a build version is only used for beta versions.
+        if (buildVersionNumber != 0) {
+            regValue := regValue . "-beta"
+            ; Corrects the version number in the registry.
+            RegWrite(regValue, "REG_SZ", scriptRegistryDirectory, "CURRENT_VERSION")
+            return getCorrectScriptVersionFromRegistry()
         }
-        else {
-            return false
-        }
+        return regValue
     }
-    catch {
-        return false
+    ; Finds versions matching this format [v1.2.3], [v1.2.3-beta], [1.2.3] or [1.2.3-beta].
+    else if (RegExMatch(regValue, "^v?\d+\.\d+\.\d+(\.\d+)?(-beta)?$", &match)) {
+        return regValue
     }
+    else {
+        ; In case the version in the registry is invalid.
+        regValue := "v0.0.0.1"
+    }
+    return regValue
 }
 
 /*

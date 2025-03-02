@@ -96,11 +96,8 @@ createMainGUI() {
     optionsMenu.SetIcon("Repair script", "shell32.dll", 41)
 
     helpMenu := Menu()
-    regValue := RegRead(scriptRegistryDirectory, "videoDownloaderVersion", "")
-    if (regValue != "") {
-        helpMenu.Add("Version - " . regValue, (*) => handleMainGUI_helpSectionEasterEgg())
-        helpMenu.SetIcon("Version - " . regValue, "shell32.dll", 79)
-    }
+    helpMenu.Add("Version - " . versionFullName, (*) => handleMainGUI_helpSectionEasterEgg())
+    helpMenu.SetIcon("Version - " . versionFullName, "shell32.dll", 79)
     helpMenu.Add("This repository (yt-dlp-autohotkey-gui)",
         (*) => Run("https://github.com/LeoTN/yt-dlp-autohotkey-gui#readme"))
     helpMenu.SetIcon("This repository (yt-dlp-autohotkey-gui)", "shell32.dll", 26)
