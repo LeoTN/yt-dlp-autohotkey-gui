@@ -4,6 +4,14 @@ on:
     push:
         branches: 
             - development
+        paths-ignore:
+            - ".github/ISSUE_TEMPLATE/**"
+            - ".github/workflows/**"
+            - "compiler/**"
+            - ".gitattributes"
+            - ".gitignore"
+            - "LICENSE"
+            - "README.md"
 
 env:
   LATEST_TAG_NAME: "null"
@@ -17,7 +25,7 @@ jobs:
 
         steps:
             - name: Checkout Repository
-              uses: actions/checkout@v2
+              uses: actions/checkout@v4
 
             - name: Get Latest Release Version
               id: get_latest_release_version_id
@@ -25,9 +33,9 @@ jobs:
                 # Calling GitHub API for the latest tag name.
                 $response = Invoke-WebRequest -Uri "https://api.github.com/repos/LeoTN/yt-dlp-autohotkey-gui/tags" -Method Get
                 $latestTag = ($response.Content | ConvertFrom-Json)[0].name
-                echo "The received tag name is [$latestTag]."
+                $null = Write-Host "The received tag name is [$latestTag]."
                 if ($latestTag -like "") {
-                  echo "Empty tag received! Exiting workflow..."   
+                  $null = Write-Host "Empty tag received! Exiting workflow..."   
                   throw
                 }
                 echo "LATEST_TAG_NAME=$latestTag" >> $env:GITHUB_OUTPUT
@@ -41,15 +49,19 @@ jobs:
                 if ($currentVersion -like "*-beta") {
                   $currentVersion = $currentVersion.Replace("-beta", "")
                 }
-                else {
-                  $version = [version]$currentVersion
-                  $version = [version]::new($version.Major, $version.Minor, $version.Build + 1)
-                  $currentVersion = $version.ToString()
+                try {
+                    $version = [version]$currentVersion
                 }
+                catch {
+                  $null = Write-Host "Failed to convert [$currentVersion] into version object! Exiting workflow..."
+                  throw
+                }
+                $version = [version]::new($version.Major, $version.Minor, $version.Build, $version.Revision + 1)
+                $currentVersion = $version.ToString()
                 $finalVersion = $currentVersion
-                Write-Host "The beta version will be [$finalVersion]."
-                if (-not ($finalVersion -match '^\d+\.\d+\.\d+$')) {
-                  echo "Invalid beta version! Exiting workflow..."   
+                $null = Write-Host "The beta version will be [$finalVersion]."
+                if (-not ($finalVersion -match '^\d+\.\d+\.\d+\.\d+$')) {
+                  $null = Write-Host "Invalid beta version! Exiting workflow..."
                   throw
                 }
                 echo "FINAL_BETA_VERSION=$finalVersion" >> $env:GITHUB_OUTPUT
