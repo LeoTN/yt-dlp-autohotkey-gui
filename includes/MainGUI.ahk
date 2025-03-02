@@ -96,7 +96,7 @@ createMainGUI() {
     optionsMenu.SetIcon("Repair script", "shell32.dll", 41)
 
     helpMenu := Menu()
-    regValue := RegRead(videoDownloaderRegistryDirectory, "videoDownloaderVersion", "")
+    regValue := RegRead(scriptRegistryDirectory, "videoDownloaderVersion", "")
     if (regValue != "") {
         helpMenu.Add("Version - " . regValue, (*) => handleMainGUI_helpSectionEasterEgg())
         helpMenu.SetIcon("Version - " . regValue, "shell32.dll", 79)
@@ -283,7 +283,7 @@ handleMainGUI_helpSectionEasterEgg() {
 }
 
 handleMainGUI_uninstallScript() {
-    videoDownloaderSetupExecutableLocation := scriptBaseFilesLocation . "\library\setup\VideoDownloader-Setup.exe"
+    videoDownloaderSetupExecutableLocation := scriptMainDirectory . "\library\setup\VideoDownloader-Setup.exe"
 
     if (!A_IsCompiled) {
         MsgBox("You are using a non compiled version of this script."
@@ -312,7 +312,7 @@ Runs the script setup to repair the application.
 @param pBooleanAllowRefuse [boolean] If set to true, the user can cancel the setup and run the script anyway.
 */
 handleMainGUI_repairScript(pBooleanAllowRefuse := true) {
-    videoDownloaderSetupExecutableLocation := scriptBaseFilesLocation . "\library\setup\VideoDownloader-Setup.exe"
+    videoDownloaderSetupExecutableLocation := scriptMainDirectory . "\library\setup\VideoDownloader-Setup.exe"
 
     if (!A_IsCompiled) {
         MsgBox("You are using a non compiled version of this script."

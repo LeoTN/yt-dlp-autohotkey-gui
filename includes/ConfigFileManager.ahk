@@ -26,21 +26,21 @@ Otherwise this can lead to fatal errors and failures!
 
 config_onInit() {
     ; Determines the location of the script's configuration file.
-    global configFileLocation := workingBaseFilesLocation . "\config\ytdownloader.ini"
+    global configFileLocation := scriptMainDirectory . "\VideoDownloader.ini"
     ; Specifies path for the .txt file which stores the URLs.
-    global URL_FILE_LOCATION := workingBaseFilesLocation . "\YT_URLS.txt"
+    global URL_FILE_LOCATION := scriptWorkingDirectory . "\YT_URLS.txt"
     ; Specifies path for the .txt file which stores the URL backup.
-    global URL_BACKUP_FILE_LOCATION := workingBaseFilesLocation . "\YT_URLS_BACKUP.txt"
+    global URL_BACKUP_FILE_LOCATION := scriptWorkingDirectory . "\YT_URLS_BACKUP.txt"
     ; Specifies path for the .txt file which stores the blacklist file.
-    global BLACKLIST_FILE_LOCATION := workingBaseFilesLocation . "\YT_BLACKLIST.txt"
+    global BLACKLIST_FILE_LOCATION := scriptWorkingDirectory . "\YT_BLACKLIST.txt"
     ; Standard download log file path.
-    global DOWNLOAD_LOG_FILE_LOCATION := workingBaseFilesLocation . "\download\download_log.txt"
+    global DOWNLOAD_LOG_FILE_LOCATION := scriptWorkingDirectory . "\download\download_log.txt"
     ; Default download archive file location.
-    global DOWNLOAD_ARCHIVE_LOCATION := workingBaseFilesLocation . "\download\download_archive.txt"
+    global DOWNLOAD_ARCHIVE_LOCATION := scriptWorkingDirectory . "\download\download_archive.txt"
     ; Default preset storage for the download option GUI.
-    global DOWNLOAD_PRESET_LOCATION := workingBaseFilesLocation . "\presets"
+    global DOWNLOAD_PRESET_LOCATION := scriptWorkingDirectory . "\presets"
     ; Standard download path.
-    global DOWNLOAD_PATH := workingBaseFilesLocation . "\download"
+    global DOWNLOAD_PATH := scriptWorkingDirectory . "\download"
 
     ; Defines if the script should ask the user for a brief explaination of it's core functions.
     global ASK_FOR_TUTORIAL := true
@@ -66,8 +66,8 @@ config_onInit() {
 
     ; Will contain all config values matching with each variable name in the array below.
     ; For example configVariableNameArray[2] = "URL_FILE_LOCATION"
-    ; and configFileContentArray[2] = "workingBaseFilesLocation . "\YT_URLS.txt""
-    ; so basically URL_FILE_LOCATION = "workingBaseFilesLocation . "\YT_URLS.txt"".
+    ; and configFileContentArray[2] = "scriptWorkingDirectory . "\YT_URLS.txt""
+    ; so basically URL_FILE_LOCATION = "scriptWorkingDirectory . "\YT_URLS.txt"".
     ; NOTE: This had to be done because changing a global variable using a dynamic
     ; expression like global %myGlobalVarName% := "newValue" won't work.
     global configFileContentArray := []

@@ -233,7 +233,7 @@ executeAndLogConsoleCommand(pCommand, pBooleanSilent) {
             FileDelete(A_Temp . "\yt_dlp_download_log.txt")
         }
         ; The powershell script now waits for the hook file.
-        Run('powershell.exe -noLogo -noProfile -executionPolicy bypass -file "' . scriptBaseFilesLocation .
+        Run('powershell.exe -noLogo -noProfile -executionPolicy bypass -file "' . scriptMainDirectory .
             '\library\scripts\MonitorHookFile.ps1"'
             , , "Min", &visualPowershellPID)
         WinWait("ahk_pid " . visualPowershellPID)
@@ -902,75 +902,23 @@ getPythonInstallionStatus() {
 }
 
 /*
-Tries to determine wheter yt-dlp is installed on the current system or not.
-@returns [boolean] True, if yt-dlp is installed.
-*/
-getYTDLPInstallionStatus() {
-    try
-    {
-        RunWait(A_ComSpec ' /c yt-dlp --version > "' . A_Temp . '\tmp.txt"', , "Hide")
-        if (FileExist(A_Temp . "\tmp.txt")) {
-            ; This means that the command could not be found and yt-dlp is not installed.
-            if (FileRead(A_Temp . "\tmp.txt") = "") {
-                return false
-            }
-            else {
-                return true
-            }
-        }
-        else {
-            return false
-        }
-    }
-    catch {
-        return false
-    }
-}
-
-/*
-Tries to determine wheter the FFmpeg library is present in the correct location or not.
-@returns [boolean] True or false depending on the outcome.
-*/
-getFFmpegInstallionStatus() {
-    try
-    {
-        regValue := RegRead(videoDownloaderRegistryDirectory, "ffmpegLocation", "")
-        ; If the FFmpeg path is valid.
-        if (validatePath(regValue, false) && regValue != "") {
-            if (!FileExist(regValue)) {
-                return false
-            }
-            else {
-                return true
-            }
-        }
-        else {
-            return false
-        }
-    }
-    catch {
-        return false
-    }
-}
-
-/*
 Shows a prompt to change the script's working directory.
 @returns [String] The path of the new working directory. Either selected by the user or set to the default directory.
 */
 changeWorkingDirectory() {
-    regValue := RegRead(videoDownloaderRegistryDirectory, "videoDownloaderWorkingDirectory", "")
+    regValue := RegRead(scriptRegistryDirectory, "videoDownloaderWorkingDirectory", "")
     if (validatePath(regValue, false) && regValue != "") {
         defaultWorkingDirectory := regValue
     }
     else {
-        defaultWorkingDirectory := A_AppData . "\LeoTN\VideoDownloader\yt_dlp_autohotkey_gui_files"
+        defaultWorkingDirectory := A_AppData . "\LeoTN\VideoDownloader\VideoDownloader"
     }
 
     path := DirSelect("*" . defaultWorkingDirectory, 3,
         "Select a working directory. This will be the place for downloaded media, settings and presets.")
     if (checkForWritingRights(path)) {
-        if (!InStr(path, "yt_dlp_autohotkey_gui_files")) {
-            return path . "\yt_dlp_autohotkey_gui_files"
+        if (!InStr(path, "VideoDownloader")) {
+            return path . "\VideoDownloader"
         }
         else {
             return path
@@ -1038,6 +986,23 @@ checkInternetConnection() {
     }
 
     return false
+}
+
+/*
+Terminates the script and shows a tray tip message to inform the user.
+@param pBooleanUseFallbackMessage [boolean] If set to true, will use the hardcoded English version
+of the termination message. This can be useful if the language modules have not been loaded yet.
+*/
+exitScriptWithNotification(pBooleanUseFallbackMessage := false) {
+    if (pBooleanUseFallbackMessage) {
+        TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
+    }
+    else {
+        TrayTip("VideoDownloader terminated. (NO LANGUAGE LOADED)", "VideoDownloader - Status", "Iconi Mute") ; REMOVE
+    }
+    ; Using ExitApp() twice ensures that the script will be terminated entirely.
+    ExitApp()
+    ExitApp()
 }
 
 /*

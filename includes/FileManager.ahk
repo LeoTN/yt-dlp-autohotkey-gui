@@ -444,11 +444,11 @@ openURLBlacklistFile(pBooleanShowPrompt := false) {
         if (result = "Yes") {
             try
             {
-                if (!DirExist(scriptBaseFilesLocation . "\deleted")) {
-                    DirCreate(scriptBaseFilesLocation . "\deleted")
+                if (!DirExist(scriptMainDirectory . "\deleted")) {
+                    DirCreate(scriptMainDirectory . "\deleted")
                 }
                 SplitPath(tmpConfig, &outFileName)
-                FileMove(tmpConfig, scriptBaseFilesLocation . "\deleted\" . outFileName, true)
+                FileMove(tmpConfig, scriptMainDirectory . "\deleted\" . outFileName, true)
                 ; Calls checkBlackListFile() in order to create a new blacklist file.
                 checkBlackListFile("generateFile", false)
                 return true
@@ -516,8 +516,8 @@ deleteFilePrompt(pFileName) {
     result := MsgBox("Would you like to delete the " . pFileName . " ?", "VD - Delete " . pFileName . "?",
         "YN Icon! 262144")
     if (result = "Yes") {
-        if (!DirExist(scriptBaseFilesLocation . "\deleted")) {
-            DirCreate(scriptBaseFilesLocation . "\deleted")
+        if (!DirExist(scriptMainDirectory . "\deleted")) {
+            DirCreate(scriptMainDirectory . "\deleted")
         }
         try
         {
@@ -527,19 +527,19 @@ deleteFilePrompt(pFileName) {
                     c := "URL_FILE_LOCATION"
                     tmpConfig := readConfigFile("URL_FILE_LOCATION")
                     SplitPath(tmpConfig, &outFileName)
-                    FileMove(tmpConfig, scriptBaseFilesLocation . "\deleted\" . outFileName, true)
+                    FileMove(tmpConfig, scriptMainDirectory . "\deleted\" . outFileName, true)
                 }
                 case "URL-Backup-File":
                 {
                     c := "URL_BACKUP_FILE_LOCATION"
                     SplitPath(readConfigFile("URL_BACKUP_FILE_LOCATION"), &outFileName)
-                    FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), scriptBaseFilesLocation . "\deleted\" .
+                    FileMove(readConfigFile("URL_BACKUP_FILE_LOCATION"), scriptMainDirectory . "\deleted\" .
                     outFileName, true)
                 }
                 case "latest download":
                 {
                     if (DirExist(lastDownloadPath)) {
-                        DirMove(lastDownloadPath, scriptBaseFilesLocation . "\deleted\" . downloadTime, true)
+                        DirMove(lastDownloadPath, scriptMainDirectory . "\deleted\" . downloadTime, true)
                     }
                     else {
                         MsgBox("No downloaded files from`ncurrent session found.", "VD - Missing File(s)!",
@@ -554,13 +554,13 @@ deleteFilePrompt(pFileName) {
         }
         ; In case something goes wrong this will try to resolve the issue.
         catch {
-            if (FileExist(scriptBaseFilesLocation . "\deleted\" . outFileName) && FileExist(scriptBaseFilesLocation .
+            if (FileExist(scriptMainDirectory . "\deleted\" . outFileName) && FileExist(scriptMainDirectory .
                 "\" . outFileName)) {
                 result := MsgBox("The " . pFileName . " was found in the deleted directory."
                     "`n`nDo you want to overwrite it ?", "VD - Overwrite Existing File(s)?", "YN Icon! 262144")
                 if (result = "Yes") {
-                    FileDelete(scriptBaseFilesLocation . "\deleted\" . outFileName)
-                    FileMove(readConfigFile(c), scriptBaseFilesLocation . "\deleted\" . outFileName, true)
+                    FileDelete(scriptMainDirectory . "\deleted\" . outFileName)
+                    FileMove(readConfigFile(c), scriptMainDirectory . "\deleted\" . outFileName, true)
                 }
             }
             else {

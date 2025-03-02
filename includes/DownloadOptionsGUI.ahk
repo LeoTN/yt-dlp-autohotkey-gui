@@ -580,13 +580,15 @@ which bill be given to the yt-dlp command prompt.
 @returns [String] A command string ready to execute with yt-dlp.
 */
 buildCommandString() {
+    global ffmpegFileLocation
+    global YTDLPFileLocation
     ; Formats the value of A_Now to give each folder a unique time stamp.
     global downloadTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
-    global commandString := "yt-dlp "
+    global commandString := '"' . YTDLPFileLocation . '" '
     tmpConfig := readConfigFile("DOWNLOAD_PATH")
     ; Makes sure that there are no conflicting options.
     handleDownloadOptionsGUI_ResolveElementConflicts()
-    ; The switch below will evaluae if extra parameters will be inserted.
+    ; The switch below evaluates, if extra parameters will be inserted.
     switch (useExternalParametersForYTDLPCheckbox.Value) {
         case 1:
         {
@@ -617,7 +619,7 @@ buildCommandString() {
         '--progress-template "[Downloading...] [%(progress._percent_str)s of %(progress._total_bytes_str)s ' .
         'at %(progress._speed_str)s. Time passed: %(progress._elapsed_str)s]" '
     ; Adds the ffmpeg location for the script to remux videos or extract audio etc.
-    commandString .= '--ffmpeg-location "' . ffmpegLocation . '" '
+    commandString .= '--ffmpeg-location "' . ffmpegFileLocation . '" '
     return commandString
 }
 
