@@ -1,36 +1,34 @@
-name: Feature Request
-description: Request a new / change (to) a feature
-title: "Feature Request"
-labels: ["enhancement"]
+---
 body:
-- type: checkboxes
-  attributes:
-    label: "Is there an existing request for this?"
-    description: "Please search to see if a request already exists or if this feature is already implemented in the latest version."
-    options:
-    - label: "This request is unique."
+  - attributes:
+      description: Please search to see, if this feature is already requested.
+      label: Duplicate Request?
+      options:
+        - label: This request is unique.
+          required: true
+    type: checkboxes
+  - attributes:
+      description: Describe what problem this feature is going to fix. Please be very specific about what exactly you want.
+      label: Encountered Problem(s)
+      placeholder: 'For example: I always have the problem that...'
+    type: textarea
+    validations:
       required: true
-
-- type: textarea
-  attributes:
-    label: "Encountered Problem(s)"
-    description: "Describe what problem this feature is going to fix. Please be very specific about what exactly you want."
-    placeholder: "For example: I always have the problem that..."
-  validations:
-    required: true
-
-- type: textarea
-  attributes:
-    label: "Offered Feature / Solution"
-    description: "Describe a possible solution for your problem. Please be very specific about what exactly you want."
-    placeholder: "For example: I would suggest that..."
-  validations:
-    required: true
-    
-- type: textarea
-  attributes:
-    label: "Additional Information"
-    description: "You can provide additional details here."
-    placeholder: "Space for additional information..."
-  validations:
-    required: false
+  - attributes:
+      description: Describe a possible solution for your problem. Please be very specific about what exactly you want.
+      label: Offered Feature / Solution
+      placeholder: 'For example: I would suggest that...'
+    type: textarea
+    validations:
+      required: true
+  - attributes:
+      description: You can provide additional details here.
+      label: Additional Information
+      placeholder: Space for additional information...
+    type: textarea
+    validations:
+      required: false
+description: Request a new / change (to a) feature
+labels: ["enhancement"]
+name: Feature Request
+title: Feature Request

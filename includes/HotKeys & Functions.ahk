@@ -4,22 +4,19 @@
 SendMode "Input"
 CoordMode "Mouse", "Client"
 
-hotkey_onInit()
-{
+hotkey_onInit() {
     global isDownloading := false
 
-    Try
+    try
     {
         registerHotkeys()
     }
-    Catch
-    {
+    catch {
         registerHotkeys()
     }
 }
 
-registerHotkeys()
-{
+registerHotkeys() {
     ; Beginning of all standard script hotkeys.
 
     ; Main hotkey (start download).
@@ -52,67 +49,55 @@ registerHotkeys()
 }
 
 ; Hotkey support function to open the script GUI.
-hotkey_openMainGUI()
-{
-    Try
+hotkey_openMainGUI() {
+    try
     {
         static flipflop := true
-        If (!WinExist("ahk_id " . mainGUI.Hwnd))
-        {
+        if (!WinExist("ahk_id " . mainGUI.Hwnd)) {
             mainGUI.Show("w300 h200")
             flipflop := false
         }
-        Else If (!flipflop && WinActive("ahk_id " . mainGUI.Hwnd))
-        {
+        else if (!flipflop && WinActive("ahk_id " . mainGUI.Hwnd)) {
             mainGUI.Hide()
             flipflop := true
         }
-        Else
-        {
+        else {
             WinActivate("ahk_id " . mainGUI.Hwnd)
         }
     }
 }
 
 ; Hotkey support function to open the script download options GUI.
-hotkey_openOptionsGUI()
-{
-    Try
+hotkey_openOptionsGUI() {
+    try
     {
         static flipflop := true
-        If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
-        {
+        if (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd)) {
             downloadOptionsGUI.Show("w500 h405")
             flipflop := false
         }
-        Else If (!flipflop && WinActive("ahk_id " . downloadOptionsGUI.Hwnd))
-        {
+        else if (!flipflop && WinActive("ahk_id " . downloadOptionsGUI.Hwnd)) {
             downloadOptionsGUI.Hide()
             flipflop := true
         }
-        Else
-        {
+        else {
             WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
         }
     }
     global lastDownloadPath := ""
 }
 
-hotkey_toggleDebugMode()
-{
-    If (readConfigFile("booleanDebugMode"))
-    {
+hotkey_toggleDebugMode() {
+    if (readConfigFile("booleanDebugMode")) {
         editConfigFile("booleanDebugMode", false)
         MsgBox("Debug mode has been disabled.", "VD - DEBUG MODE", "O Iconi 262144 T1")
     }
-    Else If (!readConfigFile("booleanDebugMode"))
-    {
+    else if (!readConfigFile("booleanDebugMode")) {
         editConfigFile("booleanDebugMode", true)
         MsgBox("Debug mode has been enabled.", "VD - DEBUG MODE", "O Icon! 262144 T1")
     }
-    Else
-    {
-        Throw ("No valid state in booleanDebugMode")
+    else {
+        throw ("No valid state in booleanDebugMode")
     }
 }
 
@@ -127,82 +112,70 @@ Serves as the main function to call sub download process functions.
 @param pCommandString [String] The parameter / command string from the main GUI.
 @param pBooleanSilent [boolean] If set to true, most progress related windows will be hidden.
 */
-startDownload(pCommandString, pBooleanSilent := unset)
-{
+startDownload(pCommandString, pBooleanSilent := unset) {
     global isDownloading
     ; Collects all data from the download options GUI into the object.
     global downloadOptionsGUI_SubmitObject := downloadOptionsGUI.Submit()
-    If (!IsSet(pBooleanSilent))
-    {
+    if (!IsSet(pBooleanSilent)) {
         pBooleanSilent := downloadOptionsGUI_SubmitObject.EnableSilentDownloadModeCheckbox
 
     }
-    If (!checkInternetConnection())
-    {
-        Return MsgBox("Unable to connect to the Internet.`n`nPlease check your Internet connection.", "VD - No Internet Connection!", "O Icon! 262144 T2")
+    if (!checkInternetConnection()) {
+        return MsgBox("Unable to connect to the Internet.`n`nPlease check your Internet connection.",
+            "VD - No Internet Connection!", "O Icon! 262144 T2")
     }
-    If (isDownloading)
-    {
-        Return MsgBox("There is a download process running already.`n`nPlease wait for it to finish or cancel it.",
+    if (isDownloading) {
+        return MsgBox("There is a download process running already.`n`nPlease wait for it to finish or cancel it.",
             "VD - Download Status", "O Icon! 262144 T2")
     }
-    Else
-    {
+    else {
         isDownloading := true
     }
-    If (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd))
-    {
+    if (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd)) {
         hotkey_openOptionsGUI()
     }
-    Else
-    {
+    else {
         WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
     }
     tmpConfig := readConfigFile("URL_FILE_LOCATION")
     SplitPath(tmpConfig, , &outDir)
-    If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
-    {
+    if (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt")) {
         result := MsgBox("An URL file from an unfinished download has been found.`n`n"
-            "Do you want do add the URLs to the current URL file?", "VD - Unfinished Download Found", "YN Icon! 262144")
-        Switch (result)
-        {
-            Case "Yes":
-                {
-                    ; Writes the content from the last downloaded file to the new one.
-                    FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"), tmpConfig)
-                }
+            "Do you want do add the URLs to the current URL file?", "VD - Unfinished Download Found", "YN Icon! 262144"
+        )
+        switch (result) {
+            case "Yes":
+            {
+                ; Writes the content from the last downloaded file to the new one.
+                FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"), tmpConfig)
+            }
             Default:
+            {
+                try
                 {
-                    Try
-                    {
-                        FileRecycle(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt")
-                    }
+                    FileRecycle(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt")
                 }
+            }
         }
     }
-    If (!FileExist(tmpConfig))
-    {
+    if (!FileExist(tmpConfig)) {
         MsgBox("No URL file found. You can save`nURLs by clicking on a video and`npressing: [" .
             expandHotkey(readConfigFile("URL_COLLECT_HK")) . "]", "VD - Download Status", "O Icon! 262144")
         isDownloading := false
-        Return
+        return
     }
-    If (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox)
-    {
+    if (downloadOptionsGUI_SubmitObject.ClearURLFileAfterDownloadCheckbox) {
         FileMove(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
     }
-    Else
-    {
+    else {
         FileCopy(tmpConfig, outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
     }
-    If (pBooleanSilent)
-    {
+    if (pBooleanSilent) {
         ; Execute the command line command and wait for it to be finished, but all progess related windows are hidden.
         executeAndLogConsoleCommand(pCommandString, true)
         monitorDownloadProgress()
     }
-    Else
-    {
+    else {
         ; Same as above, but windows aren't hidden.
         executeAndLogConsoleCommand(pCommandString, false)
         monitorDownloadProgress()
@@ -210,33 +183,28 @@ startDownload(pCommandString, pBooleanSilent := unset)
     postProcessDownloadFiles()
     saveGUISettingsAsPreset("last_settings", true)
     ; Moves the downloaded URLs to the URL backup file.
-    If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
-    {
+    if (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt")) {
         FileMove(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", readConfigFile("URL_BACKUP_FILE_LOCATION"), true)
     }
     ; This one uses the actual checkbox from the download options GUI instead of the GUI submit object.
-    If (terminateScriptAfterDownloadCheckbox.Value)
-    {
+    if (terminateScriptAfterDownloadCheckbox.Value) {
         isDownloading := false
-        If (!downloadOptionsGUI_SubmitObject.EnableSilentDownloadModeCheckbox)
-        {
+        if (!downloadOptionsGUI_SubmitObject.EnableSilentDownloadModeCheckbox) {
             terminateScriptPrompt()
         }
-        Else
-        {
+        else {
             ExitApp()
             ExitApp()
         }
     }
-    Else
-    {
-        Switch (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox)
-        {
-            Case 0:
+    else {
+        switch (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox) {
+            case 0:
             {
-                global lastDownloadPath := downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . '\' . downloadTime
+                global lastDownloadPath := downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . '\' .
+                    downloadTime
             }
-            Case 1:
+            case 1:
             {
                 global lastDownloadPath := readConfigFile("DOWNLOAD_PATH") . '\' . downloadTime
             }
@@ -250,8 +218,7 @@ Executes a given string with the command prompt.
 @param pCommand [String] The command (most likely the download command string).
 @param pBooleanSilent [boolean] If set to true, the command line window will be hidden.
 */
-executeAndLogConsoleCommand(pCommand, pBooleanSilent)
-{
+executeAndLogConsoleCommand(pCommand, pBooleanSilent) {
     global hiddenConsolePID := 0
     global visualPowershellPID := 0
 
@@ -259,15 +226,15 @@ executeAndLogConsoleCommand(pCommand, pBooleanSilent)
         . '\yt_dlp_download_log.txt" && title Completed... && timeout /T 3', , "Min", &hiddenConsolePID)
     ProcessWait(hiddenConsolePID)
 
-    If (!pBooleanSilent)
-    {
+    if (!pBooleanSilent) {
         ; Deletes the old log file.
-        Try
+        try
         {
             FileDelete(A_Temp . "\yt_dlp_download_log.txt")
         }
         ; The powershell script now waits for the hook file.
-        Run('powershell.exe -noLogo -noProfile -executionPolicy bypass -file "' . scriptBaseFilesLocation . '\library\scripts\MonitorHookFile.ps1"'
+        Run('powershell.exe -noLogo -noProfile -executionPolicy bypass -file "' . scriptMainDirectory .
+            '\library\scripts\MonitorHookFile.ps1"'
             , , "Min", &visualPowershellPID)
         WinWait("ahk_pid " . visualPowershellPID)
         WinActivate("ahk_pid " . visualPowershellPID)
@@ -275,8 +242,7 @@ executeAndLogConsoleCommand(pCommand, pBooleanSilent)
 }
 
 ; Checks the download log file for status updates and reacts by updating the download options GUI progress bar and text fields.
-monitorDownloadProgress()
-{
+monitorDownloadProgress() {
     global booleanDownloadTerminated := false
     SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
     global urlArray := readFile(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt", true)
@@ -295,112 +261,99 @@ monitorDownloadProgress()
     ; Prepares the download options GUI.
     downloadStatusProgressBar.Opt("Range0-" . maximumBarValue)
     downloadStatusProgressBar.Value := 0
-    If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox)
-    {
+    if (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox) {
         downloadStatusText.Text := "Playlist mode: " . downloadedVideoAmount . " video(s) processed."
     }
-    Else
-    {
+    else {
         downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
     }
 
     ; Waits for the download log file to exist.
     maxRetries := 10
-    While (!FileExist(A_Temp . "\yt_dlp_download_log.txt"))
-    {
+    while (!FileExist(A_Temp . "\yt_dlp_download_log.txt")) {
         Sleep(1000)
-        If (maxRetries <= 0)
-        {
-            MsgBox("Could not find hook file to track progress.`n`nScript terminated.", "VD - Download Status - Error!", "O IconX 262144")
+        if (maxRetries <= 0) {
+            MsgBox("Could not find hook file to track progress.`n`nScript terminated.", "VD - Download Status - Error!",
+                "O IconX 262144")
             ExitApp()
             ExitApp()
         }
         maxRetries--
     }
 startOfFileReadLoop:
-    Loop Read (A_Temp . "\yt_dlp_download_log.txt")
-    {
+    loop read (A_Temp . "\yt_dlp_download_log.txt") {
         ; All previous lines will be skipped.
-        If (parsedLines >= A_Index)
-        {
-            Continue
+        if (parsedLines >= A_Index) {
+            continue
         }
         ; Makes the script skip all other download percentage values so that the progress bar does only fill when
         ; downloading the actual video.
-        If (booleanWaitForVideoDownload)
-        {
+        if (booleanWaitForVideoDownload) {
             ; Makes sure that the the progress bar is not unlocked by messages like "Deleting file" etc.
-            If (InStr(A_LoopReadLine, "[download] Destination:"))
-            {
+            if (InStr(A_LoopReadLine, "[download] Destination:")) {
                 tmp_Line := A_LoopReadLine
-                Loop (downloadVideoFormatArray.Length)
-                {
-                    If (InStr(tmp_Line, "." . downloadVideoFormatArray.Get(A_Index)))
-                    {
+                loop (downloadVideoFormatArray.Length) {
+                    if (InStr(tmp_Line, "." . downloadVideoFormatArray.Get(A_Index))) {
                         booleanWaitForVideoDownload := false
                     }
                 }
             }
         }
         ; Scanns the output from the console and extracts the download progress percentage values.
-        Else If (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0 && partProgress < 100)
-        {
+        else if (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) != 0 && partProgress < 100) {
             outString := outMatch[]
             outStringReady := StrReplace(outString, "%")
             outNumberReady := Number(outStringReady)
             ; This avoids filling the progress bar to fast because of too many 100% messages from yt-dlp.
-            If (outNumberReady < 100)
-            {
+            if (outNumberReady < 100) {
                 partProgress := outNumberReady
             }
             ; This marks the end of the download process of the video.
             ; It also deactivates the second if condition above.
-            Else If (outNumberReady = 100)
-            {
+            else if (outNumberReady = 100) {
                 partProgress := 100
             }
         }
         ; The already recorded message is important because the progress bar has to move up one video to avoid issues.
-        If (InStr(A_LoopReadLine, "has already been recorded in the archive"))
-        {
+        if (InStr(A_LoopReadLine, "has already been recorded in the archive")) {
             booleanWaitForVideoDownload := true
             skippedVideoArchiveAmount++
             partProgress := 0
             downloadStatusText.Text := skippedVideoArchiveAmount . " video(s) already in archive file."
             ; Calculates the progress bar value with all videos processed.
-            tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+            tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount +
+                skippedVideoMaxSizeAmount
             currentBarValue := tmpResult * 100
             ; Applies the changes to the GUI progress bar.
             downloadStatusProgressBar.Value := currentBarValue
             Sleep(100)
         }
         ; Same thing as above.
-        Else If (InStr(A_LoopReadLine, "has already been downloaded"))
-        {
+        else if (InStr(A_LoopReadLine, "has already been downloaded")) {
             booleanWaitForVideoDownload := true
             skippedVideoPresentAmount++
             partProgress := 0
             downloadStatusText.Text := skippedVideoPresentAmount . " video(s) already present."
             ; Calculates the progress bar value with all videos processed.
-            tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+            tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount +
+                skippedVideoMaxSizeAmount
             currentBarValue := tmpResult * 100
             ; Applies the changes to the GUI progress bar.
             downloadStatusProgressBar.Value := currentBarValue
             Sleep(100)
         }
         ; This message indicates that the video will be skipped because it is larger than the selected filesize.
-        Else If (InStr(A_LoopReadLine, "does not pass filter (filesize_approx<" .
-            downloadOptionsGUI_SubmitObject.MaxDownloadSizeEdit . "M)"))
-        {
-            If (!booleanSkippingLocked)
-            {
+        else if (InStr(A_LoopReadLine, "does not pass filter (filesize_approx<" .
+            downloadOptionsGUI_SubmitObject.MaxDownloadSizeEdit . "M)")) {
+            if (!booleanSkippingLocked) {
                 booleanWaitForVideoDownload := true
                 booleanSkippingLocked := true
                 skippedVideoMaxSizeAmount++
                 partProgress := 0
                 downloadStatusText.Text := skippedVideoMaxSizeAmount . " video(s) larger than maximum filesize."
                 ; Calculates the progress bar value with all videos processed.
-                tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+                tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount +
+                    skippedVideoMaxSizeAmount
                 currentBarValue := tmpResult * 100
                 ; Applies the changes to the GUI progress bar.
                 downloadStatusProgressBar.Value := currentBarValue
@@ -409,46 +362,39 @@ startOfFileReadLoop:
         }
         ; This message only appears when the previous video processing has been finished.
         ; NOTE: Does only work when using a temp directory as parameter!
-        Else If (InStr(A_LoopReadLine, "[MoveFiles] Moving file"))
-        {
-            If (partProgress = 100)
-            {
+        else if (InStr(A_LoopReadLine, "[MoveFiles] Moving file")) {
+            if (partProgress = 100) {
                 booleanWaitForVideoDownload := true
                 downloadedVideoAmount++
                 partProgress := 0
-                If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox)
-                {
+                if (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox) {
                     downloadStatusText.Text := "Playlist mode: " . downloadedVideoAmount . " video(s) processed."
                 }
-                Else
-                {
-                    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
+                else {
+                    downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount .
+                        " videos."
                 }
             }
         }
-        Else If (booleanSkippingLocked)
-        {
+        else if (booleanSkippingLocked) {
             ; When a video is skipped this method is used to detect if a new video is beeing processed.
-            If (InStr(A_LoopReadLine, "Extracting URL: https://www"))
-            {
+            if (InStr(A_LoopReadLine, "Extracting URL: https://www")) {
                 ; "[youtube:tab]" is considered to be ignored, as it only shows up when downloading a playlist.
-                If (!InStr(A_LoopReadLine, "[youtube:tab] Extracting URL: https://www"))
-                {
+                if (!InStr(A_LoopReadLine, "[youtube:tab] Extracting URL: https://www")) {
                     ; When a new video is beeing processed, skipping it will be unlocked.
                     booleanSkippingLocked := false
                 }
             }
         }
-        If (!downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox)
-        {
+        if (!downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox) {
             ; Calculates the progress bar value with all videos processed.
-            tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount + skippedVideoMaxSizeAmount
+            tmpResult := downloadedVideoAmount + skippedVideoArchiveAmount + skippedVideoPresentAmount +
+                skippedVideoMaxSizeAmount
             currentBarValue := tmpResult * 100 + partProgress
             ; Applies the changes to the GUI progress bar.
             downloadStatusProgressBar.Value := currentBarValue
         }
-        Else
-        {
+        else {
             ; This makes sure that the progress animation is still displayed.
             downloadStatusProgressBar.Value := maximumBarValue - 1
         }
@@ -456,8 +402,7 @@ startOfFileReadLoop:
     }
     ; When the loop reaches the file end it will check if the console log has reached it's end.
     ; In other terms if the downloads have completed or not.
-    While (ProcessExist(hiddenConsolePID))
-    {
+    while (ProcessExist(hiddenConsolePID)) {
         ; Saves the content of the download log file.
         ; Because the console only adds content it is a reliable method to detect added data to the .txt file.
         oldFileContent := FileRead(A_Temp . "\yt_dlp_download_log.txt")
@@ -465,39 +410,33 @@ startOfFileReadLoop:
         Sleep(5000)
         newFileContent := FileRead(A_Temp . "\yt_dlp_download_log.txt")
 
-        If (oldFileContent != newFileContent && !booleanDownloadTerminated)
-        {
+        if (oldFileContent != newFileContent && !booleanDownloadTerminated) {
             ; If there is new data and the download is still running.
-            Goto startOfFileReadLoop
+            goto startOfFileReadLoop
         }
     }
     ; Download finish section.
     downloadStatusText.Text := "Final video processing..."
     ; Makes sure the log powershell windows is closed as well.
-    Try
+    try
     {
         WinClose("ahk_pid " . visualPowershellPID)
     }
     Sleep(500)
-    If (booleanDownloadTerminated)
-    {
+    if (booleanDownloadTerminated) {
         downloadStatusProgressBar.Value := 0
         downloadStatusText.Text := "Download canceled."
     }
-    Else
-    {
+    else {
         downloadStatusProgressBar.Value := maximumBarValue
-        If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox)
-        {
+        if (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox) {
             downloadStatusText.Text := "Playlist mode: " . downloadedVideoAmount . " video(s) processed."
         }
-        Else
-        {
+        else {
             downloadStatusText.Text := "Downloaded " . downloadedVideoAmount . " out of " . videoAmount . " videos."
         }
     }
-    If (!downloadOptionsGUI_SubmitObject.enableSilentDownloadModeCheckbox)
-    {
+    if (!downloadOptionsGUI_SubmitObject.enableSilentDownloadModeCheckbox) {
         MsgBox("Total video amount: " . videoAmount .
             "`nSkipped Videos (already in archive): " . skippedVideoArchiveAmount .
             "`nSkipped Videos (already present): " . skippedVideoPresentAmount .
@@ -507,163 +446,150 @@ startOfFileReadLoop:
 }
 
 ; Adds time, date and further information into the text files. Might also make .JSON comment files prettier in the future.
-postProcessDownloadFiles()
-{
+postProcessDownloadFiles() {
     tmpConfig := readConfigFile("DOWNLOAD_PATH")
-    If (readConfigFile("DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD")
-        && downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox)
-    {
+    if (readConfigFile("DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD")
+    && downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox) {
         ; Prepares for the upcomming download folder content check.
         tmpPath := tmpConfig . "\" . downloadTime . "\media\*.*"
-        If (!FileExist(tmpPath))
-        {
+        if (!FileExist(tmpPath)) {
             SplitPath(tmpPath, , &outDir)
             SplitPath(outDir, , &outDir)
-            Try
+            try
             {
                 DirDelete(outDir, true)
             }
-            Return
+            return
         }
     }
     ; Moves and renames all important text files into the download directory.
-    Try
+    try
     {
-        If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
-        {
+        if (FileExist(A_Temp . "\yt_dlp_download_log.txt")) {
             FileCopy(A_Temp . "\yt_dlp_download_log.txt", readConfigFile("DOWNLOAD_LOG_FILE_LOCATION"), true)
         }
-        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox)
-        {
-            If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
-            {
+        if (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox) {
+            if (FileExist(A_Temp . "\yt_dlp_download_log.txt")) {
                 ; Better alternative for FileCopy because it will append instead of overwrite the old data.
                 FileAppend(FileRead(A_Temp . "\yt_dlp_download_log.txt") . "`n`n#Download time: " . downloadTime
-                    . "`n`n##################################################`n`n",
-                    tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_log.txt")
+                . "`n`n##################################################`n`n",
+                tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_log.txt")
             }
-            If (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")))
-            {
+            if (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION"))) {
                 FileAppend(FileRead(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")) . "`n`n#: " . downloadTime
-                    . "`n`n##################################################`n`n",
-                    tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_archive.txt")
+                . "`n`n##################################################`n`n",
+                tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_archive.txt")
             }
             SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
-            If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
-            {
-                FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt") . "`n`n#Download time: " . downloadTime
-                    . "`n`n##################################################`n`n",
-                    tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_YT_URLS.txt")
+            if (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt")) {
+                FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt") . "`n`n#Download time: " .
+                downloadTime
+                . "`n`n##################################################`n`n",
+                tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_YT_URLS.txt")
             }
         }
-        Else
-        {
-            If (FileExist(A_Temp . "\yt_dlp_download_log.txt"))
-            {
+        else {
+            if (FileExist(A_Temp . "\yt_dlp_download_log.txt")) {
                 SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
                 ; Better alternative for FileCopy because it will append instead of overwrite the old data.
                 FileAppend(FileRead(A_Temp . "\yt_dlp_download_log.txt") . "`n`n#Download time: " . downloadTime
-                    . "`n`n##################################################`n`n",
-                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_log.txt")
+                . "`n`n##################################################`n`n",
+                downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName .
+                "]_download_log.txt")
             }
-            If (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")))
-            {
+            if (FileExist(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION"))) {
                 SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
-                FileAppend(FileRead(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")) . "`n`n#Download time: " . downloadTime
-                    . "`n`n##################################################`n`n",
-                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_archive.txt")
+                FileAppend(FileRead(readConfigFile("DOWNLOAD_ARCHIVE_LOCATION")) . "`n`n#Download time: " .
+                downloadTime
+                . "`n`n##################################################`n`n",
+                downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName .
+                "]_download_archive.txt")
             }
             SplitPath(readConfigFile("URL_FILE_LOCATION"), , &outDir)
-            If (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt"))
-            {
+            if (FileExist(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt")) {
                 SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
-                FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt") . "`n`n#Download time: " . downloadTime
-                    . "`n`n##################################################`n`n",
-                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_YT_URLS.txt")
+                FileAppend(FileRead(outDir . "\YT_URLS_CURRENTLY_DOWNLOADING.txt") . "`n`n#Download time: " .
+                downloadTime
+                . "`n`n##################################################`n`n",
+                downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_YT_URLS.txt")
             }
         }
     }
-    Catch
-    {
+    catch {
         MsgBox("Malfunction while writing to download log file.", "VD - Download Status - Warning!", "O Icon! T1.5")
     }
 
     ; Creates the download summary text file.
-    Try
+    try
     {
-        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox)
-        {
+        if (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox) {
             FileAppend("##################################################`n`nTotal video amount: " . videoAmount .
                 "`nSkipped Videos (already in archive): " . skippedVideoArchiveAmount .
                 "`nSkipped Videos (already present): " . skippedVideoPresentAmount .
                 "`nSkipped Videos (too large): " . skippedVideoMaxSizeAmount .
                 "`nDownloaded Videos: " . downloadedVideoAmount . "`n`n",
                 tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
-            If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox)
-            {
-                FileAppend("#Notice, that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
+            if (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox) {
+                FileAppend(
+                    "#Notice, that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
                     tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
             }
-            Else
-            {
+            else {
                 FileAppend("`n", tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
             }
             FileAppend("#Download time: " . downloadTime . "`n`n##################################################`n`n",
                 tmpConfig . "\" . downloadTime . "\[" . downloadTime . "]_download_summary.txt")
         }
-        Else
-        {
+        else {
             SplitPath(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit, &outFolderName)
             FileAppend("##################################################`n`nTotal video amount: " . videoAmount .
                 "`nSkipped Videos (already in archive): " . skippedVideoArchiveAmount .
                 "`nSkipped Videos (already present): " . skippedVideoPresentAmount .
                 "`nSkipped Videos (too large): " . skippedVideoMaxSizeAmount .
                 "`nDownloaded Videos: " . downloadedVideoAmount . "`n`n",
-                downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
-            If (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox)
-            {
-                FileAppend("#Notice, that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
-                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
+                downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName .
+                "]_download_summary.txt")
+            if (downloadOptionsGUI_SubmitObject.downloadWholePlaylistsCheckbox) {
+                FileAppend(
+                    "#Notice, that playlist mode has been activated, so the values might not be correct. \(.-.)/`n`n`n",
+                    downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName .
+                    "]_download_summary.txt")
             }
-            Else
-            {
-                FileAppend("`n", downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
+            else {
+                FileAppend("`n", downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName .
+                    "]_download_summary.txt")
             }
             FileAppend("#Download time: " . downloadTime . "`n`n##################################################`n`n",
-                downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName . "]_download_summary.txt")
+                downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\[" . outFolderName .
+                "]_download_summary.txt")
         }
     }
 
-    If (downloadOptionsGUI_SubmitObject.downloadVideoCommentsCheckbox)
-    {
+    if (downloadOptionsGUI_SubmitObject.downloadVideoCommentsCheckbox) {
         ; This is the work around for the missing --paths option for comments in yt-dlp (WIP).
-        If (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox)
-        {
-            If (!DirExist(tmpConfig . "\" . downloadTime . "\comments"))
-            {
-                Try
+        if (downloadOptionsGUI_SubmitObject.UseDefaultDownloadLocationCheckbox) {
+            if (!DirExist(tmpConfig . "\" . downloadTime . "\comments")) {
+                try
                 {
                     DirCreate(tmpConfig . "\" . downloadTime . "\comments")
                     Sleep(500)
                 }
             }
-            Try
+            try
             {
                 FileMove(tmpConfig . "\" . downloadTime . "\media\*.info.json",
                     tmpConfig . "\" . downloadTime . "\comments", true)
             }
         }
-        Else
-        {
-            If (!DirExist(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments"))
-            {
-                Try
+        else {
+            if (!DirExist(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments")) {
+                try
                 {
                     DirCreate(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments")
                     Sleep(500)
                 }
             }
-            Try
+            try
             {
                 FileMove(downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\media\*.info.json",
                     downloadOptionsGUI_SubmitObject.CustomDownloadLocationEdit . "\comments", true)
@@ -678,20 +604,16 @@ Works together with handleMainGUI_MenuCheckHandler() to enable / disable certain
 the checkmark array generated by the script GUI.
 @param pStateArray [Array] Should be a valid state array for example the one from the config file.
 */
-toggleHotkey(pStateArray)
-{
+toggleHotkey(pStateArray) {
     ; This array will be manipulated depending on the values in the array above.
     static onOffArray := ["On", "On", "On", "On", "On", "On", "On"]
 
-    Loop (pStateArray.Length)
-    {
+    loop (pStateArray.Length) {
         ; The old pStateArray.Get(A_Index) = true condition has been replaced for compatibillity reasons.
-        If (InStr(pStateArray.Get(A_Index), "0", 0))
-        {
+        if (InStr(pStateArray.Get(A_Index), "0", 0)) {
             onOffArray.InsertAt(A_Index, "Off")
         }
-        Else If (InStr(pStateArray.Get(A_Index), "1", 0))
-        {
+        else if (InStr(pStateArray.Get(A_Index), "1", 0)) {
             onOffArray.InsertAt(A_Index, "On")
         }
     }
@@ -705,8 +627,7 @@ toggleHotkey(pStateArray)
     Hotkey(readConfigFile("RESTORE_URL_FILE_HK"), (*) => restoreURLFile(), onOffArray.Get(7))
 }
 
-reloadScriptPrompt()
-{
+reloadScriptPrompt() {
     ; Number in seconds.
     i := 4
 
@@ -724,23 +645,19 @@ reloadScriptPrompt()
 
     ; The try statement is needed to protect the code from crashing because
     ; of the destroyed GUI when the user presses cancel.
-    Try
+    try
     {
-        while (i >= 0)
-        {
+        while (i >= 0) {
             ; Makes the progress bar feel smoother.
-            Loop (20)
-            {
+            loop (20) {
                 progressBar.Value += 1.25
                 Sleep(50)
             }
 
-            If (i = 1)
-            {
+            if (i = 1) {
                 textField.Text := "The script will be`n reloaded in " . i . " second."
             }
-            Else
-            {
+            else {
                 textField.Text := "The script will be`n reloaded in " . i . " seconds."
             }
             i--
@@ -754,13 +671,13 @@ reloadScriptPrompt()
     }
 }
 
-terminateScriptPrompt()
-{
+terminateScriptPrompt() {
     ; Number in seconds.
     i := 4
 
     terminateScriptGUI := Gui(, "VD - Terminating Script")
-    textField := terminateScriptGUI.Add("Text", "r3 w260 x20 y40", "The script will be`n terminated in " . i . " seconds.")
+    textField := terminateScriptGUI.Add("Text", "r3 w260 x20 y40", "The script will be`n terminated in " . i .
+        " seconds.")
     textField.SetFont("s12")
     textField.SetFont("bold")
     progressBar := terminateScriptGUI.Add("Progress", "w280 h20 x10 y100 cRed backgroundBlack", 0)
@@ -773,23 +690,19 @@ terminateScriptPrompt()
 
     ; The try statement is needed to protect the code from crashing because
     ; of the destroyed GUI when the user presses cancel.
-    Try
+    try
     {
-        while (i >= 0)
-        {
+        while (i >= 0) {
             ; Makes the progress bar feel smoother.
-            Loop (20)
-            {
+            loop (20) {
                 progressBar.Value += 1.25
                 Sleep(50)
             }
 
-            If (i = 1)
-            {
+            if (i = 1) {
                 textField.Text := "The script will be`n terminated in " . i . " second."
             }
-            Else
-            {
+            else {
                 textField.Text := "The script will be`n terminated in " . i . " seconds."
             }
             i--
@@ -806,309 +719,234 @@ Tries to find an existing process via a wildcard.
 NOTE: Currently only supports wildcards containing the beginning of the wanted process.
 @param pWildcard [String] Should be a wildcard process name for example "VideoDownloader.exe".
 */
-findProcessWithWildcard(pWildcard)
-{
+findProcessWithWildcard(pWildcard) {
     SplitPath(pWildcard, , , &outExtension, &outNameNoExt)
     allRunningProcessesNameArray := []
     allRunningProcessesPathArray := []
     ; Filles the array with all existing process names.
-    For (Process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process"))
-    {
+    for (Process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")) {
         allRunningProcessesNameArray.InsertAt(A_Index, Process.Name)
         allRunningProcessesPathArray.InsertAt(A_Index, Process.CommandLine)
     }
     ; Traveres through every object to compare it with the wildcard.
-    For (v in allRunningProcessesNameArray)
-    {
+    for (v in allRunningProcessesNameArray) {
         ; For example if you are process called "VideoDownloader.development-build-6.exe" it
         ; would be sufficient to search for "VideoDownloader.exe" as the [*]+ part allows an
         ; undefined amount of characters to appear between the wildcard name and it's extension.
         ; The condition below makes sure that it does not find the current instance of this script as a proces.
-        If (RegExMatch(v, outNameNoExt . ".*." . outExtension) != 0 && v != A_ScriptName)
-        {
+        if (RegExMatch(v, outNameNoExt . ".*." . outExtension) != 0 && v != A_ScriptName) {
             tmp := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
             result := MsgBox("There is currently another instance of this script running."
                 "`nName: [" . v . "]`nPath: [" . tmp . "]`nContinue at your own risk!"
-                "`nPress [Retry] to terminate the other instance.", "VD - Multiple Script Instances Found!", "ARI Icon! 262144")
+                "`nPress [Retry] to terminate the other instance.", "VD - Multiple Script Instances Found!",
+                "ARI Icon! 262144")
 
-            Switch (result)
-            {
-                Case "Retry":
+            switch (result) {
+                case "Retry":
+                {
+                    try
                     {
-                        Try
-                        {
-                            ProcessClose(v)
-                            If (ProcessWaitClose(v, 5) != 0)
-                            {
-                                Throw ("Could not close the other process.")
-                            }
-                        }
-                        Catch
-                        {
-                            MsgBox("Could not close process :`n"
-                                v . "`nTerminating script.", "VD - Close Process - Error!", "O IconX T3 262144")
-                            ExitApp()
+                        ProcessClose(v)
+                        if (ProcessWaitClose(v, 5) != 0) {
+                            throw ("Could not close the other process.")
                         }
                     }
-                Case "Ignore":
-                    {
-                        ; This option is not recommended because the script is not supposed to run with multiple instances.
-                        Return
-                    }
-                Default:
-                    {
-                        MsgBox("Script terminated.", "VD - Script Status", "O Iconi T1.5")
+                    catch {
+                        MsgBox("Could not close process :`n"
+                            v . "`nTerminating script.", "VD - Close Process - Error!", "O IconX T3 262144")
                         ExitApp()
                     }
+                }
+                case "Ignore":
+                {
+                    ; This option is not recommended because the script is not supposed to run with multiple instances.
+                    return
+                }
+                Default:
+                {
+                    MsgBox("Script terminated.", "VD - Script Status", "O Iconi T1.5")
+                    ExitApp()
+                }
                     ; Stops after the first match.
-                    Break
+                    break
             }
         }
     }
 }
 
 ; A small tour to show off the basic functions of this script.
-scriptTutorial()
-{
+scriptTutorial() {
     result := MsgBox("Would you like to have a short tutorial on how to select videos and some basic functionality?",
         "VideoDownloader Tutorial - Start Tutorial?", "YN Iconi 262144")
-    Switch (result)
-    {
-        Case "Yes":
-            {
-                MsgBox("Hello there... General Kenobi!`n`nWelcome to the tutorial."
-                    "`nIt will try to teach you the basic functionality of this script but keep this in mind:"
-                    "`n`nThis script is still in development phase. This means it might crash or become unresponsive "
-                    . "from time to time.`n`nWith that being said, let's begin with the tutorial."
-                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Important", "O Iconi 262144")
-                MsgBox("This script acts as a simple GUI for yt-dlp.`n`nYou can open the main GUI by pressing: "
-                    "`n[" . expandHotkey(readConfigFile("MAIN_GUI_HK")) . "]."
-                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144")
-                If (WinWaitActive("ahk_id " . mainGUI.Hwnd, , 5) = 0)
+    switch (result) {
+        case "Yes":
+        {
+            MsgBox("Hello there... General Kenobi!`n`nWelcome to the tutorial."
+                "`nIt will try to teach you the basic functionality of this script but keep this in mind:"
+                "`n`nThis script is still in development phase. This means it might crash or become unresponsive "
+                . "from time to time.`n`nWith that being said, let's begin with the tutorial."
+                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Important", "O Iconi 262144")
+            MsgBox("This script acts as a simple GUI for yt-dlp.`n`nYou can open the main GUI by pressing: "
+                "`n[" . expandHotkey(readConfigFile("MAIN_GUI_HK")) . "]."
+                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144")
+            if (WinWaitActive("ahk_id " . mainGUI.Hwnd, , 5) = 0) {
+                hotkey_openMainGUI()
+                MsgBox("The script opened the main GUI for you.`n`nNo worries, you will get the hang of it soon :)",
+                    "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144 T3")
+            }
+            MsgBox(
+                "The main GUI contains a lot of features and menus.`nYou can take some time to explore them by yourself."
+                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
+            if (!WinExist("ahk_id " . mainGUI.Hwnd)) {
+                hotkey_openMainGUI()
+            }
+            else {
+                WinActivate("ahk_id " . mainGUI.Hwnd)
+            }
+            MsgBox(
+                "As you may have noticed, there is a submenu called`n[Active Hotkeys...] when you expand the [Options] menu."
+                "`n`nOn the one hand, it provides a useful list`nof most available hotkeys"
+                "`nand on the other hand, it enables you to select which hotkeys you want to activate or deactivate."
+                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
+            MsgBox("If you want to select a video there are multiple options.`nYou either open the video and press: "
+                "`n[" . expandHotkey(readConfigFile("URL_COLLECT_HK")) .
+                "].`n`nAlternatively hover over the video thumbnail and press: "
+                "`n[" . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")) . "]."
+                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Select Video(s)", "O Iconi 262144")
+            MsgBox("It is possible to manually open the URL file`n(with the main GUI) and edit the saved URLs."
+                "`n`nThe current location of the URL file is: [" . readConfigFile("URL_FILE_LOCATION") . "]."
+                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Find Selected Video(s)", "O Iconi 262144")
+            MsgBox(
+                "To download the URLs saved in the file this script uses`na Python command line application called yt-dlp."
+                "`nThe download options GUI is used to pass the parameters`nto the console and specify various download options."
+                "`n`nPress [" . expandHotkey(readConfigFile("OPTIONS_GUI_HK")) . "] to open the download options GUI."
+                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Download Selected Video(s)",
+                "O Iconi 262144")
+            if (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 5) = 0) {
+                hotkey_openOptionsGUI()
+                MsgBox(
+                    "The script opened the download options GUI for you.`n`nNo worries, you will get the hang of it soon :)",
+                    "VideoDownloader Tutorial - Open Download Options GUI", "O Iconi 262144 T3")
+            }
+            MsgBox(
+                "If you see the download options GUI for the very first time,`nit might be a bit overwhelming, but once you have"
+                "`nused this script a few times it will become more familiar.`n`nQuick tip: "
+                "`nHover over an option with the mouse cursor`nto gain extra information."
+                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Download Options GUI",
+                "O Iconi 262144")
+            MsgBox("Take a look at the top right corner of the download options GUI."
+                "`nPresets can be used to store the current configuration`nand load it later on."
+                "`n`nPressing the save button twice will store the current preset"
+                "`nas the default one which will be loaded when launching this script."
+                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Download Options GUI",
+                "O Iconi 262144")
+            MsgBox(
+                "Depending on your selected options the script will`nclear the URL file and save the content to a backup"
+                "`nfile to possibly restore it."
+                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - After the Finished Download",
+                "O Iconi 262144")
+            MsgBox("To change the script hotkeys and script file paths`nyou can use the config file to do so."
+                "`n`nThe location of the config file is always:`n[" . configFileLocation . "]"
+                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Using the Config File", "O Iconi 262144")
+            result := MsgBox(
+                "You have reached the end of the tutorial.`n`nRemember that you can access all important files"
+                "`nfrom the main GUI window.`nIf you want further information about a button, just hover your mouse "
+                . "above it for a small tooltip.`n`nPress [Yes] to start the tutorial again.",
+                "VideoDownloader Tutorial - End", "YN Iconi 262144")
+            switch (result) {
+                case "Yes":
                 {
-                    hotkey_openMainGUI()
-                    MsgBox("The script opened the main GUI for you.`n`nNo worries, you will get the hang of it soon :)",
-                        "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144 T3")
-                }
-                MsgBox("The main GUI contains a lot of features and menus.`nYou can take some time to explore them by yourself."
-                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
-                If (!WinExist("ahk_id " . mainGUI.Hwnd))
-                {
-                    hotkey_openMainGUI()
-                }
-                Else
-                {
-                    WinActivate("ahk_id " . mainGUI.Hwnd)
-                }
-                MsgBox("As you may have noticed, there is a submenu called`n[Active Hotkeys...] when you expand the [Options] menu."
-                    "`n`nOn the one hand, it provides a useful list`nof most available hotkeys"
-                    "`nand on the other hand, it enables you to select which hotkeys you want to activate or deactivate."
-                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
-                MsgBox("If you want to select a video there are multiple options.`nYou either open the video and press: "
-                    "`n[" . expandHotkey(readConfigFile("URL_COLLECT_HK")) . "].`n`nAlternatively hover over the video thumbnail and press: "
-                    "`n[" . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")) . "]."
-                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Select Video(s)", "O Iconi 262144")
-                MsgBox("It is possible to manually open the URL file`n(with the main GUI) and edit the saved URLs."
-                    "`n`nThe current location of the URL file is: [" . readConfigFile("URL_FILE_LOCATION") . "]."
-                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Find Selected Video(s)", "O Iconi 262144")
-                MsgBox("To download the URLs saved in the file this script uses`na Python command line application called yt-dlp."
-                    "`nThe download options GUI is used to pass the parameters`nto the console and specify various download options."
-                    "`n`nPress [" . expandHotkey(readConfigFile("OPTIONS_GUI_HK")) . "] to open the download options GUI."
-                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Download Selected Video(s)", "O Iconi 262144")
-                If (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 5) = 0)
-                {
-                    hotkey_openOptionsGUI()
-                    MsgBox("The script opened the download options GUI for you.`n`nNo worries, you will get the hang of it soon :)",
-                        "VideoDownloader Tutorial - Open Download Options GUI", "O Iconi 262144 T3")
-                }
-                MsgBox("If you see the download options GUI for the very first time,`nit might be a bit overwhelming, but once you have"
-                    "`nused this script a few times it will become more familiar.`n`nQuick tip: "
-                    "`nHover over an option with the mouse cursor`nto gain extra information."
-                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Download Options GUI", "O Iconi 262144")
-                MsgBox("Take a look at the top right corner of the download options GUI."
-                    "`nPresets can be used to store the current configuration`nand load it later on."
-                    "`n`nPressing the save button twice will store the current preset"
-                    "`nas the default one which will be loaded when launching this script."
-                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Download Options GUI", "O Iconi 262144")
-                MsgBox("Depending on your selected options the script will`nclear the URL file and save the content to a backup"
-                    "`nfile to possibly restore it."
-                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - After the Finished Download", "O Iconi 262144")
-                MsgBox("To change the script hotkeys and script file paths`nyou can use the config file to do so."
-                    "`n`nThe location of the config file is always:`n[" . configFileLocation . "]"
-                    "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Using the Config File", "O Iconi 262144")
-                result := MsgBox("You have reached the end of the tutorial.`n`nRemember that you can access all important files"
-                    "`nfrom the main GUI window.`nIf you want further information about a button, just hover your mouse "
-                    . "above it for a small tooltip.`n`nPress [Yes] to start the tutorial again.",
-                    "VideoDownloader Tutorial - End", "YN Iconi 262144")
-                Switch (result)
-                {
-                    Case "Yes":
-                        {
-                            scriptTutorial
-                        }
+                    scriptTutorial
                 }
             }
+        }
     }
     ; The dialog to disable the tutorial for the next time is only shown when the config file entry mentioned below is true.
-    If (readConfigFile("ASK_FOR_TUTORIAL"))
-    {
+    if (readConfigFile("ASK_FOR_TUTORIAL")) {
         result := MsgBox("Press [Yes] if you want to disable the tutorial`nfor the next time you run this script.",
             "VideoDownloader Tutorial - Disable For Next Time?", "YN Iconi 262144")
-        Switch (result)
-        {
-            Case "Yes":
-                {
-                    editConfigFile("ASK_FOR_TUTORIAL", false)
-                }
+        switch (result) {
+            case "Yes":
+            {
+                editConfigFile("ASK_FOR_TUTORIAL", false)
+            }
         }
     }
 }
 
 /*
-Tries to determine wheter Python is installed on the current system or not.
-@returns [boolean] True, if Python is installed.
+Reads the registry and extracts the current script version.
+If the version in the registry has a build version other than 0, it will append the word "-beta".
+@Returns [String] The version from the registry or "v0.0.0.1" in case the registry value is invalid.
 */
-getPythonInstallionStatus()
-{
-    Try
-    {
-        ; "python" changed to "py" because the recommended Python version is 3.12.
-        RunWait(A_ComSpec ' /c py --version > "' . A_Temp . '\tmp.txt"', , "Hide")
-        If (FileExist(A_Temp . "\tmp.txt"))
-        {
-            ; This means that the command could not be found and Python is not installed.
-            If (FileRead(A_Temp . "\tmp.txt") = "")
-            {
-                Return false
-            }
-            Else
-            {
-                Return true
-            }
-        }
-        Else
-        {
-            Return false
-        }
-    }
-    Catch
-    {
-        Return false
-    }
-}
+getCorrectScriptVersionFromRegistry() {
+    global scriptRegistryDirectory
 
-/*
-Tries to determine wheter yt-dlp is installed on the current system or not.
-@returns [boolean] True, if yt-dlp is installed.
-*/
-getYTDLPInstallionStatus()
-{
-    Try
-    {
-        RunWait(A_ComSpec ' /c yt-dlp --version > "' . A_Temp . '\tmp.txt"', , "Hide")
-        If (FileExist(A_Temp . "\tmp.txt"))
-        {
-            ; This means that the command could not be found and yt-dlp is not installed.
-            If (FileRead(A_Temp . "\tmp.txt") = "")
-            {
-                Return false
-            }
-            Else
-            {
-                Return true
-            }
+    regValue := RegRead(scriptRegistryDirectory, "CURRENT_VERSION", "v0.0.0.1")
+    ; Finds versions matching this format [v1.2.3.4]
+    if (RegExMatch(regValue, "^v\d+\.\d+\.\d+\.(\d+)$", &match)) {
+        buildVersionNumber := match[1]
+        ; A version number with a build version is only used for beta versions.
+        if (buildVersionNumber != 0) {
+            regValue := regValue . "-beta"
+            ; Corrects the version number in the registry.
+            RegWrite(regValue, "REG_SZ", scriptRegistryDirectory, "CURRENT_VERSION")
+            return getCorrectScriptVersionFromRegistry()
         }
-        Else
-        {
-            Return false
-        }
+        return regValue
     }
-    Catch
-    {
-        Return false
+    ; Finds versions matching this format [v1.2.3], [v1.2.3-beta], [1.2.3] or [1.2.3-beta].
+    else if (RegExMatch(regValue, "^v?\d+\.\d+\.\d+(\.\d+)?(-beta)?$", &match)) {
+        return regValue
     }
-}
-
-/*
-Tries to determine wheter the FFmpeg library is present in the correct location or not.
-@returns [boolean] True or false depending on the outcome.
-*/
-getFFmpegInstallionStatus()
-{
-    Try
-    {
-        regValue := RegRead(videoDownloaderRegistryDirectory, "ffmpegLocation", "")
-        ; If the FFmpeg path is valid.
-        If (validatePath(regValue, false) && regValue != "")
-        {
-            If (!FileExist(regValue))
-            {
-                Return false
-            }
-            Else
-            {
-                Return true
-            }
-        }
-        Else
-        {
-            Return false
-        }
+    else {
+        ; In case the version in the registry is invalid.
+        regValue := "v0.0.0.1"
     }
-    Catch
-    {
-        Return false
-    }
+    return regValue
 }
 
 /*
 Shows a prompt to change the script's working directory.
 @returns [String] The path of the new working directory. Either selected by the user or set to the default directory.
 */
-changeWorkingDirectory()
-{
-    regValue := RegRead(videoDownloaderRegistryDirectory, "videoDownloaderWorkingDirectory", "")
-    If (validatePath(regValue, false) && regValue != "")
-    {
+changeWorkingDirectory() {
+    regValue := RegRead(scriptRegistryDirectory, "videoDownloaderWorkingDirectory", "")
+    if (validatePath(regValue, false) && regValue != "") {
         defaultWorkingDirectory := regValue
     }
-    Else
-    {
-        defaultWorkingDirectory := A_AppData . "\LeoTN\VideoDownloader\yt_dlp_autohotkey_gui_files"
+    else {
+        defaultWorkingDirectory := A_AppData . "\LeoTN\VideoDownloader\VideoDownloader"
     }
 
-    path := DirSelect("*" . defaultWorkingDirectory, 3, "Select a working directory. This will be the place for downloaded media, settings and presets.")
-    If (checkForWritingRights(path))
-    {
-        If (!InStr(path, "yt_dlp_autohotkey_gui_files"))
-        {
-            Return path . "\yt_dlp_autohotkey_gui_files"
+    path := DirSelect("*" . defaultWorkingDirectory, 3,
+        "Select a working directory. This will be the place for downloaded media, settings and presets.")
+    if (checkForWritingRights(path)) {
+        if (!InStr(path, "VideoDownloader")) {
+            return path . "\VideoDownloader"
         }
-        Else
-        {
-            Return path
+        else {
+            return path
         }
     }
-    Else
-    {
+    else {
         result := MsgBox("This path cannot be used.`n`n"
             "Please select another path or press [Ignore] to use the default directory which is`n"
             "[" . defaultWorkingDirectory . "].",
             "VD - Invalid Working Directory!", "ARI Icon! Default2")
-        Switch (result)
-        {
-            Case "Retry":
-                {
-                    Return changeWorkingDirectory()
-                }
-            Case "Ignore":
-                {
-                    Return defaultWorkingDirectory
-                }
+        switch (result) {
+            case "Retry":
+            {
+                return changeWorkingDirectory()
+            }
+            case "Ignore":
+            {
+                return defaultWorkingDirectory
+            }
             Default:
-                {
-                    ExitApp()
-                }
+            {
+                ExitApp()
+            }
         }
     }
 }
@@ -1117,48 +955,122 @@ changeWorkingDirectory()
 Checks a given path for writing permissions with the current user rights (the user who launched this script).
 @returns [boolean] True, if the current permissions allow writing to the specified directory. False otherwise.
 */
-checkForWritingRights(pPath)
-{
-    Try
+checkForWritingRights(pPath) {
+    try
     {
         FileAppend("checkForWritingRights", pPath . "\tmp.txt")
         FileDelete(pPath . "\tmp.txt")
     }
-    Catch As error
-    {
-        If (InStr(error.message, "(5) "))
-        {
-            Return false
+    catch as error {
+        if (InStr(error.message, "(5) ")) {
+            return false
         }
-        Else
-        {
+        else {
             MsgBox("[" . A_ThisFunc . "()] [ERROR]`n[" . error.message . "]", "VD - [" . A_ThisFunc . "()]")
             ExitApp()
         }
     }
-    Return true
+    return true
+}
+
+/*
+Checks all GitHub Repository tags to find new versions.
+@returns [boolean] Returns true, when an update is available. False otherwise.
+*/
+checkForAvailableUpdates() {
+    global psUpdateScriptLocation
+    global scriptRegistryDirectory
+
+    ; Does not check for updates, if there is no Internet connection or the script isn't compiled.
+    if (!checkInternetConnection() || !A_IsCompiled) {
+        return false
+    }
+    /*
+    Changes "HKCU\SOFTWARE\LeoTN\VideoDownloader" to "HKCU:SOFTWARE\LeoTN\VideoDownloader"
+    to make the path compatible with PowerShell.
+    */
+    psCompatibleScriptRegistryPath := StrReplace(scriptRegistryDirectory, "\", ":", , , 1)
+    parameterString :=
+        '-pGitHubRepositoryLink "https://github.com/LeoTN/yt-dlp-autohotkey-gui"' .
+        ' -pRegistryDirectory "' . psCompatibleScriptRegistryPath . '"'
+
+    if (readConfigFile("UPDATE_TO_BETA_VERSIONS")) {
+        parameterString .= " -pSwitchConsiderBetaReleases"
+    }
+    ; Calls the PowerShell script to check for available updates.
+    exitCode := RunWait('powershell.exe -executionPolicy bypass -file "'
+        . psUpdateScriptLocation . '" ' . parameterString, , "Hide")
+    switch (exitCode) {
+        ; Available update found.
+        case 101:
+        {
+            ; Extracts the available update from the registry.
+            updateVersion := RegRead(scriptRegistryDirectory, "AVAILABLE_UPDATE", "v0.0.0.1")
+            if (updateVersion == "no_available_update") {
+                return false
+            }
+            createUpdateGUI(updateVersion)
+            return true
+        }
+    }
+    ; Maybe more cases in the future.
+}
+
+/*
+Copies all files from the old version into a backup folder using robocopy.
+@param pBackupParentDirectory [String] Usually the script directory with an additional folder called "VideoDownloader_old_version_backups" at the end.
+*/
+backupOldVersionFiles(pBackupParentDirectory) {
+    global versionFullName
+
+    oldVersion := versionFullName
+    backupDate := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
+    backupFolderName := "VideoDownloader_backup_from_version_" . oldVersion . "_at_" . backupDate
+    sourceDirectory := A_ScriptDir
+    destinationDirectory := pBackupParentDirectory . "\" . backupFolderName
+    ; All subdirectories and files are copied. The folder "VideoDownloader_old_version_backups" is excluded.
+    parameterString := "`"" . sourceDirectory . "`" `"" . destinationDirectory . "`" /E /XD `"" . sourceDirectory .
+        "\VideoDownloader_old_version_backups`""
+    ; Waits 3 seconds before starting the backup process to ensure that the main script has exited already.
+    Run('cmd.exe /c "timeout /t 3 /nobreak && robocopy ' . parameterString . '"', , "Hide")
+    exitScriptWithNotification()
 }
 
 /*
 Tries to ping google.com to determine the computer's Internet connection status.
 @returns [boolean] True, if the computer is connected to the Internet. False otherwise.
 */
-checkInternetConnection()
-{
+checkInternetConnection() {
     ; Checks if the user has an established Internet connection.
-    Try
+    try
     {
         httpRequest := ComObject("WinHttp.WinHttpRequest.5.1")
         httpRequest.Open("GET", "http://www.google.com", false)
         httpRequest.Send()
 
-        If (httpRequest.Status = 200)
-        {
-            Return true
+        if (httpRequest.Status = 200) {
+            return true
         }
     }
 
-    Return false
+    return false
+}
+
+/*
+Terminates the script and shows a tray tip message to inform the user.
+@param pBooleanUseFallbackMessage [boolean] If set to true, will use the hardcoded English version
+of the termination message. This can be useful if the language modules have not been loaded yet.
+*/
+exitScriptWithNotification(pBooleanUseFallbackMessage := false) {
+    if (pBooleanUseFallbackMessage) {
+        TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
+    }
+    else {
+        TrayTip("VideoDownloader terminated. (NO LANGUAGE LOADED)", "VideoDownloader - Status", "Iconi Mute") ; REMOVE [ADD LANGUAGE OPTION]
+    }
+    ; Using ExitApp() twice ensures that the script will be terminated entirely.
+    ExitApp()
+    ExitApp()
 }
 
 /*
@@ -1168,49 +1080,44 @@ Outputs an MsgBox containing information about the error. Allows to be copied to
 @param pBooleanTerminatingError [boolean] If set to true, will force the script to terminate once message disappears.
 @param pMessageTimeout [double] Optional message timeout. Closes the message after a delay of time.
 */
-displayErrorMessage(pErrorObject := unset, pAdditionalErrorMessage := unset, pBooleanTerminatingError := false, pMessageTimeout := unset)
-{
-    If (IsSet(pErrorObject))
-    {
-        errorMessageBlock := "*****ERROR MESSAGE*****`n" . pErrorObject.Message . "`n`n*****ERROR TRIGGER*****`n" . pErrorObject.What
-        If (pErrorObject.Extra != "")
-        {
+displayErrorMessage(pErrorObject := unset, pAdditionalErrorMessage := unset, pBooleanTerminatingError := false,
+    pMessageTimeout := unset) {
+    if (IsSet(pErrorObject)) {
+        errorMessageBlock := "*****ERROR MESSAGE*****`n" . pErrorObject.Message . "`n`n*****ERROR TRIGGER*****`n" .
+            pErrorObject.What
+        if (pErrorObject.Extra != "") {
             errorMessageBlock .= "`n`n*****ADDITIONAL INFO*****`n" . pErrorObject.Extra
         }
         errorMessageBlock .= "`n`n*****FILE*****`n" . pErrorObject.File . "`n`n*****LINE*****`n" . pErrorObject.Line
             . "`n`n*****CALL STACK*****`n" . pErrorObject.Stack
     }
-    If (IsSet(pAdditionalErrorMessage))
-    {
+    if (IsSet(pAdditionalErrorMessage)) {
         errorMessageBlock .= "`n`n#####ADDITIONAL ERROR MESSAGE#####`n" . pAdditionalErrorMessage
     }
-    If (pBooleanTerminatingError)
-    {
+    if (pBooleanTerminatingError) {
         errorMessageBlock .= "`n`nScript has to exit!"
     }
-    If (IsSet(pMessageTimeout))
-    {
-        If (pMessageTimeout > 0)
-        {
-            result := MsgBox(errorMessageBlock . "`n`nPress [Yes] to copy error to clipboard.", "VD - Error Details", "YN IconX T" . pMessageTimeout)
+    if (IsSet(pMessageTimeout)) {
+        if (pMessageTimeout > 0) {
+            result := MsgBox(errorMessageBlock . "`n`nPress [Yes] to copy error to clipboard.", "VD - Error Details",
+                "YN IconX T" . pMessageTimeout)
         }
-        Else
-        {
-            result := MsgBox(errorMessageBlock . "`n`nPress [Yes] to copy error to clipboard.", "VD - Error Details", "YN IconX")
+        else {
+            result := MsgBox(errorMessageBlock . "`n`nPress [Yes] to copy error to clipboard.", "VD - Error Details",
+                "YN IconX")
         }
     }
-    Else
-    {
-        result := MsgBox(errorMessageBlock . "`n`nPress [Yes] to copy error to clipboard.", "VD - Error Details", "YN IconX")
+    else {
+        result := MsgBox(errorMessageBlock . "`n`nPress [Yes] to copy error to clipboard.", "VD - Error Details",
+            "YN IconX")
     }
-    Switch (result) {
-        Case "Yes":
-            {
-                A_Clipboard := errorMessageBlock
-            }
+    switch (result) {
+        case "Yes":
+        {
+            A_Clipboard := errorMessageBlock
+        }
     }
-    If (pBooleanTerminatingError)
-    {
+    if (pBooleanTerminatingError) {
         ExitApp()
         ExitApp()
     }
@@ -1221,21 +1128,18 @@ A simple method to convert an array into a string form.
 @param pArray [Array] Should be an array to convert.
 @returns [String] The array converted into a string form.
 */
-arrayToString(pArray)
-{
+arrayToString(pArray) {
     string := "["
 
-    For (index, value in pArray)
-    {
+    for (index, value in pArray) {
         string .= value
-        if (index < pArray.Length)
-        {
+        if (index < pArray.Length) {
             string .= ","
         }
     }
 
     string .= "]"
-    Return string
+    return string
 }
 
 /*
@@ -1243,12 +1147,11 @@ A simple method to convert a string (in array form) into an array.
 @param pString [String] Should be a string (in array form) to convert.
 @returns [Array] The string converted into an array form.
 */
-stringToArray(pString)
-{
+stringToArray(pString) {
     pString := SubStr(pString, 2, StrLen(pString) - 2)
     array := StrSplit(pString, ",")
 
-    Return array
+    return array
 }
 
 /*
@@ -1256,13 +1159,12 @@ stringToArray(pString)
 @param pHotkey [String] Should be a valid AutoHotkey hotkey for example "+!F4".
 @returns [String] A "decyphered" AutoHotkey hotkey for example "Shift + Alt + F4".
 */
-expandHotkey(pHotkey)
-{
+expandHotkey(pHotkey) {
     hotkeyString := pHotkey
     hotkeyString := StrReplace(hotkeyString, "+", "SHIFT + ")
     hotkeyString := StrReplace(hotkeyString, "^", "CTRL + ")
     hotkeyString := StrReplace(hotkeyString, "!", "ALT + ")
     hotkeyString := StrReplace(hotkeyString, "#", "WIN + ")
 
-    Return hotkeyString
+    return hotkeyString
 }
