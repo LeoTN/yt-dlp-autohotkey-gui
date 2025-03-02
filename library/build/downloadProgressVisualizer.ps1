@@ -1,5 +1,5 @@
 $Host.UI.RawUI.BackgroundColor = "Black"
-$Host.UI.RawUI.ForegroundColor = "Green"
+$Host.UI.RawUI.ForegroundColor = "White"
 $host.UI.RawUI.WindowTitle = "Download is running..."
 Clear-Host
 $logfile = $env:temp + "\yt_dlp_download_log.txt"

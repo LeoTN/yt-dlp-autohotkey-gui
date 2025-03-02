@@ -1,63 +1,58 @@
-name: Bug Report
-description: Report a software bug
-title: "Bug Report"
-labels: ["bug"]
+---
 body:
-- type: checkboxes
-  attributes:
-    label: "Is there an existing request for this?"
-    description: "Please search to see if this bug is already reported."
-    options:
-    - label: "This request is unique."
+  - attributes:
+      description: Please search to see, if this bug is already reported.
+      label: Duplicate Request?
+      options:
+        - label: This request is unique.
+          required: true
+    type: checkboxes
+  - attributes:
+      description: Specify your operating system (e.g. Windows 10 22H2).
+      label: Operating System
+      placeholder: Enter your operating system
+    type: input
+    validations:
       required: true
-
-- type: input
-  attributes:
-    label: "Operating System"
-    description: "Specify your operating system (e.g. Windows 10)."
-    placeholder: "Enter your operating system"
-  validations:
-    required: true
-
-- type: input
-  attributes:
-    label: "Software Version"
-    description: "Provide the version of VideoDownloader you were using (e.g. 1.3.0)."
-    placeholder: "Enter software version"
-  validations:
-    required: true
-
-- type: checkboxes
-  attributes:
-    label: "Issue Type"
-    description: "Select the type of issue you encountered."
-    options:
-    - label: "Crash"
-    - label: "Warning Message"
-    - label: "Other Issue"
-  validations:
-    required: true
-
-- type: textarea
-  attributes:
-    label: "Action(s) Leading to the Issue"
-    description: "Describe the specific actions you took that led to the problem."
-    placeholder: "For example: I performed the following steps..."
-  validations:
-    required: true
-
-- type: textarea
-  attributes:
-    label: "Error Message"
-    description: "If there's an error message, provide it here."
-    placeholder: "Enter the error message (if any)"
-  validations:
-    required: false
-
-- type: textarea
-  attributes:
-    label: "Additional Information"
-    description: "Share any extra details or context that might help in understanding the issue."
-    placeholder: "Space for additional information..."
-  validations:
-    required: false
+  - attributes:
+      description: Provide the version of VideoDownloader you were using (for example v1.2.3).
+      label: Software Version
+      placeholder: Enter software version
+    type: input
+    validations:
+      required: true
+  - attributes:
+      description: Select the type of issue you encountered.
+      label: Issue Type
+      options:
+        - label: Crash
+        - label: Warning Message
+        - label: Other Issue
+    type: checkboxes
+    validations:
+      required: true
+  - attributes:
+      description: Describe the specific actions you took, that led to the problem.
+      label: Action(s) Leading To The Issue
+      placeholder: 'For example: I performed the following steps...'
+    type: textarea
+    validations:
+      required: true
+  - attributes:
+      description: If there's an error message, provide it here.
+      label: Error Message
+      placeholder: Enter the error message (if any)
+    type: textarea
+    validations:
+      required: false
+  - attributes:
+      description: Share any extra details or context that might help in understanding the issue.
+      label: Additional Information
+      placeholder: Space for additional information...
+    type: textarea
+    validations:
+      required: false
+description: Report a software bug
+labels: ["bug"]
+name: Bug Report
+title: Bug Report
