@@ -5,9 +5,10 @@ SendMode "Input"
 CoordMode "Mouse", "Window"
 
 setup_onInit() {
-    createSetupGUI()
     createRequiredFolders()
     checkIfMSISetupIsRequired()
+    ; Putting this behind the setup checks prevents issues when files are missing.
+    createSetupGUI()
     ; The script won't continue until the required dependencies are installed or the GUI is closed.
     while (checkIfFFmpegOrYTDLPSetupIsRequired()) {
         setupGUI.Show()

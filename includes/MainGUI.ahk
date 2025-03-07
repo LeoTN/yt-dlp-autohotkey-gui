@@ -95,28 +95,13 @@ createMainGUI() {
     optionsMenu.Add("Repair script", (*) => handleMainGUI_repairScript())
     optionsMenu.SetIcon("Repair script", "shell32.dll", 41)
 
-    helpMenu := Menu()
-    helpMenu.Add("Version - " . versionFullName, (*) => handleMainGUI_helpSectionEasterEgg())
-    helpMenu.SetIcon("Version - " . versionFullName, "shell32.dll", 79)
-    helpMenu.Add("This repository (yt-dlp-autohotkey-gui)",
-        (*) => Run("https://github.com/LeoTN/yt-dlp-autohotkey-gui#readme"))
-    helpMenu.SetIcon("This repository (yt-dlp-autohotkey-gui)", "shell32.dll", 26)
-    helpMenu.Add("Used repository (yt-dlp)",
-        (*) => Run("https://github.com/yt-dlp/yt-dlp"))
-    helpMenu.SetIcon("Used repository (yt-dlp)", "shell32.dll", 26)
-    helpMenu.Add("Original repository (youtube-downloader-using-ahk)",
-        (*) => Run("https://github.com/LeoTN/youtube-downloader-using-ahk"))
-    helpMenu.SetIcon("Original repository (youtube-downloader-using-ahk)", "shell32.dll", 26)
-    helpMenu.Add("Built in Tutorial", (*) => scriptTutorial())
-    helpMenu.SetIcon("Built in Tutorial", "shell32.dll", 24)
-
     allMenus := MenuBar()
     allMenus.Add("&File", fileMenu)
     allMenus.SetIcon("&File", "shell32.dll", 4)
     allMenus.Add("&Options", optionsMenu)
     allMenus.SetIcon("&Options", "shell32.dll", 317)
-    allMenus.Add("&Info", helpMenu)
-    allMenus.SetIcon("&Info", "shell32.dll", 24)
+    allMenus.Add("&Help", (*) => helpGUI.Show())
+    allMenus.SetIcon("&Help", "shell32.dll", 24)
 
     mainGUI := Gui(, "VD - Control Panel")
     try

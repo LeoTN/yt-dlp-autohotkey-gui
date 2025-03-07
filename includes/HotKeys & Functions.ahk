@@ -774,106 +774,6 @@ findProcessWithWildcard(pWildcard) {
     }
 }
 
-; A small tour to show off the basic functions of this script.
-scriptTutorial() {
-    result := MsgBox("Would you like to have a short tutorial on how to select videos and some basic functionality?",
-        "VideoDownloader Tutorial - Start Tutorial?", "YN Iconi 262144")
-    switch (result) {
-        case "Yes":
-        {
-            MsgBox("Hello there... General Kenobi!`n`nWelcome to the tutorial."
-                "`nIt will try to teach you the basic functionality of this script but keep this in mind:"
-                "`n`nThis script is still in development phase. This means it might crash or become unresponsive "
-                . "from time to time.`n`nWith that being said, let's begin with the tutorial."
-                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Important", "O Iconi 262144")
-            MsgBox("This script acts as a simple GUI for yt-dlp.`n`nYou can open the main GUI by pressing: "
-                "`n[" . expandHotkey(readConfigFile("MAIN_GUI_HK")) . "]."
-                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144")
-            if (WinWaitActive("ahk_id " . mainGUI.Hwnd, , 5) = 0) {
-                hotkey_openMainGUI()
-                MsgBox("The script opened the main GUI for you.`n`nNo worries, you will get the hang of it soon :)",
-                    "VideoDownloader Tutorial - Open Main GUI", "O Iconi 262144 T3")
-            }
-            MsgBox(
-                "The main GUI contains a lot of features and menus.`nYou can take some time to explore them by yourself."
-                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
-            if (!WinExist("ahk_id " . mainGUI.Hwnd)) {
-                hotkey_openMainGUI()
-            }
-            else {
-                WinActivate("ahk_id " . mainGUI.Hwnd)
-            }
-            MsgBox(
-                "As you may have noticed, there is a submenu called`n[Active Hotkeys...] when you expand the [Options] menu."
-                "`n`nOn the one hand, it provides a useful list`nof most available hotkeys"
-                "`nand on the other hand, it enables you to select which hotkeys you want to activate or deactivate."
-                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Main GUI", "O Iconi 262144")
-            MsgBox("If you want to select a video there are multiple options.`nYou either open the video and press: "
-                "`n[" . expandHotkey(readConfigFile("URL_COLLECT_HK")) .
-                "].`n`nAlternatively hover over the video thumbnail and press: "
-                "`n[" . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")) . "]."
-                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Select Video(s)", "O Iconi 262144")
-            MsgBox("It is possible to manually open the URL file`n(with the main GUI) and edit the saved URLs."
-                "`n`nThe current location of the URL file is: [" . readConfigFile("URL_FILE_LOCATION") . "]."
-                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Find Selected Video(s)", "O Iconi 262144")
-            MsgBox(
-                "To download the URLs saved in the file this script uses`na Python command line application called yt-dlp."
-                "`nThe download options GUI is used to pass the parameters`nto the console and specify various download options."
-                "`n`nPress [" . expandHotkey(readConfigFile("OPTIONS_GUI_HK")) . "] to open the download options GUI."
-                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Download Selected Video(s)",
-                "O Iconi 262144")
-            if (WinWaitActive("ahk_id " . downloadOptionsGUI.Hwnd, , 5) = 0) {
-                hotkey_openOptionsGUI()
-                MsgBox(
-                    "The script opened the download options GUI for you.`n`nNo worries, you will get the hang of it soon :)",
-                    "VideoDownloader Tutorial - Open Download Options GUI", "O Iconi 262144 T3")
-            }
-            MsgBox(
-                "If you see the download options GUI for the very first time,`nit might be a bit overwhelming, but once you have"
-                "`nused this script a few times it will become more familiar.`n`nQuick tip: "
-                "`nHover over an option with the mouse cursor`nto gain extra information."
-                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Download Options GUI",
-                "O Iconi 262144")
-            MsgBox("Take a look at the top right corner of the download options GUI."
-                "`nPresets can be used to store the current configuration`nand load it later on."
-                "`n`nPressing the save button twice will store the current preset"
-                "`nas the default one which will be loaded when launching this script."
-                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Use Download Options GUI",
-                "O Iconi 262144")
-            MsgBox(
-                "Depending on your selected options the script will`nclear the URL file and save the content to a backup"
-                "`nfile to possibly restore it."
-                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - After the Finished Download",
-                "O Iconi 262144")
-            MsgBox("To change the script hotkeys and script file paths`nyou can use the config file to do so."
-                "`n`nThe location of the config file is always:`n[" . configFileLocation . "]"
-                "`n`nPress [Okay] to continue.", "VideoDownloader Tutorial - Using the Config File", "O Iconi 262144")
-            result := MsgBox(
-                "You have reached the end of the tutorial.`n`nRemember that you can access all important files"
-                "`nfrom the main GUI window.`nIf you want further information about a button, just hover your mouse "
-                . "above it for a small tooltip.`n`nPress [Yes] to start the tutorial again.",
-                "VideoDownloader Tutorial - End", "YN Iconi 262144")
-            switch (result) {
-                case "Yes":
-                {
-                    scriptTutorial
-                }
-            }
-        }
-    }
-    ; The dialog to disable the tutorial for the next time is only shown when the config file entry mentioned below is true.
-    if (readConfigFile("ASK_FOR_TUTORIAL")) {
-        result := MsgBox("Press [Yes] if you want to disable the tutorial`nfor the next time you run this script.",
-            "VideoDownloader Tutorial - Disable For Next Time?", "YN Iconi 262144")
-        switch (result) {
-            case "Yes":
-            {
-                editConfigFile("ASK_FOR_TUTORIAL", false)
-            }
-        }
-    }
-}
-
 /*
 Reads the registry and extracts the current script version.
 If the version in the registry has a build version other than 0, it will append the word "-beta".
@@ -1074,14 +974,14 @@ exitScriptWithNotification(pBooleanUseFallbackMessage := false) {
 }
 
 /*
-Outputs an MsgBox containing information about the error. Allows to be copied to the clipboard.
+Outputs a little GUI containing information about the error. Allows to be copied to the clipboard.
 @param pErrorObject [Error Object] Usually created when catching an error via Try / Catch.
 @param pAdditionalErrorMessage [String] An optional error message to show.
-@param pBooleanTerminatingError [boolean] If set to true, will force the script to terminate once message disappears.
-@param pMessageTimeout [double] Optional message timeout. Closes the message after a delay of time.
+@param pBooleanTerminatingError [boolean] If set to true, will force the script to terminate once the message disappears.
+@param pMessageTimeoutMilliseconds [double] Optional message timeout. Closes the message after a delay of time.
 */
 displayErrorMessage(pErrorObject := unset, pAdditionalErrorMessage := unset, pBooleanTerminatingError := false,
-    pMessageTimeout := unset) {
+    pMessageTimeoutMilliseconds := unset) {
     if (IsSet(pErrorObject)) {
         errorMessageBlock := "*****ERROR MESSAGE*****`n" . pErrorObject.Message . "`n`n*****ERROR TRIGGER*****`n" .
             pErrorObject.What
@@ -1097,29 +997,61 @@ displayErrorMessage(pErrorObject := unset, pAdditionalErrorMessage := unset, pBo
     if (pBooleanTerminatingError) {
         errorMessageBlock .= "`n`nScript has to exit!"
     }
-    if (IsSet(pMessageTimeout)) {
-        if (pMessageTimeout > 0) {
-            result := MsgBox(errorMessageBlock . "`n`nPress [Yes] to copy error to clipboard.", "VD - Error Details",
-                "YN IconX T" . pMessageTimeout)
-        }
-        else {
-            result := MsgBox(errorMessageBlock . "`n`nPress [Yes] to copy error to clipboard.", "VD - Error Details",
-                "YN IconX")
-        }
+    if (IsSet(pMessageTimeoutMilliseconds)) {
+        ; Hides the GUI and therefore
+        SetTimer((*) => errorGUI.Destroy(), "-" . pMessageTimeoutMilliseconds)
+    }
+
+    funnyErrorMessageArray := Array(
+        "This shouldn't have happened :(",
+        "Well, this is akward...",
+        "Why did we stop?!",
+        "Looks like we're lost in the code jungle...",
+        "That's not supposed to happen!",
+        "Whoopsie daisy, looks like an error!",
+        "Error 404: Sense of humor not found",
+        "Looks like a glitch in the Matrix...",
+        "Houston, we have a problem...",
+        "Unexpected error: Please blame the developer",
+        "Error: Keyboard not responding, press any key to continue... oh wait",
+        "Task failed successfully!"
+    )
+    ; Selects a "random" funny error message to be displayed.
+    funnyErrorMessage := funnyErrorMessageArray.Get(Random(1, funnyErrorMessageArray.Length))
+
+    errorGUI := Gui(, "VideoDownloader - Error")
+
+    errorGUIfunnyErrorMessageText := errorGUI.Add("Text", "yp+10 r4 w300", funnyErrorMessage)
+    errorGUIfunnyErrorMessageText.SetFont("italic S10")
+    errorGUIerrorMessageBlockText := errorGUI.Add("Text", "yp+50", errorMessageBlock)
+
+    errorGUIbuttonGroupBox := errorGUI.Add("GroupBox", "r2.1 w340")
+    errorGUIgitHubIssuePageButton := errorGUI.Add("Button", "xp+10 yp+15 w100 R2 Default",
+        "Report this issue on GitHub")
+    errorGUIgitHubIssuePageButton.OnEvent("Click", (*) => Run(
+        "https://github.com/LeoTN/yt-dlp-autohotkey-gui/issues/new/choose"))
+    errorGUIcopyErrorToClipboardButton := errorGUI.Add("Button", "xp+110 w100 R2", "Copy error to clipboard")
+    errorGUIcopyErrorToClipboardButton.OnEvent("Click", (*) => A_Clipboard := errorMessageBlock)
+
+    if (pBooleanTerminatingError) {
+        errorGUIActionButton := errorGUI.Add("Button", "xp+110 w100 R2", "Exit Script")
     }
     else {
-        result := MsgBox(errorMessageBlock . "`n`nPress [Yes] to copy error to clipboard.", "VD - Error Details",
-            "YN IconX")
+        errorGUIActionButton := errorGUI.Add("Button", "xp+110 w100 R2", "Continue Script")
     }
-    switch (result) {
-        case "Yes":
-        {
-            A_Clipboard := errorMessageBlock
+    errorGUIActionButton.OnEvent("Click", (*) => errorGUI.Destroy())
+    errorGUI.Show()
+    errorGUI.Flash()
+    ; There might be an error with the while condition, once the GUI is destroyed.
+    try
+    {
+        while (WinExist("ahk_id " . errorGUI.Hwnd)) {
+            Sleep(500)
         }
     }
+
     if (pBooleanTerminatingError) {
-        ExitApp()
-        ExitApp()
+        exitScriptWithNotification(true)
     }
 }
 
@@ -1148,9 +1080,7 @@ A simple method to convert a string (in array form) into an array.
 @returns [Array] The string converted into an array form.
 */
 stringToArray(pString) {
-    pString := SubStr(pString, 2, StrLen(pString) - 2)
     array := StrSplit(pString, ",")
-
     return array
 }
 

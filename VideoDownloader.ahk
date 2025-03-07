@@ -15,9 +15,11 @@ CoordMode "Mouse", "Client"
 #Include "ConfigFile.ahk"
 #Include "DownloadOptionsGUI.ahk"
 #Include "FileManager.ahk"
+#Include "HelpGUI.ahk"
 #Include "HotKeys & Functions.ahk"
 #Include "MainGUI.ahk"
 #Include "Setup.ahk"
+#Include "Tutorials.ahk"
 #Include "UpdateGUI.ahk"
 
 onInit()
@@ -67,6 +69,8 @@ onInit() {
     hotkey_onInit()
     mainGUI_onInit()
     optionsGUI_onInit()
+    help_onInit()
+    tutorials_onInit()
     ; Shows a small tutorial to guide the user.
     if (readConfigFile("ASK_FOR_TUTORIAL")) {
         ; scriptTutorial() ; REMOVE [TEMPORARILY DISABLED UNTIL TUTORIAL REWORK]

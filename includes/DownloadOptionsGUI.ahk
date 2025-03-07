@@ -169,7 +169,7 @@ optionsGUI_onInit() {
             Run(downloadOptionsGUITooltipFileLocation . " " . downloadOptionsGUI.Hwnd)
         }
         catch as error {
-            displayErrorMessage(error, "This is not a fatal error.", , 10)
+            displayErrorMessage(error, "This is not a fatal error.", , 10000)
         }
     }
 }
@@ -725,7 +725,7 @@ saveGUISettingsAsPreset(pPresetName, pBooleanTemporary := false, pBooleanDefault
             FileDelete(presetLocationCompleteWithTag)
         }
         catch as error {
-            displayErrorMessage(error, "This is not a fatal error.", , 10)
+            displayErrorMessage(error, "This is not a fatal error.", , 10000)
         }
         return saveGUISettingsAsPreset(pPresetName, pBooleanTemporary, pBooleanDefault)
     }
@@ -856,7 +856,7 @@ loadGUISettingsFromPreset(pPresetName, pBooleanDeletePreset := false, pBooleanSu
             FileDelete(presetLocationComplete)
         }
         catch as error {
-            displayErrorMessage(error, "This is not a fatal error.", , 10)
+            displayErrorMessage(error, "This is not a fatal error.", , 10000)
         }
     }
     handleDownloadOptionsGUI_ResolveElementConflicts()
