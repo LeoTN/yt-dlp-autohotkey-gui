@@ -138,6 +138,104 @@ createDownloadOptionsGUI() {
     cancelDownloadButton.OnEvent("Click", (*) => cancelDownload())
     savePresetButton.OnEvent("Click", (*) => handleDownloadOptionsGUI_Button_savePreset_waitForSecondClick())
     loadPresetButton.OnEvent("Click", (*) => handleDownloadOptionsGUI_Button_loadPreset_waitForSecondClick())
+    /*
+    ********************************************************************************************************************
+    This section creates all the menus.
+    ********************************************************************************************************************
+    */
+    fileSelectionMenuOpen := Menu()
+    fileSelectionMenuOpen.Add("URL-File`t1", (*) => openURLFile())
+    fileSelectionMenuOpen.SetIcon("URL-File`t1", "shell32.dll", 104)
+    fileSelectionMenuOpen.Add("URL-Backup-File`t2", (*) => openURLBackupFile())
+    fileSelectionMenuOpen.SetIcon("URL-Backup-File`t2", "shell32.dll", 46)
+    fileSelectionMenuOpen.Add("URL-Blacklist-File`t3", (*) => openURLBlacklistFile())
+    fileSelectionMenuOpen.SetIcon("URL-Blacklist-File`t3", "shell32.dll", 110)
+    fileSelectionMenuOpen.Add("Config-File`t4", (*) => openConfigFile())
+    fileSelectionMenuOpen.SetIcon("Config-File`t4", "shell32.dll", 70)
+    fileSelectionMenuOpen.Add("Download destination`t5", (*) => handleMainGUI_openDownloadLocation())
+    fileSelectionMenuOpen.SetIcon("Download destination`t5", "shell32.dll", 116)
+
+    fileSelectionMenuDelete := Menu()
+    fileSelectionMenuDelete.Add("URL-File`tShift+1", (*) => deleteFilePrompt("URL-File"))
+    fileSelectionMenuDelete.SetIcon("URL-File`tShift+1", "shell32.dll", 104)
+    fileSelectionMenuDelete.Add("URL-Backup-File`tShift+2", (*) => deleteFilePrompt("URL-Backup-File"))
+    fileSelectionMenuDelete.SetIcon("URL-Backup-File`tShift+2", "shell32.dll", 46)
+    fileSelectionMenuDelete.Add("Latest download`tShift+5", (*) => deleteFilePrompt("latest download"))
+    fileSelectionMenuDelete.SetIcon("Latest download`tShift+5", "shell32.dll", 116)
+
+    fileSelectionMenuReset := Menu()
+    fileSelectionMenuReset.Add("URL-Blacklist-File`tShift+3", (*) => openURLBlacklistFile(true))
+    fileSelectionMenuReset.SetIcon("URL-Blacklist-File`tShift+3", "shell32.dll", 110)
+    fileSelectionMenuReset.Add("Config-File`tShift+4", (*) => createDefaultConfigFile(, true))
+    fileSelectionMenuReset.SetIcon("Config-File`tShift+4", "shell32.dll", 70)
+
+    fileMenu := Menu()
+    fileMenu.Add("&Open...", fileSelectionMenuOpen)
+    fileMenu.SetIcon("&Open...", "shell32.dll", 127)
+    fileMenu.Add("&Delete...", fileSelectionMenuDelete)
+    fileMenu.SetIcon("&Delete...", "shell32.dll", 32)
+    fileMenu.Add("&Reset...", fileSelectionMenuReset)
+    fileMenu.SetIcon("&Reset...", "shell32.dll", 239)
+
+    activeHotkeyMenu := Menu()
+    activeHotkeyMenu.Add("Terminate Script → " . expandHotkey(readConfigFile("TERMINATE_SCRIPT_HK")),
+    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Terminate Script → " .
+        expandHotkey(readConfigFile("TERMINATE_SCRIPT_HK")), 1), "+Radio")
+
+    activeHotkeyMenu.Add("Reload Script → " . expandHotkey(readConfigFile("RELOAD_SCRIPT_HK")),
+    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Reload Script → " .
+        expandHotkey(readConfigFile("RELOAD_SCRIPT_HK")), 2), "+Radio")
+
+    activeHotkeyMenu.Add("Start Download → " . expandHotkey(readConfigFile("DOWNLOAD_HK")),
+    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Start Download → " .
+        expandHotkey(readConfigFile("DOWNLOAD_HK")), 3), "+Radio")
+
+    activeHotkeyMenu.Add("Collect URL Searchbar → " . expandHotkey(readConfigFile("URL_COLLECT_HK")),
+    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Collect URL Searchbar → " .
+        expandHotkey(readConfigFile("URL_COLLECT_HK")), 4), "+Radio")
+
+    activeHotkeyMenu.Add("Collect URL Thumbnail → " . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")),
+    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Collect URL Thumbnail → " .
+        expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")), 5), "+Radio")
+
+    activeHotkeyMenu.Add("Clear URL File → " . expandHotkey(readConfigFile("CLEAR_URL_FILE_HK")),
+    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Clear URL File → " .
+        expandHotkey(readConfigFile("CLEAR_URL_FILE_HK")), 6), "+Radio")
+
+    activeHotkeyMenu.Add("Restore URL File → " . expandHotkey(readConfigFile("RESTORE_URL_FILE_HK")),
+    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Restore URL File → " .
+        expandHotkey(readConfigFile("RESTORE_URL_FILE_HK")), 7), "+Radio")
+
+    activeHotkeyMenu.Add()
+    activeHotkeyMenu.Add("Enable All", (*) => handleMainGUI_MenuCheckAll("activeHotkeyMenu"))
+    activeHotkeyMenu.SetIcon("Enable All", "shell32.dll", 297)
+    activeHotkeyMenu.Add("Disable All", (*) => handleMainGUI_MenuUncheckAll("activeHotkeyMenu"))
+    activeHotkeyMenu.SetIcon("Disable All", "shell32.dll", 132)
+
+    optionsMenu := Menu()
+    optionsMenu.Add("&Active Hotkeys...", activeHotkeyMenu)
+    optionsMenu.SetIcon("&Active Hotkeys...", "shell32.dll", 177)
+    optionsMenu.Add()
+    optionsMenu.Add("Clear URL File", (*) => clearURLFile())
+    optionsMenu.SetIcon("Clear URL File", "shell32.dll", 43)
+    optionsMenu.Add("Restore URL File from Backup", (*) => restoreURLFile())
+    optionsMenu.SetIcon("Restore URL File from Backup", "shell32.dll", 240)
+    optionsMenu.Add("Open Download Options GUI", (*) => hotkey_openOptionsGUI())
+    optionsMenu.SetIcon("Open Download Options GUI", "shell32.dll", 123)
+    optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
+    optionsMenu.SetIcon("Terminate Script", "shell32.dll", 28)
+    optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())
+    optionsMenu.SetIcon("Reload Script", "shell32.dll", 207)
+
+    allMenus := MenuBar()
+    allMenus.Add("&File", fileMenu)
+    allMenus.SetIcon("&File", "shell32.dll", 4)
+    allMenus.Add("&Options", optionsMenu)
+    allMenus.SetIcon("&Options", "shell32.dll", 317)
+    allMenus.Add("&Help", (*) => helpGUI.Show())
+    allMenus.SetIcon("&Help", "shell32.dll", 24)
+
+    downloadOptionsGUI.MenuBar := allMenus
 }
 
 ; Runs a few commands when the script is executed.
