@@ -20,7 +20,7 @@ createHelpGUI() {
     helpGUIListView := helpGUI.Add("ListView", "yp+40 w400 R10 -Multi", helpGUIListViewArray)
     helpGUIListView.OnEvent("DoubleClick", (*) => processDoubleClickedListViewItem())
 
-    helpGUIInfoGroupBox := helpGUI.Add("GroupBox", "xp+170 yp-59 w230 R2", "Script Info")
+    helpGUIInfoGroupBox := helpGUI.Add("GroupBox", "xp+170 yp-65 w230 R2", "Script Info")
 
     local currentVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/" . versionFullName
     local currentVersionString := 'Version: <a href="' . currentVersionLink . '">' . versionFullName . '</a>'

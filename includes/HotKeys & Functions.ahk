@@ -52,7 +52,7 @@ hotkey_openOptionsGUI() {
     {
         static flipflop := true
         if (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd)) {
-            downloadOptionsGUI.Show("w500 h405")
+            downloadOptionsGUI.Show("AutoSize")
             flipflop := false
         }
         else if (!flipflop && WinActive("ahk_id " . downloadOptionsGUI.Hwnd)) {

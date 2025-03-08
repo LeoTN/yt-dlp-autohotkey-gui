@@ -26,7 +26,7 @@ createDownloadOptionsGUI() {
     enableFastDownloadModeCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vEnableFastDownloadModeCheckbox",
         "Fast download mode")
 
-    downloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-120 yp+20 w479 R9.3", "Download Options")
+    downloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-120 yp+23 w479 R9.3", "Download Options")
 
     limitDownloadRateText1 := downloadOptionsGUI.Add("Text", "xp+10 yp+20 vLimitDownloadRateText1",
         "Maximum download rate`nin MB per second.")
@@ -77,7 +77,7 @@ createDownloadOptionsGUI() {
     prioritiseAudioQualityCheckbox := downloadOptionsGUI.Add("Checkbox", "yp+20 vPrioritiseAudioQualityCheckbox",
         "Prefer audio quality")
 
-    fileSystemGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-344 yp+22.5 w260 R5.2", "File Management")
+    fileSystemGroupbox := downloadOptionsGUI.Add("GroupBox", "xp-344 yp+28 w260 R5.2", "File Management")
 
     useExternalParametersForYTDLPCheckbox := downloadOptionsGUI.Add("Checkbox",
         "xp+10 yp+20 vUseExternalParametersForYTDLPCheckbox",
@@ -90,7 +90,7 @@ createDownloadOptionsGUI() {
     customDownloadLocationEdit := downloadOptionsGUI.Add("Edit", "yp+20 w240 Disabled vCustomDownloadLocationEdit",
         "Currently downloading into default directory.")
 
-    startDownloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp+265 yp-90 w205 R5.2", "Download Status")
+    startDownloadGroupbox := downloadOptionsGUI.Add("GroupBox", "xp+263 yp-90 w205 R5.2", "Download Status")
 
     startDownloadButton := downloadOptionsGUI.Add("Button", "xp+10 yp+20 R1 vStartDownloadButton",
         "Start downloading...")
@@ -102,7 +102,7 @@ createDownloadOptionsGUI() {
     downloadStatusText := downloadOptionsGUI.Add("Text", "yp+20 w183 vDownloadStatusText", "Currently not downloading."
     )
 
-    presetSelectionGroupBox := downloadOptionsGUI.Add("GroupBox", "xp+28 yp-371 w165 R3.2", "Presets")
+    presetSelectionGroupBox := downloadOptionsGUI.Add("GroupBox", "xp+28 yp-382 w165 R3.2", "Presets")
 
     selectAndAddPresetsComboBox := downloadOptionsGUI.Add("ComboBox", "xp+10 yp+20 w145 vSelectAndAddPresetsComboBox",
         handleDownloadOptionsGUI_RefreshPresetArray())

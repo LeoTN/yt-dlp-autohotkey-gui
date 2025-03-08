@@ -29,7 +29,7 @@ tutorial_howToFindHelpGUI() {
 
     showDownloadOptionsGUIAndHighlightMenu() {
         hideAllHighlightedElements()
-        downloadOptionsGUI.Show()
+        downloadOptionsGUI.Show("AutoSize")
         currentlyHighlightedControlObject := highlightMenuElement(downloadOptionsGUI.Hwnd, 3)
     }
     highlightSearchBar() {
