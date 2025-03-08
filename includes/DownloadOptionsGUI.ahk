@@ -152,7 +152,7 @@ createDownloadOptionsGUI() {
     fileSelectionMenuOpen.SetIcon("URL-Blacklist-File`t3", "shell32.dll", 110)
     fileSelectionMenuOpen.Add("Config-File`t4", (*) => openConfigFile())
     fileSelectionMenuOpen.SetIcon("Config-File`t4", "shell32.dll", 70)
-    fileSelectionMenuOpen.Add("Download destination`t5", (*) => handleMainGUI_openDownloadLocation())
+    fileSelectionMenuOpen.Add("Download destination`t5", (*) => handleDownloadOptionsGUI_openDownloadLocation())
     fileSelectionMenuOpen.SetIcon("Download destination`t5", "shell32.dll", 116)
 
     fileSelectionMenuDelete := Menu()
@@ -179,37 +179,37 @@ createDownloadOptionsGUI() {
 
     activeHotkeyMenu := Menu()
     activeHotkeyMenu.Add("Terminate Script → " . expandHotkey(readConfigFile("TERMINATE_SCRIPT_HK")),
-    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Terminate Script → " .
+    (*) => handleDownloadOptionsGUI_ToggleCheck("activeHotkeyMenu", "Terminate Script → " .
         expandHotkey(readConfigFile("TERMINATE_SCRIPT_HK")), 1), "+Radio")
 
     activeHotkeyMenu.Add("Reload Script → " . expandHotkey(readConfigFile("RELOAD_SCRIPT_HK")),
-    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Reload Script → " .
+    (*) => handleDownloadOptionsGUI_ToggleCheck("activeHotkeyMenu", "Reload Script → " .
         expandHotkey(readConfigFile("RELOAD_SCRIPT_HK")), 2), "+Radio")
 
     activeHotkeyMenu.Add("Start Download → " . expandHotkey(readConfigFile("DOWNLOAD_HK")),
-    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Start Download → " .
+    (*) => handleDownloadOptionsGUI_ToggleCheck("activeHotkeyMenu", "Start Download → " .
         expandHotkey(readConfigFile("DOWNLOAD_HK")), 3), "+Radio")
 
     activeHotkeyMenu.Add("Collect URL Searchbar → " . expandHotkey(readConfigFile("URL_COLLECT_HK")),
-    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Collect URL Searchbar → " .
+    (*) => handleDownloadOptionsGUI_ToggleCheck("activeHotkeyMenu", "Collect URL Searchbar → " .
         expandHotkey(readConfigFile("URL_COLLECT_HK")), 4), "+Radio")
 
     activeHotkeyMenu.Add("Collect URL Thumbnail → " . expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")),
-    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Collect URL Thumbnail → " .
+    (*) => handleDownloadOptionsGUI_ToggleCheck("activeHotkeyMenu", "Collect URL Thumbnail → " .
         expandHotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK")), 5), "+Radio")
 
     activeHotkeyMenu.Add("Clear URL File → " . expandHotkey(readConfigFile("CLEAR_URL_FILE_HK")),
-    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Clear URL File → " .
+    (*) => handleDownloadOptionsGUI_ToggleCheck("activeHotkeyMenu", "Clear URL File → " .
         expandHotkey(readConfigFile("CLEAR_URL_FILE_HK")), 6), "+Radio")
 
     activeHotkeyMenu.Add("Restore URL File → " . expandHotkey(readConfigFile("RESTORE_URL_FILE_HK")),
-    (*) => handleMainGUI_ToggleCheck("activeHotkeyMenu", "Restore URL File → " .
+    (*) => handleDownloadOptionsGUI_ToggleCheck("activeHotkeyMenu", "Restore URL File → " .
         expandHotkey(readConfigFile("RESTORE_URL_FILE_HK")), 7), "+Radio")
 
     activeHotkeyMenu.Add()
-    activeHotkeyMenu.Add("Enable All", (*) => handleMainGUI_MenuCheckAll("activeHotkeyMenu"))
+    activeHotkeyMenu.Add("Enable All", (*) => handleDownloadOptionsGUI_MenuCheckAll("activeHotkeyMenu"))
     activeHotkeyMenu.SetIcon("Enable All", "shell32.dll", 297)
-    activeHotkeyMenu.Add("Disable All", (*) => handleMainGUI_MenuUncheckAll("activeHotkeyMenu"))
+    activeHotkeyMenu.Add("Disable All", (*) => handleDownloadOptionsGUI_MenuUncheckAll("activeHotkeyMenu"))
     activeHotkeyMenu.SetIcon("Disable All", "shell32.dll", 132)
 
     optionsMenu := Menu()
@@ -243,6 +243,7 @@ optionsGUI_onInit() {
     global downloadOptionsGUITooltipFileLocation
 
     createDownloadOptionsGUI()
+    handleDownloadOptionsGUI_ApplyCheckmarksFromConfigFile("activeHotkeyMenu")
     buildCommandString()
     Sleep(1000)
     ; Checks for the last settings file to restore settings from the last download.
@@ -272,19 +273,211 @@ optionsGUI_onInit() {
     }
 }
 
-cancelDownload() {
-    global booleanDownloadTerminated
+/*
+GUI SUPPORT FUNCTIONS
+-------------------------------------------------
+*/
 
-    result := MsgBox("Do you really want to cancel the running download process ?", "VD - Cancel Download Process?",
-        "YN Icon! 262144")
+/*
+Necessary in place for the normal way of toggeling the checkmark.
+This function also flips the checkMarkArrays values to keep track of the checkmarks.
+@param pMenuName [String] Should be a valid menu name for example "activeHotkeyMenu".
+@param pMenuItemName [String] Should be a valid menu item name from the menu mentioned above.
+@param pMenuItemPosition [int] Should be a valid menu item position. See AHK help for more info about this topic.
+*/
+handleDownloadOptionsGUI_ToggleCheck(pMenuName, pMenuItemName, pMenuItemPosition) {
+    ; Executes the command so that the checkmark becomes visible for the user.
+    %pMenuName%.ToggleCheck(pMenuItemName)
+    ; Registers the change in the matching array.
+    handleDownloadOptionsGUI_MenuCheckHandler(pMenuName, pMenuItemPosition, "toggle")
+}
 
-    if (result = "Yes") {
-        booleanDownloadTerminated := true
+/*
+Checks all menu options from the (most likely) hotkey menu.
+@param pMenuName [String] Should be a valid menu name for example "activeHotkeyMenu".
+*/
+handleDownloadOptionsGUI_MenuCheckAll(pMenuName) {
+    menuItemCount := DllCall("GetMenuItemCount", "ptr", %pMenuName%.Handle)
+
+    loop (MenuItemCount - 3) {
+        %pMenuName%.Check(A_Index . "&")
+        ; Protects the code from the invalid index error caused by the check array further on.
         try
         {
-            ProcessClose(("ahk_pid " . hiddenConsolePID))
-            WinClose(("ahk_pid " . hiddenConsolePID))
+            handleDownloadOptionsGUI_MenuCheckHandler(pMenuName, A_Index, true)
         }
+    }
+}
+
+/*
+Unchecks all menu options from the (most likely) hotkey menu.
+@param pMenuName [String] Should be a valid menu name for example "activeHotkeyMenu".
+*/
+handleDownloadOptionsGUI_MenuUncheckAll(pMenuName) {
+    menuItemCount := DllCall("GetMenuItemCount", "ptr", %pMenuName%.Handle)
+
+    loop (MenuItemCount - 3) {
+        %pMenuName%.Uncheck(A_Index . "&")
+        ; Protects the code from the invalid index error caused by the check array further on.
+        try
+        {
+            handleDownloadOptionsGUI_MenuCheckHandler(pMenuName, A_Index, true)
+        }
+    }
+}
+
+/*
+This function stores all menu items check states. In other words if there is a checkmark next to an option.
+Leave only pBooleanState ommited to receive the current value of a submenu item or every parameter to receive the complete array.
+@param pMenuName [String] Should be a valid menu name for example "activeHotkeyMenu".
+@param pSubMenuPosition [int] Should be the position of a sub menu element from the main menu mentioned above.
+@param pBooleanState [boolean] / [String] Defines the state of the checkmarks to set. Pass "toggle" to invert the checkmark's
+current state.
+*/
+handleDownloadOptionsGUI_MenuCheckHandler(pMenuName := unset, pSubMenuPosition := unset, pBooleanState := unset) {
+    menuCheckArray_activeHotKeyMenu := stringToArray(readConfigFile("HOTKEY_STATE_ARRAY"))
+
+    ; Returns the menu check array if those parameters are omitted.
+    if (!IsSet(pMenuName) || !isSet(pSubMenuPosition)) {
+        return menuCheckArray_activeHotKeyMenu
+    }
+    try
+    {
+        if (pMenuName = "activeHotkeyMenu") {
+            if (pBooleanState = "toggle") {
+                ; Toggles the boolean value at a specific position.
+                menuCheckArray_activeHotKeyMenu[pSubMenuPosition] := !menuCheckArray_activeHotKeyMenu[pSubMenuPosition]
+                editConfigFile("HOTKEY_STATE_ARRAY", menuCheckArray_activeHotKeyMenu)
+            }
+            ; Only if there is a state given to apply to a menu.
+            else if (pBooleanState || !pBooleanState) {
+                menuCheckArray_activeHotKeyMenu[pSubMenuPosition] := pBooleanState
+                editConfigFile("HOTKEY_STATE_ARRAY", menuCheckArray_activeHotKeyMenu)
+            }
+            else {
+                return menuCheckArray_activeHotKeyMenu[pSubMenuPosition]
+            }
+            toggleHotkey(menuCheckArray_activeHotKeyMenu)
+        }
+    }
+    catch as error {
+        displayErrorMessage(error)
+    }
+}
+
+/*
+Applies the checkmarks stored in the config file so that they become visible to the user in the GUI.
+@param pMenuName [String] Should be a valid menu name for example "activeHotkeyMenu".
+*/
+handleDownloadOptionsGUI_ApplyCheckmarksFromConfigFile(pMenuName) {
+    stateArray := stringToArray(readConfigFile("HOTKEY_STATE_ARRAY"))
+
+    if (pMenuName = "activeHotkeyMenu") {
+        loop (stateArray.Length) {
+            if (stateArray.Get(A_Index)) {
+                activeHotkeyMenu.Check(A_Index . "&")
+            }
+            else if (!stateArray.Get(A_Index)) {
+                activeHotkeyMenu.Uncheck(A_Index . "&")
+            }
+            else {
+                throw ("No valid state in state array.")
+            }
+        }
+        stateArray := stringToArray(readConfigFile("HOTKEY_STATE_ARRAY"))
+        toggleHotkey(stateArray)
+    }
+}
+
+; Opens the explorer.
+handleDownloadOptionsGUI_openDownloadLocation() {
+    try
+    {
+        switch (useDefaultDownloadLocationCheckbox.Value) {
+            case 0:
+            {
+                Run(customDownloadLocationEdit.Value)
+            }
+            case 1:
+            {
+                Run(readConfigFile("DOWNLOAD_PATH"))
+            }
+        }
+    }
+    catch as error {
+        displayErrorMessage(error)
+    }
+}
+
+handleDownloadOptionsGUI_helpSectionEasterEgg() {
+    static i := 0
+
+    i++
+    if (i >= 3) {
+        i := 0
+        MsgBox("Looks like some found an easter egg!`n`nIt seems you like testing, just like my friend,"
+            . " who helps me a lot by testing this script for me.`n`nThank you Elias!", "What's that?", "Iconi")
+    }
+}
+
+/*
+Refreshes the download options GUI's preset drop down menu array.
+@returns [Array] An array containing all preset names.
+*/
+handleDownloadOptionsGUI_RefreshPresetArray() {
+    presetArray := []
+    ; Scanns all preset files and fills the array with the file names.
+    loop files (readConfigFile("DOWNLOAD_PRESET_LOCATION") . "\*.ini") {
+        SplitPath(A_LoopFilePath, , , , &outNameNoExt)
+        presetArray.InsertAt(A_Index, outNameNoExt)
+    }
+    else {
+        presetArray.InsertAt(1, "No presets found.")
+    }
+    return presetArray
+}
+
+; Enables the save preset button to have two functions, if either double clicked or single clicked.
+handleDownloadOptionsGUI_Button_savePreset_waitForSecondClick() {
+    static click_amount := 0
+    if (click_amount > 0) {
+        click_amount += 1
+        return
+    }
+
+    click_amount := 1
+    SetTimer(After500, -500)
+
+    After500() {
+        if (click_amount = 1) {
+            saveGUISettingsAsPreset(selectAndAddPresetsComboBox.Text)
+        }
+        else if (click_amount = 2) {
+            saveGUISettingsAsPreset(selectAndAddPresetsComboBox.Text, , true)
+        }
+        click_amount := 0
+    }
+}
+
+; Enables the load preset button to have two functions, if either double clicked or single clicked.
+handleDownloadOptionsGUI_Button_loadPreset_waitForSecondClick() {
+    static click_amount := 0
+    if (click_amount > 0) {
+        click_amount += 1
+        return
+    }
+
+    click_amount := 1
+    SetTimer(After500, -500)
+
+    After500() {
+        if (click_amount = 1) {
+            loadGUISettingsFromPreset(selectAndAddPresetsComboBox.Text)
+        }
+        else if (click_amount = 2) {
+            loadGUISettingsFromPreset(selectAndAddPresetsComboBox.Text, true)
+        }
+        click_amount := 0
     }
 }
 
@@ -721,6 +914,22 @@ buildCommandString() {
     return commandString
 }
 
+cancelDownload() {
+    global booleanDownloadTerminated
+
+    result := MsgBox("Do you really want to cancel the running download process ?", "VD - Cancel Download Process?",
+        "YN Icon! 262144")
+
+    if (result = "Yes") {
+        booleanDownloadTerminated := true
+        try
+        {
+            ProcessClose(("ahk_pid " . hiddenConsolePID))
+            WinClose(("ahk_pid " . hiddenConsolePID))
+        }
+    }
+}
+
 ; The function is used to generate necessary information for the download options GUI tooltip executable.
 generateHWNDArrayFile() {
     global downloadOptionsGUI
@@ -966,65 +1175,4 @@ loadGUISettingsFromPreset(pPresetName, pBooleanDeletePreset := false, pBooleanSu
         return false
     }
     return true
-}
-
-/*
-Refreshes the download options GUI's preset drop down menu array.
-@returns [Array] An array containing all preset names.
-*/
-handleDownloadOptionsGUI_RefreshPresetArray() {
-    presetArray := []
-    ; Scanns all preset files and fills the array with the file names.
-    loop files (readConfigFile("DOWNLOAD_PRESET_LOCATION") . "\*.ini") {
-        SplitPath(A_LoopFilePath, , , , &outNameNoExt)
-        presetArray.InsertAt(A_Index, outNameNoExt)
-    }
-    else {
-        presetArray.InsertAt(1, "No presets found.")
-    }
-    return presetArray
-}
-
-; Enables the save preset button to have two functions, if either double clicked or single clicked.
-handleDownloadOptionsGUI_Button_savePreset_waitForSecondClick() {
-    static click_amount := 0
-    if (click_amount > 0) {
-        click_amount += 1
-        return
-    }
-
-    click_amount := 1
-    SetTimer(After500, -500)
-
-    After500() {
-        if (click_amount = 1) {
-            saveGUISettingsAsPreset(selectAndAddPresetsComboBox.Text)
-        }
-        else if (click_amount = 2) {
-            saveGUISettingsAsPreset(selectAndAddPresetsComboBox.Text, , true)
-        }
-        click_amount := 0
-    }
-}
-
-; Enables the load preset button to have two functions, if either double clicked or single clicked.
-handleDownloadOptionsGUI_Button_loadPreset_waitForSecondClick() {
-    static click_amount := 0
-    if (click_amount > 0) {
-        click_amount += 1
-        return
-    }
-
-    click_amount := 1
-    SetTimer(After500, -500)
-
-    After500() {
-        if (click_amount = 1) {
-            loadGUISettingsFromPreset(selectAndAddPresetsComboBox.Text)
-        }
-        else if (click_amount = 2) {
-            loadGUISettingsFromPreset(selectAndAddPresetsComboBox.Text, true)
-        }
-        click_amount := 0
-    }
 }

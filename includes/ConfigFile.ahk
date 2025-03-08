@@ -48,8 +48,6 @@ config_onInit() {
     global UPDATE_TO_BETA_VERSIONS := false
     ; Defines if the script should ask the user for a brief explaination of it's core functions.
     global ASK_FOR_TUTORIAL := true
-    ; Toggle if the main GUI should be shown on launch.
-    global SHOW_MAIN_GUI_ON_LAUNCH := true
     ; Toggle if the download options GUI should be shown on launch.
     global SHOW_OPTIONS_GUI_ON_LAUNCH := true
     ; This option controls if empty download folders with no media inside should be automatically deleted.
@@ -94,7 +92,6 @@ config_onInit() {
             "CHECK_FOR_UPDATES_AT_LAUNCH",
             "UPDATE_TO_BETA_VERSIONS",
             "ASK_FOR_TUTORIAL",
-            "SHOW_MAIN_GUI_ON_LAUNCH",
             "SHOW_OPTIONS_GUI_ON_LAUNCH",
             "DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD",
             "HOTKEY_STATE_ARRAY",
@@ -122,7 +119,6 @@ config_onInit() {
             "FileLocations",
             "FileLocations",
             "FileLocations",
-            "GeneralSettings",
             "GeneralSettings",
             "GeneralSettings",
             "GeneralSettings",

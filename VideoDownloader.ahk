@@ -17,7 +17,6 @@ CoordMode "Mouse", "Client"
 #Include "FileManager.ahk"
 #Include "HelpGUI.ahk"
 #Include "HotKeys & Functions.ahk"
-#Include "MainGUI.ahk"
 #Include "Setup.ahk"
 #Include "Tutorials.ahk"
 #Include "UpdateGUI.ahk"
@@ -38,7 +37,7 @@ onInit() {
 
     global iconDirectory := assetDirectory . "\icons"
     global scriptIconLocation := iconDirectory . "\green_arrow_icon.ico"
-    global mainGUIBackGroundLocation := iconDirectory . "\main_gui_background.png"
+    global GUIBackgroundImageLocation := iconDirectory . "\main_gui_background.png"
 
     global psScriptDirectory := assetDirectory . "\scripts"
     global psUpdateScriptLocation := psScriptDirectory . "\checkForAvailableUpdates.ps1"
@@ -67,7 +66,6 @@ onInit() {
     readConfigFile("booleanDebugMode")
     checkBlackListFile("createBlackListFile")
     hotkey_onInit()
-    mainGUI_onInit()
     optionsGUI_onInit()
     help_onInit()
     tutorials_onInit()
@@ -81,14 +79,6 @@ onInit() {
         }
         else {
             WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
-        }
-    }
-    if (readConfigFile("SHOW_MAIN_GUI_ON_LAUNCH")) {
-        if (!WinExist("ahk_id " . mainGUI.Hwnd)) {
-            hotkey_openMainGUI()
-        }
-        else {
-            WinActivate("ahk_id " . mainGUI.Hwnd)
         }
     }
     if (readConfigFile("CHECK_FOR_UPDATES_AT_LAUNCH") && !booleanFirstTimeLaunch) {

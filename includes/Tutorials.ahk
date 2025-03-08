@@ -18,7 +18,7 @@ tutorial_howToFindHelpGUI() {
     howToUseHelpGUITutorial.addAction((*) => hideAllHighlightedElements())
     howToUseHelpGUITutorial.addText(
         "At first, you need to click on the [Help] menu in the top right corner of the main window.")
-    howToUseHelpGUITutorial.addAction((*) => showMainGUIAndHighlightMenu())
+    howToUseHelpGUITutorial.addAction((*) => showDownloadOptionsGUIAndHighlightMenu())
     howToUseHelpGUITutorial.addText(
         "You can search these entries with the search bar (highlighted with a red border).")
     howToUseHelpGUITutorial.addAction((*) => highlightSearchBar())
@@ -27,10 +27,10 @@ tutorial_howToFindHelpGUI() {
     ; Makes sure the highlighted controls become normal again.
     howToUseHelpGUITutorial.addExitAction((*) => hideAllHighlightedElements())
 
-    showMainGUIAndHighlightMenu() {
+    showDownloadOptionsGUIAndHighlightMenu() {
         hideAllHighlightedElements()
-        mainGUI.Show()
-        currentlyHighlightedControlObject := highlightMenuElement(mainGUI.Hwnd, 3)
+        downloadOptionsGUI.Show()
+        currentlyHighlightedControlObject := highlightMenuElement(downloadOptionsGUI.Hwnd, 3)
     }
     highlightSearchBar() {
         hideAllHighlightedElements()
@@ -78,7 +78,8 @@ createListViewContentCollectionArray() {
     listViewEntry_1 := ListViewEntry(
         "General", "Tutorial", "How to use the help database",
         ; This will show the window relatively to the main GUI.
-        (*) => calculateInteractiveTutorialGUICoordinates(mainGUI.Hwnd, &x, &y) howToUseHelpGUITutorial.start(x, y)
+        (*) => calculateInteractiveTutorialGUICoordinates(downloadOptionsGUI.Hwnd, &x, &y) howToUseHelpGUITutorial.start(
+            x, y)
     )
     listViewEntry_2 := ListViewEntry("General", "Tutorial", "Getting started",
         ; This will show the window relatively to the help GUI.
@@ -109,14 +110,14 @@ scriptTutorial() {
         MsgBox("Hello there... General Kenobi!`n`nThank you for downloading VideoDownloader!",
             "VideoDownloader - Thanks for Installing", "YN Iconi 262144")
         ; This will show the window relatively to the main GUI.
-        calculateInteractiveTutorialGUICoordinates(mainGUI.Hwnd, &x, &y)
+        calculateInteractiveTutorialGUICoordinates(downloadOptionsGUI.Hwnd, &x, &y)
         howToUseHelpGUITutorial.start(x, y)
     }
 }
 
 minimizeAllGUIs() {
     ; Minimizes all script windows to reduce diversion.
-    if (WinExist("ahk_id " . mainGUI.Hwnd)) {
+    if (WinExist("ahk_id " . downloadOptionsGUI.Hwnd)) {
         WinMinimize()
     }
     if (WinExist("ahk_id " . downloadOptionsGUI.Hwnd)) {

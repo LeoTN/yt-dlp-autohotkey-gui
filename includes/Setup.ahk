@@ -22,7 +22,7 @@ createSetupGUI() {
     setupGUI.MarginX := 0
     setupGUI.MarginY := 0
     ; Add a background image to the GUI.
-    setupGUI.Add("Picture", "x0 y0 w320 h-1 +Center", mainGUIBackGroundLocation)
+    setupGUI.Add("Picture", "x0 y0 w320 h-1 +Center", GUIBackgroundImageLocation)
     dependencyText := setupGUI.Add("Text", "xp+10 yp+5 wp-20 R2 +BackgroundTrans",
         "Required Dependencies")
     dependencyText.SetFont("s12 bold")
@@ -96,7 +96,7 @@ checkIfMSISetupIsRequired() {
     requiredFiles := [
         psUpdateScriptLocation,
         downloadOptionsGUITooltipFileLocation,
-        mainGUIBackGroundLocation,
+        GUIBackgroundImageLocation,
         scriptIconLocation
     ]
     for (i, requiredFile in requiredFiles) {
