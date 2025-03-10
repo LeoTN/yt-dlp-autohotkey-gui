@@ -46,6 +46,28 @@ registerHotkeys() {
     Hotkey("+^!F1", (*) => hotkey_toggleDebugMode(), "On")
 }
 
+; Hotkey support function to open the video list GUI.
+hotkey_openVideoListGUI() {
+    try
+    {
+        static flipflop := true
+        if (!WinExist("ahk_id " . videoListGUI.Hwnd)) {
+            videoListGUI.Show("AutoSize")
+            flipflop := false
+        }
+        else if (!flipflop && WinActive("ahk_id " . videoListGUI.Hwnd)) {
+            videoListGUI.Hide()
+            flipflop := true
+        }
+        else {
+            WinActivate("ahk_id " . videoListGUI.Hwnd)
+        }
+    }
+    catch as error {
+        displayErrorMessage(error)
+    }
+}
+
 ; Hotkey support function to open the script download options GUI.
 hotkey_openOptionsGUI() {
     try
@@ -62,6 +84,9 @@ hotkey_openOptionsGUI() {
         else {
             WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
         }
+    }
+    catch as error {
+        displayErrorMessage(error)
     }
     global lastDownloadPath := ""
 }

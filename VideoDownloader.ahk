@@ -20,6 +20,7 @@ CoordMode "Mouse", "Client"
 #Include "Setup.ahk"
 #Include "Tutorials.ahk"
 #Include "UpdateGUI.ahk"
+#Include "VideoListGUI.ahk"
 
 onInit()
 
@@ -28,7 +29,7 @@ onInit() {
     ; This folder will contain all other files.
     global scriptMainDirectory := A_ScriptDir . "\VideoDownloader"
     ; Working directory for downloads, settings and presets.
-    global scriptWorkingDirectory := scriptMainDirectory ; REMOVE ADD OPTION TO CHANGE
+    global scriptWorkingDirectory := scriptMainDirectory ; REMOVE [ADD OPTION TO CHANGE]
 
     global assetDirectory := scriptMainDirectory . "\assets"
 
@@ -69,6 +70,7 @@ onInit() {
     optionsGUI_onInit()
     help_onInit()
     tutorials_onInit()
+    videoListGUI_onInit()
     ; Shows a small tutorial to guide the user.
     if (readConfigFile("ASK_FOR_TUTORIAL")) {
         ; scriptTutorial() ; REMOVE [TEMPORARILY DISABLED UNTIL TUTORIAL REWORK]

@@ -220,8 +220,8 @@ createDownloadOptionsGUI() {
     optionsMenu.SetIcon("Clear URL File", "shell32.dll", 43)
     optionsMenu.Add("Restore URL File from Backup", (*) => restoreURLFile())
     optionsMenu.SetIcon("Restore URL File from Backup", "shell32.dll", 240)
-    optionsMenu.Add("Open Download Options GUI", (*) => hotkey_openOptionsGUI())
-    optionsMenu.SetIcon("Open Download Options GUI", "shell32.dll", 123)
+    optionsMenu.Add("Open New Download Window (Beta)", (*) => hotkey_openVideoListGUI()) ; REMOVE
+    optionsMenu.SetIcon("Open New Download Window (Beta)", "shell32.dll", 123) ; REMOVE
     optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
     optionsMenu.SetIcon("Terminate Script", "shell32.dll", 28)
     optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())

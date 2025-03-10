@@ -279,7 +279,6 @@ Stores all data required to create an entry in a list view element.
 @param pType [String] The type of content, for instance, Tutorial or Info.
 @param pTitle[String] The title of the entry.
 @param pAction [Function] Can be a fat arrow function ((*) =>) or a function call (doSomething()).
-@param pEntryIndex [int] Should be increased by 1 each time a new entry is created. Starting with 1 initially.
 */
 class ListViewEntry {
     __New(pTopic, pType, pTitle, pAction) {
