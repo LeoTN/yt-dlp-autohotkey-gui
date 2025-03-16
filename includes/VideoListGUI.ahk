@@ -3,9 +3,32 @@
 SendMode "Input"
 CoordMode "Mouse", "Window"
 
+/*
+Allows the DELETE key to have the same function as clicking the remove video from list button.
+This is done to allow the user to delete videos from the list by pressing the DELETE key.
+It only works while the video list GUI is the active window.
+*/
+#HotIf (WinActive("ahk_id " . videoListGUI.Hwnd))
+Delete:: {
+    handleVideoListGUI_removeVideoFromListButton_onClick("", "")
+}
+#HotIf
+
+/*
+Allows the ENTER key to function the same way as the add video to list button.
+This makes adding a video URL more convenient as the user can simply press enter while focused on the URL input field.
+Only works while the URL input field or the playlist range input field is focused.
+*/
+#HotIf (ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoURLInputEdit.Hwnd || ControlGetFocus("ahk_id " .
+    videoListGUI.Hwnd) == addVideoSpecifyPlaylistRangeInputEdit.Hwnd)
+Enter:: {
+    handleVideoListGUI_addVideoToListButton_onClick("", "")
+}
+#HotIf
+
 createVideoListGUI() {
     global
-    videoListGUI := Gui(, "VD - Video List")
+    videoListGUI := Gui("+OwnDialogs", "VD - Video List")
     ; Controlls that display the currently selected video.
     currentlySelectedVideoGroupBox := videoListGUI.Add("GroupBox", "w300 h390", "Currently Selected Video")
     videoTitleText := videoListGUI.Add("Text", "xp+10 yp+20 w280 R1 -Wrap", "Video Title")
@@ -14,9 +37,9 @@ createVideoListGUI() {
     videoThumbnailImage := videoListGUI.Add("Picture", "w280 h157.5 yp+20 +AltSubmit", GUIBackgroundImageLocation)
     ; Controls that change the download settings for the video.
     videoDesiredFormatText := videoListGUI.Add("Text", "yp+172.5", "Desired Format")
-    videoDesiredFormatDDL := videoListGUI.Add("DropDownList", "w200 yp+20 Choose1", ["None"])
+    videoDesiredFormatDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
     videoDesiredSubtitleText := videoListGUI.Add("Text", "yp+30", "Desired Subtitle")
-    videoDesiredSubtitleDDL := videoListGUI.Add("DropDownList", "w200 yp+20 Choose1", ["None"])
+    videoDesiredSubtitleDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
     videoAdvancedDownloadSettingsButton := videoListGUI.Add("Button", "w280 yp+30", "Advanced Download Settings")
     ; Video list controls.
     videoListSearchBarText := videoListGUI.Add("Text", "xm+310 ym", "Search the Video List")
@@ -43,7 +66,7 @@ createVideoListGUI() {
     ; Import and export elements.
     importVideoListButton := videoListGUI.Add("Button", "xp+200 yp-50 w75", "Import")
     exportVideoListButton := videoListGUI.Add("Button", "yp xp+85 w75", "Export")
-    exportOnlySelectedVideosCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Only export selected videos") ; REMOVE
+    exportOnlySelectedVideosCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Only export selected videos")
     autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20", "Auto export video list (WIP)") ; REMOVE
     ; Controls that are relevant for downloading the videos in the video list.
     downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download (WIP)") ; REMOVE
@@ -87,6 +110,8 @@ createVideoListGUI() {
     downloadOnlySelectedVideosButton.OnEvent("Click", handleVideoListGUI_downloadOnlySelectedVideosButton_onClick)
     downloadSelectDownloadDirectoryButton.OnEvent("Click",
         handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick)
+    ; Enables the help button in the MsgBox which informs the user once they entered an incorrect playlist range index.
+    OnMessage(0x0053, handleVideoListGUI_invalidPlaylistRangeIndexMsgBoxHelpButton)
 
     ; Add a temporary video list view element. When removing it, there will be the no entries entry.
     tmpVideoMetaDataObject := Object()
@@ -104,9 +129,9 @@ createVideoListGUI() {
 videoListGUI_onInit() {
     createVideoListGUI()
     videoListGUI.Show() ; REMOVE
-    VideoListViewEntry("https://www.youtube.com/watch?v=mQlqofX3wfA")
-    VideoListViewEntry("https://www.youtube.com/watch?v=GFlSxPivviQ")
-    VideoListViewEntry("fake url")
+    VideoListViewEntry("https://www.youtube.com/watch?v=mQlqofX3wfA") ; REMOVE
+    VideoListViewEntry("https://www.youtube.com/watch?v=GFlSxPivviQ") ; REMOVE
+    VideoListViewEntry("fake url") ; REMOVE
 }
 
 handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
@@ -117,7 +142,7 @@ handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
 }
 
 handleVideoListGUI_videoAdvancedDownloadSettingsButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1")
+    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
 }
 
 handleVideoListGUI_videoListSearchBarInputEdit_onChange(pEdit, pInfo) {
@@ -201,9 +226,21 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
     if (videoURL == "") {
         return
     }
-    if (!RegExMatch(videoURL, '^(https?:\/\/)?([\w\-]+\.)+[\w]{2,}(\/[^\s]*)?$')) {
+    ; Checks if the entered string is a valid URL.
+    regExString := '^(https?:\/\/)?([\w\-]+\.)+[\w]{2,}(\/[^\s]*)?$'
+    if (!RegExMatch(videoURL, regExString)) {
         MsgBox("Please enter a valid URL.", "VD - Invalid URL", "O Icon! 262144 T1")
         return
+    }
+    ; Only relevant when downloading specific parts of a playlist.
+    if (addVideoURLUsePlaylistRangeCheckbox.Value) {
+        ; Checks if the provided playlist range index string has a correct syntaxt (1-2 or 1:2 for example).
+        regExString := '^(\d+([-:]\d+)?)(,\d+([-:]\d+)?)*$'
+        if (!RegExMatch(addVideoSpecifyPlaylistRangeInputEdit.Value, regExString)) {
+            result := MsgBox("The provided playlist range index is invalid!", "VD - Invalid Playlist Range Index",
+                "O Icon! 16384 Owner" . videoListGUI.Hwnd)
+            return
+        }
     }
     ; This means the provided URL contains a refference to a playlist.
     if (addVideoURLIsAPlaylistCheckbox.Value) {
@@ -216,13 +253,27 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
         else {
             playlistVideoMetaDataObjectArray := extractVideoMetaDataPlaylist(videoURL)
         }
-        ; Creates a new video list view entry object for each video.
-        for (index, videoMetaDataObject in playlistVideoMetaDataObjectArray) {
-            /*
-            Create a new video entry but do not update the video list view element.
-            When updating the element for each object, there is a flickering effect which is unpleasant to look at.
-            */
-            newVideoEntry := VideoListViewEntry(videoMetaDataObject, false)
+        ; This happens when the playlist could not be found.
+        if (playlistVideoMetaDataObjectArray.Length == 0) {
+            tmpVideoMetaDataObject := Object()
+            tmpVideoMetaDataObject.VIDEO_TITLE := "playlist_not_found: " . videoURL
+            tmpVideoMetaDataObject.VIDEO_ID := ""
+            tmpVideoMetaDataObject.VIDEO_URL := ""
+            tmpVideoMetaDataObject.VIDEO_UPLOADER := "Not found"
+            tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
+            tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "Not found"
+            tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
+            newVideoEntry := VideoListViewEntry(tmpVideoMetaDataObject)
+        }
+        else {
+            ; Creates a new video list view entry object for each video.
+            for (index, videoMetaDataObject in playlistVideoMetaDataObjectArray) {
+                /*
+                Create a new video entry but do not update the video list view element.
+                When updating the element for each object, there is a flickering effect which is unpleasant to look at.
+                */
+                newVideoEntry := VideoListViewEntry(videoMetaDataObject, false)
+            }
         }
         newVideoEntry.updateVideoListViewElement()
     }
@@ -240,7 +291,8 @@ handleVideoListGUI_removeVideoFromListButton_onClick(pButton, pInfo) {
     ; Prompts the user to confirm the deletion of one video element.
     if (listViewSelectedElementsCount == 1 &&
         removeVideoConfirmDeletionCheckbox.Value && !removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.Value) {
-        result := MsgBox("Do you really want to delete this video?", "VD - Confirm Deletion", "YN Icon? 262144 T15")
+        result := MsgBox("Do you really want to delete this video?", "VD - Confirm Deletion",
+            "YN Icon? 262144 T15")
         if (result != "Yes") {
             return
         }
@@ -284,11 +336,11 @@ handleVideoListGUI_removeVideoConformDeletionCheckbox_onClick(pCheckbox, pInfo) 
 }
 
 handleVideoListGUI_importVideoListButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1")
+    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
 }
 
 handleVideoListGUI_exportVideoListButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1")
+    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
 }
 
 handleVideoListGUI_videoListView_onItemSelect(pListView, pSelectedElementIndex, pBooleanElementWasSelected) {
@@ -313,11 +365,11 @@ handleVideoListGUI_videoListView_onItemSelect(pListView, pSelectedElementIndex, 
 }
 
 handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1")
+    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
 }
 
 handleVideoListGUI_downloadOnlySelectedVideosButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1")
+    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
 }
 
 handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo) {
@@ -343,6 +395,10 @@ handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo)
         return
     }
     downloadSelectDownloadDirectoryInputEdit.Value := downloadDirectory
+}
+
+handleVideoListGUI_invalidPlaylistRangeIndexMsgBoxHelpButton(*) {
+    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
 }
 
 /*
@@ -567,7 +623,8 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "0") {
         videoMetaDataObject.VIDEO_DURATION_STRING := ""
         ; Extract the meta data from the .INI file.
         for (property, value in videoMetaDataObject.OwnProps()) {
-            videoMetaDataObject.%property% := IniRead(A_LoopFileFullPath, "VideoMetaData", property, "Not found")
+            videoMetaDataObject.%property% := IniRead(A_LoopFileFullPath, "VideoMetaData", property,
+                "Not found")
         }
         ; We have to find out the extension of the thumbnail file because we don't know it in advance.
         videoID := videoMetaDataObject.VIDEO_ID
@@ -639,7 +696,8 @@ class VideoListViewEntry {
             ; Video formats.
             "Automatically choose best video format", "mp4", "webm", "avi", "flv", "mkv", "mov",
             ; Audio formats.
-            "Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "aac", "alac", "opus", "vorbis"
+            "Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "aac", "alac", "opus",
+            "vorbis"
         ]
         ; This option changes when the user selects a different format in the video list GUI.
         this.desiredFormatArrayCurrentlySelectedIndex := 1
@@ -661,8 +719,10 @@ class VideoListViewEntry {
     generateDownloadCommandPart() {
         this.downloadCommandPart := '"' . this.videoURL . '" '
         desiredFormat := this.desiredFormatArray[this.desiredFormatArrayCurrentlySelectedIndex]
-        videoFormatArray := ["Automatically choose best video format", "mp4", "webm", "avi", "flv", "mkv", "mov"]
-        audioFormatArray := ["Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "aac", "alac",
+        videoFormatArray := ["Automatically choose best video format", "mp4", "webm", "avi", "flv", "mkv",
+            "mov"]
+        audioFormatArray := ["Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "aac",
+            "alac",
             "opus", "vorbis"]
 
         ; In case the user selected a video format.
@@ -761,6 +821,10 @@ class VideoListViewEntry {
         videoListView.Delete()
         for (key, value in videoListViewContentMap) {
             addVideoListViewEntryToListView(value)
+        }
+        ; Sorts the videos in case a search prompt is present in the search field.
+        if (videoListSearchBarInputEdit.Value != "") {
+            handleVideoListGUI_videoListSearchBarInputEdit_onChange(videoListSearchBarInputEdit, "")
         }
     }
 }
