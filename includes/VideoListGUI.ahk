@@ -56,7 +56,7 @@ createVideoListGUI() {
     addVideoURLUsePlaylistRangeCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
         "Only add videos in a specific range")
     addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20", "Index Range")
-    addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w100 +Disabled", "0")
+    addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w100 +Disabled", "1")
     ; Remove video elements.
     removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200", "Remove Selected Video(s) From List")
     removeVideoConfirmDeletionCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30",
@@ -82,6 +82,10 @@ createVideoListGUI() {
     downloadSelectDownloadDirectoryButton := videoListGUI.Add("Button", "xp+260 yp+1 w20 h20", "...")
     downloadProgressText := videoListGUI.Add("Text", "xp-260 yp+29", "Downloaded 0 / 0 (WIP)") ; REMOVE
     downloadProgressBar := videoListGUI.Add("Progress", "yp+20 w280")
+    ; Status bar
+    videoListGUIStatusBar := videoListGUI.Add("StatusBar", , "Add a video URL to start")
+    videoListGUIStatusBar.SetIcon("shell32.dll", 222)
+    videoListGUIStatusBar.loadingAnimationIsPlaying := false
 
     ; Adds the event handlers for the video list GUI.
     videoDesiredFormatDDL.OnEvent("Change", handleVideoListGUI_allCurrentlySelectedVideoElements_onChange)
@@ -129,9 +133,9 @@ createVideoListGUI() {
 videoListGUI_onInit() {
     createVideoListGUI()
     videoListGUI.Show() ; REMOVE
-    VideoListViewEntry("https://www.youtube.com/watch?v=mQlqofX3wfA") ; REMOVE
-    VideoListViewEntry("https://www.youtube.com/watch?v=GFlSxPivviQ") ; REMOVE
-    VideoListViewEntry("fake url") ; REMOVE
+    /*  VideoListViewEntry("https://www.youtube.com/watch?v=mQlqofX3wfA") ; REMOVE
+     VideoListViewEntry("https://www.youtube.com/watch?v=GFlSxPivviQ") ; REMOVE
+    VideoListViewEntry("fake url") ; REMOVE */
 }
 
 handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
@@ -235,7 +239,7 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
     ; Only relevant when downloading specific parts of a playlist.
     if (addVideoURLUsePlaylistRangeCheckbox.Value) {
         ; Checks if the provided playlist range index string has a correct syntaxt (1-2 or 1:2 for example).
-        regExString := '^(\d+([-:]\d+)?)(,\d+([-:]\d+)?)*$'
+        regExString := '^([1-9]\d*([-:]\d+)?)(,[1-9]\d*([-:]\d+)?)*$'
         if (!RegExMatch(addVideoSpecifyPlaylistRangeInputEdit.Value, regExString)) {
             result := MsgBox("The provided playlist range index is invalid!", "VD - Invalid Playlist Range Index",
                 "O Icon! 16384 Owner" . videoListGUI.Hwnd)
@@ -401,6 +405,68 @@ handleVideoListGUI_invalidPlaylistRangeIndexMsgBoxHelpButton(*) {
     MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
 }
 
+; Shows a neat little loading animation in the status bar.
+handleVideoListGUI_videoListGUIStatusBar_startPlaylistAnimation() {
+    statusBarText := "Extracting playlist data..."
+    videoListGUIStatusBar.loadingAnimationIsPlaying := true
+    spinnerCharArray := [
+        "[💾         ]", "[ 💾        ]", "[  💾       ]", "[   💾      ]", "[    💾     ]",
+        "[     💾    ]", "[      💾   ]", "[       💾  ]", "[        💾 ]", "[         💾]",
+        "[        💾 ]", "[       💾  ]", "[      💾   ]", "[     💾    ]", "[    💾     ]",
+        "[   💾      ]", "[  💾       ]", "[ 💾        ]"
+    ]
+    SetTimer(step, 150)
+    step() {
+        ; Arrays in AHK start with the index of 1.
+        static i := 1
+        if (!videoListGUIStatusBar.loadingAnimationIsPlaying) {
+            SetTimer(step, 0)
+            return
+        }
+        currentChar := spinnerCharArray[i]
+        videoListGUIStatusBar.SetText(statusBarText . " " . currentChar)
+        ; Increases the index for the next time this function is called.
+        i := Mod(i, spinnerCharArray.Length) + 1
+    }
+}
+
+handleVideoListGUI_videoListGUIStatusBar_stopPlaylistAnimation() {
+    statusBarText := "Finished playlist information extraction"
+    videoListGUIStatusBar.loadingAnimationIsPlaying := false
+    videoListGUIStatusBar.SetText(statusBarText)
+}
+
+; Shows a neat little loading animation in the status bar.
+handleVideoListGUI_videoListGUIStatusBar_startVideoAnimation() {
+    statusBarText := "Extracting video data..."
+    videoListGUIStatusBar.loadingAnimationIsPlaying := true
+    spinnerCharArray := [
+        "[🎞️         ]", "[ 🎞️        ]", "[  🎞️       ]", "[   🎞️      ]", "[    🎞️     ]",
+        "[     🎞️    ]", "[      🎞️   ]", "[       🎞️  ]", "[        🎞️ ]", "[         🎞️]",
+        "[        🎞️ ]", "[       🎞️  ]", "[      🎞️   ]", "[     🎞️    ]", "[    🎞️     ]",
+        "[   🎞️      ]", "[  🎞️       ]", "[ 🎞️        ]"
+    ]
+    SetTimer(step, 150)
+    step() {
+        ; Arrays in AHK start with the index of 1.
+        static i := 1
+        if (!videoListGUIStatusBar.loadingAnimationIsPlaying) {
+            SetTimer(step, 0)
+            return
+        }
+        currentChar := spinnerCharArray[i]
+        videoListGUIStatusBar.SetText(statusBarText . " " . currentChar)
+        ; Increases the index for the next time this function is called.
+        i := Mod(i, spinnerCharArray.Length) + 1
+    }
+}
+
+handleVideoListGUI_videoListGUIStatusBar_stopVideoAnimation() {
+    statusBarText := "Finished video information extraction"
+    videoListGUIStatusBar.loadingAnimationIsPlaying := false
+    videoListGUIStatusBar.SetText(statusBarText)
+}
+
 /*
 Allows to search for elements in the video list view element.
 @param pSearchString [String] A string to search for.
@@ -502,22 +568,27 @@ extractVideoMetaData(pVideoURL) {
     ; The video thumbnail will be stored and it's location saved in the object.
     thumbnailFileLocation := tempWorkingDirectory . "\" . currentTime . ".%(ext)s"
 
-    ; This object stores the video metadata.
+    ; This object stores the video metadata which yt-dlp should extract.
     videoMetaDataObject := Object()
     videoMetaDataObject.VIDEO_TITLE := "%(title)s"
+    videoMetaDataObject.VIDEO_ID := "%(id)s"
     videoMetaDataObject.VIDEO_URL := "%(webpage_url)s"
     videoMetaDataObject.VIDEO_UPLOADER := "%(uploader)s"
     videoMetaDataObject.VIDEO_UPLOADER_URL := "%(uploader_url)s"
     videoMetaDataObject.VIDEO_DURATION_STRING := "%(duration_string)s"
-    ; Build the string for yt-dlp.
+    ; Build the meta data string for yt-dlp.
     relevantMetaDataString := "[VideoMetaData]`n"
     for (property, value in videoMetaDataObject.OwnProps()) {
         relevantMetaDataString .= property . "=" . value . "`n"
     }
-    ytdlpCommand := '"' . YTDLPFileLocation
-        . '" --skip-download --no-playlist --convert-thumbnails "jpg/png" --output "thumbnail:'
-        . thumbnailFileLocation . '" --write-thumbnail --print-to-file "' . relevantMetaDataString . '" "'
-        . metaDataFileLocation . '" --ffmpeg-location "' . ffmpegDirectory . '" "' . pVideoURL . '"'
+    ; Build the actual yt-dlp command.
+    ytdlpCommand := '"' . YTDLPFileLocation . '" --skip-download --no-playlist --convert-thumbnails "jpg/png" '
+    ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
+    ytdlpCommand .= '--paths "home:' . tempWorkingDirectory . '" '
+    ytdlpCommand .= '--print-to-file "' . relevantMetaDataString . '" "' . metaDataFileLocation . '" '
+    ytdlpCommand .= '--ffmpeg-location "' . ffmpegDirectory . '" '
+    ytdlpCommand .= '"' . pVideoURL . '"'
+    handleVideoListGUI_videoListGUIStatusBar_startVideoAnimation()
     RunWait(ytdlpCommand, , "Hide")
     ; Extract the metadata from the file into the object.
     for (property, value in videoMetaDataObject.OwnProps()) {
@@ -544,6 +615,7 @@ extractVideoMetaData(pVideoURL) {
     }
     ; We add this property after the loops because it will not be written by yt-dlp.
     videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := thumbnailFileLocation
+    handleVideoListGUI_videoListGUIStatusBar_stopVideoAnimation()
     return videoMetaDataObject
 }
 
@@ -571,7 +643,7 @@ videoMetaDataObject.VIDEO_UPLOADER_URL (The URL of the uploader)
 videoMetaDataObject.VIDEO_DURATION_STRING (The duration of the video in this format [HH:mm:ss])
 videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
 */
-extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "0") {
+extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     global GUIBackgroundImageLocation
     global YTDLPFileLocation
     global ffmpegDirectory
@@ -600,14 +672,17 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "0") {
         relevantMetaDataString .= property . "=" . value . "`n"
     }
     ; Build the actual yt-dlp command.
-    ytdlpCommand := '"' . YTDLPFileLocation
-        . '" --skip-download --yes-playlist --convert-thumbnails "jpg/png" --output "thumbnail:'
-        . thumbnailFileLocation . '" --write-thumbnail --print-to-file "' . relevantMetaDataString . '" "'
-        . metaDataFileLocation . '" --ffmpeg-location "' . ffmpegDirectory . '" "' . pVideoPlaylistURL . '" '
+    ytdlpCommand := '"' . YTDLPFileLocation . '" --skip-download --yes-playlist --convert-thumbnails "jpg/png" '
+    ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
+    ytdlpCommand .= '--paths "home:' . tempWorkingDirectoryPlaylist . '" '
+    ytdlpCommand .= '--print-to-file "' . relevantMetaDataString . '" "' . metaDataFileLocation . '" '
+    ytdlpCommand .= '--ffmpeg-location "' . ffmpegDirectory . '" '
     ; If the user wants to download only a specific range of the playlist.
-    if (pPlayListRangeIndex != "0") {
+    if (pPlayListRangeIndex != "-1") {
         ytdlpCommand .= '--playlist-items "' . pPlayListRangeIndex . '" '
     }
+    ytdlpCommand .= '"' . pVideoPlaylistURL . '"'
+    handleVideoListGUI_videoListGUIStatusBar_startPlaylistAnimation()
     ; Run yt-dlp and create a .INI and a thumbnail file for each video in the playlist.
     RunWait(ytdlpCommand, , "Hide")
     videoMetaDataObjectArray := []
@@ -644,6 +719,7 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "0") {
         videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := thumbnailFileLocation
         videoMetaDataObjectArray.Push(videoMetaDataObject)
     }
+    handleVideoListGUI_videoListGUIStatusBar_stopPlaylistAnimation()
     return videoMetaDataObjectArray
 }
 
