@@ -71,7 +71,7 @@ createVideoListGUI() {
     ; Controls that are relevant for downloading the videos in the video list.
     downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download (WIP)") ; REMOVE
     downloadAllVideosButton := videoListGUI.Add("Button", "xp+10 yp+20 w135", "Download All")
-    downloadOnlySelectedVideosButton := videoListGUI.Add("Button", "xp+145 yp w135", "Download Only Selected")
+    downloadCancelButton := videoListGUI.Add("Button", "xp+145 yp w135", "Cancel Download")
     downloadRemoveVideosAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "xp-135 yp+30 Checked",
         "Automatically remove downloaded videos")
     downloadTerminateAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "yp+20",
@@ -111,7 +111,7 @@ createVideoListGUI() {
     videoListView.OnEvent("ItemSelect", handleVideoListGUI_videoListView_onItemSelect)
     ; Controls that are relevant for downloading the videos in the video list.
     downloadAllVideosButton.OnEvent("Click", handleVideoListGUI_downloadAllVideosButton_onClick)
-    downloadOnlySelectedVideosButton.OnEvent("Click", handleVideoListGUI_downloadOnlySelectedVideosButton_onClick)
+    downloadCancelButton.OnEvent("Click", handleVideoListGUI_downloadCancelButton_onClick)
     downloadSelectDownloadDirectoryButton.OnEvent("Click",
         handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick)
     ; Enables the help button in the MsgBox which informs the user once they entered an incorrect playlist range index.
@@ -133,9 +133,6 @@ createVideoListGUI() {
 videoListGUI_onInit() {
     createVideoListGUI()
     videoListGUI.Show() ; REMOVE
-    /*  VideoListViewEntry("https://www.youtube.com/watch?v=mQlqofX3wfA") ; REMOVE
-     VideoListViewEntry("https://www.youtube.com/watch?v=GFlSxPivviQ") ; REMOVE
-    VideoListViewEntry("fake url") ; REMOVE */
 }
 
 handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
@@ -369,10 +366,66 @@ handleVideoListGUI_videoListView_onItemSelect(pListView, pSelectedElementIndex, 
 }
 
 handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global videoListViewContentMap
+    global scriptWorkingDirectory
+    global videoListViewContentMap
+
+    /*
+    Create a local copy of the video list view content map to avoid download issues
+    when the original map changes during the download.
+    It only contains valid URLs which could be found by yt-dlp.
+    */
+    localCopyVideoListViewContentMap := videoListViewContentMap.Clone()
+    for (key, videoListEntry in videoListViewContentMap) {
+        videoURL := videoListEntry.videoURL
+        ; Checks if the URL is invalid.
+        regExString := '^(https?:\/\/)?([\w\-]+\.)+[\w]{2,}(\/[^\s]*)?$'
+        if (!RegExMatch(videoURL, regExString)) {
+            localCopyVideoListViewContentMap.Delete(key)
+        }
+        ; Checks if the video was not found by yt-dlp.
+        else if (InStr(videoListEntry.videoTitle, "video_not_found: ")) {
+            localCopyVideoListViewContentMap.Delete(key)
+        }
+    }
+
+    ; We use the current time stamp to generade a unique name for the download folder.
+    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
+    ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
+    currentDownloadDirectory := scriptWorkingDirectory . "\download\" . currentTime
+    alternativeDownloadDirectory := downloadSelectDownloadDirectoryInputEdit.Value
+    if (DirExist(alternativeDownloadDirectory)) {
+        targetDownloadDirectory := alternativeDownloadDirectory
+    }
+    else {
+        targetDownloadDirectory := currentDownloadDirectory
+    }
+
+    totalAvailableVideoAmount := localCopyVideoListViewContentMap.Count
+    totalDownloadedVideoAmount := 0
+    ; Parse through each video and start the download process.
+    for (key, videoListEntry in localCopyVideoListViewContentMap) {
+        videoURL := videoListEntry.videoURL
+        downloadVideoListViewEntry(videoListEntry, targetDownloadDirectory)
+        ; Remove the video from the video list view element.
+        if (downloadRemoveVideosAfterDownloadCheckbox.Value) {
+            videoListEntry.removeEntryFromVideoListViewContentMap()
+        }
+        totalDownloadedVideoAmount++
+    }
+    if (totalDownloadedVideoAmount == 1) {
+        videoListGUIStatusBar.SetText("Downloaded 1 video to [" . targetDownloadDirectory . "]")
+    }
+    else if (totalDownloadedVideoAmount > 1) {
+        videoListGUIStatusBar.SetText("Downloaded " . totalDownloadedVideoAmount
+            . " videos to [" . targetDownloadDirectory . "]")
+    }
+    if (downloadTerminateAfterDownloadCheckbox.Value) {
+        exitScriptWithNotification()
+    }
 }
 
-handleVideoListGUI_downloadOnlySelectedVideosButton_onClick(pButton, pInfo) {
+handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
     MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
 }
 
@@ -405,16 +458,22 @@ handleVideoListGUI_invalidPlaylistRangeIndexMsgBoxHelpButton(*) {
     MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
 }
 
-; Shows a neat little loading animation in the status bar.
-handleVideoListGUI_videoListGUIStatusBar_startPlaylistAnimation() {
-    statusBarText := "Extracting playlist data..."
+/*
+Shows a neat little loading animation in the status bar.
+@param pStatusBarText [String] The text that is displayed in the status bar while the loading animation plays.
+@param pSpinnerCharArray [Array] An array containing different states an positions of an element represented with a string.
+It should look as if the object is animated when parsing through the array.
+*/
+handleVideoListGUI_videoListGUIStatusBar_startAnimation(pStatusBarText, pSpinnerCharArray?) {
+    if (!IsSet(pSpinnerCharArray)) {
+        pSpinnerCharArray := [
+            "[⌛         ]", "[ ⌛        ]", "[  ⌛       ]", "[   ⌛      ]", "[    ⌛     ]",
+            "[     ⌛    ]", "[      ⌛   ]", "[       ⌛  ]", "[        ⌛ ]", "[         ⌛]",
+            "[        ⌛ ]", "[       ⌛  ]", "[      ⌛   ]", "[     ⌛    ]", "[    ⌛     ]",
+            "[   ⌛      ]", "[  ⌛       ]", "[ ⌛        ]"
+        ]
+    }
     videoListGUIStatusBar.loadingAnimationIsPlaying := true
-    spinnerCharArray := [
-        "[💾         ]", "[ 💾        ]", "[  💾       ]", "[   💾      ]", "[    💾     ]",
-        "[     💾    ]", "[      💾   ]", "[       💾  ]", "[        💾 ]", "[         💾]",
-        "[        💾 ]", "[       💾  ]", "[      💾   ]", "[     💾    ]", "[    💾     ]",
-        "[   💾      ]", "[  💾       ]", "[ 💾        ]"
-    ]
     SetTimer(step, 150)
     step() {
         ; Arrays in AHK start with the index of 1.
@@ -423,48 +482,20 @@ handleVideoListGUI_videoListGUIStatusBar_startPlaylistAnimation() {
             SetTimer(step, 0)
             return
         }
-        currentChar := spinnerCharArray[i]
-        videoListGUIStatusBar.SetText(statusBarText . " " . currentChar)
+        currentChar := pSpinnerCharArray[i]
+        videoListGUIStatusBar.SetText(pStatusBarText . " " . currentChar)
         ; Increases the index for the next time this function is called.
-        i := Mod(i, spinnerCharArray.Length) + 1
+        i := Mod(i, pSpinnerCharArray.Length) + 1
     }
 }
 
-handleVideoListGUI_videoListGUIStatusBar_stopPlaylistAnimation() {
-    statusBarText := "Finished playlist information extraction"
+/*
+Stops the status bar loading animation.
+@param pStatusBarText [String] The text that is displayed in the status bar when the loading animation ends.
+*/
+handleVideoListGUI_videoListGUIStatusBar_stopAnimation(pStatusBarText) {
     videoListGUIStatusBar.loadingAnimationIsPlaying := false
-    videoListGUIStatusBar.SetText(statusBarText)
-}
-
-; Shows a neat little loading animation in the status bar.
-handleVideoListGUI_videoListGUIStatusBar_startVideoAnimation() {
-    statusBarText := "Extracting video data..."
-    videoListGUIStatusBar.loadingAnimationIsPlaying := true
-    spinnerCharArray := [
-        "[🎞️         ]", "[ 🎞️        ]", "[  🎞️       ]", "[   🎞️      ]", "[    🎞️     ]",
-        "[     🎞️    ]", "[      🎞️   ]", "[       🎞️  ]", "[        🎞️ ]", "[         🎞️]",
-        "[        🎞️ ]", "[       🎞️  ]", "[      🎞️   ]", "[     🎞️    ]", "[    🎞️     ]",
-        "[   🎞️      ]", "[  🎞️       ]", "[ 🎞️        ]"
-    ]
-    SetTimer(step, 150)
-    step() {
-        ; Arrays in AHK start with the index of 1.
-        static i := 1
-        if (!videoListGUIStatusBar.loadingAnimationIsPlaying) {
-            SetTimer(step, 0)
-            return
-        }
-        currentChar := spinnerCharArray[i]
-        videoListGUIStatusBar.SetText(statusBarText . " " . currentChar)
-        ; Increases the index for the next time this function is called.
-        i := Mod(i, spinnerCharArray.Length) + 1
-    }
-}
-
-handleVideoListGUI_videoListGUIStatusBar_stopVideoAnimation() {
-    statusBarText := "Finished video information extraction"
-    videoListGUIStatusBar.loadingAnimationIsPlaying := false
-    videoListGUIStatusBar.SetText(statusBarText)
+    videoListGUIStatusBar.SetText(pStatusBarText)
 }
 
 /*
@@ -581,6 +612,7 @@ extractVideoMetaData(pVideoURL) {
     for (property, value in videoMetaDataObject.OwnProps()) {
         relevantMetaDataString .= property . "=" . value . "`n"
     }
+    relevantMetaDataString := RTrim(relevantMetaDataString, "`n")
     ; Build the actual yt-dlp command.
     ytdlpCommand := '"' . YTDLPFileLocation . '" --skip-download --no-playlist --convert-thumbnails "jpg/png" '
     ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
@@ -588,7 +620,14 @@ extractVideoMetaData(pVideoURL) {
     ytdlpCommand .= '--print-to-file "' . relevantMetaDataString . '" "' . metaDataFileLocation . '" '
     ytdlpCommand .= '--ffmpeg-location "' . ffmpegDirectory . '" '
     ytdlpCommand .= '"' . pVideoURL . '"'
-    handleVideoListGUI_videoListGUIStatusBar_startVideoAnimation()
+    ; Start the status bar loading animation.
+    spinnerCharArray := [
+        "[🎞️         ]", "[ 🎞️        ]", "[  🎞️       ]", "[   🎞️      ]", "[    🎞️     ]",
+        "[     🎞️    ]", "[      🎞️   ]", "[       🎞️  ]", "[        🎞️ ]", "[         🎞️]",
+        "[        🎞️ ]", "[       🎞️  ]", "[      🎞️   ]", "[     🎞️    ]", "[    🎞️     ]",
+        "[   🎞️      ]", "[  🎞️       ]", "[ 🎞️        ]"
+    ]
+    handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting video data...", spinnerCharArray)
     RunWait(ytdlpCommand, , "Hide")
     ; Extract the metadata from the file into the object.
     for (property, value in videoMetaDataObject.OwnProps()) {
@@ -615,7 +654,7 @@ extractVideoMetaData(pVideoURL) {
     }
     ; We add this property after the loops because it will not be written by yt-dlp.
     videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := thumbnailFileLocation
-    handleVideoListGUI_videoListGUIStatusBar_stopVideoAnimation()
+    handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished video information extraction")
     return videoMetaDataObject
 }
 
@@ -671,6 +710,7 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     for (property, value in videoMetaDataObject.OwnProps()) {
         relevantMetaDataString .= property . "=" . value . "`n"
     }
+    relevantMetaDataString := RTrim(relevantMetaDataString, "`n")
     ; Build the actual yt-dlp command.
     ytdlpCommand := '"' . YTDLPFileLocation . '" --skip-download --yes-playlist --convert-thumbnails "jpg/png" '
     ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
@@ -682,7 +722,14 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         ytdlpCommand .= '--playlist-items "' . pPlayListRangeIndex . '" '
     }
     ytdlpCommand .= '"' . pVideoPlaylistURL . '"'
-    handleVideoListGUI_videoListGUIStatusBar_startPlaylistAnimation()
+    ; Start the status bar loading animation.
+    spinnerCharArray := [
+        "[💾         ]", "[ 💾        ]", "[  💾       ]", "[   💾      ]", "[    💾     ]",
+        "[     💾    ]", "[      💾   ]", "[       💾  ]", "[        💾 ]", "[         💾]",
+        "[        💾 ]", "[       💾  ]", "[      💾   ]", "[     💾    ]", "[    💾     ]",
+        "[   💾      ]", "[  💾       ]", "[ 💾        ]"
+    ]
+    handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting playlist data...", spinnerCharArray)
     ; Run yt-dlp and create a .INI and a thumbnail file for each video in the playlist.
     RunWait(ytdlpCommand, , "Hide")
     videoMetaDataObjectArray := []
@@ -719,8 +766,37 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := thumbnailFileLocation
         videoMetaDataObjectArray.Push(videoMetaDataObject)
     }
-    handleVideoListGUI_videoListGUIStatusBar_stopPlaylistAnimation()
+    handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished playlist information extraction")
     return videoMetaDataObjectArray
+}
+
+downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
+    global scriptWorkingDirectory
+    global YTDLPFileLocation
+    global ffmpegDirectory
+
+    if (!DirExist(pDownloadTargetDirectory)) {
+        DirCreate(pDownloadTargetDirectory)
+    }
+    ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
+    downloadTempDirectory := scriptWorkingDirectory . "\download_temp"
+    if (!DirExist(downloadTempDirectory)) {
+        DirCreate(downloadTempDirectory)
+    }
+
+    ytdlpCommand := '"' . YTDLPFileLocation . '" --no-playlist '
+    ytdlpCommand .= '--paths "' . pDownloadTargetDirectory . '" '
+    ytdlpCommand .= '--paths "temp:' . downloadTempDirectory . '" '
+    ytdlpCommand .= '--ffmpeg-location "' . ffmpegDirectory . '" '
+    ; Add the custom parameters from the video list view entry.
+    pVideoListViewEntry.generateDownloadCommandPart()
+    ytdlpCommand .= pVideoListViewEntry.downloadCommandPart
+    videoTitle := pVideoListViewEntry.videoTitle
+    handleVideoListGUI_videoListGUIStatusBar_startAnimation("Downloading (" . videoTitle . ")...")
+    RunWait(ytdlpCommand, , "Hide")
+    handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished downloading (" . videoTitle . ")")
+    ; This delay gives the loading bar animation enough time to end properly and avoid visual bugs.
+    Sleep(200)
 }
 
 /*
@@ -772,8 +848,7 @@ class VideoListViewEntry {
             ; Video formats.
             "Automatically choose best video format", "mp4", "webm", "avi", "flv", "mkv", "mov",
             ; Audio formats.
-            "Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "aac", "alac", "opus",
-            "vorbis"
+            "Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "opus", "vorbis"
         ]
         ; This option changes when the user selects a different format in the video list GUI.
         this.desiredFormatArrayCurrentlySelectedIndex := 1
@@ -793,13 +868,11 @@ class VideoListViewEntry {
     }
     ; Generates the part of the download command that is specific to this video.
     generateDownloadCommandPart() {
-        this.downloadCommandPart := '"' . this.videoURL . '" '
+        this.downloadCommandPart := ''
         desiredFormat := this.desiredFormatArray[this.desiredFormatArrayCurrentlySelectedIndex]
-        videoFormatArray := ["Automatically choose best video format", "mp4", "webm", "avi", "flv", "mkv",
-            "mov"]
-        audioFormatArray := ["Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "aac",
-            "alac",
-            "opus", "vorbis"]
+        videoFormatArray := ["Automatically choose best video format", "mp4", "webm", "avi", "flv", "mkv", "mov"]
+        audioFormatArray := ["Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "opus",
+            "vorbis"]
 
         ; In case the user selected a video format.
         if (checkIfStringIsInArray(desiredFormat, videoFormatArray)) {
@@ -822,6 +895,7 @@ class VideoListViewEntry {
             this.downloadCommandPart .= '--sub-langs "all" '
             this.downloadCommandPart .= "--embed-subs "
         }
+        this.downloadCommandPart .= '"' . this.videoURL . '" '
     }
     /*
     SHOULD be called when the values of this.videoTitle, this.videoUploader or this.videoDurationString are changed externally.
