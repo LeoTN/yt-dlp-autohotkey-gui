@@ -189,7 +189,7 @@ installYTDLP() {
 
 /*
 Checks if the FFmpeg and yt-dlp executables are present.
-@Returns [boolean] True, if the files are not present. False otherwise.
+@returns [boolean] True, if the files are not present. False otherwise.
 */
 checkIfFFmpegOrYTDLPSetupIsRequired() {
     if (!getFFmpegInstallionStatus() || !getYTDLPInstallionStatus()) {
@@ -200,7 +200,7 @@ checkIfFFmpegOrYTDLPSetupIsRequired() {
 
 /*
 Checks if the FFmpeg executables are installed.
-@Returns [boolean] True if all FFmpeg executables are installed, false otherwise.
+@returns [boolean] True if all FFmpeg executables are installed, false otherwise.
 */
 getFFmpegInstallionStatus() {
     global ffmpegDirectory
@@ -216,7 +216,7 @@ getFFmpegInstallionStatus() {
 
 /*
 Checks if yt-dlp is installed.
-@Returns [boolean] True if yt-dlp is installed, false otherwise.
+@returns [boolean] True if yt-dlp is installed, false otherwise.
 */
 getYTDLPInstallionStatus() {
     global YTDLPDirectory

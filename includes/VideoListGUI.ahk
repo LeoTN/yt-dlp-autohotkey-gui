@@ -228,8 +228,7 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
         return
     }
     ; Checks if the entered string is a valid URL.
-    regExString := '^(https?:\/\/)?([\w\-]+\.)+[\w]{2,}(\/[^\s]*)?$'
-    if (!RegExMatch(videoURL, regExString)) {
+    if (!checkIfStringIsAValidURL(videoURL)) {
         MsgBox("Please enter a valid URL.", "VD - Invalid URL", "O Icon! 262144 T1")
         return
     }
@@ -379,8 +378,7 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
     for (key, videoListEntry in videoListViewContentMap) {
         videoURL := videoListEntry.videoURL
         ; Checks if the URL is invalid.
-        regExString := '^(https?:\/\/)?([\w\-]+\.)+[\w]{2,}(\/[^\s]*)?$'
-        if (!RegExMatch(videoURL, regExString)) {
+        if (!checkIfStringIsAValidURL(videoUrl)) {
             localCopyVideoListViewContentMap.Delete(key)
         }
         ; Checks if the video was not found by yt-dlp.

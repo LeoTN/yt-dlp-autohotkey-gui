@@ -23,10 +23,10 @@ registerHotkeys() {
     Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), "On")
 
     ; Second hotkey (collect URLs).
-    Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), "On")
+    Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => hotkey_extractVideoURLFromSearchBar(), "On")
 
     ; Third hotkey (collect URLs from video thumbnail).
-    Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), "On")
+    Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => hotkey_extractVideoURLUnderMouseCursor(), "On")
 
     ; Hotkey to open Download Options GUI.
     Hotkey(readConfigFile("OPTIONS_GUI_HK"), (*) => hotkey_openOptionsGUI())
@@ -624,10 +624,35 @@ toggleHotkey(pStateArray) {
     Hotkey(readConfigFile("TERMINATE_SCRIPT_HK"), (*) => terminateScriptPrompt(), onOffArray.Get(1))
     Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => reloadScriptPrompt(), onOffArray.Get(2))
     Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => startDownload(buildCommandString()), onOffArray.Get(3))
-    Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => saveSearchBarContentsToFile(), onOffArray.Get(4))
-    Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => saveVideoURLDirectlyToFile(), onOffArray.Get(5))
+    Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => hotkey_extractVideoURLFromSearchBar(), onOffArray.Get(4))
+    Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => hotkey_extractVideoURLUnderMouseCursor(), onOffArray.Get(
+        5))
     Hotkey(readConfigFile("CLEAR_URL_FILE_HK"), (*) => clearURLFile(), onOffArray.Get(6))
     Hotkey(readConfigFile("RESTORE_URL_FILE_HK"), (*) => restoreURLFile(), onOffArray.Get(7))
+}
+
+/*
+This function will try to extract the video meta data from any given URL and add the video to the video list.
+@param pVideoURL [String] Should be a valid URL from a video.
+@returns [Array] A status code which is the first element in the array.
+The array might have different values at other indexes depending on the status code at the first index
+*/
+createVideoListViewEntry(pVideoURL) {
+    global videoListViewContentMap
+    ; This object will store the information about the given video URL.
+    extractedVideoMetaDataObject := extractVideoMetaData(pVideoURL)
+    extractedVideoIdentifierString := extractedVideoMetaDataObject.VIDEO_TITLE . extractedVideoMetaDataObject.VIDEO_UPLOADER .
+        extractedVideoMetaDataObject.VIDEO_DURATION_STRING
+    ; Parses through all entries in the video list.
+    for (identifierString, videoListEntry in videoListViewContentMap) {
+        if (identifierString == extractedVideoIdentifierString) {
+            returnArray := ["_result_video_already_in_list", extractedVideoMetaDataObject.VIDEO_TITLE]
+            return returnArray
+        }
+    }
+    ; Adds the video to the list.
+    VideoListViewEntry(extractedVideoMetaDataObject)
+    return ["_result_video_added_to_list"]
 }
 
 reloadScriptPrompt() {
@@ -780,7 +805,7 @@ findProcessWithWildcard(pWildcard) {
 /*
 Reads the registry and extracts the current script version.
 If the version in the registry has a build version other than 0, it will append the word "-beta".
-@Returns [String] The version from the registry or "v0.0.0.1" in case the registry value is invalid.
+@returns [String] The version from the registry or "v0.0.0.1" in case the registry value is invalid.
 */
 getCorrectScriptVersionFromRegistry() {
     global scriptRegistryDirectory

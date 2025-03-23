@@ -6,134 +6,67 @@ CoordMode "Mouse", "Client"
 
 ; Beginning of the file manager functions.
 
-/*
-Save search bar contents to text file.
-@returns [boolean] Depending on the function's success.
-*/
-saveSearchBarContentsToFile() {
+; Extracts the video URL from the browser search bar.
+hotkey_extractVideoURLFromSearchBar() {
     A_Clipboard := ""
     Send("^{l}")
     Sleep(150)
     Send("^{c}")
     if (!ClipWait(0.5)) {
-        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1.5")
-        return false
+        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1")
+        return
     }
     clipboardContent := A_Clipboard
     Sleep(150)
     Send("{Escape}")
-    if (IsSet(clipboardContent)) {
-        if (!(InStr(clipboardContent, "https://") || (InStr(clipboardContent, "http://")))) {
-            MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1.5")
-            return false
-        }
-        result := writeToURLFile(clipboardContent)
-        switch (result) {
-            case "duplicate_url":
-            {
-                MsgBox("Same URL selected twice.", "VD - Duplicate URL!", "O Iconi T1.5")
-                return false
-            }
-            case "already_in_blacklist_file":
-            {
-                MsgBox("Selected URL is blacklisted.", "VD - Blacklistet URL!", "O Iconi T1.5")
-                return false
-            }
-            case true:
-            {
-                return true
-            }
-            Default:
-            {
-                MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid return value from writeToURLFile() received [" .
-                    result . "]."
-                    , "VD - [" . A_ThisFunc . "()]", "Icon! 262144")
-                return false
-            }
-        }
+    Send("{Escape}")
+    if (!checkIfStringIsAValidURL(clipboardContent)) {
+        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1")
+        return
     }
-    else {
-        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1.5")
-        return false
+    ; Extracts the video meta data and checks if it is already in the video list.
+    resultArray := createVideoListViewEntry(clipboardContent)
+    if (resultArray[1] == "_result_video_already_in_list") {
+        MsgBox(resultArray[2] . "`n`nis already in the video list.", "VD - Duplicate URL!", "O Iconi T2")
+        return
     }
 }
 
 /*
-Saves the video URL directly by hovering over the video thumbnail on the start page.
-@returns [boolean] Depending on the function's success.
+Tries to extract the URL from any browser element currently under the mouse cursor.
+For example when the user hovers over a video thumbnail on YouTube.
 */
-saveVideoURLDirectlyToFile() {
-    videoURL := getBrowserURLUnderMouseCursor()
-    tmpConfig := readConfigFile("URL_FILE_LOCATION")
-    ; False if URL is invalid or not found.
-    if (videoURL) {
-        result := writeToURLFile(videoURL)
-        switch (result) {
-            case "duplicate_url":
-            {
-                MsgBox("Same URL selected twice.", "VD - Duplicate URL!", "O Iconi T0.8")
-                return false
-            }
-            case "already_in_blacklist_file":
-            {
-                MsgBox("Selected URL is blacklisted.", "VD - Blacklistet URL!", "O Iconi T1")
-                return false
-            }
-            case true:
-            {
-                return true
-            }
-            Default:
-            {
-                MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid return value from writeToURLFile() received [" .
-                    result . "]."
-                    , "VD - [" . A_ThisFunc . "()]", "Icon! 262144")
-                return false
-            }
-        }
+hotkey_extractVideoURLUnderMouseCursor() {
+    url := getBrowserURLUnderMouseCursor()
+    if (!checkIfStringIsAValidURL(url)) {
+        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1")
+        return
     }
-    MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T0.8")
-    return false
-}
-
-/*
-Basically a support function for saveVideoURLDirectlyToFile().
-@returns [boolean] false in case of failure and [String] if an URL has been found.
-*/
-getBrowserURLUnderMouseCursor() {
-    ; These three variables contain the matching values for each role type.
-    role_Shortcut := 30
-    role_Text := 42
-    role_Group := 20
-
-    try
-    {
-        ; Currently used to prevent a bug which causes the URL to be invalid.
-        static tmp := true
-        if (tmp) {
-            tmp := false
-            getBrowserURLUnderMouseCursor()
-        }
+    ; Extracts the video meta data and checks if it is already in the video list.
+    resultArray := createVideoListViewEntry(url)
+    if (resultArray[1] == "_result_video_already_in_list") {
+        MsgBox(resultArray[2] . "`n`nis already in the video list.", "VD - Duplicate URL!", "O Iconi T2")
+        return
+    }
+    /*
+    Basically a support function for hotkey_extractVideoURLUnderMouseCursor().
+    @returns [String] The URL from the browser element under the mouse cursor.
+    Otherwise the returned value will be a status string indicating that no URL was found.
+    */
+    getBrowserURLUnderMouseCursor() {
+        ; These three variables contain the matching values for each role type.
+        role_Shortcut := 30
+        role_Text := 42
+        role_Group := 20
         ; Get the video element.
         videoElementAccOrigin := Acc.ElementFromPoint()
-        videoElementAccOriginParent := videoElementAccOrigin.Parent
-        ; Child and origin section.
-        try
-        {
-            ; Added to check if the element directly under the cursor contains an URL.
-            videoURL := videoElementAccOrigin.Value
-            ; The /@ is located in the youtuber channel link, which should not be selected.
-            if ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@")) {
-                return videoURL
-            }
-        }
         try
         {
             ; Looks for the URL in the originally selected element.
-            videoElementValue := videoElementAccOrigin.Normalize({ Role: role_Shortcut, not: { Value: "" } })
-            videoURL := videoElementValue.Value
-            ; The /@ is located in the youtuber channel link, which should not be selected.
-            if ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@")) {
+            videoElement := videoElementAccOrigin.FindElement({ Role: role_Shortcut, not: { Value: "" } })
+            videoURL := videoElement.Value
+            ; The "/@" is located in the youtube channel link which the user might accidentally select.
+            if (checkIfStringIsAValidURL(videoURL) && !InStr(videoURL, "/@")) {
                 return videoURL
             }
         }
@@ -142,39 +75,49 @@ getBrowserURLUnderMouseCursor() {
             ; Looks for the URL in the originally selected element.
             videoElementValue := videoElementAccOrigin.Normalize({ Role: role_Text, not: { Value: "" } })
             videoURL := videoElementValue.Value
-            ; The /@ is located in the youtuber channel link, which should not be selected.
-            if ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@")) {
+            ; The "/@" is located in the youtube channel link which the user might accidentally select.
+            if (checkIfStringIsAValidURL(videoURL) && !InStr(videoURL, "/@")) {
                 return videoURL
             }
         }
-        ; Parent section.
-        try
-        {
-            ; Tries to find matching childs in the parent of the originally selected element.
-            videoElementAccChildShortcut := videoElementAccOriginParent.FindElement({ Role: role_Shortcut, not: { Value: "" } })
-            ; Looks for the URL in the "brothers" of the originally selected element.
-            videoElementValue := videoElementAccChildShortcut.Normalize({ Role: role_Shortcut, not: { Value: "" } })
-            videoURL := videoElementValue.Value
-            ; The /@ is located in the youtuber channel link, which should not be selected.
-            if ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@")) {
+        /*
+        This is usually required when the user hoveres over the video thumbnail. Therefore we try to go one or two
+        steps back and identify the video this way.
+        */
+        try {
+            elementChildren := videoElementAccOrigin.Children
+            ; This means the selected thumbnail element has no children.
+            if (!elementChildren.Has(1)) {
+                targetParentNode := videoElementAccOrigin.Parent.Parent
+            }
+            else {
+                targetParentNode := videoElementAccOrigin.Parent
+            }
+            targetChildNode := targetParentNode.FindElement({ Role: role_Shortcut, State: "5242880", not: { Value: "" } })
+            videoURL := targetChildNode.Value
+            ; The "/@" is located in the youtube channel link which the user might accidentally select.
+            if (checkIfStringIsAValidURL(videoURL) && !InStr(videoURL, "/@")) {
                 return videoURL
             }
         }
-        try
-        {
-            ; Looks for the URL in the "brothers" of the originally selected element.
-            videoElementValue := videoElementAccChildShortcut.Normalize({ Role: role_Text, not: { Value: "" } })
-            videoURL := videoElementValue.Value
-            ; The /@ is located in the youtuber channel link, which should not be selected.
-            if ((InStr(videoURL, "https://") || InStr(videoURL, "http://")) && !InStr(videoURL, "/@")) {
-                return videoURL
-            }
-        }
-        return false
+        return "_result_no_url_found"
     }
-    catch {
-        return false
+}
+
+/*
+Checks if a given string is a valid video URL.
+NOTE: URLs without any content after the top level domain won't be considered valid!
+For example [www.youtube.com] would be invalid but [https://www.youtube.com/watch?v=dQw4w9WgXcQ] would be valid.
+@param pString [String] The string that should be examined.
+@returns [boolean] True, if the provided string is a valid URL. False otherwise.
+*/
+checkIfStringIsAValidURL(pString) {
+    ; Checks if the entered string is a valid URL.
+    regExString := '^(https?:\/\/)?([\w\-]+\.)+[\w]{2,}\/[^\s]{3,}$'
+    if (RegExMatch(pString, regExString)) {
+        return true
     }
+    return false
 }
 
 /*
