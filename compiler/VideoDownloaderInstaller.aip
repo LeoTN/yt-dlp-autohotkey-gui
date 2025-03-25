@@ -55,7 +55,6 @@
     <ROW Component="APPDIR" ComponentId="{C58A7097-A45E-45D7-B9D2-CF2C72CAC188}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="AVAILABLE_UPDATE" ComponentId="{423E75C7-67CB-4F7F-A6AA-2B658BBF264B}" Directory_="APPDIR" Attributes="4" KeyPath="AVAILABLE_UPDATE"/>
     <ROW Component="CURRENT_VERSION_LAST_UPDATED" ComponentId="{A51E2E73-382F-4B1F-B656-0F5FC4179BF4}" Directory_="APPDIR" Attributes="4" KeyPath="CURRENT_VERSION_LAST_UPDATED"/>
-    <ROW Component="DownloadOptionsGUITooltips.exe" ComponentId="{A9576DB6-B4AA-4984-B688-376E63D8B677}" Directory_="scripts_Dir" Attributes="256" KeyPath="DownloadOptionsGUITooltips.exe"/>
     <ROW Component="SHORTCUTDIR" ComponentId="{2A2AF60B-B8C7-4CB8-A55A-90753369C198}" Directory_="SHORTCUTDIR" Attributes="0"/>
     <ROW Component="Version" ComponentId="{B4B1F4F9-F536-49F6-BF8C-9033207F33D8}" Directory_="APPDIR" Attributes="4" KeyPath="Version_2"/>
     <ROW Component="VideoDownloader.exe" ComponentId="{4434CF81-CED8-4261-9875-8E9A44DCB8D9}" Directory_="APPDIR" Attributes="256" KeyPath="VideoDownloader.exe"/>
@@ -80,7 +79,6 @@
     <ROW File="downloadProgressVisualizer.ps1" Component_="downloadProgressVisualizer.ps1" FileName="DOWNLO~1.PS1|downloadProgressVisualizer.ps1" Attributes="0" SourcePath="..\library\build\downloadProgressVisualizer.ps1" SelfReg="false"/>
     <ROW File="VideoDownloader.exe" Component_="VideoDownloader.exe" FileName="VIDEOD~1.EXE|VideoDownloader.exe" Attributes="0" SourcePath="..\VideoDownloader.exe" SelfReg="false" DigSign="true"/>
     <ROW File="checkForAvailableUpdates.ps1" Component_="downloadProgressVisualizer.ps1" FileName="CHECKF~1.PS1|checkForAvailableUpdates.ps1" Attributes="0" SourcePath="..\library\build\checkForAvailableUpdates.ps1" SelfReg="false"/>
-    <ROW File="DownloadOptionsGUITooltips.exe" Component_="DownloadOptionsGUITooltips.exe" FileName="DOWNLO~1.EXE|DownloadOptionsGUITooltips.exe" Attributes="0" SourcePath="..\library\build\DownloadOptionsGUITooltips.exe" SelfReg="false" DigSign="true"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BootstrOptComponent">
     <ROW BootstrOptKey="GlobalOptions" DownloadFolder="[AppDataFolder][|Manufacturer]\[|ProductName]\prerequisites" Options="2"/>
@@ -208,7 +206,6 @@
     <ROW Feature_="MainFeature" Component_="VideoDownloader.exe"/>
     <ROW Feature_="MainFeature" Component_="SHORTCUTDIR"/>
     <ROW Feature_="MainFeature" Component_="working_directory"/>
-    <ROW Feature_="MainFeature" Component_="DownloadOptionsGUITooltips.exe"/>
     <ROW Feature_="MainFeature" Component_="CURRENT_VERSION_LAST_UPDATED"/>
     <ROW Feature_="MainFeature" Component_="AVAILABLE_UPDATE"/>
   </COMPONENT>

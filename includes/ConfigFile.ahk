@@ -24,7 +24,7 @@ These default variables are used to generate the config file template.
 Otherwise this can lead to fatal errors and failures!
 */
 
-config_onInit() {
+configFile_onInit() {
     ; Determines the location of the script's configuration file.
     global configFileLocation := scriptMainDirectory . "\VideoDownloader.ini"
     ; Specifies path for the .txt file which stores the URLs.
@@ -48,8 +48,8 @@ config_onInit() {
     global UPDATE_TO_BETA_VERSIONS := false
     ; Defines if the script should ask the user for a brief explaination of it's core functions.
     global ASK_FOR_TUTORIAL := true
-    ; Toggle if the download options GUI should be shown on launch.
-    global SHOW_OPTIONS_GUI_ON_LAUNCH := true
+    ; Toggle if the video list GUI should be shown on launch.
+    global SHOW_VIDEO_LIST_GUI_ON_LAUNCH := true
     ; This option controls if empty download folders with no media inside should be automatically deleted.
     global DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD := true
 
@@ -59,7 +59,7 @@ config_onInit() {
     global DOWNLOAD_HK := "+^!D"
     global URL_COLLECT_HK := "+^!S"
     global THUMBNAIL_URL_COLLECT_HK := "+^!F"
-    global MAIN_GUI_HK := "+^!G"
+    global VIDEO_LIST_GUI_HK := "+^!A"
     global TERMINATE_SCRIPT_HK := "+^!T"
     global RELOAD_SCRIPT_HK := "+^!R"
     global RESTORE_URL_FILE_HK := "!F2"
@@ -92,13 +92,13 @@ config_onInit() {
             "CHECK_FOR_UPDATES_AT_LAUNCH",
             "UPDATE_TO_BETA_VERSIONS",
             "ASK_FOR_TUTORIAL",
-            "SHOW_OPTIONS_GUI_ON_LAUNCH",
+            "SHOW_VIDEO_LIST_GUI_ON_LAUNCH",
             "DELETE_EMPTY_DOWNLOAD_FOLDERS_AFTER_DOWNLOAD",
             "HOTKEY_STATE_ARRAY",
             "DOWNLOAD_HK",
             "URL_COLLECT_HK",
             "THUMBNAIL_URL_COLLECT_HK",
-            "MAIN_GUI_HK",
+            "VIDEO_LIST_GUI_HK",
             "OPTIONS_GUI_HK",
             "TERMINATE_SCRIPT_HK",
             "RELOAD_SCRIPT_HK",

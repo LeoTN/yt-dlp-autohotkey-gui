@@ -13,10 +13,9 @@ CoordMode "Mouse", "Client"
 #Include "includes\"
 #Include "Acc.ahk"
 #Include "ConfigFile.ahk"
-#Include "DownloadOptionsGUI.ahk"
-#Include "FileManager.ahk"
+#Include "Functions.ahk"
 #Include "HelpGUI.ahk"
-#Include "HotKeys & Functions.ahk"
+#Include "Hotkeys.ahk"
 #Include "Setup.ahk"
 #Include "Tutorials.ahk"
 #Include "UpdateGUI.ahk"
@@ -42,7 +41,6 @@ onInit() {
 
     global psScriptDirectory := assetDirectory . "\scripts"
     global psUpdateScriptLocation := psScriptDirectory . "\checkForAvailableUpdates.ps1"
-    global downloadOptionsGUITooltipFileLocation := psScriptDirectory . "\DownloadOptionsGUITooltips.exe"
     global psDownloadProgressVisualizerLocation := psScriptDirectory . "\downloadProgressVisualizer.ps1"
 
     global YTDLPDirectory := assetDirectory . "\yt-dlp"
@@ -57,72 +55,43 @@ onInit() {
     {
         TraySetIcon(scriptIconLocation)
     }
+    catch as error {
+        displayErrorMessage(error, "This is not a fatal error.", , 10000)
+    }
+
+    /*
+    INCLUDED COMPONENTS INIT FUNCTIONS
+    -------------------------------------------------
+    */
+
     ; Basically checks if all required files and folders are present.
     setup_onInit()
-
-    ; Checks the system for other already running instances of this script.
-    findProcessWithWildcard("VideoDownloader.exe")
-    config_onInit()
-    ; Only called to check the config file status.
-    readConfigFile("booleanDebugMode")
-    checkBlackListFile("createBlackListFile")
-    hotkey_onInit()
-    optionsGUI_onInit()
-    help_onInit()
+    ; Checks the config file.
+    configFile_onInit()
+    ; Currently has no purpose.
+    functions_onInit()
+    ; Initializes the hotkeys.
+    hotkeys_onInit()
+    ; Creates the help GUI.
+    helpGUI_onInit()
+    ; Initializes the tutorials for the help GUI.
     tutorials_onInit()
+    ; Creates the video list GUI.
     videoListGUI_onInit()
+    ; Checks for available updates (depending on the user's choice regarding updates).
+    updateGUI_onInit()
+
+    /*
+    INCLUDED COMPONENTS INIT FUNCTIONS END
+    -------------------------------------------------
+    */
+
     ; Shows a small tutorial to guide the user.
     if (readConfigFile("ASK_FOR_TUTORIAL")) {
         ; scriptTutorial() ; REMOVE [TEMPORARILY DISABLED UNTIL TUTORIAL REWORK]
-    }
-    if (readConfigFile("SHOW_OPTIONS_GUI_ON_LAUNCH")) {
-        if (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd)) {
-            hotkey_openOptionsGUI()
-        }
-        else {
-            WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
-        }
-    }
-    if (readConfigFile("CHECK_FOR_UPDATES_AT_LAUNCH") && !booleanFirstTimeLaunch) {
-        checkForAvailableUpdates()
     }
     ; Disables the firstTimeLaunch at the end of the first run.
     if (booleanFirstTimeLaunch) {
         RegWrite(false, "REG_DWORD", scriptRegistryDirectory, "booleanFirstTimeLaunch")
     }
 }
-
-/*
-DEBUG SECTION
--------------------------------------------------
-Add debug hotkeys here.
-*/
-
-; Debug hotkey template.
-F5::
-{
-    if (readConfigFile("booleanDebugMode")) {
-        ; Enter code below.
-        A_Clipboard := A_ComSpec ' /k ' . buildCommandString() . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") .
-        '"'
-    }
-}
-
-F6::
-{
-    if (readConfigFile("booleanDebugMode")) {
-        ; Enter code below.
-    }
-}
-
-F7::
-{
-    if (readConfigFile("booleanDebugMode")) {
-        ; Enter code below.
-    }
-}
-
-/*
-DEBUG SECTION END
--------------------------------------------------
-*/

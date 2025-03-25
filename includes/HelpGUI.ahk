@@ -3,7 +3,7 @@
 SendMode "Input"
 CoordMode "Mouse", "Window"
 
-help_onInit() {
+helpGUI_onInit() {
     createHelpGUI()
 }
 

@@ -8,7 +8,7 @@ Allows the DELETE key to have the same function as clicking the remove video fro
 This is done to allow the user to delete videos from the list by pressing the DELETE key.
 It only works while the video list GUI is the active window.
 */
-#HotIf (WinActive("ahk_id " . videoListGUI.Hwnd))
+#HotIf (WinExist("ahk_id " . videoListGUI.Hwnd) && WinActive("ahk_id " . videoListGUI.Hwnd))
 Delete:: {
     handleVideoListGUI_removeVideoFromListButton_onClick("", "")
 }
@@ -117,6 +117,44 @@ createVideoListGUI() {
         handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick)
     ; Enables the help button in the MsgBox which informs the user once they entered an incorrect playlist range index.
     OnMessage(0x0053, handleVideoListGUI_invalidPlaylistRangeIndexMsgBoxHelpButton)
+    /*
+    ********************************************************************************************************************
+    This section creates all the menus.
+    ********************************************************************************************************************
+    */
+    fileSelectionMenuOpen := Menu()
+    fileSelectionMenuOpen.Add("Config-File`t1", (*) => menu_openConfigFile())
+    fileSelectionMenuOpen.SetIcon("Config-File`t1", "shell32.dll", 70)
+    fileSelectionMenuOpen.Add("Download destination`t2", (*) => menu_openDownloadLocation()) ; REMOVE
+    fileSelectionMenuOpen.SetIcon("Download destination`t2", "shell32.dll", 116)
+
+    fileSelectionMenuReset := Menu()
+    fileSelectionMenuReset.Add("Config-File`tShift+1", (*) => createDefaultConfigFile(, true))
+    fileSelectionMenuReset.SetIcon("Config-File`tShift+1", "shell32.dll", 70)
+
+    fileMenu := Menu()
+    fileMenu.Add("&Open...", fileSelectionMenuOpen)
+    fileMenu.SetIcon("&Open...", "shell32.dll", 127)
+    fileMenu.Add("&Reset...", fileSelectionMenuReset)
+    fileMenu.SetIcon("&Reset...", "shell32.dll", 239)
+
+    optionsMenu := Menu()
+    optionsMenu.Add("Open New Settings Window (Beta)",
+        (*) => MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1")) ; REMOVE
+    optionsMenu.SetIcon("Open New Settings Window (Beta)", "shell32.dll", 123) ; REMOVE
+    optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
+    optionsMenu.SetIcon("Terminate Script", "shell32.dll", 28)
+    optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())
+    optionsMenu.SetIcon("Reload Script", "shell32.dll", 207)
+
+    allMenus := MenuBar()
+    allMenus.Add("&File", fileMenu)
+    allMenus.SetIcon("&File", "shell32.dll", 4)
+    allMenus.Add("&Options", optionsMenu)
+    allMenus.SetIcon("&Options", "shell32.dll", 317)
+    allMenus.Add("&Help", (*) => helpGUI.Show())
+    allMenus.SetIcon("&Help", "shell32.dll", 24)
+    videoListGUI.MenuBar := allMenus
 
     ; Add a temporary video list view element. When removing it, there will be the no entries entry.
     tmpVideoMetaDataObject := Object()
@@ -133,7 +171,9 @@ createVideoListGUI() {
 
 videoListGUI_onInit() {
     createVideoListGUI()
-    videoListGUI.Show() ; REMOVE
+    if (readConfigFile("SHOW_VIDEO_LIST_GUI_ON_LAUNCH")) {
+        hotkey_openVideoListGUI()
+    }
 }
 
 handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {

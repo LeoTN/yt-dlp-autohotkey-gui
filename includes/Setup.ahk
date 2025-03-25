@@ -5,6 +5,8 @@ SendMode "Input"
 CoordMode "Mouse", "Window"
 
 setup_onInit() {
+    ; Checks the system for other already running instances of this script.
+    findAlreadyRunningScriptInstance("VideoDownloader.exe")
     createRequiredFolders()
     checkIfMSISetupIsRequired()
     ; Putting this behind the setup checks prevents issues when files are missing.
@@ -95,7 +97,6 @@ createRequiredFolders() {
 checkIfMSISetupIsRequired() {
     requiredFiles := [
         psUpdateScriptLocation,
-        downloadOptionsGUITooltipFileLocation,
         GUIBackgroundImageLocation,
         scriptIconLocation
     ]

@@ -3,6 +3,21 @@
 SendMode "Input"
 CoordMode "Mouse", "Window"
 
+updateGUI_onInit() {
+    /*
+    The script won't check for updates if it is disabled in the config file
+    or the script has been launched for the very first time.
+    */
+    if (!readConfigFile("CHECK_FOR_UPDATES_AT_LAUNCH") || booleanFirstTimeLaunch) {
+        return
+    }
+    availableUpdateVersion := checkForAvailableUpdates()
+    if (availableUpdateVersion == "_result_no_update_available") {
+        return
+    }
+    createUpdateGUI(availableUpdateVersion)
+}
+
 /*
 Creates the user inface which asks the user to confirm the update.
 @param pUpdateVersion [String] The version of the update or rather the complete tag name.
