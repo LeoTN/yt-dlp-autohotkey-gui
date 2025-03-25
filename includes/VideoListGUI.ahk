@@ -19,8 +19,9 @@ Allows the ENTER key to function the same way as the add video to list button.
 This makes adding a video URL more convenient as the user can simply press enter while focused on the URL input field.
 Only works while the URL input field or the playlist range input field is focused.
 */
-#HotIf (ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoURLInputEdit.Hwnd || ControlGetFocus("ahk_id " .
-    videoListGUI.Hwnd) == addVideoSpecifyPlaylistRangeInputEdit.Hwnd)
+#HotIf (WinExist("ahk_id " . videoListGUI.Hwnd) &&
+((ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoURLInputEdit.Hwnd ||
+ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoSpecifyPlaylistRangeInputEdit.Hwnd)))
 Enter:: {
     handleVideoListGUI_addVideoToListButton_onClick("", "")
 }
