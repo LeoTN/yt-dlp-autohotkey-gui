@@ -226,8 +226,11 @@ checkForAvailableUpdates() {
             }
             return updateVersion
         }
+        Default:
+        {
+            return "_result_no_update_available"
+        }
     }
-    ; Maybe more cases in the future.
 }
 
 /*
