@@ -410,6 +410,15 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
     global scriptWorkingDirectory
     global videoListViewContentMap
 
+    static booleanDownloadIsRunning
+    ; This ensures that there can only be one download process at the time.
+    if (!IsSet(booleanDownloadIsRunning) || !booleanDownloadIsRunning) {
+        booleanDownloadIsRunning := true
+    }
+    else {
+        MsgBox("There is already another download in progress.", "VD - Other Download Running", "O Iconi 262144 T1")
+        return
+    }
     /*
     Create a local copy of the video list view content map to avoid download issues
     when the original map changes during the download.
@@ -462,6 +471,7 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
     if (downloadTerminateAfterDownloadCheckbox.Value) {
         exitScriptWithNotification()
     }
+    booleanDownloadIsRunning := false
 }
 
 handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {

@@ -26,7 +26,7 @@ registerHotkeys() {
     ; Beginning of all standard script hotkeys.
 
     ; Main hotkey (start download).
-    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1"), "On") ; REMOVE
+    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => hotkey_startDownload(), "On") ; REMOVE
 
     ; Second hotkey (collect URLs).
     Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => hotkey_extractVideoURLFromSearchBar(), "On")
@@ -56,6 +56,11 @@ HOTKEY FUNCTION SECTION
 -------------------------------------------------
 Add functions that will be called by hotkeys below.
 */
+
+; Starts the video download process. Same as pressing the download button in the video list GUI.
+hotkey_startDownload() {
+    handleVideoListGUI_downloadAllVideosButton_onClick("", "")
+}
 
 ; Extracts the video URL from the browser search bar.
 hotkey_extractVideoURLFromSearchBar() {
