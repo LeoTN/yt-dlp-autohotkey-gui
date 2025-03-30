@@ -78,11 +78,12 @@ function exitScript() {
         [int]$pExitCode
     )
 
-    $null = Write-Host "[onInit()] [exitScript()] Exiting with exit code [$pExitCode]."
+    $null = Write-Host "[exitScript()] Exiting with exit code [$pExitCode]."
     # Speeds up the script when it's ran without the user seeing it.
     If (checkIfScriptWindowIsHidden) {
         $null = Start-Sleep -Seconds 3
     }
+    $null = Stop-Transcript
     Exit $pExitCode
 }
 

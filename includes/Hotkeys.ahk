@@ -26,7 +26,7 @@ registerHotkeys() {
     ; Beginning of all standard script hotkeys.
 
     ; Main hotkey (start download).
-    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => hotkey_startDownload(), "On") ; REMOVE
+    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => hotkey_startDownload(), "On")
 
     ; Second hotkey (collect URLs).
     Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => hotkey_extractVideoURLFromSearchBar(), "On")

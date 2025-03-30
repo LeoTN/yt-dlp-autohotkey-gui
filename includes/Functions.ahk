@@ -14,6 +14,40 @@ FUNCTION SECTION
 */
 
 /*
+Executes a given command with the yt-dlp executable.
+@param pYTDLPCommandString [String] The yt-dlp command to execute.
+@param pLogFileLocation [String] An optional full path to a log file which will contain the output.
+@returns [int] The PID of the yt-dlp process.
+@returns (alt) [String] "_result_error_while_starting_ytdlp_executable", when the yt-dlp executable failed to launch.
+*/
+executeYTDLPCommand(pYTDLPCommandString, pLogFileLocation := A_Temp . "\yt-dlp.log") {
+    global psRunYTDLPExecutableLocation
+    global YTDLPFileLocation
+
+    ; Replaces all single quotation marks with tripple quoation marks to make the string compatible with PowerShell.
+    formattedYTDLPCommandString := StrReplace(pYTDLPCommandString, '"', '"""')
+
+    commandString := 'powershell.exe -executionPolicy bypass -file "' . psRunYTDLPExecutableLocation . '" '
+    commandString .= '-pYTDLPExecutableFileLocation "' . YTDLPFileLocation . '" '
+    commandString .= '-pYTDLPLogFileLocation "' . pLogFileLocation . '" '
+    commandString .= '-pYTDLPCommandString "' . formattedYTDLPCommandString . '"'
+
+    exitCode := RunWait(commandString, , "Hide")
+    if (exitCode == 1) {
+        errorObject := Error("Failed to run yt-dlp executable with redirected stdout.", ,
+            "Please see the log file at`n[" . pLogFileLocation . "]`nfor more information.")
+        errorObject.File := psRunYTDLPExecutableLocation
+        errorObject.Stack := "No call stack required."
+        displayErrorMessage(errorObject,
+            "Please report this error and provide the information from the log file mentioned above.")
+        return "_result_error_while_starting_ytdlp_executable"
+    }
+    else {
+        return exitCode
+    }
+}
+
+/*
 This function will try to extract the video meta data from any given URL and add the video to the video list.
 @param pVideoURL [String] Should be a valid URL from a video.
 @returns [Array] A status code which is the first element in the array.
@@ -190,7 +224,7 @@ checkForWritingRights(pPath) {
 /*
 Checks all GitHub Repository tags to find new versions.
 @returns [String] Returns the update version (which is usually the tag name), when an update is available.
-@returns [String] (alt) "_result_no_update_available", when no update is available.
+@returns (alt) [String] "_result_no_update_available", when no update is available.
 */
 checkForAvailableUpdates() {
     global psUpdateScriptLocation

@@ -79,6 +79,7 @@
     <ROW File="downloadProgressVisualizer.ps1" Component_="downloadProgressVisualizer.ps1" FileName="DOWNLO~1.PS1|downloadProgressVisualizer.ps1" Attributes="0" SourcePath="..\library\build\downloadProgressVisualizer.ps1" SelfReg="false"/>
     <ROW File="VideoDownloader.exe" Component_="VideoDownloader.exe" FileName="VIDEOD~1.EXE|VideoDownloader.exe" Attributes="0" SourcePath="..\VideoDownloader.exe" SelfReg="false" DigSign="true"/>
     <ROW File="checkForAvailableUpdates.ps1" Component_="downloadProgressVisualizer.ps1" FileName="CHECKF~1.PS1|checkForAvailableUpdates.ps1" Attributes="0" SourcePath="..\library\build\checkForAvailableUpdates.ps1" SelfReg="false"/>
+    <ROW File="runYTDLPExecutableWithRedirectedStdout.ps1" Component_="downloadProgressVisualizer.ps1" FileName="RUNYTD~1.PS1|runYTDLPExecutableWithRedirectedStdout.ps1" Attributes="0" SourcePath="..\library\build\runYTDLPExecutableWithRedirectedStdout.ps1" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BootstrOptComponent">
     <ROW BootstrOptKey="GlobalOptions" DownloadFolder="[AppDataFolder][|Manufacturer]\[|ProductName]\prerequisites" Options="2"/>

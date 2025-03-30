@@ -97,6 +97,7 @@ createRequiredFolders() {
 checkIfMSISetupIsRequired() {
     requiredFiles := [
         psUpdateScriptLocation,
+        psRunYTDLPExecutableLocation,
         GUIBackgroundImageLocation,
         scriptIconLocation
     ]

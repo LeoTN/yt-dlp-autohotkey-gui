@@ -42,6 +42,7 @@ onInit() {
     global psScriptDirectory := assetDirectory . "\scripts"
     global psUpdateScriptLocation := psScriptDirectory . "\checkForAvailableUpdates.ps1"
     global psDownloadProgressVisualizerLocation := psScriptDirectory . "\downloadProgressVisualizer.ps1"
+    global psRunYTDLPExecutableLocation := psScriptDirectory . "\runYTDLPExecutableWithRedirectedStdout.ps1"
 
     global YTDLPDirectory := assetDirectory . "\yt-dlp"
     global YTDLPFileLocation := YTDLPDirectory . "\yt-dlp.exe"

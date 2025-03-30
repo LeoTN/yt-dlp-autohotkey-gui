@@ -634,7 +634,6 @@ videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail
 */
 extractVideoMetaData(pVideoURL) {
     global GUIBackgroundImageLocation
-    global YTDLPFileLocation
     global ffmpegDirectory
     global scriptWorkingDirectory
 
@@ -663,7 +662,7 @@ extractVideoMetaData(pVideoURL) {
     }
     relevantMetaDataString := RTrim(relevantMetaDataString, "`n")
     ; Build the actual yt-dlp command.
-    ytdlpCommand := '"' . YTDLPFileLocation . '" --skip-download --no-playlist --convert-thumbnails "jpg/png" '
+    ytdlpCommand := '--skip-download --no-playlist --convert-thumbnails "jpg/png" '
     ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
     ytdlpCommand .= '--paths "home:' . tempWorkingDirectory . '" '
     ytdlpCommand .= '--print-to-file "' . relevantMetaDataString . '" "' . metaDataFileLocation . '" '
@@ -677,7 +676,11 @@ extractVideoMetaData(pVideoURL) {
         "[   🎞️      ]", "[  🎞️       ]", "[ 🎞️        ]"
     ]
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting video data...", spinnerCharArray)
-    RunWait(ytdlpCommand, , "Hide")
+    processPID := executeYTDLPCommand(ytdlpCommand)
+    ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
+    if (processPID != "_result_error_while_starting_ytdlp_executable") {
+        ProcessWaitClose(processPID)
+    }
     ; Extract the metadata from the file into the object.
     for (property, value in videoMetaDataObject.OwnProps()) {
         videoMetaDataObject.%property% := IniRead(metaDataFileLocation, "VideoMetaData", property, "Not found")
@@ -761,7 +764,7 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     }
     relevantMetaDataString := RTrim(relevantMetaDataString, "`n")
     ; Build the actual yt-dlp command.
-    ytdlpCommand := '"' . YTDLPFileLocation . '" --skip-download --yes-playlist --convert-thumbnails "jpg/png" '
+    ytdlpCommand := '--skip-download --yes-playlist --convert-thumbnails "jpg/png" '
     ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
     ytdlpCommand .= '--paths "home:' . tempWorkingDirectoryPlaylist . '" '
     ytdlpCommand .= '--print-to-file "' . relevantMetaDataString . '" "' . metaDataFileLocation . '" '
@@ -780,7 +783,11 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     ]
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting playlist data...", spinnerCharArray)
     ; Run yt-dlp and create a .INI and a thumbnail file for each video in the playlist.
-    RunWait(ytdlpCommand, , "Hide")
+    processPID := executeYTDLPCommand(ytdlpCommand)
+    ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
+    if (processPID != "_result_error_while_starting_ytdlp_executable") {
+        ProcessWaitClose(processPID)
+    }
     videoMetaDataObjectArray := []
     ; Parse all .INI files in the temp directory and extract the metadata.
     iniFileSearchString := tempWorkingDirectoryPlaylist . "\" . currentTime . "_*.ini"
@@ -833,8 +840,7 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
         DirCreate(downloadTempDirectory)
     }
 
-    ytdlpCommand := '"' . YTDLPFileLocation . '" --no-playlist '
-    ytdlpCommand .= '--paths "' . pDownloadTargetDirectory . '" '
+    ytdlpCommand := '--no-playlist --paths "' . pDownloadTargetDirectory . '" '
     ytdlpCommand .= '--paths "temp:' . downloadTempDirectory . '" '
     ytdlpCommand .= '--ffmpeg-location "' . ffmpegDirectory . '" '
     ; Add the custom parameters from the video list view entry.
@@ -842,7 +848,11 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     ytdlpCommand .= pVideoListViewEntry.downloadCommandPart
     videoTitle := pVideoListViewEntry.videoTitle
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Downloading (" . videoTitle . ")...")
-    RunWait(ytdlpCommand, , "Hide")
+    processPID := executeYTDLPCommand(ytdlpCommand)
+    ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
+    if (processPID != "_result_error_while_starting_ytdlp_executable") {
+        ProcessWaitClose(processPID)
+    }
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished downloading (" . videoTitle . ")")
     ; This delay gives the loading bar animation enough time to end properly and avoid visual bugs.
     Sleep(200)
