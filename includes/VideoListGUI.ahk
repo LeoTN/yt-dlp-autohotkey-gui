@@ -123,14 +123,14 @@ createVideoListGUI() {
     ********************************************************************************************************************
     */
     fileSelectionMenuOpen := Menu()
-    fileSelectionMenuOpen.Add("Config-File`t1", (*) => menu_openConfigFile())
-    fileSelectionMenuOpen.SetIcon("Config-File`t1", "shell32.dll", 70)
-    fileSelectionMenuOpen.Add("Download destination`t2", (*) => menu_openDownloadLocation()) ; REMOVE
-    fileSelectionMenuOpen.SetIcon("Download destination`t2", "shell32.dll", 116)
+    fileSelectionMenuOpen.Add("Config-File`tShift+1", (*) => menu_openConfigFile())
+    fileSelectionMenuOpen.SetIcon("Config-File`tShift+1", "shell32.dll", 70)
+    fileSelectionMenuOpen.Add("Download destination`tShift+2", (*) => menu_openDownloadLocation()) ; REMOVE
+    fileSelectionMenuOpen.SetIcon("Download destination`tShift+2", "shell32.dll", 116)
 
     fileSelectionMenuReset := Menu()
-    fileSelectionMenuReset.Add("Config-File`tShift+1", (*) => createDefaultConfigFile(, true))
-    fileSelectionMenuReset.SetIcon("Config-File`tShift+1", "shell32.dll", 70)
+    fileSelectionMenuReset.Add("Config-File`tCtrl+1", (*) => createDefaultConfigFile(, true))
+    fileSelectionMenuReset.SetIcon("Config-File`tCtrl+1", "shell32.dll", 70)
 
     fileMenu := Menu()
     fileMenu.Add("&Open...", fileSelectionMenuOpen)
@@ -637,7 +637,7 @@ extractVideoMetaData(pVideoURL) {
     global ffmpegDirectory
     global scriptWorkingDirectory
 
-    tempWorkingDirectory := scriptWorkingDirectory . "\temp"
+    tempWorkingDirectory := scriptWorkingDirectory . "\temp" ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
     if (!DirExist(tempWorkingDirectory)) {
         DirCreate(tempWorkingDirectory)
     }
@@ -742,7 +742,7 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
 
     ; We use the current time stamp to generade a unique name for each operation.
     currentTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
-    tempWorkingDirectoryPlaylist := scriptWorkingDirectory . "\temp\" . currentTime . "_playlist"
+    tempWorkingDirectoryPlaylist := scriptWorkingDirectory . "\temp\" . currentTime . "_playlist"  ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
     ; The %(id)s part will be filled by yt-dlp.
     metaDataFileLocation := tempWorkingDirectoryPlaylist . "\" . currentTime . "_%(id)s.ini"
     thumbnailFileLocation := tempWorkingDirectoryPlaylist . "\" . currentTime . "_%(id)s.%(ext)s"

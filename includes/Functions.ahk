@@ -137,15 +137,29 @@ Copies all files from the old version into a backup folder using robocopy.
 */
 backupOldVersionFiles(pBackupParentDirectory) {
     global versionFullName
+    global scriptWorkingDirectory
 
     oldVersion := versionFullName
     backupDate := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
     backupFolderName := "VideoDownloader_backup_from_version_" . oldVersion . "_at_" . backupDate
     sourceDirectory := A_ScriptDir
     destinationDirectory := pBackupParentDirectory . "\" . backupFolderName
-    ; All subdirectories and files are copied. The folder "VideoDownloader_old_version_backups" is excluded.
-    parameterString := "`"" . sourceDirectory . "`" `"" . destinationDirectory . "`" /E /XD `"" . sourceDirectory .
-        "\VideoDownloader_old_version_backups`""
+    /*
+    All subdirectories and files are copied. The folder "VideoDownloader_old_version_backups" is excluded.
+    All download related folders and temporary directories will be excluded.
+    Files larger than 10MB will be ignored as well.
+    */
+    downloadFolder := readConfigFile("DOWNLOAD_PATH")
+    downloadFolderTemp := sourceDirectory . "\VideoDownloader\download_temp" ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
+    generalTempFolder := scriptWorkingDirectory . "\temp" ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
+    ; Build the paramter string for the robocopy executable.
+    parameterString := "`"" . sourceDirectory . "`" `"" . destinationDirectory . "`" /E "
+    parameterString .= "/XD `"" . sourceDirectory . "\VideoDownloader_old_version_backups`" "
+    parameterString .= "`"" . downloadFolder . "`" "
+    parameterString .= "`"" . downloadFolderTemp . "`" "
+    parameterString .= "`"" . generalTempFolder . "`" "
+    parameterString .= "/MAX:10485760"
+
     ; Waits 3 seconds before starting the backup process to ensure that the main script has exited already.
     Run('cmd.exe /c "timeout /t 3 /nobreak && robocopy ' . parameterString . '"', , "Hide")
     exitScriptWithNotification()
