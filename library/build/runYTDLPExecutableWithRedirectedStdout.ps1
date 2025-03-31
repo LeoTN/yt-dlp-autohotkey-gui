@@ -8,7 +8,10 @@ Param (
     [String]$pYTDLPCommandString,
     # An optional path to a log file which will contain the stdout of the yt-dlp executable file.
     [Parameter(Mandatory = $false)]
-    [String]$pYTDLPLogFileLocation = (Join-Path -Path $env:TEMP -ChildPath "yt-dlp.log")
+    [String]$pYTDLPLogFileLocation = (Join-Path -Path $env:TEMP -ChildPath "yt-dlp.log"),
+    # An optional path to a log file which will contain the error stdout of the yt-dlp executable file.
+    [Parameter(Mandatory = $false)]
+    [String]$pYTDLPErrorLogFileLocation = (Join-Path -Path $env:TEMP -ChildPath "yt-dlp_errors.log")
 )
 
 $Host.UI.RawUI.BackgroundColor = "Black"
@@ -22,7 +25,7 @@ $null = Clear-Host
 $null = Write-Host "Terminal ready..."
 
 function onInit() {
-    $process = Start-Process -FilePath $pYTDLPExecutableFileLocation -ArgumentList $pYTDLPCommandString -RedirectStandardOutput $pYTDLPLogFileLocation -WindowStyle "Hidden" -PassThru -ErrorAction "Continue"
+    $process = Start-Process -FilePath $pYTDLPExecutableFileLocation -ArgumentList $pYTDLPCommandString -RedirectStandardOutput $pYTDLPLogFileLocation -RedirectStandardError $pYTDLPErrorLogFileLocation -WindowStyle "Hidden" -PassThru -ErrorAction "Continue"
     If ($process.Id -eq $null) {
         # This exit code means that an error has occured.
         $exitCode = 1

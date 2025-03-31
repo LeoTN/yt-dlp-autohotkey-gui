@@ -20,7 +20,8 @@ Executes a given command with the yt-dlp executable.
 @returns [int] The PID of the yt-dlp process.
 @returns (alt) [String] "_result_error_while_starting_ytdlp_executable", when the yt-dlp executable failed to launch.
 */
-executeYTDLPCommand(pYTDLPCommandString, pLogFileLocation := A_Temp . "\yt-dlp.log") {
+executeYTDLPCommand(pYTDLPCommandString, pLogFileLocation := A_Temp . "\yt-dlp.log",
+    pErrorLogFileLocation := A_Temp . "\yt-dlp_errors.log") {
     global psRunYTDLPExecutableLocation
     global YTDLPFileLocation
 
@@ -30,16 +31,23 @@ executeYTDLPCommand(pYTDLPCommandString, pLogFileLocation := A_Temp . "\yt-dlp.l
     commandString := 'powershell.exe -executionPolicy bypass -file "' . psRunYTDLPExecutableLocation . '" '
     commandString .= '-pYTDLPExecutableFileLocation "' . YTDLPFileLocation . '" '
     commandString .= '-pYTDLPLogFileLocation "' . pLogFileLocation . '" '
+    commandString .= '-pYTDLPErrorLogFileLocation "' . pErrorLogFileLocation . '" '
     commandString .= '-pYTDLPCommandString "' . formattedYTDLPCommandString . '"'
 
     exitCode := RunWait(commandString, , "Hide")
     if (exitCode == 1) {
-        errorObject := Error("Failed to run yt-dlp executable with redirected stdout.", ,
-            "Please see the log file at`n[" . pLogFileLocation . "]`nfor more information.")
+        ; Recreates the log file path because the script will put the log file in the same directory as itself.
+        psRunYTDLPExecutableLocationLogFileLocation := StrReplace(psRunYTDLPExecutableLocation, ".ps1", ".log")
+        errorExtraMessage := "The following log files might provide more information:`n`n"
+        errorExtraMessage .= "[" . psRunYTDLPExecutableLocationLogFileLocation . "]`n"
+        errorExtraMessage .= "[" . pLogFileLocation . "]`n"
+        errorExtraMessage .= "[" . pErrorLogFileLocation . "]"
+        errorObject := Error("Failed to run yt-dlp executable with redirected stdout.", , errorExtraMessage)
         errorObject.File := psRunYTDLPExecutableLocation
+        errorObject.Line := "No line information required."
         errorObject.Stack := "No call stack required."
         displayErrorMessage(errorObject,
-            "Please report this error and provide the information from the log file mentioned above.")
+            "Please report this error and provide the information from the log files mentioned above. Thank you!")
         return "_result_error_while_starting_ytdlp_executable"
     }
     else {
@@ -71,6 +79,230 @@ createVideoListViewEntry(pVideoURL) {
     return ["_result_video_added_to_list"]
 }
 
+monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCompleteVideoAmount,
+    pAlreadyDownloadedVideoAmount, pCurrentlyDownloadedVideoTitle) {
+    ; The phases will be marked with a tracking point line in the yt-dlp log file.
+    static booleanPhaseReached_pre_process := false
+    static booleanPhaseReached_after_filter := false
+    static booleanPhaseReached_video := false
+    static booleanPhaseReached_before_dl := false
+    static booleanPhaseReached_post_process := false
+    static booleanPhaseReached_after_move := false
+    static booleanPhaseReached_after_video := false
+    ; These values represent the download progress for the video and it's corresponding audio track.
+    static videoDownloadProgress := 0
+    static audioDownloadProgress := 0
+    ; These values are important for the parseYTDLPLogFile() function.
+    static previousProgressPerecentage := 0
+    static parsedLines := 0
+
+    ; Updates the downloaded video progress text.
+    downloadProgressText.Value := "Downloaded " . pAlreadyDownloadedVideoAmount . " / " . pCompleteVideoAmount
+    ; Resets the download progress bar.
+    downloadProgressBar.Value := 0
+
+    SetTimer(updateDownloadProgressStep, 1000)
+    ; This function is called every second to update the download progress GUI elements.
+    updateDownloadProgressStep() {
+        ; Stops the monitoring because the yt-dlp executable delivering new progress is no longer running.
+        if (!ProcessExist(pYTDLPProcessPID)) {
+            SetTimer(updateDownloadProgressStep, 0)
+            downloadProgressBar.Value := 100
+            ; Updates the downloaded video progress text.
+            downloadProgressText.Value := "Downloaded " . pAlreadyDownloadedVideoAmount + 1
+                . " / " . pCompleteVideoAmount
+            ; Resets all relevant values for the next download.
+            booleanPhaseReached_pre_process := false
+            booleanPhaseReached_after_filter := false
+            booleanPhaseReached_video := false
+            booleanPhaseReached_before_dl := false
+            booleanPhaseReached_post_process := false
+            booleanPhaseReached_after_move := false
+            booleanPhaseReached_after_video := false
+            videoDownloadProgress := 0
+            audioDownloadProgress := 0
+            previousProgressPerecentage := 0
+            parsedLines := 0
+        }
+        else {
+            parseYTDLPLogFile()
+            downloadProgressBar.Value := calculateDownloadProgressBarValue()
+        }
+    }
+    ; This function parses the yt-dlp log file and extracts the relevant information to track the download process.
+    parseYTDLPLogFile() {
+        loop read (pYTDLPLogFileLocation) {
+            ; All previous lines will be skipped.
+            if (parsedLines >= A_Index) {
+                continue
+            }
+            parsedLines++
+            /*
+            Checks the log file for any of the tracking point lines below.
+            These will be printed by yt-dlp depending on the overall download progression.
+            -------------------------------------------------
+            */
+            trackingLine :=
+                "[PROGRESS_INFO_PRE_PROCESS] [Tracking Point: Video information has been extracted.]"
+            if (InStr(A_LoopReadLine, trackingLine)) {
+                booleanPhaseReached_pre_process := true
+                statusBarText := "[" . pCurrentlyDownloadedVideoTitle . "] - Processing video information..."
+                handleVideoListGUI_videoListGUIStatusBar_startAnimation(statusBarText)
+                continue
+            }
+            trackingLine :=
+                "[PROGRESS_INFO_AFTER_FILTER] [Tracking Point: Video has passed the format filter.]"
+            if (InStr(A_LoopReadLine, trackingLine)) {
+                booleanPhaseReached_after_filter := true
+                continue
+            }
+            trackingLine :=
+                "[PROGRESS_INFO_VIDEO] [Tracking Point: Starting download of subtitle and other requested files...]"
+            if (InStr(A_LoopReadLine, trackingLine)) {
+                booleanPhaseReached_video := true
+                statusBarText := "[" . pCurrentlyDownloadedVideoTitle .
+                    "] - Downloading video subtitle(s) and other requested files..."
+                handleVideoListGUI_videoListGUIStatusBar_startAnimation(statusBarText)
+                continue
+            }
+            trackingLine :=
+                "[PROGRESS_INFO_BEFORE_DL] [Tracking Point: Starting video download...]"
+            if (InStr(A_LoopReadLine, trackingLine)) {
+                booleanPhaseReached_before_dl := true
+                statusBarText := "[" . pCurrentlyDownloadedVideoTitle . "] - Downloading video..."
+                handleVideoListGUI_videoListGUIStatusBar_startAnimation(statusBarText)
+                continue
+            }
+            trackingLine :=
+                "[PROGRESS_INFO_POST_PROCESS] [Tracking Point: All relevant files have been downloaded. Starting video post processing...]"
+            if (InStr(A_LoopReadLine, trackingLine)) {
+                booleanPhaseReached_post_process := true
+                statusBarText := "[" . pCurrentlyDownloadedVideoTitle . "] - Post processing downloaded video..."
+                handleVideoListGUI_videoListGUIStatusBar_startAnimation(statusBarText)
+                continue
+            }
+            trackingLine :=
+                "[PROGRESS_INFO_AFTER_MOVE] [Tracking Point: Video has been post processed and moved.]"
+            if (InStr(A_LoopReadLine, trackingLine)) {
+                booleanPhaseReached_after_move := true
+                statusBarText := "[" . pCurrentlyDownloadedVideoTitle . "] - Finishing video post processing..."
+                handleVideoListGUI_videoListGUIStatusBar_startAnimation(statusBarText)
+                continue
+            }
+            trackingLine :=
+                "[PROGRESS_INFO_AFTER_VIDEO] [Tracking Point: The video download process has been finished.]"
+            if (InStr(A_LoopReadLine, trackingLine)) {
+                booleanPhaseReached_after_video := true
+                continue
+            }
+            /*
+            Extracts the download progress for the video file and it's corresponding audio track.
+            -------------------------------------------------
+            */
+            ; This tracking point must occur in order to be able to track the video (and audio) download progress.
+            if (!booleanPhaseReached_before_dl) {
+                continue
+            }
+            /*
+            Scans the output from the yt-dlp executable and extracts the download progress percentage values.
+            As yt-dlp usually downloads the video file first, this will most likely be the video download progress.
+            */
+            if (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) && videoDownloadProgress != 100) {
+                outString := outMatch[]
+                outStringReady := StrReplace(outString, "%")
+                extractedPercentage := Number(outStringReady)
+                extractedPercentage := Round(extractedPercentage, 2)
+                /*
+                Checks if the extracted perentage is bigger than the previously extracted number.
+                Otherwise the progress bar might move backwards.
+                */
+                if (extractedPercentage <= 100 && extractedPercentage > previousProgressPerecentage) {
+                    /*
+                    This is another safety guard. If yt-dlp outputs a progress number which is way to high,
+                    this condition will sort that out. For example, if the download progress is at 4% and suddenly
+                    there is a 100% in the log file. This would be discarded as the difference is to high.
+                    */
+                    if ((extractedPercentage - previousProgressPerecentage) >= 80) {
+                        continue
+                    }
+                    previousProgressPerecentage := extractedPercentage
+                    videoDownloadProgress := extractedPercentage
+                    if (videoDownloadProgress == 100) {
+                        ; Resets the previous progress percentage for the audio download.
+                        previousProgressPerecentage := 0
+                    }
+                }
+                continue
+            }
+            /*
+            This makes sure, that the video has already been downloaded.
+            Usually at this point, yt-dlp will download the corresponding audio track.
+            This means the progress will most likely be the audio track download progress.
+            */
+            static booleanWaitForVideoDestinationString := true
+            if (booleanWaitForVideoDestinationString && videoDownloadProgress == 100
+                && InStr(A_LoopReadLine, "[download] Destination: ")) {
+                booleanWaitForVideoDestinationString := false
+            }
+            else {
+                continue
+            }
+            ; Scans the output from the yt-dlp executable and extracts the download progress percentage values.
+            if (RegExMatch(A_LoopReadLine, "S)[\d]+[.][\d{1}][%]", &outMatch) && audioDownloadProgress != 100) {
+                outString := outMatch[]
+                outStringReady := StrReplace(outString, "%")
+                extractedPercentage := Number(outStringReady)
+                extractedPercentage := Round(extractedPercentage, 2)
+                /*
+                Checks if the extracted perentage is bigger than the previously extracted number.
+                Otherwise the progress bar might move backwards.
+                */
+                if (extractedPercentage <= 100 && extractedPercentage > previousProgressPerecentage) {
+                    /*
+                    This is another safety guard. If yt-dlp outputs a progress number which is way to high,
+                    this condition will sort that out. For example, if the download progress is at 4% and suddenly
+                    there is a 100% in the log file. This would be discarded as the difference is to high.
+                    */
+                    if ((extractedPercentage - previousProgressPerecentage) >= 80) {
+                        continue
+                    }
+                    previousProgressPerecentage := extractedPercentage
+                    audioDownloadProgress := extractedPercentage
+                }
+                continue
+            }
+        }
+    }
+    /*
+    It also calculates the overall progress of the video download to display it via a progress bar.
+    @returns [int] The overall download progress percentage (0-100).
+    */
+    calculateDownloadProgressBarValue() {
+        totalDownloadProgressBarValue := 0
+        /*
+        The phases will be marked with a tracking point line in the yt-dlp log file. If the value of a phase is true,
+        which means yt-dlp has completed this phase, it will increase the progress bar value by 5.
+        The progress bar has a maximum value of 100. This means that 30% of it will be filled by completing
+        the phases and the remaining 70% will be filled with the actual download progress from the log file.
+        */
+        totalDownloadProgressBarValue += 5 * booleanPhaseReached_pre_process
+        totalDownloadProgressBarValue += 5 * booleanPhaseReached_after_filter
+        totalDownloadProgressBarValue += 5 * booleanPhaseReached_video
+        ; The phase "booleanPhaseReached_before_dl" is skipped because the progress will be read from the log file instead.
+        totalDownloadProgressBarValue += 5 * booleanPhaseReached_post_process
+        totalDownloadProgressBarValue += 5 * booleanPhaseReached_after_move
+        totalDownloadProgressBarValue += 5 * booleanPhaseReached_after_video
+        /*
+        Adds the actual download progress from the log file. Per default, yt-dlp downloads the video and audio separately.
+        60% of the progress bar will be filled by completing the download of the video.
+        The remaining 10% can be filled by completing the download of the video's audio track.
+        */
+        totalDownloadProgressBarValue += 0.6 * videoDownloadProgress
+        totalDownloadProgressBarValue += 0.1 * audioDownloadProgress
+        return Round(totalDownloadProgressBarValue, 2)
+    }
+}
+
 /*
 Tries to find an existing process via a wildcard.
 NOTE: Currently only supports wildcards containing the beginning of the wanted process.
@@ -91,7 +323,7 @@ findAlreadyRunningScriptInstance(pWildcard) {
         ; would be sufficient to search for "VideoDownloader.exe" as the [*]+ part allows an
         ; undefined amount of characters to appear between the wildcard name and it's extension.
         ; The condition below makes sure that it does not find the current instance of this script as a proces.
-        if (RegExMatch(v, outNameNoExt . ".*." . outExtension) != 0 && v != A_ScriptName) {
+        if (RegExMatch(v, outNameNoExt . ".*." . outExtension) && v != A_ScriptName) {
             tmp := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
             result := MsgBox("There is currently another instance of this script running."
                 "`nName: [" . v . "]`nPath: [" . tmp . "]`nContinue at your own risk!"

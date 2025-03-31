@@ -81,12 +81,13 @@ createVideoListGUI() {
     downloadSelectDownloadDirectoryInputEdit := videoListGUI.Add("Edit", "yp+20 w255 R1 -WantReturn +ReadOnly",
         "default")
     downloadSelectDownloadDirectoryButton := videoListGUI.Add("Button", "xp+260 yp+1 w20 h20", "...")
-    downloadProgressText := videoListGUI.Add("Text", "xp-260 yp+29", "Downloaded 0 / 0 (WIP)") ; REMOVE
+    downloadProgressText := videoListGUI.Add("Text", "xp-260 yp+29", "Downloaded 0 / 0")
     downloadProgressBar := videoListGUI.Add("Progress", "yp+20 w280")
     ; Status bar
     videoListGUIStatusBar := videoListGUI.Add("StatusBar", , "Add a video URL to start")
     videoListGUIStatusBar.SetIcon("shell32.dll", 222)
     videoListGUIStatusBar.loadingAnimationIsPlaying := false
+    videoListGUIStatusBar.loadingAnimationCurrentStatusBarText := ""
 
     ; Adds the event handlers for the video list GUI.
     videoDesiredFormatDDL.OnEvent("Change", handleVideoListGUI_allCurrentlySelectedVideoElements_onChange)
@@ -125,7 +126,7 @@ createVideoListGUI() {
     fileSelectionMenuOpen := Menu()
     fileSelectionMenuOpen.Add("Config-File`tShift+1", (*) => menu_openConfigFile())
     fileSelectionMenuOpen.SetIcon("Config-File`tShift+1", "shell32.dll", 70)
-    fileSelectionMenuOpen.Add("Download destination`tShift+2", (*) => menu_openDownloadLocation()) ; REMOVE
+    fileSelectionMenuOpen.Add("Download destination`tShift+2", (*) => menu_openDownloadLocation())
     fileSelectionMenuOpen.SetIcon("Download destination`tShift+2", "shell32.dll", 116)
 
     fileSelectionMenuReset := Menu()
@@ -454,7 +455,8 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
     ; Parse through each video and start the download process.
     for (key, videoListEntry in localCopyVideoListViewContentMap) {
         videoURL := videoListEntry.videoURL
-        downloadVideoListViewEntry(videoListEntry, targetDownloadDirectory)
+        downloadVideoListViewEntry(videoListEntry, targetDownloadDirectory, totalAvailableVideoAmount,
+            totalDownloadedVideoAmount)
         ; Remove the video from the video list view element.
         if (downloadRemoveVideosAfterDownloadCheckbox.Value) {
             videoListEntry.removeEntryFromVideoListViewContentMap()
@@ -462,11 +464,11 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
         totalDownloadedVideoAmount++
     }
     if (totalDownloadedVideoAmount == 1) {
-        videoListGUIStatusBar.SetText("Downloaded 1 video to [" . targetDownloadDirectory . "]")
+        videoListGUIStatusBar.SetText("Downloaded 1 file to [" . targetDownloadDirectory . "]")
     }
     else if (totalDownloadedVideoAmount > 1) {
         videoListGUIStatusBar.SetText("Downloaded " . totalDownloadedVideoAmount
-            . " videos to [" . targetDownloadDirectory . "]")
+            . " files to [" . targetDownloadDirectory . "]")
     }
     if (downloadTerminateAfterDownloadCheckbox.Value) {
         exitScriptWithNotification()
@@ -509,6 +511,7 @@ handleVideoListGUI_invalidPlaylistRangeIndexMsgBoxHelpButton(*) {
 
 /*
 Shows a neat little loading animation in the status bar.
+This function can be called again to overwrite the currently playing animation.
 @param pStatusBarText [String] The text that is displayed in the status bar while the loading animation plays.
 @param pSpinnerCharArray [Array] An array containing different states an positions of an element represented with a string.
 It should look as if the object is animated when parsing through the array.
@@ -522,6 +525,14 @@ handleVideoListGUI_videoListGUIStatusBar_startAnimation(pStatusBarText, pSpinner
             "[   ⌛      ]", "[  ⌛       ]", "[ ⌛        ]"
         ]
     }
+    /*
+    If this function is called while the loading animation is playing, it will simply swap out the text
+    but not start another timer. This avoids multiple timers overlapping and causing graphical issues in the status bar.
+    */
+    videoListGUIStatusBar.loadingAnimationCurrentStatusBarText := pStatusBarText
+    if (videoListGUIStatusBar.loadingAnimationIsPlaying) {
+        return
+    }
     videoListGUIStatusBar.loadingAnimationIsPlaying := true
     SetTimer(step, 150)
     step() {
@@ -532,7 +543,7 @@ handleVideoListGUI_videoListGUIStatusBar_startAnimation(pStatusBarText, pSpinner
             return
         }
         currentChar := pSpinnerCharArray[i]
-        videoListGUIStatusBar.SetText(pStatusBarText . " " . currentChar)
+        videoListGUIStatusBar.SetText(videoListGUIStatusBar.loadingAnimationCurrentStatusBarText . " " . currentChar)
         ; Increases the index for the next time this function is called.
         i := Mod(i, pSpinnerCharArray.Length) + 1
     }
@@ -544,6 +555,7 @@ Stops the status bar loading animation.
 */
 handleVideoListGUI_videoListGUIStatusBar_stopAnimation(pStatusBarText) {
     videoListGUIStatusBar.loadingAnimationIsPlaying := false
+    videoListGUIStatusBar.loadingAnimationCurrentStatusBarText := pStatusBarText
     videoListGUIStatusBar.SetText(pStatusBarText)
 }
 
@@ -826,7 +838,8 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     return videoMetaDataObjectArray
 }
 
-downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
+downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory, pCompleteVideoAmount,
+    pAlreadyDownloadedVideoAmount) {
     global scriptWorkingDirectory
     global YTDLPFileLocation
     global ffmpegDirectory
@@ -835,25 +848,69 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
         DirCreate(pDownloadTargetDirectory)
     }
     ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
+    tempWorkingDirectory := scriptWorkingDirectory . "\temp"
+    if (!DirExist(tempWorkingDirectory)) {
+        DirCreate(tempWorkingDirectory)
+    }
+    ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
     downloadTempDirectory := scriptWorkingDirectory . "\download_temp"
     if (!DirExist(downloadTempDirectory)) {
         DirCreate(downloadTempDirectory)
     }
 
+    ; Build the yt-dlp command to download the video and add progress tracking points to the stdout.
     ytdlpCommand := '--no-playlist --paths "' . pDownloadTargetDirectory . '" '
     ytdlpCommand .= '--paths "temp:' . downloadTempDirectory . '" '
     ytdlpCommand .= '--ffmpeg-location "' . ffmpegDirectory . '" '
+    ytdlpCommand .=
+        '--progress-template "[Downloading...] [%(progress._percent_str)s of %(progress._total_bytes_str)s ' .
+        'at %(progress._speed_str)s. Time passed: %(progress._elapsed_str)s]" '
+    ; These printed lines will be used to track the download progress more accurately.
+    ytdlpCommand .=
+        '--print "pre_process:[PROGRESS_INFO_PRE_PROCESS] [Tracking Point: Video information has been extracted.]" '
+    ytdlpCommand .=
+        '--print "after_filter:[PROGRESS_INFO_AFTER_FILTER] [Tracking Point: Video has passed the format filter.]" '
+    ytdlpCommand .=
+        '--print "video:[PROGRESS_INFO_VIDEO] [Tracking Point: Starting download of subtitle and other requested files...]" '
+    ytdlpCommand .=
+        '--print "before_dl:[PROGRESS_INFO_BEFORE_DL] [Tracking Point: Starting video download...]" '
+    ytdlpCommand .=
+        '--print "post_process:[PROGRESS_INFO_POST_PROCESS] [Tracking Point: All relevant files have been downloaded. Starting video post processing...]" '
+    ytdlpCommand .=
+        '--print "after_move:[PROGRESS_INFO_AFTER_MOVE] [Tracking Point: Video has been post processed and moved.]" '
+    ytdlpCommand .=
+        '--print "after_video:[PROGRESS_INFO_AFTER_VIDEO] [Tracking Point: The video download process has been finished.]" '
+    ; Those options are required due to the use of the --print command.
+    ytdlpCommand .= '--no-quiet --no-simulate '
     ; Add the custom parameters from the video list view entry.
     pVideoListViewEntry.generateDownloadCommandPart()
     ytdlpCommand .= pVideoListViewEntry.downloadCommandPart
+
+    ; We use the current time stamp to generade a unique name for log file.
+    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
+    ; Defines the yt-dlp download log file name.
+    ytdlpDownloadLogFileName := currentTime . "_yt_dlp_download_log.log"
+    ytdlpDownloadLogFileLocation := tempWorkingDirectory . "\" . ytdlpDownloadLogFileName
+    ; Defines the yt-dlp error log file name.
+    ytdlpErrorLogFileName := currentTime . "_yt_dlp_error_log.log"
+    ytdlpErrorLogFileLocation := tempWorkingDirectory . "\" . ytdlpErrorLogFileName
+    ; Execute the yt-dlp command and monitor the download progress.
+    processPID := executeYTDLPCommand(ytdlpCommand, ytdlpDownloadLogFileLocation, ytdlpErrorLogFileLocation)
+
+    ; Progress section below.
     videoTitle := pVideoListViewEntry.videoTitle
-    handleVideoListGUI_videoListGUIStatusBar_startAnimation("Downloading (" . videoTitle . ")...")
-    processPID := executeYTDLPCommand(ytdlpCommand)
+    statusBarText := "[" . videoTitle . "] - Starting download process..."
+    handleVideoListGUI_videoListGUIStatusBar_startAnimation(statusBarText)
+    ; This function monitor the download progress and update the video list GUI accordingly.
+    monitorVideoDownloadProgress(processPID, ytdlpDownloadLogFileLocation, pCompleteVideoAmount,
+        pAlreadyDownloadedVideoAmount, videoTitle)
+
     ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
     if (processPID != "_result_error_while_starting_ytdlp_executable") {
         ProcessWaitClose(processPID)
     }
-    handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished downloading (" . videoTitle . ")")
+    statusBarText := "[" . videoTitle . "] - Finished download process."
+    handleVideoListGUI_videoListGUIStatusBar_stopAnimation(statusBarText)
     ; This delay gives the loading bar animation enough time to end properly and avoid visual bugs.
     Sleep(200)
 }
