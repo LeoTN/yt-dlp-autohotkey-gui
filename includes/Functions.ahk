@@ -79,6 +79,14 @@ createVideoListViewEntry(pVideoURL) {
     return ["_result_video_added_to_list"]
 }
 
+/*
+Reads the download log file during the download process. The progress will be displayed in the video list GUI.
+@param pYTDLPProcessPID [int] The PID of the yt-dlp process downloading the video.
+@param pYTDLPLogFileLocation [int] The location of the log file that the yt-dlp process writes to.
+@param pCompleteVideoAmount [int] The total amount of videos that are going to be downloaded.
+@param pAlreadyDownloadedVideoAmount [int] The amount of videos that have been downloaded already.
+@param pCurrentlyDownloadedVideoTitle [int] The title of the currently downloaded video.
+*/
 monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCompleteVideoAmount,
     pAlreadyDownloadedVideoAmount, pCurrentlyDownloadedVideoTitle) {
     ; The phases will be marked with a tracking point line in the yt-dlp log file.
@@ -324,37 +332,43 @@ findAlreadyRunningScriptInstance(pWildcard) {
         ; undefined amount of characters to appear between the wildcard name and it's extension.
         ; The condition below makes sure that it does not find the current instance of this script as a proces.
         if (RegExMatch(v, outNameNoExt . ".*." . outExtension) && v != A_ScriptName) {
-            tmp := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
-            result := MsgBox("There is currently another instance of this script running."
-                "`nName: [" . v . "]`nPath: [" . tmp . "]`nContinue at your own risk!"
-                "`nPress [Retry] to terminate the other instance.", "VD - Multiple Script Instances Found!",
-                "ARI Icon! 262144")
+            processPath := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
+            msgText := "Another instance of VideoDownloader is already running."
+            msgText .= "`n`n********************"
+            msgText .= "`nName: [ " . v . "]"
+            msgText .= "`nPath: [ " . processPath . "]"
+            msgText .= "`n********************"
+            msgText .= "`n`nRunning multiple instances can cause unpredictable issues."
+            msgText .= "`n`nContinue at your own risk."
+            msgTitle := "VD - Multiple Instances Found!"
+            msgHeadLine := "Multiple Instances Found!"
+            msgButton1 := "Continue"
+            msgButton2 := "Abort"
+            msgButton3 := "Terminate Other Instance"
+            result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
 
             switch (result) {
-                case "Retry":
+                case msgButton3:
                 {
                     try
                     {
                         ProcessClose(v)
-                        if (ProcessWaitClose(v, 5) != 0) {
-                            throw ("Could not close the other process.")
-                        }
                     }
-                    catch {
-                        MsgBox("Could not close process :`n"
-                            v . "`nTerminating script.", "VD - Close Process - Error!", "O IconX T3 262144")
-                        ExitApp()
+                    catch as error {
+                        errorAdditionalMessage :=
+                            "The process might be elevated (which means it was launched with higher permissions)."
+                        displayErrorMessage(error, errorAdditionalMessage, true)
                     }
                 }
-                case "Ignore":
+                case msgButton1:
                 {
-                    ; This option is not recommended because the script is not supposed to run with multiple instances.
+                    ; This option is not recommended because the script is not supposed to run with multiple instances active.
                     return
                 }
                 Default:
                 {
                     MsgBox("Script terminated.", "VD - Script Status", "O Iconi T1.5")
-                    ExitApp()
+                    exitScriptWithNotification(true)
                 }
                     ; Stops after the first match.
                     break
@@ -395,6 +409,89 @@ backupOldVersionFiles(pBackupParentDirectory) {
     ; Waits 3 seconds before starting the backup process to ensure that the main script has exited already.
     Run('cmd.exe /c "timeout /t 3 /nobreak && robocopy ' . parameterString . '"', , "Hide")
     exitScriptWithNotification()
+}
+
+/*
+Displays a customizable message box with up to 3 buttons and a headline.
+@param pMsgBoxText [String] The main body text of the message box. [Max. 78 characters without line breaks (`n)]
+@param pMsgBoxTitle [String] The title of the message box window. [Max. 48 characters]
+@param pMsgBoxHeadLine [String] The headline text displayed at the top of the message box. [Max. 48 characters]
+@param pButton1Text [String] The text for the leftmost button. [Max. 50 characters]
+@param pButton2Text [String] The text for the middle button. Defaults to "Okay". [Max. 50 characters]
+@param pButton3Text [String] The text for the rightmost button. [Max. 50 characters]
+@param pMsgBoxTimeoutSeconds [int] Optional timeout in seconds. Closes the message box automatically after this duration.
+@param pBooleanAlwaysOnTop [boolean] If true, the message box will always stay on top of other windows.
+@returns [String] The text of the button clicked by the user.
+@returns (alt) [String] "_result_gui_closed" if the GUI was closed.
+@returns (alt) [String] "_result_timeout" if the timeout was reached.
+*/
+customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_ScriptName,
+    pButton1Text?, pButton2Text := "Okay", pButton3Text?, pMsgBoxTimeoutSeconds?, pBooleanAlwaysOnTop := false) {
+    ; This value represents either the user choice or any other possible outcome like a timeout for example.
+    returnValue := "_result_gui_closed"
+    ; Create the GUI which will mimic the style of a message box.
+    customMsgBoxGUI := Gui(, pMsgBoxTitle)
+    if (pBooleanAlwaysOnTop) {
+        customMsgBoxGUI.Opt("+AlwaysOnTop")
+    }
+    ; Headline text.
+    customMsgBoxGUIHeadLineText := customMsgBoxGUI.Add("Text", "xm ym w490 h40", pMsgBoxHeadLine)
+    customMsgBoxGUIHeadLineText.SetFont("bold s12")
+    ; A separator line.
+    customMsgBoxGUIHeadLineSeparatorLineProgressBar := customMsgBoxGUI.Add("Progress", "xm-15 ym+25 w500 h5 cBlack")
+    customMsgBoxGUIHeadLineSeparatorLineProgressBar.Value := 100
+    ; MsgBox message text.
+    customMsgBoxGUITextGroupBox := customMsgBoxGUI.Add("GroupBox", "xm ym+30 w470 h220")
+    customMsgBoxGUIText := customMsgBoxGUI.Add("Text", "xp+10 yp+10 w450 h200", pMsgBoxText)
+    ; Creates the buttons for the user to choose.
+    if (IsSet(pButton1Text) && pButton1Text != "") {
+        customMsgBoxGUIButton1 := customMsgBoxGUI.Add("Button", "xm ym+260 w150 h40", pButton1Text)
+        customMsgBoxGUIButton1.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
+    }
+    if (IsSet(pButton2Text) && pButton2Text != "") {
+        customMsgBoxGUIButton2 := customMsgBoxGUI.Add("Button", "xm+160 ym+260 w150 h40 Default", pButton2Text)
+        customMsgBoxGUIButton2.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
+    }
+    if (IsSet(pButton3Text) && pButton3Text != "") {
+        customMsgBoxGUIButton3 := customMsgBoxGUI.Add("Button", "xm+320 ym+260 w150 h40", pButton3Text)
+        customMsgBoxGUIButton3.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
+    }
+    ; Status bar.
+    customMsgBoxGUIStatusBar := customMsgBoxGUI.Add("StatusBar", , "Please choose an option")
+    customMsgBoxGUIStatusBar.SetIcon("shell32.dll", 222) ; REMOVE USE ICON DLL HERE
+    customMsgBoxGUI.Show("w490")
+    ; OnEvent function for the buttons.
+    handleCustomMsgBoxGUI_button_onClick(pButton, pInfo) {
+        ; The text of the pressed button will be returned.
+        returnValue := pButton.Text
+        if (WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
+            WinClose()
+        }
+    }
+    ; The script waits until the user made a choice or the timer runs out.
+    if (IsSet(pMsgBoxTimeoutSeconds)) {
+        loop (pMsgBoxTimeoutSeconds) {
+            if (!WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
+                return returnValue
+            }
+            remainingSeconds := pMsgBoxTimeoutSeconds - A_Index + 1
+            statusBarText := "Please choose an option - [The window will close in " . remainingSeconds
+            if (remainingSeconds == 1) {
+                statusBarText .= " second]"
+            }
+            else {
+                statusBarText .= " seconds]"
+            }
+            customMsgBoxGUIStatusBar.SetText(statusBarText)
+            Sleep(1000)
+        }
+        returnValue := "_result_timeout"
+        if (WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
+            WinClose()
+        }
+    }
+    WinWaitClose("ahk_id " . customMsgBoxGUI.Hwnd)
+    return returnValue
 }
 
 /*
