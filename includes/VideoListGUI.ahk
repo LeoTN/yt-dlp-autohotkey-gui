@@ -67,8 +67,8 @@ createVideoListGUI() {
     ; Import and export elements.
     importVideoListButton := videoListGUI.Add("Button", "xp+200 yp-50 w75", "Import")
     exportVideoListButton := videoListGUI.Add("Button", "yp xp+85 w75", "Export")
-    exportOnlySelectedVideosCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Only export selected videos")
-    autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20", "Auto export video list (WIP)") ; REMOVE
+    exportOnlyValidURLsCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Only consider valid URLs")
+    autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Controls that are relevant for downloading the videos in the video list.
     downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download")
     downloadAllVideosButton := videoListGUI.Add("Button", "xp+10 yp+20 w135", "Download All")
@@ -227,7 +227,7 @@ handleVideoListGUI_videoListSearchBarInputEdit_onChange(pEdit, pInfo) {
         tmpVideoMetaDataObject := Object()
         tmpVideoMetaDataObject.VIDEO_TITLE := "*****"
         tmpVideoMetaDataObject.VIDEO_ID := ""
-        tmpVideoMetaDataObject.VIDEO_URL := ""
+        tmpVideoMetaDataObject.VIDEO_URL := "_internal_entry_no_results_found"
         tmpVideoMetaDataObject.VIDEO_UPLOADER := "No results found."
         tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
         tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "*****"
@@ -296,7 +296,7 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
             return
         }
     }
-    ; This means the provided URL contains a refference to a playlist.
+    ; This means the provided URL contains a reference to a playlist.
     if (addVideoURLIsAPlaylistCheckbox.Value) {
         playlistRangeIndex := addVideoSpecifyPlaylistRangeInputEdit.Value
         ; This means the user wants to download only parts of the playlist.
@@ -312,7 +312,7 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
             tmpVideoMetaDataObject := Object()
             tmpVideoMetaDataObject.VIDEO_TITLE := "playlist_not_found: " . videoURL
             tmpVideoMetaDataObject.VIDEO_ID := ""
-            tmpVideoMetaDataObject.VIDEO_URL := ""
+            tmpVideoMetaDataObject.VIDEO_URL := "playlist_not_found: " . videoURL
             tmpVideoMetaDataObject.VIDEO_UPLOADER := "Not found"
             tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
             tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "Not found"
@@ -390,11 +390,25 @@ handleVideoListGUI_removeVideoConformDeletionCheckbox_onClick(pCheckbox, pInfo) 
 }
 
 handleVideoListGUI_importVideoListButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    importFileDefaultDirectory := A_MyDocuments
+    importFileLocation := FileSelect("3", importFileDefaultDirectory, "VD - Please select a file to import", "*.txt")
+    ; This usually happens, when the user cancels the selection.
+    if (importFileLocation == "") {
+        return
+    }
+    ; Imports all URLs or only valid ones, depending on the value of the checkbox.
+    importVideoListViewElements(importFileLocation, exportOnlyValidURLsCheckbox.Value)
 }
 
 handleVideoListGUI_exportVideoListButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global videoListViewContentMap
+
+    ; This means there are no videos in the list view element.
+    if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
+        return
+    }
+    ; Exports all URLs or only valid ones, depending on the value of the checkbox.
+    exportVideoListViewElements(videoListViewContentMap, , exportOnlyValidURLsCheckbox.Value)
 }
 
 handleVideoListGUI_videoListView_onItemSelect(pListView, pSelectedElementIndex, pBooleanElementWasSelected) {
@@ -452,7 +466,7 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
         }
     }
 
-    ; We use the current time stamp to generade a unique name for the download folder.
+    ; We use the current time stamp to generate a unique name for the download folder.
     currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
     currentDownloadDirectory := scriptWorkingDirectory . "\download\" . currentTime
@@ -469,6 +483,8 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
     currentYTDLPActionObject.completeVideoAmount := localCopyVideoListViewContentMap.Count
     currentYTDLPActionObject.canceledDownloadVideoAmount := 0
 
+    ; This map will be used to automatically export the downloaded URLs into the download folder.
+    actuallyDownloadedVideoListViewElements := Map()
     ; Parse through each video and start the download process.
     for (key, videoListEntry in localCopyVideoListViewContentMap) {
         ; Calculates the remaining amount of videos which are left to be downloaded.
@@ -490,8 +506,18 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
         if (downloadRemoveVideosAfterDownloadCheckbox.Value) {
             videoListEntry.removeEntryFromVideoListViewContentMap()
         }
+        actuallyDownloadedVideoListViewElements.Set(key, videoListEntry)
         currentYTDLPActionObject.alreadyDownloadedVideoAmount++
     }
+
+    ; Automatically exports all downloaded video URLs.
+    if (autoExportVideoListCheckbox.Value) {
+        exportFileName := currentTime . "_VD_auto_exported_urls.txt"
+        exportFileLocation := currentDownloadDirectory . "\" . exportFileName
+        ; There shouldn't be any invalid URLs. Really :D But if there are any, the will be ignored.
+        exportVideoListViewElements(actuallyDownloadedVideoListViewElements, exportFileLocation, true)
+    }
+
     ; Calculates the remaining amount of videos which are left to be downloaded.
     currentYTDLPActionObject.remainingVideos := currentYTDLPActionObject.completeVideoAmount -
         currentYTDLPActionObject.alreadyDownloadedVideoAmount - currentYTDLPActionObject.canceledDownloadVideoAmount
@@ -730,7 +756,7 @@ extractVideoMetaData(pVideoURL) {
     if (!DirExist(tempWorkingDirectory)) {
         DirCreate(tempWorkingDirectory)
     }
-    ; We use the current time stamp to generade a unique name for both files.
+    ; We use the current time stamp to generate a unique name for both files.
     currentTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
     metaDataFileLocation := tempWorkingDirectory . "\" . currentTime . ".ini"
     ; The video thumbnail will be stored and it's location saved in the object.
@@ -781,6 +807,7 @@ extractVideoMetaData(pVideoURL) {
     */
     if (!FileExist(metaDataFileLocation)) {
         videoMetaDataObject.VIDEO_TITLE := "video_not_found: " . pVideoURL
+        videoMetaDataObject.VIDEO_URL := "video_not_found: " . pVideoURL
     }
     ; We have to find out the extension of the thumbnail file because we don't know it in advance.
     loop files (tempWorkingDirectory . "\" . currentTime ".*") {
@@ -829,7 +856,7 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     global ffmpegDirectory
     global scriptWorkingDirectory
 
-    ; We use the current time stamp to generade a unique name for each operation.
+    ; We use the current time stamp to generate a unique name for each operation.
     currentTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
     tempWorkingDirectoryPlaylist := scriptWorkingDirectory . "\temp\" . currentTime . "_playlist"  ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
     ; The %(id)s part will be filled by yt-dlp.
@@ -968,7 +995,7 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     pVideoListViewEntry.generateDownloadCommandPart()
     ytdlpCommand .= pVideoListViewEntry.downloadCommandPart
 
-    ; We use the current time stamp to generade a unique name for log file.
+    ; We use the current time stamp to generate a unique name for log file.
     currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     ; Defines the yt-dlp download log file name.
     ytdlpDownloadLogFileName := currentTime . "_yt_dlp_download_log.log"
@@ -1152,7 +1179,7 @@ class VideoListViewEntry {
             tmpVideoMetaDataObject := Object()
             tmpVideoMetaDataObject.VIDEO_TITLE := "*****"
             tmpVideoMetaDataObject.VIDEO_ID := ""
-            tmpVideoMetaDataObject.VIDEO_URL := ""
+            tmpVideoMetaDataObject.VIDEO_URL := "_internal_entry_no_videos_added_yet"
             tmpVideoMetaDataObject.VIDEO_UPLOADER := "No videos added yet."
             tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
             tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "*****"

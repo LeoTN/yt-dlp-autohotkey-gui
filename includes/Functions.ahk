@@ -522,6 +522,171 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
 }
 
 /*
+Imports URLs from a text file which must contain one URL per line.
+@param pImportFileLocation [String] The location of the URL file.
+@param pBooleanSkipInvalidURLs [boolean] If set to true, all invalid URLs will automatically not be imported.
+*/
+importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := false) {
+    validURLArray := Array()
+    invalidURLArray := Array()
+    loop read (pImportFileLocation) {
+        ; Comments will be skipped.
+        if (InStr(A_LoopReadLine, "#")) {
+            continue
+        }
+        ; Sorts out all invalid URLs and saves them in the array.
+        if (!checkIfStringIsAValidURL(A_LoopReadLine)) {
+            invalidURLArray.Push(A_LoopReadLine)
+            continue
+        }
+        validURLArray.Push(A_LoopReadLine)
+    }
+
+    if (invalidURLArray.Length > 0 && !pBooleanSkipInvalidURLs) {
+        ; Asks the user if they would like to import the invalid URLs (if there are any).
+        if (invalidURLArray.Length == 1) {
+            msgText := "There is [1] invalid URL in the list."
+            msgText .= "`n`nWould you like to import it anyway?"
+            msgTitle := "VD - Invalid URL Found"
+            msgHeadLine := "Import Invalid URL?"
+            msgButton1 := "Import Invalid URL"
+            msgButton2 := ""
+            msgButton3 := "Exclude Invalid URL"
+        }
+        else {
+            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the list."
+            msgText .= "`n`nWould you like to import them anyway?"
+            msgTitle := "VD - Invalid URLs Found"
+            msgHeadLine := "Import Invalid URLs?"
+            msgButton1 := "Import Invalid URLs"
+            msgButton2 := ""
+            msgButton3 := "Exclude Invalid URLs"
+        }
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+        ; If the users wishes, the invalid URLs will be imported as well.
+        if (result == msgButton1) {
+            for (invalidURL in invalidURLArray) {
+                validURLArray.Push(invalidURL)
+            }
+        }
+    }
+
+    ; Creates new video list view entry objects with the given URLs.
+    for (validURL in validURLArray) {
+        url := validURL
+        ; Removes the "invalid" marker. This gives the URL behind the marker a new "chance" to be found.
+        url := StrReplace(url, "video_not_found: ")
+        url := StrReplace(url, "playlist_not_found: ")
+        VideoListViewEntry(url)
+        ; Prevents the status bar animation from glitching out.
+        Sleep(100)
+    }
+    statusBarText := "Finished importing " . validURLArray.Length . " URLs"
+    videoListGUIStatusBar.SetText(statusBarText)
+}
+
+/*
+Exports all video list view elements in the given map to a text file.
+@param pVideoListViewElementMap [Map] A map filled with video list view elements to export.
+@param pExportFileLocation [String] An optional file path to save the exported URLs.
+If not provided, the user will be prompted to select a save location.
+@param pBooleanSkipInvalidURLs [boolean] If set to true, all invalid URLs will automatically not be exported.
+*/
+exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBooleanSkipInvalidURLs := false) {
+    global videoListViewContentMap
+
+    ; We use the current time stamp to generate a unique name for the exported file.
+    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
+    if (!IsSet(pExportFileLocation)) {
+        exportFileDefaultLocation := A_MyDocuments . "\" . currentTime . "_VD_exported_urls.txt"
+        pExportFileLocation := FileSelect("S16", exportFileDefaultLocation, "VD - Please select a save location",
+            "*.txt")
+        ; This usually happens, when the user cancels the selection.
+        if (pExportFileLocation == "") {
+            return
+        }
+    }
+
+    validURLArray := Array()
+    invalidURLArray := Array()
+    for (key, videoListEntry in pVideoListViewElementMap) {
+        ; Skips all internal video list view entries used to communicate with the user.
+        if (videoListEntry.videoURL == "_internal_entry_no_results_found" || videoListEntry.videoURL ==
+            "_internal_entry_no_videos_added_yet") {
+            continue
+        }
+        ; Sorts out all invalid URLs and saves them in the array.
+        if (!checkIfStringIsAValidURL(videoListEntry.videoURL)) {
+            invalidURLArray.Push(videoListEntry.videoURL)
+            continue
+        }
+        validURLArray.Push(videoListEntry.videoURL)
+    }
+
+    if (invalidURLArray.Length > 0 && !pBooleanSkipInvalidURLs) {
+        ; Asks the user if they would like to include the invalid URLs (if there are any).
+        if (invalidURLArray.Length == 1) {
+            msgText := "There is [1] invalid URL in the list."
+            msgText .= "`n`nWould you like to export it anyway?"
+            msgTitle := "VD - Invalid URL Found"
+            msgHeadLine := "Export Invalid URL?"
+            msgButton1 := "Export Invalid URL"
+            msgButton2 := ""
+            msgButton3 := "Exclude Invalid URL"
+        }
+        else {
+            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the list."
+            msgText .= "`n`nWould you like to export them anyway?"
+            msgTitle := "VD - Invalid URLs Found"
+            msgHeadLine := "Export Invalid URLs?"
+            msgButton1 := "Export Invalid URLs"
+            msgButton2 := ""
+            msgButton3 := "Exclude Invalid URLs"
+        }
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+        ; If the users wishes, the invalid URLs will be included in the export.
+        if (result == msgButton1) {
+            ; Adds the separation line into the array.
+            validURLArray.Push("# ********************`n# Invalid URLs below.`n# ********************")
+            for (invalidURL in invalidURLArray) {
+                validURLArray.Push(invalidURL)
+            }
+        }
+    }
+
+    for (validURL in validURLArray) {
+        exportFileContent .= validURL . "`n"
+    }
+    ; Removing the separator line must be done in a separate for loop.
+    for (validURL in validURLArray) {
+        if (validURL == "# ********************`n# Invalid URLs below.`n# ********************") {
+            ; Removes the separation line to correct the amount of exported URLs (which is the length of the array).
+            validURLArray.RemoveAt(A_Index)
+        }
+    }
+    exportFileContent := RTrim(exportFileContent, "`n")
+    exportFileContentFinal := "# ********************"
+    exportFileContentFinal .= "`n# VideoDownloader URL Export - " . currentTime
+    exportFileContentFinal .= "`n# Total URLs - " . validURLArray.Length
+    exportFileContentFinal .= "`n# ********************`n"
+    exportFileContentFinal .= exportFileContent
+
+    ; "Overwrites" the existing file.
+    if (FileExist(pExportFileLocation)) {
+        FileDelete(pExportFileLocation)
+    }
+    try
+    {
+        FileAppend(exportFileContentFinal, pExportFileLocation,)
+    }
+    catch as error {
+        displayErrorMessage(error, "File writing errors are usually rare. Please report this!")
+    }
+    statusBarText := "Finished exporting " . validURLArray.Length . " URLs"
+    videoListGUIStatusBar.SetText(statusBarText)
+}
+
+/*
 Reads the registry and extracts the current script version.
 If the version in the registry has a build version other than 0, it will append the word "-beta".
 @returns [String] The version from the registry or "v0.0.0.1" in case the registry value is invalid.
