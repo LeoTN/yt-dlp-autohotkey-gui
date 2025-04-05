@@ -70,7 +70,7 @@ createVideoListGUI() {
     exportOnlySelectedVideosCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Only export selected videos")
     autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20", "Auto export video list (WIP)") ; REMOVE
     ; Controls that are relevant for downloading the videos in the video list.
-    downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download (WIP)") ; REMOVE
+    downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download")
     downloadAllVideosButton := videoListGUI.Add("Button", "xp+10 yp+20 w135", "Download All")
     downloadCancelButton := videoListGUI.Add("Button", "xp+145 yp w135", "Cancel Download")
     downloadRemoveVideosAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "xp-135 yp+30 Checked",
@@ -81,7 +81,7 @@ createVideoListGUI() {
     downloadSelectDownloadDirectoryInputEdit := videoListGUI.Add("Edit", "yp+20 w255 R1 -WantReturn +ReadOnly",
         "default")
     downloadSelectDownloadDirectoryButton := videoListGUI.Add("Button", "xp+260 yp+1 w20 h20", "...")
-    downloadProgressText := videoListGUI.Add("Text", "xp-260 yp+29", "Downloaded 0 / 0")
+    downloadProgressText := videoListGUI.Add("Text", "xp-260 yp+29 w280", "Downloaded (0 / 0)")
     downloadProgressBar := videoListGUI.Add("Progress", "yp+20 w280")
     ; Status bar
     videoListGUIStatusBar := videoListGUI.Add("StatusBar", , "Add a video URL to start")
@@ -171,6 +171,18 @@ createVideoListGUI() {
 }
 
 videoListGUI_onInit() {
+    ; This object will be used to share data between different functions about currently ongoing yt-dlp processes.
+    global currentYTDLPActionObject := Object()
+    ; Download related variables.
+    currentYTDLPActionObject.booleanDownloadIsRunning := false
+    currentYTDLPActionObject.booleanCancelOneVideoDownload := false
+    currentYTDLPActionObject.booleanCancelCompleteDownload := false
+    currentYTDLPActionObject.currentlyDownloadedVideoTitle := ""
+    currentYTDLPActionObject.alreadyDownloadedVideoAmount := 0
+    currentYTDLPActionObject.completeVideoAmount := 0
+    currentYTDLPActionObject.canceledDownloadVideoAmount := 0
+    currentYTDLPActionObject.remainingVideos := 0
+    currentYTDLPActionObject.downloadProcessYTDLPPID := 0
     createVideoListGUI()
     if (readConfigFile("SHOW_VIDEO_LIST_GUI_ON_LAUNCH")) {
         hotkey_openVideoListGUI()
@@ -410,11 +422,13 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
     global videoListViewContentMap
     global scriptWorkingDirectory
     global videoListViewContentMap
+    global currentYTDLPActionObject
 
-    static booleanDownloadIsRunning
     ; This ensures that there can only be one download process at the time.
-    if (!IsSet(booleanDownloadIsRunning) || !booleanDownloadIsRunning) {
-        booleanDownloadIsRunning := true
+    if (!currentYTDLPActionObject.booleanDownloadIsRunning) {
+        currentYTDLPActionObject.booleanDownloadIsRunning := true
+        currentYTDLPActionObject.booleanCancelOneVideoDownload := false
+        currentYTDLPActionObject.booleanCancelCompleteDownload := false
     }
     else {
         MsgBox("There is already another download in progress.", "VD - Other Download Running", "O Iconi 262144 T1")
@@ -450,34 +464,97 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
         targetDownloadDirectory := currentDownloadDirectory
     }
 
-    totalAvailableVideoAmount := localCopyVideoListViewContentMap.Count
-    totalDownloadedVideoAmount := 0
+    ; Fill the currentYTDLPActionObject with data which can be used to cancel the download.
+    currentYTDLPActionObject.alreadyDownloadedVideoAmount := 0
+    currentYTDLPActionObject.completeVideoAmount := localCopyVideoListViewContentMap.Count
+    currentYTDLPActionObject.canceledDownloadVideoAmount := 0
+
     ; Parse through each video and start the download process.
     for (key, videoListEntry in localCopyVideoListViewContentMap) {
+        ; Calculates the remaining amount of videos which are left to be downloaded.
+        currentYTDLPActionObject.remainingVideos := currentYTDLPActionObject.completeVideoAmount -
+            currentYTDLPActionObject.alreadyDownloadedVideoAmount - currentYTDLPActionObject.canceledDownloadVideoAmount
+        ; Fill the currentYTDLPActionObject with data which can be used to cancel the download.
+        currentYTDLPActionObject.currentlyDownloadedVideoTitle := videoListEntry.videoTitle
         videoURL := videoListEntry.videoURL
-        downloadVideoListViewEntry(videoListEntry, targetDownloadDirectory, totalAvailableVideoAmount,
-            totalDownloadedVideoAmount)
+        downloadVideoListViewEntry(videoListEntry, targetDownloadDirectory)
+        if (currentYTDLPActionObject.booleanCancelOneVideoDownload) {
+            currentYTDLPActionObject.canceledDownloadVideoAmount++
+            currentYTDLPActionObject.booleanCancelOneVideoDownload := false
+            continue
+        }
+        if (currentYTDLPActionObject.booleanCancelCompleteDownload) {
+            break
+        }
         ; Remove the video from the video list view element.
         if (downloadRemoveVideosAfterDownloadCheckbox.Value) {
             videoListEntry.removeEntryFromVideoListViewContentMap()
         }
-        totalDownloadedVideoAmount++
+        currentYTDLPActionObject.alreadyDownloadedVideoAmount++
     }
-    if (totalDownloadedVideoAmount == 1) {
+    ; Calculates the remaining amount of videos which are left to be downloaded.
+    currentYTDLPActionObject.remainingVideos := currentYTDLPActionObject.completeVideoAmount -
+        currentYTDLPActionObject.alreadyDownloadedVideoAmount - currentYTDLPActionObject.canceledDownloadVideoAmount
+    ; Updates the downloaded video progress text.
+    downloadProgressText.Value := "Downloaded (" . currentYTDLPActionObject.alreadyDownloadedVideoAmount . " / " .
+        currentYTDLPActionObject.completeVideoAmount . ") - [" . currentYTDLPActionObject.remainingVideos .
+        "] Remaining"
+    if (currentYTDLPActionObject.alreadyDownloadedVideoAmount == 1) {
         videoListGUIStatusBar.SetText("Downloaded 1 file to [" . targetDownloadDirectory . "]")
     }
-    else if (totalDownloadedVideoAmount > 1) {
-        videoListGUIStatusBar.SetText("Downloaded " . totalDownloadedVideoAmount
+    else if (currentYTDLPActionObject.alreadyDownloadedVideoAmount > 1) {
+        videoListGUIStatusBar.SetText("Downloaded " . currentYTDLPActionObject.alreadyDownloadedVideoAmount
             . " files to [" . targetDownloadDirectory . "]")
     }
     if (downloadTerminateAfterDownloadCheckbox.Value) {
         exitScriptWithNotification()
     }
-    booleanDownloadIsRunning := false
+    currentYTDLPActionObject.booleanDownloadIsRunning := false
 }
 
 handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global currentYTDLPActionObject
+
+    if (!currentYTDLPActionObject.booleanDownloadIsRunning) {
+        return
+    }
+    msgText := "Would you like to cancel the current video download of"
+    msgText .= "`n`n[" . currentYTDLPActionObject.currentlyDownloadedVideoTitle . "]"
+    ; Ignores the cancel complete download when there is only one video in total.
+    if (currentYTDLPActionObject.remainingVideos == 1) {
+        msgText .= "?"
+    }
+    else {
+        msgText .= "`n`nor the complete download of [" . currentYTDLPActionObject.remainingVideos .
+            "] remaining video(s)?"
+    }
+    msgTitle := "VD - Cancel Download"
+    msgHeadLine := "Cancel Download Process"
+    msgButton1 := "Cancel Current Download"
+    msgButton2 := "Abort"
+    msgButton3 := "Cancel Complete Download"
+
+    ; Ignores the cancel complete download when there is only one video in total.
+    if (currentYTDLPActionObject.remainingVideos == 1) {
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, , , true)
+    }
+    else {
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+    }
+    if (result == msgButton1) {
+        if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
+            ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
+            terminateAllYTDLPChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID)
+            currentYTDLPActionObject.booleanCancelOneVideoDownload := true
+        }
+    }
+    else if (result == msgButton3) {
+        if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
+            ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
+            terminateAllYTDLPChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID)
+            currentYTDLPActionObject.booleanCancelCompleteDownload := true
+        }
+    }
 }
 
 handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo) {
@@ -838,8 +915,13 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     return videoMetaDataObjectArray
 }
 
-downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory, pCompleteVideoAmount,
-    pAlreadyDownloadedVideoAmount) {
+/*
+Downloads a video from a given video list view entry object.
+@param pVideoListViewEntry [VideoListViewEntry] The video list view entry object to download.
+@param pDownloadTargetDirectory [String] The target directory to download the video to.
+*/
+downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
+    global currentYTDLPActionObject
     global scriptWorkingDirectory
     global YTDLPFileLocation
     global ffmpegDirectory
@@ -897,21 +979,28 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory, pCompl
     ; Execute the yt-dlp command and monitor the download progress.
     processPID := executeYTDLPCommand(ytdlpCommand, ytdlpDownloadLogFileLocation, ytdlpErrorLogFileLocation)
 
+    ; Fill the currentYTDLPActionObject with data which can be used to cancel the download.
+    currentYTDLPActionObject.downloadProcessYTDLPPID := processPID
+
     ; Progress section below.
     videoTitle := pVideoListViewEntry.videoTitle
     statusBarText := "[" . videoTitle . "] - Starting download process..."
     handleVideoListGUI_videoListGUIStatusBar_startAnimation(statusBarText)
     ; This function monitor the download progress and update the video list GUI accordingly.
-    monitorVideoDownloadProgress(processPID, ytdlpDownloadLogFileLocation, pCompleteVideoAmount,
-        pAlreadyDownloadedVideoAmount, videoTitle)
+    monitorVideoDownloadProgress(processPID, ytdlpDownloadLogFileLocation, videoTitle)
 
     ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
     if (processPID != "_result_error_while_starting_ytdlp_executable") {
         ProcessWaitClose(processPID)
     }
-    statusBarText := "[" . videoTitle . "] - Finished download process."
+    if (currentYTDLPActionObject.booleanCancelOneVideoDownload) {
+        statusBarText := "[" . videoTitle . "] - Canceled download process."
+    }
+    else {
+        statusBarText := "[" . videoTitle . "] - Finished download process."
+    }
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation(statusBarText)
-    ; This delay gives the loading bar animation enough time to end properly and avoid visual bugs.
+    ; This delay allows the user to read the status message for a short period of time before downloading the next video.
     Sleep(200)
 }
 

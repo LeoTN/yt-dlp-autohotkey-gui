@@ -83,12 +83,11 @@ createVideoListViewEntry(pVideoURL) {
 Reads the download log file during the download process. The progress will be displayed in the video list GUI.
 @param pYTDLPProcessPID [int] The PID of the yt-dlp process downloading the video.
 @param pYTDLPLogFileLocation [int] The location of the log file that the yt-dlp process writes to.
-@param pCompleteVideoAmount [int] The total amount of videos that are going to be downloaded.
-@param pAlreadyDownloadedVideoAmount [int] The amount of videos that have been downloaded already.
 @param pCurrentlyDownloadedVideoTitle [int] The title of the currently downloaded video.
 */
-monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCompleteVideoAmount,
-    pAlreadyDownloadedVideoAmount, pCurrentlyDownloadedVideoTitle) {
+monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCurrentlyDownloadedVideoTitle) {
+    global currentYTDLPActionObject
+
     ; The phases will be marked with a tracking point line in the yt-dlp log file.
     static booleanPhaseReached_pre_process := false
     static booleanPhaseReached_after_filter := false
@@ -105,7 +104,9 @@ monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCompleteV
     static parsedLines := 0
 
     ; Updates the downloaded video progress text.
-    downloadProgressText.Value := "Downloaded " . pAlreadyDownloadedVideoAmount . " / " . pCompleteVideoAmount
+    downloadProgressText.Value := "Downloaded (" . currentYTDLPActionObject.alreadyDownloadedVideoAmount . " / " .
+        currentYTDLPActionObject.completeVideoAmount . ") - [" . currentYTDLPActionObject.remainingVideos .
+        "] Remaining"
     ; Resets the download progress bar.
     downloadProgressBar.Value := 0
 
@@ -117,8 +118,10 @@ monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCompleteV
             SetTimer(updateDownloadProgressStep, 0)
             downloadProgressBar.Value := 100
             ; Updates the downloaded video progress text.
-            downloadProgressText.Value := "Downloaded " . pAlreadyDownloadedVideoAmount + 1
-                . " / " . pCompleteVideoAmount
+            downloadProgressText.Value := "Downloaded (" . currentYTDLPActionObject.alreadyDownloadedVideoAmount .
+                " / " .
+                currentYTDLPActionObject.completeVideoAmount . ") - [" . currentYTDLPActionObject.remainingVideos .
+                "] Remaining"
             ; Resets all relevant values for the next download.
             booleanPhaseReached_pre_process := false
             booleanPhaseReached_after_filter := false
@@ -373,6 +376,30 @@ findAlreadyRunningScriptInstance(pWildcard) {
                     ; Stops after the first match.
                     break
             }
+        }
+    }
+}
+
+/*
+yt-dlp sometimes uses multiple child processes which originate from the main process to speed up the download process.
+This function will close every child process with that corresponding parent's process ID.
+@param pYTDLPParentProcessPID [int] The PID of the yt-dlp main process.
+*/
+terminateAllYTDLPChildProcesses(pYTDLPParentProcessPID) {
+    childProcessesPIDArray := Array()
+
+    ; Searches for the process yt-dlp.exe and the matching parent process id.
+    query := "SELECT * FROM Win32_Process WHERE Name = 'yt-dlp.exe' AND ParentProcessId = " . pYTDLPParentProcessPID
+    ytdlpProcesses := ComObjGet("winmgmts:").ExecQuery(query)
+    for (ytdlpProcess in ytdlpProcesses) {
+        try
+        {
+            ProcessClose(ytdlpProcess.ProcessId)
+        }
+        catch as error {
+            errorAdditionalMessage :=
+                "The process might be elevated (which means it was launched with higher permissions)."
+            displayErrorMessage(error, errorAdditionalMessage)
         }
     }
 }
