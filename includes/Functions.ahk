@@ -381,20 +381,28 @@ findAlreadyRunningScriptInstance(pWildcard) {
 }
 
 /*
-yt-dlp sometimes uses multiple child processes which originate from the main process to speed up the download process.
 This function will close every child process with that corresponding parent's process ID.
-@param pYTDLPParentProcessPID [int] The PID of the yt-dlp main process.
+@param pParentProcessPID [int] The PID of the process which started the child processes.
+@param pChildProcessNameFilter [String] An optional filter e.g. "yt-dlp.exe"
+@param pBooleanRecursive [boolean] If set to true, will terminate all child processes of the child processes.
+For safety and performance reasons, this will only go one layer deeper and stop after that.
 */
-terminateAllYTDLPChildProcesses(pYTDLPParentProcessPID) {
-    childProcessesPIDArray := Array()
+terminateAllChildProcesses(pParentProcessPID, pChildProcessNameFilter?, pBooleanRecursive := false) {
+    ; Searches for the process nane and the matching parent process id.
+    query := "SELECT * FROM Win32_Process WHERE ParentProcessId = '" . pParentProcessPID . "' "
+    if (IsSet(pChildProcessNameFilter)) {
+        query .= "AND Name = '" . pChildProcessNameFilter . "'"
+    }
+    childProcesses := ComObjGet("winmgmts:").ExecQuery(query)
 
-    ; Searches for the process yt-dlp.exe and the matching parent process id.
-    query := "SELECT * FROM Win32_Process WHERE Name = 'yt-dlp.exe' AND ParentProcessId = " . pYTDLPParentProcessPID
-    ytdlpProcesses := ComObjGet("winmgmts:").ExecQuery(query)
-    for (ytdlpProcess in ytdlpProcesses) {
+    for (childProcess in childProcesses) {
+        if (pBooleanRecursive) {
+            ; For safety reasons, this request will not be recursive.
+            terminateAllChildProcesses(childProcess.ProcessId)
+        }
         try
         {
-            ProcessClose(ytdlpProcess.ProcessId)
+            ProcessClose(childProcess.ProcessId)
         }
         catch as error {
             errorAdditionalMessage :=
@@ -595,6 +603,10 @@ If not provided, the user will be prompted to select a save location.
 exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBooleanSkipInvalidURLs := false) {
     global videoListViewContentMap
 
+    ; It does not make sense to start an with an empty map.
+    if (pVideoListViewElementMap.Count == 0) {
+        return
+    }
     ; We use the current time stamp to generate a unique name for the exported file.
     currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     if (!IsSet(pExportFileLocation)) {

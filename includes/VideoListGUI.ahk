@@ -521,7 +521,7 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
     }
 
     ; Automatically exports all downloaded video URLs.
-    if (autoExportVideoListCheckbox.Value) {
+    if (autoExportVideoListCheckbox.Value && actuallyDownloadedVideoListViewElements.Count > 0) {
         exportFileName := currentTime . "_VD_auto_exported_urls.txt"
         exportFileLocation := currentDownloadDirectory . "\" . exportFileName
         ; There shouldn't be any invalid URLs. Really :D But if there are any, the will be ignored.
@@ -580,14 +580,16 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
     if (result == msgButton1) {
         if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
             ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
-            terminateAllYTDLPChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID)
+            ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
+            terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
             currentYTDLPActionObject.booleanCancelOneVideoDownload := true
         }
     }
     else if (result == msgButton3) {
         if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
             ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
-            terminateAllYTDLPChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID)
+            ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
+            terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
             currentYTDLPActionObject.booleanCancelCompleteDownload := true
         }
     }
