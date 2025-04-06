@@ -71,7 +71,7 @@ createVideoListGUI() {
     autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Controls that are relevant for downloading the videos in the video list.
     downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download")
-    downloadAllVideosButton := videoListGUI.Add("Button", "xp+10 yp+20 w135", "Download All")
+    downloadAllVideosButton := videoListGUI.Add("Button", "xp+10 yp+20 w135", "Start Download")
     downloadCancelButton := videoListGUI.Add("Button", "xp+145 yp w135", "Cancel Download")
     downloadRemoveVideosAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "xp-135 yp+30 Checked",
         "Automatically remove downloaded videos")
@@ -338,12 +338,11 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
 }
 
 handleVideoListGUI_removeVideoFromListButton_onClick(pButton, pInfo) {
-    selectedItemsIdentifierStringArray := []
-    ; Count the selected elements in the list view.
-    listViewSelectedElementsCount := ListViewGetContent("Count Selected", videoListView.Hwnd,
-        "ahk_id " . videoListGUI.Hwnd)
+    ; This map contains all video list view elements currently selected by the user.
+    selectedVideoListViewElementsMap := getSelectedVideoListViewElements()
+
     ; Prompts the user to confirm the deletion of one video element.
-    if (listViewSelectedElementsCount == 1 &&
+    if (selectedVideoListViewElementsMap.Count == 1 &&
         removeVideoConfirmDeletionCheckbox.Value && !removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.Value) {
         result := MsgBox("Do you really want to delete this video?", "VD - Confirm Deletion",
             "YN Icon? 262144 T15")
@@ -352,28 +351,16 @@ handleVideoListGUI_removeVideoFromListButton_onClick(pButton, pInfo) {
         }
     }
     ; Prompts the user to confirm the deletion of multiple video elements.
-    else if (listViewSelectedElementsCount > 1 &&
+    else if (selectedVideoListViewElementsMap.Count > 1 &&
         (removeVideoConfirmDeletionCheckbox.Value || removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.Value)) {
-        result := MsgBox("Do you really want to delete " . listViewSelectedElementsCount . " videos?",
+        result := MsgBox("Do you really want to delete " . selectedVideoListViewElementsMap.Count . " videos?",
             "VD - Confirm Deletion", "YN Icon? 262144 T15")
         if (result != "Yes") {
             return
         }
     }
-    ; Get all selected list view items or rather their content in the form of a string.
-    listViewContent := ListViewGetContent("Selected", videoListView.Hwnd, "ahk_id " . videoListGUI.Hwnd)
-    ; The content is separated by new lines and tabs so we need two loops to get the identifier strings.
-    loop parse, listViewContent, "`n" {
-        entryIdentifierString := ""
-        loop parse, A_LoopField, A_Tab {
-            entryIdentifierString .= A_LoopField
-        }
-        selectedItemsIdentifierStringArray.Push(entryIdentifierString)
-    }
-    for (index, identifierString in selectedItemsIdentifierStringArray) {
-        ; Find the matching video list view entry object with that identifier string.
-        selectedVideoEntry := videoListViewContentMap.Get(identifierString)
-        selectedVideoEntry.removeEntryFromVideoListViewContentMap()
+    for (key, videoListEntry in selectedVideoListViewElementsMap) {
+        videoListEntry.removeEntryFromVideoListViewContentMap()
     }
 }
 
@@ -407,8 +394,18 @@ handleVideoListGUI_exportVideoListButton_onClick(pButton, pInfo) {
     if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
         return
     }
-    ; Exports all URLs or only valid ones, depending on the value of the checkbox.
-    exportVideoListViewElements(videoListViewContentMap, , exportOnlyValidURLsCheckbox.Value)
+    ; Checks if the user has selected a few videos.
+    selectedVideoListViewElementsMap := getSelectedVideoListViewElements()
+    ; Only export the selected videos.
+    if (selectedVideoListViewElementsMap.Count > 0) {
+        ; Exports all URLs or only valid ones, depending on the value of the checkbox.
+        exportVideoListViewElements(selectedVideoListViewElementsMap, , exportOnlyValidURLsCheckbox.Value)
+    }
+    ; Export all videos.
+    else {
+        ; Exports all URLs or only valid ones, depending on the value of the checkbox.
+        exportVideoListViewElements(videoListViewContentMap, , exportOnlyValidURLsCheckbox.Value)
+    }
 }
 
 handleVideoListGUI_videoListView_onItemSelect(pListView, pSelectedElementIndex, pBooleanElementWasSelected) {
@@ -448,13 +445,26 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
         MsgBox("There is already another download in progress.", "VD - Other Download Running", "O Iconi 262144 T1")
         return
     }
-    /*
-    Create a local copy of the video list view content map to avoid download issues
-    when the original map changes during the download.
-    It only contains valid URLs which could be found by yt-dlp.
-    */
-    localCopyVideoListViewContentMap := videoListViewContentMap.Clone()
-    for (key, videoListEntry in videoListViewContentMap) {
+
+    ; Checks if the user has selected a few videos.
+    selectedVideoListViewElementsMap := getSelectedVideoListViewElements()
+    ; Only download the selected videos.
+    if (selectedVideoListViewElementsMap.Count > 0) {
+        localCopyVideoListViewContentMap := selectedVideoListViewElementsMap
+    }
+    ; Download all videos.
+    else {
+        /*
+        Create a local copy of the video list view content map to avoid download issues
+        when the original map changes during the download.
+        */
+        localCopyVideoListViewContentMap := videoListViewContentMap.Clone()
+    }
+
+    ; A copy of the map is required as deleting keys while parsing through the same map causes issues with the for loop.
+    localCopyVideoListViewContentMapCopy := localCopyVideoListViewContentMap.Clone()
+    ; Filter out the invalid URLs.
+    for (key, videoListEntry in localCopyVideoListViewContentMapCopy) {
         videoURL := videoListEntry.videoURL
         ; Checks if the URL is invalid.
         if (!checkIfStringIsAValidURL(videoUrl)) {

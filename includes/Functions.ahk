@@ -687,6 +687,42 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
 }
 
 /*
+Creates a map containing all currently selected video list view elements in the video list.
+@Returns [Map] This map can contain no objects if no videos are currently selected.
+*/
+getSelectedVideoListViewElements() {
+    global videoListViewContentMap
+
+    selectedItemsIdentifierStringArray := Array()
+    selectedVideoListViewElementsMap := Map()
+
+    ; Get all selected list view items or rather their content in the form of a string.
+    listViewContent := ListViewGetContent("Selected", videoListView.Hwnd, "ahk_id " . videoListGUI.Hwnd)
+    ; The content is separated by new lines and tabs so we need two loops to get the identifier strings.
+    loop parse, listViewContent, "`n" {
+        entryIdentifierString := ""
+        loop parse, A_LoopField, A_Tab {
+            entryIdentifierString .= A_LoopField
+        }
+        selectedItemsIdentifierStringArray.Push(entryIdentifierString)
+    }
+    for (identifierString in selectedItemsIdentifierStringArray) {
+        if (!videoListViewContentMap.Has(identifierString)) {
+            continue
+        }
+        ; Retrieves the video list view element from the content map and adds it to the selected entries map.
+        videoListEntry := videoListViewContentMap.Get(identifierString)
+        ; Skips all internal video list view entries used to communicate with the user.
+        if (videoListEntry.videoURL == "_internal_entry_no_results_found" || videoListEntry.videoURL ==
+            "_internal_entry_no_videos_added_yet") {
+            continue
+        }
+        selectedVideoListViewElementsMap.Set(identifierString, videoListEntry)
+    }
+    return selectedVideoListViewElementsMap
+}
+
+/*
 Reads the registry and extracts the current script version.
 If the version in the registry has a build version other than 0, it will append the word "-beta".
 @returns [String] The version from the registry or "v0.0.0.1" in case the registry value is invalid.
