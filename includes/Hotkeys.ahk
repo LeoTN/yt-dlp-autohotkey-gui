@@ -11,7 +11,7 @@ hotkeys_onInit() {
         displayErrorMessage(error)
     }
     ; Sometimes the debug hotkeys might be needed.
-    if (!readConfigFile("booleanDebugMode")) {
+    if (!readConfigFile("ENABLE_DEBUG_HOTKEYS")) {
         return
     }
     try {
@@ -23,25 +23,30 @@ hotkeys_onInit() {
 }
 
 registerHotkeys() {
-    ; Beginning of all standard script hotkeys.
-
     ; Main hotkey (start download).
-    Hotkey(readConfigFile("DOWNLOAD_HK"), (*) => hotkey_startDownload(), "On")
-
-    ; Second hotkey (collect URLs).
-    Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => hotkey_extractVideoURLFromSearchBar(), "On")
-
-    ; Third hotkey (collect URLs from video thumbnail).
-    Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => hotkey_extractVideoURLUnderMouseCursor(), "On")
-
+    if (readConfigFile("START_DOWNLOAD_HK_ENABLED")) {
+        Hotkey(readConfigFile("START_DOWNLOAD_HK"), (*) => hotkey_startDownload(), "On")
+    }
+    ; First hotkey (collect URLs).
+    if (readConfigFile("URL_COLLECT_HK_ENABLED")) {
+        Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => hotkey_extractVideoURLFromSearchBar(), "On")
+    }
+    ; Second hotkey (collect URLs from video thumbnail).
+    if (readConfigFile("THUMBNAIL_URL_COLLECT_HK_ENABLED")) {
+        Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => hotkey_extractVideoURLUnderMouseCursor(), "On")
+    }
     ; Hotkey to open the video list GUI.
-    Hotkey(readConfigFile("VIDEO_LIST_GUI_HK"), (*) => hotkey_openVideoListGUI(), "On")
-
-    ; Hotkey to terminate the script.
-    Hotkey(readConfigFile("TERMINATE_SCRIPT_HK"), (*) => hotkey_terminateScript(), "On")
-
-    ; Hotkey to reload the script.
-    Hotkey(readConfigFile("RELOAD_SCRIPT_HK"), (*) => hotkey_reloadScript(), "On")
+    if (readConfigFile("VIDEO_LIST_GUI_HK_ENABLED")) {
+        Hotkey(readConfigFile("VIDEO_LIST_GUI_HK"), (*) => hotkey_openVideoListGUI(), "On")
+    }
+    ; Hotkey to terminate the program.
+    if (readConfigFile("TERMINATE_PROGRAM_HK_ENABLED")) {
+        Hotkey(readConfigFile("TERMINATE_PROGRAM_HK"), (*) => hotkey_terminateProgram(), "On")
+    }
+    ; Hotkey to reload the program.
+    if (readConfigFile("RELOAD_PROGRAM_HK_ENABLED")) {
+        Hotkey(readConfigFile("RELOAD_PROGRAM_HK"), (*) => hotkey_reloadProgram(), "On")
+    }
 }
 
 registerDebugHotkeys() {
@@ -182,11 +187,11 @@ hotkey_openVideoListGUI() {
     }
 }
 
-hotkey_terminateScript() {
+hotkey_terminateProgram() {
     terminateScriptPrompt()
 }
 
-hotkey_reloadScript() {
+hotkey_reloadProgram() {
     reloadScriptPrompt()
 }
 
@@ -252,7 +257,7 @@ menu_openDownloadLocation() {
         The reason why the path is opened explicitly with explorer.exe is, that sometimes it will attempt to sort of guess the file
         extension and open other files.
         */
-        downloadDirectory := readConfigFile("DOWNLOAD_PATH")
+        downloadDirectory := readConfigFile("DEFAULT_DOWNLOAD_DIRECTORY")
         if (DirExist(downloadDirectory)) {
             Run('explorer.exe "' . downloadDirectory . '"')
         }

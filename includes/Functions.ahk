@@ -418,7 +418,6 @@ Copies all files from the old version into a backup folder using robocopy.
 */
 backupOldVersionFiles(pBackupParentDirectory) {
     global versionFullName
-    global scriptWorkingDirectory
 
     oldVersion := versionFullName
     backupDate := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
@@ -430,9 +429,9 @@ backupOldVersionFiles(pBackupParentDirectory) {
     All download related folders and temporary directories will be excluded.
     Files larger than 10MB will be ignored as well.
     */
-    downloadFolder := readConfigFile("DOWNLOAD_PATH")
-    downloadFolderTemp := sourceDirectory . "\VideoDownloader\download_temp" ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
-    generalTempFolder := scriptWorkingDirectory . "\temp" ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
+    downloadFolder := readConfigFile("DEFAULT_DOWNLOAD_DIRECTORY")
+    downloadFolderTemp := readConfigFile("TEMP_DOWNLOAD_DIRECTORY")
+    generalTempFolder := readConfigFile("TEMP_DIRECTORY")
     ; Build the paramter string for the robocopy executable.
     parameterString := "`"" . sourceDirectory . "`" `"" . destinationDirectory . "`" /E "
     parameterString .= "/XD `"" . sourceDirectory . "\VideoDownloader_old_version_backups`" "

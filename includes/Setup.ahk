@@ -79,7 +79,6 @@ updateDependencyCheckboxes() {
 createRequiredFolders() {
     requiredFolders := [
         scriptMainDirectory,
-        scriptWorkingDirectory,
         assetDirectory,
         ffmpegDirectory,
         iconDirectory,

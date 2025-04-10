@@ -12,7 +12,7 @@ CoordMode "Mouse", "Client"
 ; Sets the directory for all following files.
 #Include "includes\"
 #Include "Acc.ahk"
-#Include "ConfigFile.ahk"
+#Include "ConfigurationFile.ahk"
 #Include "Functions.ahk"
 #Include "HelpGUI.ahk"
 #Include "Hotkeys.ahk"
@@ -27,8 +27,6 @@ onInit() {
     global scriptRegistryDirectory := "HKCU\SOFTWARE\LeoTN\VideoDownloader"
     ; This folder will contain all other files.
     global scriptMainDirectory := A_ScriptDir . "\VideoDownloader"
-    ; Working directory for downloads, settings and presets.
-    global scriptWorkingDirectory := scriptMainDirectory ; REMOVE [ADD OPTION TO CHANGE]
 
     global assetDirectory := scriptMainDirectory . "\assets"
 
@@ -67,8 +65,8 @@ onInit() {
 
     ; Basically checks if all required files and folders are present.
     setup_onInit()
-    ; Checks the config file.
-    configFile_onInit()
+    ; Checks and loads the config file.
+    configurationFile_onInit()
     ; Currently has no purpose.
     functions_onInit()
     ; Initializes the hotkeys.

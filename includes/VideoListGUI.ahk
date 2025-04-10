@@ -431,7 +431,6 @@ handleVideoListGUI_videoListView_onItemSelect(pListView, pSelectedElementIndex, 
 
 handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
     global videoListViewContentMap
-    global scriptWorkingDirectory
     global videoListViewContentMap
     global currentYTDLPActionObject
 
@@ -478,9 +477,10 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
 
     ; We use the current time stamp to generate a unique name for the download folder.
     currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
-    ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
-    currentDownloadDirectory := scriptWorkingDirectory . "\download\" . currentTime
+    defaultDownloadDirectory := readConfigFile("DEFAULT_DOWNLOAD_DIRECTORY")
+    currentDownloadDirectory := defaultDownloadDirectory . "\" . currentTime
     alternativeDownloadDirectory := downloadSelectDownloadDirectoryInputEdit.Value
+    ; Use the alternative download directory if it exists.
     if (DirExist(alternativeDownloadDirectory)) {
         targetDownloadDirectory := alternativeDownloadDirectory
     }
@@ -596,7 +596,7 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
 }
 
 handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo) {
-    global scriptWorkingDirectory
+    global scriptMainDirectory
 
     if (downloadSelectDownloadDirectoryInputEdit.Value != "") {
         ; This will open the current directory (if one is already selected and the folder exists).
@@ -604,11 +604,11 @@ handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo)
             selectPath := downloadSelectDownloadDirectoryInputEdit.Value
         }
         else {
-            selectPath := scriptWorkingDirectory
+            selectPath := scriptMainDirectory
         }
     }
     else {
-        selectPath := scriptWorkingDirectory
+        selectPath := scriptMainDirectory
     }
 
     downloadDirectory := FileSelect("D", selectPath, "VD - Please select the download target folder")
@@ -762,9 +762,8 @@ videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail
 extractVideoMetaData(pVideoURL) {
     global GUIBackgroundImageLocation
     global ffmpegDirectory
-    global scriptWorkingDirectory
 
-    tempWorkingDirectory := scriptWorkingDirectory . "\temp" ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
+    tempWorkingDirectory := readConfigFile("TEMP_DIRECTORY")
     if (!DirExist(tempWorkingDirectory)) {
         DirCreate(tempWorkingDirectory)
     }
@@ -866,11 +865,11 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     global GUIBackgroundImageLocation
     global YTDLPFileLocation
     global ffmpegDirectory
-    global scriptWorkingDirectory
 
     ; We use the current time stamp to generate a unique name for each operation.
     currentTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
-    tempWorkingDirectoryPlaylist := scriptWorkingDirectory . "\temp\" . currentTime . "_playlist"  ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
+    tempWorkingDirectory := readConfigFile("TEMP_DIRECTORY")
+    tempWorkingDirectoryPlaylist := tempWorkingDirectory . "\" . currentTime . "_playlist"
     ; The %(id)s part will be filled by yt-dlp.
     metaDataFileLocation := tempWorkingDirectoryPlaylist . "\" . currentTime . "_%(id)s.ini"
     thumbnailFileLocation := tempWorkingDirectoryPlaylist . "\" . currentTime . "_%(id)s.%(ext)s"
@@ -961,20 +960,17 @@ Downloads a video from a given video list view entry object.
 */
 downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     global currentYTDLPActionObject
-    global scriptWorkingDirectory
     global YTDLPFileLocation
     global ffmpegDirectory
 
     if (!DirExist(pDownloadTargetDirectory)) {
         DirCreate(pDownloadTargetDirectory)
     }
-    ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
-    tempWorkingDirectory := scriptWorkingDirectory . "\temp"
+    tempWorkingDirectory := readConfigFile("TEMP_DIRECTORY")
     if (!DirExist(tempWorkingDirectory)) {
         DirCreate(tempWorkingDirectory)
     }
-    ; REMOVE [READ VALUE FROM CONFIG FILE IN THE FUTURE]
-    downloadTempDirectory := scriptWorkingDirectory . "\download_temp"
+    downloadTempDirectory := readConfigFile("TEMP_DOWNLOAD_DIRECTORY")
     if (!DirExist(downloadTempDirectory)) {
         DirCreate(downloadTempDirectory)
     }
@@ -1172,7 +1168,7 @@ class VideoListViewEntry {
         }
     }
     /*
-    Removes this object from the video list view content map.
+    Removes the object from the video list view content map.
     @param pBooleanUpdateVideoListViewElement [boolean] If set to true, the video list view element will be updated.
     */
     removeEntryFromVideoListViewContentMap(pBooleanUpdateVideoListViewElement := true) {
