@@ -140,9 +140,9 @@ createVideoListGUI() {
     fileMenu.SetIcon("&Reset...", "shell32.dll", 239)
 
     optionsMenu := Menu()
-    optionsMenu.Add("Open New Settings Window (Beta)",
-        (*) => MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1")) ; REMOVE
-    optionsMenu.SetIcon("Open New Settings Window (Beta)", "shell32.dll", 123) ; REMOVE
+    optionsMenu.Add("Settings",
+        (*) => menu_openSettingsGUI())
+    optionsMenu.SetIcon("Settings", "shell32.dll", 123) ; REMOVE USE ICON DLL HERE
     optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
     optionsMenu.SetIcon("Terminate Script", "shell32.dll", 28)
     optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())
@@ -611,10 +611,8 @@ handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo)
         selectPath := scriptMainDirectory
     }
 
-    downloadDirectory := FileSelect("D", selectPath, "VD - Please select the download target folder")
-    ; Makes sure that the path is an actual file and not a directory or more specifically a folder.
-    ; This usually happens, when the user cancels the selection.
-    if (downloadDirectory == "") {
+    downloadDirectory := directorySelectPrompt("VD - Please select the download target folder", selectPath)
+    if (downloadDirectory == "_result_no_directory_selected") {
         return
     }
     downloadSelectDownloadDirectoryInputEdit.Value := downloadDirectory

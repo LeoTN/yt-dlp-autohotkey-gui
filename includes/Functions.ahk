@@ -529,6 +529,22 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
 }
 
 /*
+Prompts the user to select a directory.
+@param pPromptTitle [String] The title of the prompt window.
+@param pRootDirectory [String] The root directory to start the selection from.
+@returns [String] The selected directory path.
+@returns (alt) [String] "_result_no_directory_selected" if the user cancels the selection.
+*/
+directorySelectPrompt(pPromptTitle, pRootDirectory) {
+    selectedDirectory := FileSelect("D3", pRootDirectory, pPromptTitle)
+    ; This usually happens, when the user cancels the selection.
+    if (selectedDirectory == "") {
+        return "_result_no_directory_selected"
+    }
+    return selectedDirectory
+}
+
+/*
 Imports URLs from a text file which must contain one URL per line.
 @param pImportFileLocation [String] The location of the URL file.
 @param pBooleanSkipInvalidURLs [boolean] If set to true, all invalid URLs will automatically not be imported.

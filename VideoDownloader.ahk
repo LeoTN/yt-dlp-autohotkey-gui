@@ -16,6 +16,7 @@ CoordMode "Mouse", "Client"
 #Include "Functions.ahk"
 #Include "HelpGUI.ahk"
 #Include "Hotkeys.ahk"
+#Include "SettingsGUI.ahk"
 #Include "Setup.ahk"
 #Include "Tutorials.ahk"
 #Include "UpdateGUI.ahk"
@@ -73,6 +74,8 @@ onInit() {
     hotkeys_onInit()
     ; Creates the help GUI.
     helpGUI_onInit()
+    ; Creates the settings GUI.
+    settingsGUI_onInit()
     ; Initializes the tutorials for the help GUI.
     tutorials_onInit()
     ; Creates the video list GUI.

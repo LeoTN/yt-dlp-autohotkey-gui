@@ -39,6 +39,11 @@ initializeConfigEntryMap() {
     DEFAULT_DOWNLOAD_DIRECTORY := scriptMainDirectory . "\download"
     TEMP_DIRECTORY := scriptMainDirectory . "\temp"
     TEMP_DOWNLOAD_DIRECTORY := TEMP_DIRECTORY . "\download_temp"
+    ; [NotificationSettings]
+    NotificationSettings := "NotificationSettings"
+    DISPLAY_STARTUP_NOTIFICATION := true
+    DISPLAY_EXIT_NOTIFICATION := true
+    DISPLAY_FINISHED_DOWNLOAD_NOTIFICATION := true
     ; [HotkeySettings]
     HotkeySettings := "HotkeySettings"
     START_DOWNLOAD_HK := "+^!D"
@@ -53,6 +58,16 @@ initializeConfigEntryMap() {
     RELOAD_PROGRAM_HK_ENABLED := true
     TERMINATE_PROGRAM_HK := "+^!T"
     TERMINATE_PROGRAM_HK_ENABLED := true
+    ; [VideoListDefaultPreferences]
+    VideoListDefaultPreferences := "VideoListDefaultPreferences"
+    ADD_VIDEO_URL_IS_A_PLAYLIST := false
+    ADD_VIDEO_URL_USE_PLAYLIST_RANGE := false
+    REMOVE_VIDEO_CONFIRM_DELETION := false
+    REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED := false
+    EXPORT_ONLY_VALID_URLS := true
+    AUTO_EXPORT_VIDEO_LIST := true
+    REMOVE_VIDEOS_AFTER_DOWNLOAD := true
+    TERMINATE_AFTER_DOWNLOAD := false
 
     ; [DebugSettings]
     ConfigFileEntry(ENABLE_DEBUG_HOTKEYS, "ENABLE_DEBUG_HOTKEYS", DebugSettings, ENABLE_DEBUG_HOTKEYS, "boolean")
@@ -72,6 +87,13 @@ initializeConfigEntryMap() {
     ConfigFileEntry(TEMP_DIRECTORY, "TEMP_DIRECTORY", DirectoryPaths, TEMP_DIRECTORY, "directory")
     ConfigFileEntry(TEMP_DOWNLOAD_DIRECTORY, "TEMP_DOWNLOAD_DIRECTORY", DirectoryPaths,
         TEMP_DOWNLOAD_DIRECTORY, "directory")
+    ; [NotificationSettings]
+    ConfigFileEntry(DISPLAY_STARTUP_NOTIFICATION, "DISPLAY_STARTUP_NOTIFICATION", NotificationSettings,
+        DISPLAY_STARTUP_NOTIFICATION, "boolean")
+    ConfigFileEntry(DISPLAY_EXIT_NOTIFICATION, "DISPLAY_EXIT_NOTIFICATION", NotificationSettings,
+        DISPLAY_EXIT_NOTIFICATION, "boolean")
+    ConfigFileEntry(DISPLAY_FINISHED_DOWNLOAD_NOTIFICATION, "DISPLAY_FINISHED_DOWNLOAD_NOTIFICATION",
+        NotificationSettings, DISPLAY_FINISHED_DOWNLOAD_NOTIFICATION, "boolean")
     ; [HotkeySettings]
     ConfigFileEntry(START_DOWNLOAD_HK, "START_DOWNLOAD_HK", HotkeySettings, START_DOWNLOAD_HK, "hotkey")
     ConfigFileEntry(START_DOWNLOAD_HK_ENABLED, "START_DOWNLOAD_HK_ENABLED", HotkeySettings,
@@ -92,6 +114,24 @@ initializeConfigEntryMap() {
     ConfigFileEntry(TERMINATE_PROGRAM_HK, "TERMINATE_PROGRAM_HK", HotkeySettings, TERMINATE_PROGRAM_HK, "hotkey")
     ConfigFileEntry(TERMINATE_PROGRAM_HK_ENABLED, "TERMINATE_PROGRAM_HK_ENABLED", HotkeySettings,
         TERMINATE_PROGRAM_HK_ENABLED, "boolean")
+    ; [VideoListDefaultPreferences]
+    ConfigFileEntry(ADD_VIDEO_URL_IS_A_PLAYLIST, "ADD_VIDEO_URL_IS_A_PLAYLIST", VideoListDefaultPreferences,
+        ADD_VIDEO_URL_IS_A_PLAYLIST, "boolean")
+    ConfigFileEntry(ADD_VIDEO_URL_USE_PLAYLIST_RANGE, "ADD_VIDEO_URL_USE_PLAYLIST_RANGE",
+        VideoListDefaultPreferences, ADD_VIDEO_URL_USE_PLAYLIST_RANGE, "boolean")
+    ConfigFileEntry(REMOVE_VIDEO_CONFIRM_DELETION, "REMOVE_VIDEO_CONFIRM_DELETION", VideoListDefaultPreferences,
+        REMOVE_VIDEO_CONFIRM_DELETION, "boolean")
+    ConfigFileEntry(REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED,
+        "REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED", VideoListDefaultPreferences,
+        REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED, "boolean")
+    ConfigFileEntry(EXPORT_ONLY_VALID_URLS, "EXPORT_ONLY_VALID_URLS", VideoListDefaultPreferences,
+        EXPORT_ONLY_VALID_URLS, "boolean")
+    ConfigFileEntry(AUTO_EXPORT_VIDEO_LIST, "AUTO_EXPORT_VIDEO_LIST", VideoListDefaultPreferences,
+        AUTO_EXPORT_VIDEO_LIST, "boolean")
+    ConfigFileEntry(REMOVE_VIDEOS_AFTER_DOWNLOAD, "REMOVE_VIDEOS_AFTER_DOWNLOAD", VideoListDefaultPreferences,
+        REMOVE_VIDEOS_AFTER_DOWNLOAD, "boolean")
+    ConfigFileEntry(TERMINATE_AFTER_DOWNLOAD, "TERMINATE_AFTER_DOWNLOAD", VideoListDefaultPreferences,
+        TERMINATE_AFTER_DOWNLOAD, "boolean")
 }
 
 ; Uses the config file entry map and each config file entry tries to read out it's value from the current config file.

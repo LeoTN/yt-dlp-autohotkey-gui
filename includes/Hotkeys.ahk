@@ -271,6 +271,11 @@ menu_openDownloadLocation() {
     }
 }
 
+; Opens the settings GUI.
+menu_openSettingsGUI() {
+    settingsGUI.Show()
+}
+
 /*
 MENU FUNCTION SECTION END
 -------------------------------------------------
