@@ -5,7 +5,7 @@ CoordMode "Mouse", "Window"
 
 createSettingsGUI() {
     global
-    settingsGUI := Gui("+AlwaysOnTop", "VD - Settings (currently partially non functional)") ; REMOVE ALWAYSONTOP
+    settingsGUI := Gui(, "VD - Settings (currently partially non functional)")
     ; The space is intentional as it increases the tab size.
     local tabNames := ["   General   ", "   Video List   ", "   Hotkeys (WIP)   "] ; REMOVE
     settingsGUITabs := settingsGUI.Add("Tab3", , tabNames)
@@ -108,6 +108,9 @@ createSettingsGUI() {
     settingsGUIHotkeySaveChangesButton := settingsGUI.Add("Button", "yp+10 w187 +Disabled", "Save Changes")
     settingsGUIHotkeyDiscardChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Discard Changes")
     settingsGUIHotkeyResetChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Reset to Default")
+    ; Status bar.
+    settingsGUIStatusBar := settingsGUI.Add("StatusBar", , "Some settings might require a restart of the application.")
+    settingsGUIStatusBar.SetIcon("shell32.dll", 222) ; REMOVE USE ICON DLL HERE
 
     ; Adds the event handlers for the settings GUI.
     /*
@@ -340,7 +343,7 @@ handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange(pEdi
     if (checkIfStringIsValidPlaylistIndexRange(pEdit.Value)) {
         settingsGUIAddVideoSpecifyPlaylistRangeText.Text := "Index Range (valid)"
         ; Writes the value to the config file.
-        editConfigFile(pEdit.Value, "ADD_VIDEO_PLAYLIST_RANGE_INDEX")
+        editConfigFile(pEdit.Value, "ADD_VIDEO_PLAYLIST_RANGE_INDEX_VALUE")
         booleanUnsavedPlaylistRangeIndexChangesExist := false
     }
     else {
@@ -424,7 +427,7 @@ handleSettingsGUI_settingsGUI_onClose(pGUI) {
     ; Discards the playlist range index changes.
     booleanUnsavedPlaylistRangeIndexChangesExist := false
     ; Updates the playlist range index value and text.
-    settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.Value := readConfigFile("ADD_VIDEO_PLAYLIST_RANGE_INDEX")
+    settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.Value := readConfigFile("ADD_VIDEO_PLAYLIST_RANGE_INDEX_VALUE")
     handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange(
         settingsGUIAddVideoSpecifyPlaylistRangeInputEdit, "")
 }
@@ -520,7 +523,7 @@ importConfigFileValuesIntoSettingsGUI() {
     handleSettingsGUI_allCheckBox_onClick(settingsGUICheckForUpdatesAtLaunchCheckbox, "")
 
     ; Updates the playlist range index value and text.
-    settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.Value := readConfigFile("ADD_VIDEO_PLAYLIST_RANGE_INDEX")
+    settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.Value := readConfigFile("ADD_VIDEO_PLAYLIST_RANGE_INDEX_VALUE")
     handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange(
         settingsGUIAddVideoSpecifyPlaylistRangeInputEdit, "")
 

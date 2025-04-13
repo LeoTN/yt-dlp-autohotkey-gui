@@ -1081,7 +1081,7 @@ displayErrorMessage(pErrorObject := unset, pAdditionalErrorMessage := unset, pBo
         errorGUIActionButton := errorGUI.Add("Button", "xp+110 w100 R2", "Continue Script")
     }
     errorGUIActionButton.OnEvent("Click", (*) => errorGUI.Destroy())
-    errorGUI.Show()
+    errorGUI.Show("AutoSize")
     errorGUI.Flash()
     ; There might be an error with the while condition, once the GUI is destroyed.
     try

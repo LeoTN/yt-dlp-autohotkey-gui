@@ -13,7 +13,7 @@ setup_onInit() {
     createSetupGUI()
     ; The script won't continue until the required dependencies are installed or the GUI is closed.
     while (checkIfFFmpegOrYTDLPSetupIsRequired()) {
-        setupGUI.Show()
+        setupGUI.Show("AutoSize")
         Sleep(2000)
     }
 }

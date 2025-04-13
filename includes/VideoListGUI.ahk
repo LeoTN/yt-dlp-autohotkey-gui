@@ -99,15 +99,15 @@ createVideoListGUI() {
     videoListSearchBarInputClearButton.OnEvent("Click", handleVideoListGUI_videoListSearchBarInputClearButton_onClick)
     ; Add URL elements.
     addVideoURLInputClearButton.OnEvent("Click", handleVideoListGUI_addVideoURLInputClearButton_onClick)
+    addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_onClick)
     addVideoURLIsAPlaylistCheckbox.OnEvent("Click", handleVideoListGUI_addVideoURLIsAPlaylistCheckbox_onClick)
     addVideoURLUsePlaylistRangeCheckbox.OnEvent("Click",
         handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick)
     addVideoSpecifyPlaylistRangeInputEdit.OnEvent("Change",
         handleSettingsGUI_addVideoSpecifyPlaylistRangeInputEdit_onChange)
-    addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_onClick)
     ; Remove video elements.
     removeVideoFromListButton.OnEvent("Click", handleVideoListGUI_removeVideoFromListButton_onClick)
-    removeVideoConfirmDeletionCheckbox.OnEvent("Click", handleVideoListGUI_removeVideoConformDeletionCheckbox_onClick)
+    removeVideoConfirmDeletionCheckbox.OnEvent("Click", handleVideoListGUI_removeVideoConfirmDeletionCheckbox_onClick)
     ; Import and export elements.
     importVideoListButton.OnEvent("Click", handleVideoListGUI_importVideoListButton_onClick)
     exportVideoListButton.OnEvent("Click", handleVideoListGUI_exportVideoListButton_onClick)
@@ -156,7 +156,7 @@ createVideoListGUI() {
     allMenus.SetIcon("&File", "shell32.dll", 4)
     allMenus.Add("&Options", optionsMenu)
     allMenus.SetIcon("&Options", "shell32.dll", 317)
-    allMenus.Add("&Help", (*) => helpGUI.Show())
+    allMenus.Add("&Help", (*) => helpGUI.Show("AutoSize"))
     allMenus.SetIcon("&Help", "shell32.dll", 24)
     videoListGUI.MenuBar := allMenus
 
@@ -188,6 +188,7 @@ videoListGUI_onInit() {
     currentYTDLPActionObject.remainingVideos := 0
     currentYTDLPActionObject.downloadProcessYTDLPPID := 0
     createVideoListGUI()
+    importConfigFileValuesIntoVideoListGUI()
     if (readConfigFile("SHOW_VIDEO_LIST_GUI_ON_LAUNCH")) {
         hotkey_openVideoListGUI()
     }
@@ -256,39 +257,6 @@ handleVideoListGUI_addVideoURLInputClearButton_onClick(pButton, pInfo) {
     addVideoURLInputEdit.Value := ""
 }
 
-handleVideoListGUI_addVideoURLIsAPlaylistCheckbox_onClick(pCheckbox, pInfo) {
-    ; Enable the checkbox below.
-    if (pCheckbox.Value) {
-        addVideoURLUsePlaylistRangeCheckbox.Opt("-Disabled")
-    }
-    ; Disable the checkbox below and uncheck it.
-    else {
-        addVideoURLUsePlaylistRangeCheckbox.Opt("+Disabled")
-        addVideoURLUsePlaylistRangeCheckbox.Value := false
-        handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick(addVideoURLUsePlaylistRangeCheckbox, pInfo)
-    }
-}
-
-handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick(pCheckbox, pInfo) {
-    ; Enable the edit below.
-    if (pCheckbox.Value) {
-        addVideoSpecifyPlaylistRangeInputEdit.Opt("-Disabled")
-    }
-    else {
-        addVideoSpecifyPlaylistRangeInputEdit.Opt("+Disabled")
-    }
-}
-
-handleSettingsGUI_addVideoSpecifyPlaylistRangeInputEdit_onChange(pEdit, pInfo) {
-    ; Displays an inidicator in the text to show the validity status.
-    if (checkIfStringIsValidPlaylistIndexRange(pEdit.Value)) {
-        addVideoSpecifyPlaylistRangeText.Text := "Index Range (valid)"
-    }
-    else {
-        addVideoSpecifyPlaylistRangeText.Text := "Index Range (invalid)"
-    }
-}
-
 handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
     videoURL := addVideoURLInputEdit.Value
     ; Avoids the invalid URL MsgBox when the edit is empty.
@@ -348,6 +316,39 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
     }
 }
 
+handleVideoListGUI_addVideoURLIsAPlaylistCheckbox_onClick(pCheckbox, pInfo) {
+    ; Enable the checkbox below.
+    if (pCheckbox.Value) {
+        addVideoURLUsePlaylistRangeCheckbox.Opt("-Disabled")
+    }
+    ; Disable the checkbox below and uncheck it.
+    else {
+        addVideoURLUsePlaylistRangeCheckbox.Opt("+Disabled")
+        addVideoURLUsePlaylistRangeCheckbox.Value := false
+        handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick(addVideoURLUsePlaylistRangeCheckbox, pInfo)
+    }
+}
+
+handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick(pCheckbox, pInfo) {
+    ; Enable the edit below.
+    if (pCheckbox.Value) {
+        addVideoSpecifyPlaylistRangeInputEdit.Opt("-Disabled")
+    }
+    else {
+        addVideoSpecifyPlaylistRangeInputEdit.Opt("+Disabled")
+    }
+}
+
+handleSettingsGUI_addVideoSpecifyPlaylistRangeInputEdit_onChange(pEdit, pInfo) {
+    ; Displays an inidicator in the text to show the validity status.
+    if (checkIfStringIsValidPlaylistIndexRange(pEdit.Value)) {
+        addVideoSpecifyPlaylistRangeText.Text := "Index Range (valid)"
+    }
+    else {
+        addVideoSpecifyPlaylistRangeText.Text := "Index Range (invalid)"
+    }
+}
+
 handleVideoListGUI_removeVideoFromListButton_onClick(pButton, pInfo) {
     ; This map contains all video list view elements currently selected by the user.
     selectedVideoListViewElementsMap := getSelectedVideoListViewElements()
@@ -375,7 +376,7 @@ handleVideoListGUI_removeVideoFromListButton_onClick(pButton, pInfo) {
     }
 }
 
-handleVideoListGUI_removeVideoConformDeletionCheckbox_onClick(pCheckbox, pInfo) {
+handleVideoListGUI_removeVideoConfirmDeletionCheckbox_onClick(pCheckbox, pInfo) {
     ; Enable the checkbox below.
     if (pCheckbox.Value) {
         removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.Opt("-Disabled")
@@ -683,6 +684,29 @@ handleVideoListGUI_videoListGUIStatusBar_stopAnimation(pStatusBarText) {
     videoListGUIStatusBar.SetText(pStatusBarText)
 }
 
+; Updates the checkbox values according to the config file.
+importConfigFileValuesIntoVideoListGUI() {
+    ; Add URL elements.
+    addVideoURLIsAPlaylistCheckbox.Value := readConfigFile("ADD_VIDEO_URL_IS_A_PLAYLIST")
+    addVideoURLUsePlaylistRangeCheckbox.Value := readConfigFile("ADD_VIDEO_URL_USE_PLAYLIST_RANGE")
+    addVideoSpecifyPlaylistRangeInputEdit.Value := readConfigFile("ADD_VIDEO_PLAYLIST_RANGE_INDEX_VALUE")
+    ; Remove video elements.
+    removeVideoConfirmDeletionCheckbox.Value := readConfigFile("REMOVE_VIDEO_CONFIRM_DELETION")
+    removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.Value := readConfigFile(
+        "REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED")
+    ; Import and export elements.
+    exportOnlyValidURLsCheckbox.Value := readConfigFile("EXPORT_ONLY_VALID_URLS")
+    autoExportVideoListCheckbox.Value := readConfigFile("AUTO_EXPORT_VIDEO_LIST")
+    ; Controls that are relevant for downloading the videos in the video list.
+    downloadRemoveVideosAfterDownloadCheckbox.Value := readConfigFile("REMOVE_VIDEOS_AFTER_DOWNLOAD")
+    downloadTerminateAfterDownloadCheckbox.Value := readConfigFile("TERMINATE_AFTER_DOWNLOAD")
+
+    ; Enables or disables a few checkboxes according to their values.
+    handleVideoListGUI_addVideoURLIsAPlaylistCheckbox_onClick(addVideoURLIsAPlaylistCheckbox, "")
+    handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick(addVideoURLUsePlaylistRangeCheckbox, "")
+    handleVideoListGUI_removeVideoConfirmDeletionCheckbox_onClick(removeVideoConfirmDeletionCheckbox, "")
+}
+
 /*
 Allows to search for elements in the video list view element.
 @param pSearchString [String] A string to search for.
@@ -753,8 +777,16 @@ updateCurrentlySelectedVideo(pVideoListViewEntry) {
     videoDesiredFormatDDL.Add(pVideoListViewEntry.desiredFormatArray)
     videoDesiredSubtitleDDL.Add(pVideoListViewEntry.desiredSubtitleArray)
     ; Select the currently selected format and subtitle.
-    videoDesiredFormatDDL.Value := pVideoListViewEntry.desiredFormatArrayCurrentlySelectedIndex
-    videoDesiredSubtitleDDL.Value := pVideoListViewEntry.desiredSubtitleArrayCurrentlySelectedIndex
+    try {
+        ; This operation will fail when the index is higher than the amount of elements in the DDL.
+        videoDesiredFormatDDL.Value := pVideoListViewEntry.desiredFormatArrayCurrentlySelectedIndex
+        videoDesiredSubtitleDDL.Value := pVideoListViewEntry.desiredSubtitleArrayCurrentlySelectedIndex
+    }
+    catch {
+        ; Selects the very first entry.
+        videoDesiredFormatDDL.Value := 1
+        videoDesiredSubtitleDDL.Value := 1
+    }
 }
 
 /*
@@ -1098,10 +1130,10 @@ class VideoListViewEntry {
         ; The following attributes will be used when downloading the video.
         this.desiredFormatArray := desiredDownloadFormatArray.Clone()
         ; This option changes when the user selects a different format in the video list GUI.
-        this.desiredFormatArrayCurrentlySelectedIndex := 1
+        this.desiredFormatArrayCurrentlySelectedIndex := readConfigFile("DEFAULT_DESIRED_DOWNLOAD_FORMAT_ARRAY_INDEX")
         this.desiredSubtitleArray := desiredSubtitleArray.Clone()
         ; This option changes when the user selects a different format in the video list GUI.
-        this.desiredSubtitleArrayCurrentlySelectedIndex := 1
+        this.desiredSubtitleArrayCurrentlySelectedIndex := readConfigFile("DEFAULT_DESIRED_SUBTITLE_ARRAY_INDEX")
         ; This is the part of the download command that is specific to this video.
         this.downloadCommandPart := ""
         ; Creates the download command for the first time.

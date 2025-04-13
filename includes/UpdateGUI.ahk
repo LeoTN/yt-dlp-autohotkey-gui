@@ -42,7 +42,7 @@ createUpdateGUI(pUpdateVersion) {
     updateGUINoUpdateButton := updateGUI.Add("Button", "xp+110 w100 R2", "No Thanks")
     updateGUINoUpdateButton.OnEvent("Click", (*) => updateGUI.Destroy())
 
-    updateGUI.Show()
+    updateGUI.Show("AutoSize")
 }
 
 handleUpdateGUI_downloadMSIButton(pMSIDownloadURL) {

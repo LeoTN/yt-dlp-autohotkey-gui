@@ -34,7 +34,7 @@ tutorial_howToFindHelpGUI() {
     }
     highlightSearchBar() {
         hideAllHighlightedElements()
-        helpGUI.Show()
+        helpGUI.Show("AutoSize")
         currentlyHighlightedControlObject := highlightControl(helpGUISearchBarEdit)
     }
     demonstrateSearchBar() {
@@ -182,14 +182,14 @@ class InteractiveTutorial {
     start(pGuiX := unset, pGuiY := unset) {
         ; Both parameters are omitted.
         if (!IsSet(pGuiX) && !IsSet(pGuiY)) {
-            this.gui.Show()
+            this.gui.Show("AutoSize")
         }
         ; Only one parameter is given and the other one is missing.
         else if (!IsSet(pGuiX) || !IsSet(pGuiY)) {
             MsgBox("[" . A_ThisFunc .
                 "()] [WARNING] Make sure that either both (pGuiX and pGuiY) are given or omitted entirely.",
                 "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
-            this.gui.Show()
+            this.gui.Show("AutoSize")
         }
         else {
             this.gui.Show("x" . pGuiX . " y" . pGuiY)

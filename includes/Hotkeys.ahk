@@ -273,7 +273,7 @@ menu_openDownloadLocation() {
 
 ; Opens the settings GUI.
 menu_openSettingsGUI() {
-    settingsGUI.Show()
+    settingsGUI.Show("AutoSize")
 }
 
 /*
