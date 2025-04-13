@@ -51,6 +51,17 @@ onInit() {
     ; The version of this script. For example "v1.2.3.4".
     global versionFullName := getCorrectScriptVersionFromRegistry()
 
+    ; Determine the available download formats and subtitle options.
+    global desiredDownloadFormatArray := [
+        ; Video formats.
+        "Automatically choose best video format", "mp4", "webm", "avi", "flv", "mkv", "mov",
+        ; Audio formats.
+        "Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "opus", "vorbis"
+    ]
+    global desiredSubtitleArray := [
+        "Do not download subtitles", "Embed all available subtitles"
+    ]
+
     try
     {
         TraySetIcon(scriptIconLocation)

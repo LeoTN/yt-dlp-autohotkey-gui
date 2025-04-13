@@ -7,29 +7,32 @@ createSettingsGUI() {
     global
     settingsGUI := Gui("+AlwaysOnTop", "VD - Settings (currently partially non functional)") ; REMOVE ALWAYSONTOP
     ; The space is intentional as it increases the tab size.
-    local tabNames := ["   General   ", "   Video List (WIP)   ", "   Hotkeys (WIP)   "] ; REMOVE
+    local tabNames := ["   General   ", "   Video List   ", "   Hotkeys (WIP)   "] ; REMOVE
     settingsGUITabs := settingsGUI.Add("Tab3", , tabNames)
     /*
     GENERAL SETTINGS TAB
     -------------------------------------------------
     */
     settingsGUITabs.UseTab(1)
-    ; Update settings.
-    settingsGUIUpdateSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+30 w600 h90", "Update")
-    settingsGUICheckForUpdatesAtLaunchCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
+    ; Startup settings.
+    settingsGUIStartupSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+30 w600 h140", "Startup")
+    settingsGUIEnableAutoStartCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20", "Start with Windows (WIP)") ; REMOVE
+    settingsGUIShowVideoListGUIAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
+        "Open the video list window at the start")
+    settingsGUICheckForUpdatesAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+30 Checked",
         "Check for updates at the start")
     settingsGUIUpdateToBetaVersionsCheckbox := settingsGUI.Add("Checkbox", "yp+20",
         "I want to receive beta versions")
     settingsGUIUpdateCheckForUpdatesButton := settingsGUI.Add("Button", "yp+20 w200", "Check for Updates now")
     ; Notification settings.
-    settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+130 w600 h80", "Notifications")
+    settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+180 w600 h80", "Notifications")
     settingsGUIDisplayStartupNotificationCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
         "Program launch")
     settingsGUIDisplayExitNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked", "Program exit")
     settingsGUIDisplayFinishedDownloadNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "Download finished")
     ; Directory settings.
-    settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+220 w600 h175", "Directories")
+    settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+270 w600 h175", "Directories")
     settingsGUIDirectoryDDL := settingsGUI.Add("DropDownList", "xp+10 yp+20 w580")
     settingsGUIDirectoryDescriptionEdit := settingsGUI.Add("Edit", "yp+30 w580 h40 -WantReturn +ReadOnly",
         "No description available.")
@@ -65,7 +68,7 @@ createSettingsGUI() {
         "Add videos from a playlist")
     settingsGUIAddVideoURLUsePlaylistRangeCheckbox := settingsGUI.Add("CheckBox", "yp+20 +Disabled",
         "Only add videos in a specific range")
-    settingsGUIAddVideoSpecifyPlaylistRangeText := settingsGUI.Add("Text", "yp+20", "Index Range")
+    settingsGUIAddVideoSpecifyPlaylistRangeText := settingsGUI.Add("Text", "yp+20 w580", "Index Range")
     settingsGUIAddVideoSpecifyPlaylistRangeInputEdit := settingsGUI.Add("Edit", "yp+20 w100 +Disabled", "1")
     ; Remove video elements.
     settingsGUIRemoveVideoConfirmDeletionCheckbox := settingsGUI.Add("CheckBox", "yp+40",
@@ -122,6 +125,8 @@ createSettingsGUI() {
     settingsGUIDirectoryResetChangesButton.OnEvent("Click",
         handleSettingsGUI_settingsGUIDirectoryResetChangesButton_onClick)
     ; Ckeckboxes
+    settingsGUIEnableAutoStartCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
+    settingsGUIShowVideoListGUIAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUICheckForUpdatesAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIUpdateToBetaVersionsCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDisplayStartupNotificationCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
@@ -134,11 +139,11 @@ createSettingsGUI() {
     */
     settingsGUIVideoDesiredFormatDDL.OnEvent("Change", handleSettingsGUI_settingsGUIVideoDesiredFormatDDL_onChange)
     settingsGUIVideoDesiredSubtitleDDL.OnEvent("Change", handleSettingsGUI_settingsGUIVideoDesiredSubtitleDDL_onChange)
+    settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.OnEvent("Change",
+        handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange)
     ; Checkboxes
     settingsGUIAddVideoURLIsAPlaylistCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIAddVideoURLUsePlaylistRangeCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
-    settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.OnEvent("Change",
-        handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange)
     settingsGUIRemoveVideoConfirmDeletionCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox.OnEvent("Click",
         handleSettingsGUI_allCheckBox_onClick)
@@ -161,10 +166,13 @@ createSettingsGUI() {
     settingsGUIHotkeyDiscardChangesButton.OnEvent("Click",
         handleSettingsGUI_settingsGUIHotkeyDiscardChangesButton_onClick)
     settingsGUIHotkeyResetChangesButton.OnEvent("Click", handleSettingsGUI_settingsGUIHotkeyResetChangesButton_onClick)
+    ; Checks for any unsaved changes when closing the settings window.
+    settingsGUI.OnEvent("Close", handleSettingsGUI_settingsGUI_onClose)
 }
 
 settingsGUI_onInit() {
     global booleanUnsavedDirectoryChangesExist := false
+    global booleanUnsavedPlaylistRangeIndexChangesExist := false
 
     createSettingsGUI()
     initializeCheckboxLinkedConfigFileEntryMap()
@@ -173,7 +181,25 @@ settingsGUI_onInit() {
 }
 
 handleSettingsGUI_settingsGUIUpdateCheckForUpdatesButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
+    ; Does not check for updates, if there is no Internet connection or the script isn't compiled.
+    if (!checkInternetConnection()) {
+        MsgBox("There seems to be no internet connection.", "VD - Manual Update Check", "O Icon! 262144 T2")
+    }
+    else if (!A_IsCompiled) {
+        MsgBox("You cannot use this function with an uncompiled version.", "VD - Manual Update Check",
+            "O Icon! 262144 T2")
+    }
+    else {
+        availableUpdateVersion := checkForAvailableUpdates()
+        if (availableUpdateVersion == "_result_no_update_available") {
+            MsgBox("There are currently no updates available.", "VD - Manual Update Check", "O Iconi 262144 T2")
+        }
+        else {
+            createUpdateGUI(availableUpdateVersion)
+        }
+    }
+    settingsGUIUpdateCheckForUpdatesButton.Opt("-Disabled")
 }
 
 handleSettingsGUI_settingsGUIDirectoryDDL_onChange(pDDL, pInfo) {
@@ -217,7 +243,7 @@ handleSettingsGUI_settingsGUISelectDirectoryButton_onClick(pButton, pInfo) {
     else {
         rootDirectory := A_ScriptDir
     }
-    selectedDirectory := directorySelectPrompt("VD - Please select a directory", rootDirectory)
+    selectedDirectory := directorySelectPrompt("VD - Please select a directory", rootDirectory, true)
     if (selectedDirectory != "_result_no_directory_selected") {
         previousDirectory := settingsGUIDirectoryInputEdit.Value
         settingsGUIDirectoryInputEdit.Value := selectedDirectory
@@ -265,11 +291,13 @@ handleSettingsGUI_settingsGUIDirectoryResetChangesButton_onClick(pButton, pInfo)
 }
 
 handleSettingsGUI_settingsGUIVideoDesiredFormatDDL_onChange(pDDL, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    ; Writes the index number of the selected element into the config file.
+    editConfigFile(settingsGUIVideoDesiredFormatDDL.Value, "DEFAULT_DESIRED_DOWNLOAD_FORMAT_ARRAY_INDEX")
 }
 
 handleSettingsGUI_settingsGUIVideoDesiredSubtitleDDL_onChange(pDDL, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    ; Writes the index number of the selected element into the config file.
+    editConfigFile(settingsGUIVideoDesiredSubtitleDDL.Value, "DEFAULT_DESIRED_SUBTITLE_ARRAY_INDEX")
 }
 
 handleSettingsGUI_settingsGUIHotkeyDDL_onChange(pDDL, pInfo) {
@@ -306,7 +334,19 @@ handleSettingsGUI_settingsGUIHotkeyResetChangesButton_onClick(pButton, pInfo) {
 }
 
 handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange(pEdit, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global booleanUnsavedPlaylistRangeIndexChangesExist
+
+    ; Displays an inidicator in the text to show the validity status.
+    if (checkIfStringIsValidPlaylistIndexRange(pEdit.Value)) {
+        settingsGUIAddVideoSpecifyPlaylistRangeText.Text := "Index Range (valid)"
+        ; Writes the value to the config file.
+        editConfigFile(pEdit.Value, "ADD_VIDEO_PLAYLIST_RANGE_INDEX")
+        booleanUnsavedPlaylistRangeIndexChangesExist := false
+    }
+    else {
+        settingsGUIAddVideoSpecifyPlaylistRangeText.Text := "Index Range (invalid)"
+        booleanUnsavedPlaylistRangeIndexChangesExist := true
+    }
 }
 
 /*
@@ -359,6 +399,36 @@ handleSettingsGUI_allCheckBox_onClick(pCheckBox, pInfo) {
     }
 }
 
+handleSettingsGUI_settingsGUI_onClose(pGUI) {
+    global booleanUnsavedDirectoryChangesExist
+    global booleanUnsavedPlaylistRangeIndexChangesExist
+
+    ; Checks for any unsaved changes.
+    if (!booleanUnsavedDirectoryChangesExist && !booleanUnsavedPlaylistRangeIndexChangesExist) {
+        return
+    }
+    result := MsgBox("There are unsaved changes.`n`nContinue?", "VD - Unsaved Changes", "YN Icon! 262144")
+    if (result != "Yes") {
+        ; This stops the GUI from closing.
+        return true
+    }
+    ; Discards the directory changes.
+    booleanUnsavedDirectoryChangesExist := false
+    settingsGUIDirectorySaveChangesButton.Opt("+Disabled")
+    settingsGUIDirectoryDiscardChangesButton.Opt("+Disabled")
+    ; This makes sure that there is a selected entry.
+    if (settingsGUIDirectoryDDL.Value != 0) {
+        handleSettingsGUI_settingsGUIDirectoryDDL_onChange(settingsGUIDirectoryDDL, "")
+    }
+
+    ; Discards the playlist range index changes.
+    booleanUnsavedPlaylistRangeIndexChangesExist := false
+    ; Updates the playlist range index value and text.
+    settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.Value := readConfigFile("ADD_VIDEO_PLAYLIST_RANGE_INDEX")
+    handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange(
+        settingsGUIAddVideoSpecifyPlaylistRangeInputEdit, "")
+}
+
 initializeCheckboxLinkedConfigFileEntryMap() {
     ; Each relevant config file entry name will be matched with the corresponding checkbox.
     global checkboxLinkedConfigFileEntryMap := Map()
@@ -367,9 +437,10 @@ initializeCheckboxLinkedConfigFileEntryMap() {
     GENERAL SETTINGS TAB
     -------------------------------------------------
     */
-    ; Update settings.
-    checkboxLinkedConfigFileEntryMap.Set(settingsGUICheckForUpdatesAtLaunchCheckbox,
-        "CHECK_FOR_UPDATES_AT_LAUNCH")
+    ; Startup settings.
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIEnableAutoStartCheckbox, "START_WITH_WINDOWS")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIShowVideoListGUIAtLaunchCheckbox, "SHOW_VIDEO_LIST_GUI_ON_LAUNCH")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUICheckForUpdatesAtLaunchCheckbox, "CHECK_FOR_UPDATES_AT_LAUNCH")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIUpdateToBetaVersionsCheckbox, "UPDATE_TO_BETA_VERSIONS")
     ; Notification settings.
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIDisplayStartupNotificationCheckbox, "DISPLAY_STARTUP_NOTIFICATION")
@@ -434,6 +505,8 @@ initializeSettingsGUIDirectoryDDLEntryMap() {
 
 ; Imports the config file content and sets the controls' values accordingly.
 importConfigFileValuesIntoSettingsGUI() {
+    global desiredDownloadFormatArray
+    global desiredSubtitleArray
     global checkboxLinkedConfigFileEntryMap
 
     ; Checkboxes.
@@ -445,6 +518,22 @@ importConfigFileValuesIntoSettingsGUI() {
     It doesn't matter which checkbox object we pass to the function in this case.
     */
     handleSettingsGUI_allCheckBox_onClick(settingsGUICheckForUpdatesAtLaunchCheckbox, "")
+
+    ; Updates the playlist range index value and text.
+    settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.Value := readConfigFile("ADD_VIDEO_PLAYLIST_RANGE_INDEX")
+    handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange(
+        settingsGUIAddVideoSpecifyPlaylistRangeInputEdit, "")
+
+    ; Updates the video format preferences DDL.
+    settingsGUIVideoDesiredFormatDDL.Delete()
+    settingsGUIVideoDesiredFormatDDL.Add(desiredDownloadFormatArray)
+    selectedIndex := readConfigFile("DEFAULT_DESIRED_DOWNLOAD_FORMAT_ARRAY_INDEX")
+    settingsGUIVideoDesiredFormatDDL.Value := selectedIndex
+    ; Updates the video subtitle preferences DDL.
+    settingsGUIVideoDesiredSubtitleDDL.Delete()
+    settingsGUIVideoDesiredSubtitleDDL.Add(desiredSubtitleArray)
+    selectedIndex := readConfigFile("DEFAULT_DESIRED_SUBTITLE_ARRAY_INDEX")
+    settingsGUIVideoDesiredSubtitleDDL.Value := selectedIndex
 }
 
 /*

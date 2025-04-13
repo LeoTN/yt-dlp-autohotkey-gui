@@ -30,10 +30,11 @@ initializeConfigEntryMap() {
     CONFIG_FILE_VD_VERSION := versionFullName
     ; [GeneralSettings]
     GeneralSettings := "GeneralSettings"
+    START_WITH_WINDOWS := false
+    SHOW_VIDEO_LIST_GUI_ON_LAUNCH := true
     CHECK_FOR_UPDATES_AT_LAUNCH := true
     UPDATE_TO_BETA_VERSIONS := false
     ASK_FOR_TUTORIAL := true
-    SHOW_VIDEO_LIST_GUI_ON_LAUNCH := true
     ; [DirectoryPaths]
     DirectoryPaths := "DirectoryPaths"
     DEFAULT_DOWNLOAD_DIRECTORY := scriptMainDirectory . "\download"
@@ -60,8 +61,11 @@ initializeConfigEntryMap() {
     TERMINATE_PROGRAM_HK_ENABLED := true
     ; [VideoListDefaultPreferences]
     VideoListDefaultPreferences := "VideoListDefaultPreferences"
+    DEFAULT_DESIRED_DOWNLOAD_FORMAT_ARRAY_INDEX := 1
+    DEFAULT_DESIRED_SUBTITLE_ARRAY_INDEX := 1
     ADD_VIDEO_URL_IS_A_PLAYLIST := false
     ADD_VIDEO_URL_USE_PLAYLIST_RANGE := false
+    ADD_VIDEO_PLAYLIST_RANGE_INDEX := 1
     REMOVE_VIDEO_CONFIRM_DELETION := false
     REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED := false
     EXPORT_ONLY_VALID_URLS := true
@@ -74,13 +78,15 @@ initializeConfigEntryMap() {
     ConfigFileEntry(ENABLE_DEBUG_MODE, "ENABLE_DEBUG_MODE", DebugSettings, ENABLE_DEBUG_MODE, "boolean")
     ConfigFileEntry(CONFIG_FILE_VD_VERSION, "CONFIG_FILE_VD_VERSION", DebugSettings, CONFIG_FILE_VD_VERSION, "string")
     ; [GeneralSettings]
+    ConfigFileEntry(START_WITH_WINDOWS, "START_WITH_WINDOWS", GeneralSettings,
+        START_WITH_WINDOWS, "boolean")
+    ConfigFileEntry(SHOW_VIDEO_LIST_GUI_ON_LAUNCH, "SHOW_VIDEO_LIST_GUI_ON_LAUNCH", GeneralSettings,
+        SHOW_VIDEO_LIST_GUI_ON_LAUNCH, "boolean")
     ConfigFileEntry(CHECK_FOR_UPDATES_AT_LAUNCH, "CHECK_FOR_UPDATES_AT_LAUNCH", GeneralSettings,
         CHECK_FOR_UPDATES_AT_LAUNCH, "boolean")
     ConfigFileEntry(UPDATE_TO_BETA_VERSIONS, "UPDATE_TO_BETA_VERSIONS", GeneralSettings,
         UPDATE_TO_BETA_VERSIONS, "boolean")
     ConfigFileEntry(ASK_FOR_TUTORIAL, "ASK_FOR_TUTORIAL", GeneralSettings, ASK_FOR_TUTORIAL, "boolean")
-    ConfigFileEntry(SHOW_VIDEO_LIST_GUI_ON_LAUNCH, "SHOW_VIDEO_LIST_GUI_ON_LAUNCH", GeneralSettings,
-        SHOW_VIDEO_LIST_GUI_ON_LAUNCH, "boolean")
     ; [DirectoryPaths]
     ConfigFileEntry(DEFAULT_DOWNLOAD_DIRECTORY, "DEFAULT_DOWNLOAD_DIRECTORY", DirectoryPaths,
         DEFAULT_DOWNLOAD_DIRECTORY, "directory")
@@ -115,10 +121,18 @@ initializeConfigEntryMap() {
     ConfigFileEntry(TERMINATE_PROGRAM_HK_ENABLED, "TERMINATE_PROGRAM_HK_ENABLED", HotkeySettings,
         TERMINATE_PROGRAM_HK_ENABLED, "boolean")
     ; [VideoListDefaultPreferences]
+    ConfigFileEntry(DEFAULT_DESIRED_DOWNLOAD_FORMAT_ARRAY_INDEX, "DEFAULT_DESIRED_DOWNLOAD_FORMAT_ARRAY_INDEX",
+        VideoListDefaultPreferences,
+        DEFAULT_DESIRED_DOWNLOAD_FORMAT_ARRAY_INDEX, "string")
+    ConfigFileEntry(DEFAULT_DESIRED_SUBTITLE_ARRAY_INDEX, "DEFAULT_DESIRED_SUBTITLE_ARRAY_INDEX",
+        VideoListDefaultPreferences,
+        DEFAULT_DESIRED_SUBTITLE_ARRAY_INDEX, "string")
     ConfigFileEntry(ADD_VIDEO_URL_IS_A_PLAYLIST, "ADD_VIDEO_URL_IS_A_PLAYLIST", VideoListDefaultPreferences,
         ADD_VIDEO_URL_IS_A_PLAYLIST, "boolean")
     ConfigFileEntry(ADD_VIDEO_URL_USE_PLAYLIST_RANGE, "ADD_VIDEO_URL_USE_PLAYLIST_RANGE",
         VideoListDefaultPreferences, ADD_VIDEO_URL_USE_PLAYLIST_RANGE, "boolean")
+    ConfigFileEntry(ADD_VIDEO_PLAYLIST_RANGE_INDEX, "ADD_VIDEO_PLAYLIST_RANGE_INDEX", VideoListDefaultPreferences,
+        ADD_VIDEO_PLAYLIST_RANGE_INDEX, "string")
     ConfigFileEntry(REMOVE_VIDEO_CONFIRM_DELETION, "REMOVE_VIDEO_CONFIRM_DELETION", VideoListDefaultPreferences,
         REMOVE_VIDEO_CONFIRM_DELETION, "boolean")
     ConfigFileEntry(REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED,

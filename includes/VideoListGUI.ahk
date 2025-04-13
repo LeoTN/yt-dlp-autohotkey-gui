@@ -56,7 +56,7 @@ createVideoListGUI() {
     addVideoURLIsAPlaylistCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30", "Add videos from a playlist")
     addVideoURLUsePlaylistRangeCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
         "Only add videos in a specific range")
-    addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20", "Index Range")
+    addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
     addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w100 +Disabled", "1")
     ; Remove video elements.
     removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200", "Remove Selected Video(s) From List")
@@ -102,6 +102,8 @@ createVideoListGUI() {
     addVideoURLIsAPlaylistCheckbox.OnEvent("Click", handleVideoListGUI_addVideoURLIsAPlaylistCheckbox_onClick)
     addVideoURLUsePlaylistRangeCheckbox.OnEvent("Click",
         handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick)
+    addVideoSpecifyPlaylistRangeInputEdit.OnEvent("Change",
+        handleSettingsGUI_addVideoSpecifyPlaylistRangeInputEdit_onChange)
     addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_onClick)
     ; Remove video elements.
     removeVideoFromListButton.OnEvent("Click", handleVideoListGUI_removeVideoFromListButton_onClick)
@@ -143,6 +145,7 @@ createVideoListGUI() {
     optionsMenu.Add("Settings",
         (*) => menu_openSettingsGUI())
     optionsMenu.SetIcon("Settings", "shell32.dll", 123) ; REMOVE USE ICON DLL HERE
+    optionsMenu.Add()
     optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
     optionsMenu.SetIcon("Terminate Script", "shell32.dll", 28)
     optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())
@@ -173,6 +176,7 @@ createVideoListGUI() {
 videoListGUI_onInit() {
     ; This object will be used to share data between different functions about currently ongoing yt-dlp processes.
     global currentYTDLPActionObject := Object()
+
     ; Download related variables.
     currentYTDLPActionObject.booleanDownloadIsRunning := false
     currentYTDLPActionObject.booleanCancelOneVideoDownload := false
@@ -275,6 +279,16 @@ handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick(pCheckbox, pInfo)
     }
 }
 
+handleSettingsGUI_addVideoSpecifyPlaylistRangeInputEdit_onChange(pEdit, pInfo) {
+    ; Displays an inidicator in the text to show the validity status.
+    if (checkIfStringIsValidPlaylistIndexRange(pEdit.Value)) {
+        addVideoSpecifyPlaylistRangeText.Text := "Index Range (valid)"
+    }
+    else {
+        addVideoSpecifyPlaylistRangeText.Text := "Index Range (invalid)"
+    }
+}
+
 handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
     videoURL := addVideoURLInputEdit.Value
     ; Avoids the invalid URL MsgBox when the edit is empty.
@@ -287,14 +301,11 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
         return
     }
     ; Only relevant when downloading specific parts of a playlist.
-    if (addVideoURLUsePlaylistRangeCheckbox.Value) {
-        ; Checks if the provided playlist range index string has a correct syntaxt (1-2 or 1:2 for example).
-        regExString := '^([1-9]\d*([-:]\d+)?)(,[1-9]\d*([-:]\d+)?)*$'
-        if (!RegExMatch(addVideoSpecifyPlaylistRangeInputEdit.Value, regExString)) {
-            result := MsgBox("The provided playlist range index is invalid!", "VD - Invalid Playlist Range Index",
-                "O Icon! 16384 Owner" . videoListGUI.Hwnd)
-            return
-        }
+    if (addVideoURLUsePlaylistRangeCheckbox.Value &&
+        !checkIfStringIsValidPlaylistIndexRange(addVideoSpecifyPlaylistRangeInputEdit.Value)) {
+        MsgBox("The provided playlist range index is invalid!", "VD - Invalid Playlist Range Index",
+            "O Icon! 16384 Owner" . videoListGUI.Hwnd)
+        return
     }
     ; This means the provided URL contains a reference to a playlist.
     if (addVideoURLIsAPlaylistCheckbox.Value) {
@@ -611,7 +622,7 @@ handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo)
         selectPath := scriptMainDirectory
     }
 
-    downloadDirectory := directorySelectPrompt("VD - Please select the download target folder", selectPath)
+    downloadDirectory := directorySelectPrompt("VD - Please select the download target folder", selectPath, true)
     if (downloadDirectory == "_result_no_directory_selected") {
         return
     }
@@ -1060,6 +1071,9 @@ This object is used as a data container for the video list view element.
 */
 class VideoListViewEntry {
     __New(pVideoURLOrVideoMetaDataObject, pBooleanUpdateVideoListViewElement := true) {
+        global desiredDownloadFormatArray
+        global desiredSubtitleArray
+
         /*
         This map stores all video list view content objects with their identifier string as key.
         It is used to provide the content for the video list view element.
@@ -1082,17 +1096,10 @@ class VideoListViewEntry {
         this.videoUploaderURL := metaData.VIDEO_UPLOADER_URL
         this.videoThumbailFileLocation := metaData.VIDEO_THUMBNAIL_FILE_LOCATION
         ; The following attributes will be used when downloading the video.
-        this.desiredFormatArray := [
-            ; Video formats.
-            "Automatically choose best video format", "mp4", "webm", "avi", "flv", "mkv", "mov",
-            ; Audio formats.
-            "Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "opus", "vorbis"
-        ]
+        this.desiredFormatArray := desiredDownloadFormatArray.Clone()
         ; This option changes when the user selects a different format in the video list GUI.
         this.desiredFormatArrayCurrentlySelectedIndex := 1
-        this.desiredSubtitleArray := [
-            "Do not download subtitles", "Embed all available subtitles" ; REMOVE [ADD AVAILABLE SUBTITLES IN THE FUTURE]
-        ]
+        this.desiredSubtitleArray := desiredSubtitleArray.Clone()
         ; This option changes when the user selects a different format in the video list GUI.
         this.desiredSubtitleArrayCurrentlySelectedIndex := 1
         ; This is the part of the download command that is specific to this video.

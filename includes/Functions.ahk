@@ -532,13 +532,23 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
 Prompts the user to select a directory.
 @param pPromptTitle [String] The title of the prompt window.
 @param pRootDirectory [String] The root directory to start the selection from.
+@param pBooleanCheckForWritingRights [boolean] Checks if the user is able to write into the selected directory.
+If that is not the case, they will be prompted to select another directory.
 @returns [String] The selected directory path.
 @returns (alt) [String] "_result_no_directory_selected" if the user cancels the selection.
 */
-directorySelectPrompt(pPromptTitle, pRootDirectory) {
+directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRights) {
     selectedDirectory := FileSelect("D3", pRootDirectory, pPromptTitle)
     ; This usually happens, when the user cancels the selection.
     if (selectedDirectory == "") {
+        return "_result_no_directory_selected"
+    }
+    if (pBooleanCheckForWritingRights && !checkForWritingRights(selectedDirectory)) {
+        result := MsgBox("You do not have permission to write in this directory. Please choose a different one.",
+            "VD - Invalid Directory", "RC Icon! 262144")
+        if (result == "Retry") {
+            return directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRights)
+        }
         return "_result_no_directory_selected"
     }
     return selectedDirectory
@@ -791,6 +801,19 @@ For example [www.youtube.com] would be invalid but [https://www.youtube.com/watc
 checkIfStringIsAValidURL(pString) {
     ; Checks if the entered string is a valid URL.
     regExString := '^(https?:\/\/)?([\w\-]+\.)+[\w]{2,}\/[^\s]{3,}$'
+    if (RegExMatch(pString, regExString)) {
+        return true
+    }
+    return false
+}
+
+/*
+Checks if the provided playlist range index string has a correct syntaxt (1-2 or 1:2 for example).
+@param pString [String] The string that should be examined.
+@returns [boolean] True, if the provided string is a valid playlist range. False otherwise.
+*/
+checkIfStringIsValidPlaylistIndexRange(pString) {
+    regExString := '^([1-9]\d*([-:]\d+)?)(,[1-9]\d*([-:]\d+)?)*$'
     if (RegExMatch(pString, regExString)) {
         return true
     }
