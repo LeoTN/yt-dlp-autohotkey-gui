@@ -42,7 +42,7 @@ createSetupGUI() {
     setupProgressBar := setupGUI.Add("Progress", "xp-120 x0 yp+50 w320")
     setupGUIStatusBar := setupGUI.Add("StatusBar", "-Theme BackgroundSilver")
     setupGUIStatusBar.SetIcon("shell32.dll", 222) ; REMOVE USE ICON DLL HERE
-    setupGUIStatusBar.SetText("Please start the setup process.")
+    setupGUIStatusBar.SetText("Please start the setup process")
 
     ; When the window is closed without installing the required dependencies, the script must exit.
     setupGUI.OnEvent("Close", (*) => exitScriptWithNotification(true))
@@ -116,7 +116,7 @@ handleSetupGUI_startSetupButton() {
     startSetupButton.Opt("+Disabled")
     ; Installs the dependencies and updates the GUI accordingly.
     if (getFFmpegInstallionStatus()) {
-        setupGUIStatusBar.SetText("FFmpeg installed.")
+        setupGUIStatusBar.SetText("FFmpeg installed")
         setupProgressBar.Value += 50
     }
     else {
@@ -124,14 +124,14 @@ handleSetupGUI_startSetupButton() {
     }
     updateDependencyCheckboxes()
     if (getYTDLPInstallionStatus()) {
-        setupGUIStatusBar.SetText("yt-dlp installed.")
+        setupGUIStatusBar.SetText("yt-dlp installed")
         setupProgressBar.Value += 50
     }
     else {
         installYTDLP()
     }
     updateDependencyCheckboxes()
-    setupGUIStatusBar.SetText("Setup completed.")
+    setupGUIStatusBar.SetText("Setup completed")
     Sleep(2000)
     Reload()
 }

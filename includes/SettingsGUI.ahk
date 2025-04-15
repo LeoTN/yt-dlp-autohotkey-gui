@@ -5,9 +5,9 @@ CoordMode "Mouse", "Window"
 
 createSettingsGUI() {
     global
-    settingsGUI := Gui(, "VD - Settings (currently partially non functional)")
+    settingsGUI := Gui("+OwnDialogs", "VD - Settings")
     ; The space is intentional as it increases the tab size.
-    local tabNames := ["   General   ", "   Video List   ", "   Hotkeys (WIP)   "] ; REMOVE
+    local tabNames := ["   General   ", "   Video List   ", "   Hotkeys   "]
     settingsGUITabs := settingsGUI.Add("Tab3", , tabNames)
     /*
     GENERAL SETTINGS TAB
@@ -35,10 +35,10 @@ createSettingsGUI() {
     settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+270 w600 h175", "Directories")
     settingsGUIDirectoryDDL := settingsGUI.Add("DropDownList", "xp+10 yp+20 w580")
     settingsGUIDirectoryDescriptionEdit := settingsGUI.Add("Edit", "yp+30 w580 h40 -WantReturn +ReadOnly",
-        "No description available.")
+        "Please select a directory above.")
     ; A separator line.
-    customMsgBoxGUIHeadLineSeparatorLineProgressBar := settingsGUI.Add("Progress", "yp+50 w580 h5 cSilver")
-    customMsgBoxGUIHeadLineSeparatorLineProgressBar.Value := 100
+    settingsGUIDirectoryHeadLineSeparatorLineProgressBar := settingsGUI.Add("Progress", "yp+50 w580 h5 cSilver")
+    settingsGUIDirectoryHeadLineSeparatorLineProgressBar.Value := 100
     settingsGUIDirectoryInputEdit := settingsGUI.Add("Edit", "yp+15 w555 R1 -WantReturn +ReadOnly")
     settingsGUISelectDirectoryButton := settingsGUI.Add("Button", "xp+560 yp+1 w20 h20", "...")
     settingsGUIDirectorySaveChangesButton := settingsGUI.Add("Button", "xp-560 yp+29 w187 +Disabled", "Save Changes")
@@ -97,14 +97,14 @@ createSettingsGUI() {
     settingsGUIHotkeyText := settingsGUI.Add("Text", "yp+30", "Key Combination")
     settingsGUIHotkeyHotkeyInputField := settingsGUI.Add("Hotkey", "yp+20 w300")
     settingsGUIHotkeyDescriptionEdit := settingsGUI.Add("Edit", "xp+310 yp-50 w270 h71 -WantReturn +ReadOnly",
-        "No description available.")
+        "Please select a hotkey.")
     settingsGUIHotkeyEnabledRadio := settingsGUI.Add("Radio", "xp-310 yp+90", "Hotkey enabled")
     settingsGUIHotkeyDisabledRadio := settingsGUI.Add("Radio", "xp+150", "Hotkey disabled")
     settingsGUIHotkeyEnableAllButton := settingsGUI.Add("Button", "xp+160 yp-5 w130", "Enable all Hotkeys")
     settingsGUIHotkeyDisableAllButton := settingsGUI.Add("Button", "xp+140 w130", "Disable all Hotkeys")
     ; A separator line.
-    customMsgBoxGUIHeadLineSeparatorLineProgressBar := settingsGUI.Add("Progress", "xp-450 yp+30 w580 h5 cSilver")
-    customMsgBoxGUIHeadLineSeparatorLineProgressBar.Value := 100
+    settingsGUIHotkeyHeadLineSeparatorLineProgressBar := settingsGUI.Add("Progress", "xp-450 yp+30 w580 h5 cSilver")
+    settingsGUIHotkeyHeadLineSeparatorLineProgressBar.Value := 100
     settingsGUIHotkeySaveChangesButton := settingsGUI.Add("Button", "yp+10 w187 +Disabled", "Save Changes")
     settingsGUIHotkeyDiscardChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Discard Changes")
     settingsGUIHotkeyResetChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Reset to Default")
@@ -176,10 +176,13 @@ createSettingsGUI() {
 settingsGUI_onInit() {
     global booleanUnsavedDirectoryChangesExist := false
     global booleanUnsavedPlaylistRangeIndexChangesExist := false
+    global booleanUnsavedHotkeyChangesExist := false
+    global booleanUnsavedHotkeyEnabledChangesExist := false
 
     createSettingsGUI()
     initializeCheckboxLinkedConfigFileEntryMap()
     initializeSettingsGUIDirectoryDDLEntryMap()
+    initializeSettingsGUIHotkeyDDLEntryMap()
     importConfigFileValuesIntoSettingsGUI()
 }
 
@@ -187,7 +190,7 @@ handleSettingsGUI_settingsGUIUpdateCheckForUpdatesButton_onClick(pButton, pInfo)
     settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
     ; Does not check for updates, if there is no Internet connection or the script isn't compiled.
     if (!checkInternetConnection()) {
-        MsgBox("There seems to be no internet connection.", "VD - Manual Update Check", "O Icon! 262144 T2")
+        MsgBox("There seems to be no connection to the Internet.", "VD - Manual Update Check", "O Icon! 262144 T2")
     }
     else if (!A_IsCompiled) {
         MsgBox("You cannot use this function with an uncompiled version.", "VD - Manual Update Check",
@@ -211,13 +214,15 @@ handleSettingsGUI_settingsGUIDirectoryDDL_onChange(pDDL, pInfo) {
     ; This is used to select the previous DDL entry which has not been saved or discarded yet.
     static previouslySelectedDDLEntryIndex
 
-    if (booleanUnsavedDirectoryChangesExist) {
-        result := MsgBox("There are unsaved changes.`n`nContinue?", "VD - Unsaved Changes", "YN Icon! 262144")
-        if (result != "Yes") {
-            ; Selects the previously selected DDL entry.
-            pDDL.Value := previouslySelectedDDLEntryIndex
-            return
-        }
+    msgBoxText := "The directory path has been modified."
+    msgBoxText .= "`n`nContinue without saving?"
+    ; Checks for any unsaved changes.
+    if (booleanUnsavedDirectoryChangesExist && !askUserToDiscardUnsavedChanges(msgBoxText)) {
+        ; Selects the previously selected DDL entry.
+        pDDL.Value := previouslySelectedDDLEntryIndex
+        return
+    }
+    else {
         booleanUnsavedDirectoryChangesExist := false
         settingsGUIDirectorySaveChangesButton.Opt("+Disabled")
         settingsGUIDirectoryDiscardChangesButton.Opt("+Disabled")
@@ -304,36 +309,194 @@ handleSettingsGUI_settingsGUIVideoDesiredSubtitleDDL_onChange(pDDL, pInfo) {
 }
 
 handleSettingsGUI_settingsGUIHotkeyDDL_onChange(pDDL, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global booleanUnsavedHotkeyChangesExist
+    global booleanUnsavedHotkeyEnabledChangesExist
+    global settingsGUIHotkeyDDLEntryMap
+    ; This is used to select the previous DDL entry which has not been saved or discarded yet.
+    static previouslySelectedDDLEntryIndex
+
+    msgBoxText := "The hotkey has been modified."
+    msgBoxText .= "`n`nContinue without saving?"
+    ; Checks for any unsaved changes.
+    if ((booleanUnsavedHotkeyChangesExist || booleanUnsavedHotkeyEnabledChangesExist)
+    && !askUserToDiscardUnsavedChanges(msgBoxText)) {
+        ; Selects the previously selected DDL entry.
+        pDDL.Value := previouslySelectedDDLEntryIndex
+        return
+    }
+    else {
+        booleanUnsavedHotkeyChangesExist := false
+        booleanUnsavedHotkeyEnabledChangesExist := false
+        settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+        settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+    }
+
+    previouslySelectedDDLEntryIndex := pDDL.Value
+    selectedHotkeyDDLEntry := settingsGUIHotkeyDDLEntryMap.Get(pDDL.Text)
+    ; Update the corresponding GUI elements.
+    settingsGUIHotkeyDescriptionEdit.Value := selectedHotkeyDDLEntry.entryDescription
+    settingsGUIHotkeyHotkeyInputField.Value := selectedHotkeyDDLEntry.hotkey
+    ; Enable one of the two radio elements.
+    if (selectedHotkeyDDLEntry.hotkeyEnabled) {
+        settingsGUIHotkeyEnabledRadio.Value := true
+    }
+    else {
+        settingsGUIHotkeyDisabledRadio.Value := true
+    }
+    ; Enables the button to reset the hotkey to default.
+    if ((selectedHotkeyDDLEntry.hotkey != selectedHotkeyDDLEntry.defaultHotkey) ||
+    (selectedHotkeyDDLEntry.hotkeyEnabled != selectedHotkeyDDLEntry.defaultHotkeyEnabled)) {
+        settingsGUIHotkeyResetChangesButton.Opt("-Disabled")
+    }
+    else {
+        settingsGUIHotkeyResetChangesButton.Opt("+Disabled")
+    }
 }
 
 handleSettingsGUI_settingsGUIHotkeyHotkeyInputField_onChange(pHotkey, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global booleanUnsavedHotkeyChangesExist
+
+    ; This means there is no hotkey entry selected at the moment.
+    if (settingsGUIHotkeyDDL.Value == 0) {
+        return
+    }
+    selectedHotkeyDDLEntry := settingsGUIHotkeyDDLEntryMap.Get(settingsGUIHotkeyDDL.Text)
+    ; Checks if the user made changes to the hotkey.
+    if (pHotkey.Value != selectedHotkeyDDLEntry.hotkey) {
+        booleanUnsavedHotkeyChangesExist := true
+        settingsGUIHotkeySaveChangesButton.Opt("-Disabled")
+        settingsGUIHotkeyDiscardChangesButton.Opt("-Disabled")
+    }
+    else {
+        booleanUnsavedHotkeyChangesExist := false
+        settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+        settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+    }
+
 }
 
 ; This function will be called when one of the two hotkey radio elements is checked or unchecked.
 handleSettingsGUI_allHotkeyRadio_onChange(pRadio, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global booleanUnsavedHotkeyEnabledChangesExist
+
+    ; This means there is no hotkey entry selected at the moment.
+    if (settingsGUIHotkeyDDL.Value == 0) {
+        return
+    }
+    selectedHotkeyDDLEntry := settingsGUIHotkeyDDLEntryMap.Get(settingsGUIHotkeyDDL.Text)
+    ; Checks if the user made changes to the hotkey enabled status.
+    if (settingsGUIHotkeyEnabledRadio.Value != selectedHotkeyDDLEntry.hotkeyEnabled) {
+        booleanUnsavedHotkeyEnabledChangesExist := true
+        settingsGUIHotkeySaveChangesButton.Opt("-Disabled")
+        settingsGUIHotkeyDiscardChangesButton.Opt("-Disabled")
+    }
+    else {
+        booleanUnsavedHotkeyEnabledChangesExist := false
+        settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+        settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+    }
 }
 
 handleSettingsGUI_settingsGUIHotkeyEnableAllButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global booleanUnsavedHotkeyChangesExist
+    global booleanUnsavedHotkeyEnabledChangesExist
+    global settingsGUIHotkeyDDLEntryMap
+
+    msgBoxText := "The hotkey has been modified."
+    msgBoxText .= "`n`nContinue without saving?"
+    ; Checks for any unsaved changes.
+    if (booleanUnsavedHotkeyChangesExist || booleanUnsavedHotkeyEnabledChangesExist
+        && !askUserToDiscardUnsavedChanges(msgBoxText)) {
+        ; Do not discard the unsaved changes.
+        return
+    }
+    else {
+        booleanUnsavedHotkeyChangesExist := false
+        booleanUnsavedHotkeyEnabledChangesExist := false
+        settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+        settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+    }
+
+    ; Enables all hotkeys.
+    for (key, hotkeyEntry in settingsGUIHotkeyDDLEntryMap) {
+        hotkeyEntry.changeHotkeyEnabled(true)
+    }
+    ; This makes sure that there is a selected entry.
+    if (settingsGUIHotkeyDDL.Value != 0) {
+        ; This function is called to update the corresponding GUI elements.
+        handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
+    }
 }
 
 handleSettingsGUI_settingsGUIHotkeyDisableAllButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global booleanUnsavedHotkeyChangesExist
+    global booleanUnsavedHotkeyEnabledChangesExist
+    global settingsGUIHotkeyDDLEntryMap
+
+    msgBoxText := "The hotkey has been modified."
+    msgBoxText .= "`n`nContinue without saving?"
+    ; Checks for any unsaved changes.
+    if (booleanUnsavedHotkeyChangesExist || booleanUnsavedHotkeyEnabledChangesExist
+        && !askUserToDiscardUnsavedChanges(msgBoxText)) {
+        ; Do not discard the unsaved changes.
+        return
+    }
+    else {
+        booleanUnsavedHotkeyChangesExist := false
+        booleanUnsavedHotkeyEnabledChangesExist := false
+        settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+        settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+    }
+
+    ; Disables all hotkeys.
+    for (key, hotkeyEntry in settingsGUIHotkeyDDLEntryMap) {
+        hotkeyEntry.changeHotkeyEnabled(false)
+    }
+    ; This makes sure that there is a selected entry.
+    if (settingsGUIHotkeyDDL.Value != 0) {
+        ; This function is called to update the corresponding GUI elements.
+        handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
+    }
 }
 
 handleSettingsGUI_settingsGUIHotkeySaveChangesButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global booleanUnsavedHotkeyChangesExist := false
+    global booleanUnsavedHotkeyEnabledChangesExist := false
+
+    selectedHotkeyDDLEntry := settingsGUIHotkeyDDLEntryMap.Get(settingsGUIHotkeyDDL.Text)
+    selectedHotkeyDDLEntry.changeHotkey(settingsGUIHotkeyHotkeyInputField.Value)
+    selectedHotkeyDDLEntry.changeHotkeyEnabled(settingsGUIHotkeyEnabledRadio.Value)
+    ; This function is called to update the corresponding GUI elements.
+    handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
+    ; Disables the save and discard button.
+    settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+    settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
 }
 
 handleSettingsGUI_settingsGUIHotkeyDiscardChangesButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global booleanUnsavedHotkeyChangesExist := false
+    global booleanUnsavedHotkeyEnabledChangesExist := false
+
+    ; This function is called to update the corresponding GUI elements.
+    handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
+    ; Disables the save and discard button.
+    settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+    settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
 }
 
 handleSettingsGUI_settingsGUIHotkeyResetChangesButton_onClick(pButton, pInfo) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global booleanUnsavedHotkeyChangesExist := false
+    global booleanUnsavedHotkeyEnabledChangesExist := false
+
+    selectedHotkeyDDLEntry := settingsGUIHotkeyDDLEntryMap.Get(settingsGUIHotkeyDDL.Text)
+    selectedHotkeyDDLEntry.resetHotkey()
+    selectedHotkeyDDLEntry.resetHotkeyEnabled()
+
+    ; This function is called to update the corresponding GUI elements.
+    handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
+    ; Disables the save and discard button.
+    settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+    settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
 }
 
 handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange(pEdit, pInfo) {
@@ -405,16 +568,15 @@ handleSettingsGUI_allCheckBox_onClick(pCheckBox, pInfo) {
 handleSettingsGUI_settingsGUI_onClose(pGUI) {
     global booleanUnsavedDirectoryChangesExist
     global booleanUnsavedPlaylistRangeIndexChangesExist
+    global booleanUnsavedHotkeyChangesExist
+    global booleanUnsavedHotkeyEnabledChangesExist
 
     ; Checks for any unsaved changes.
-    if (!booleanUnsavedDirectoryChangesExist && !booleanUnsavedPlaylistRangeIndexChangesExist) {
-        return
-    }
-    result := MsgBox("There are unsaved changes.`n`nContinue?", "VD - Unsaved Changes", "YN Icon! 262144")
-    if (result != "Yes") {
+    if (!askUserToDiscardUnsavedChanges()) {
         ; This stops the GUI from closing.
         return true
     }
+
     ; Discards the directory changes.
     booleanUnsavedDirectoryChangesExist := false
     settingsGUIDirectorySaveChangesButton.Opt("+Disabled")
@@ -430,6 +592,16 @@ handleSettingsGUI_settingsGUI_onClose(pGUI) {
     settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.Value := readConfigFile("ADD_VIDEO_PLAYLIST_RANGE_INDEX_VALUE")
     handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange(
         settingsGUIAddVideoSpecifyPlaylistRangeInputEdit, "")
+
+    ; Discards the hotkey changes.
+    booleanUnsavedHotkeyChangesExist := false
+    booleanUnsavedHotkeyEnabledChangesExist := false
+    ; This makes sure that there is a selected entry.
+    if (settingsGUIHotkeyDDL.Value != 0) {
+        handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
+    }
+    settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+    settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
 }
 
 initializeCheckboxLinkedConfigFileEntryMap() {
@@ -506,6 +678,85 @@ initializeSettingsGUIDirectoryDDLEntryMap() {
     settingsGUIDirectoryDDL.Add(ddlContentArray)
 }
 
+initializeSettingsGUIHotkeyDDLEntryMap() {
+    global configFileEntryMap
+    global settingsGUIHotkeyDDLEntryMap := Map()
+
+    ; Create the hotkey entries and add them to the map.
+
+    ; Main hotkey (start download).
+    entryName := "Start Download Hotkey"
+    entryDescription := "This hotkey will start the download process. "
+    entryDescription .= "It has the same effect as pressing the [Start Download] button in the video list window."
+    linkedConfigFileEntryHotkey := configFileEntryMap.Get("START_DOWNLOAD_HKHotkeySettings")
+    linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("START_DOWNLOAD_HK_ENABLEDHotkeySettings")
+    hotkeyFunction := (*) => hotkey_startDownload()
+    entry := SettingsGUIHotkeyDDLEntry(entryName, entryDescription, linkedConfigFileEntryHotkey,
+        linkedConfigFileEntryHotkeyEnabled, hotkeyFunction)
+    settingsGUIHotkeyDDLEntryMap.Set(entryName, entry)
+
+    ; First hotkey (collect URL).
+    entryName := "Collect URL Hotkey"
+    entryDescription := "This hotkey will collect the video URL from your browser search bar. "
+    entryDescription .= "Your browser must be the active window for this to work."
+    linkedConfigFileEntryHotkey := configFileEntryMap.Get("URL_COLLECT_HKHotkeySettings")
+    linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("URL_COLLECT_HK_ENABLEDHotkeySettings")
+    hotkeyFunction := (*) => hotkey_extractVideoURLFromSearchBar()
+    entry := SettingsGUIHotkeyDDLEntry(entryName, entryDescription, linkedConfigFileEntryHotkey,
+        linkedConfigFileEntryHotkeyEnabled, hotkeyFunction)
+    settingsGUIHotkeyDDLEntryMap.Set(entryName, entry)
+
+    ; Second hotkey (collect URL from video thumbnail).
+    entryName := "Collect URL from Thumbnail Hotkey"
+    entryDescription :=
+        "This hotkey will collect the video URL while hovering over the video thumbnail (for example on YouTube). "
+    entryDescription .= "Your browser must be the active window for this to work. "
+    entryDescription .= "The hotkey won't work most of the time because it is still experimental."
+    linkedConfigFileEntryHotkey := configFileEntryMap.Get("THUMBNAIL_URL_COLLECT_HKHotkeySettings")
+    linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("THUMBNAIL_URL_COLLECT_HK_ENABLEDHotkeySettings")
+    hotkeyFunction := (*) => hotkey_extractVideoURLUnderMouseCursor()
+    entry := SettingsGUIHotkeyDDLEntry(entryName, entryDescription, linkedConfigFileEntryHotkey,
+        linkedConfigFileEntryHotkeyEnabled, hotkeyFunction)
+    settingsGUIHotkeyDDLEntryMap.Set(entryName, entry)
+
+    ; Hotkey to open the video list GUI.
+    entryName := "Open Video List GUI Hotkey"
+    entryDescription := "This hotkey will open the video list GUI."
+    linkedConfigFileEntryHotkey := configFileEntryMap.Get("VIDEO_LIST_GUI_HKHotkeySettings")
+    linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("VIDEO_LIST_GUI_HK_ENABLEDHotkeySettings")
+    hotkeyFunction := (*) => hotkey_openVideoListGUI()
+    entry := SettingsGUIHotkeyDDLEntry(entryName, entryDescription, linkedConfigFileEntryHotkey,
+        linkedConfigFileEntryHotkeyEnabled, hotkeyFunction)
+    settingsGUIHotkeyDDLEntryMap.Set(entryName, entry)
+
+    ; Hotkey to terminate the program.
+    entryName := "Terminate Program Hotkey"
+    entryDescription := "This hotkey will terminate the application."
+    linkedConfigFileEntryHotkey := configFileEntryMap.Get("TERMINATE_PROGRAM_HKHotkeySettings")
+    linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("TERMINATE_PROGRAM_HK_ENABLEDHotkeySettings")
+    hotkeyFunction := (*) => hotkey_terminateProgram()
+    entry := SettingsGUIHotkeyDDLEntry(entryName, entryDescription, linkedConfigFileEntryHotkey,
+        linkedConfigFileEntryHotkeyEnabled, hotkeyFunction)
+    settingsGUIHotkeyDDLEntryMap.Set(entryName, entry)
+
+    ; Hotkey to reload the program.
+    entryName := "Reload Program Hotkey"
+    entryDescription := "This hotkey will reload the application."
+    linkedConfigFileEntryHotkey := configFileEntryMap.Get("RELOAD_PROGRAM_HKHotkeySettings")
+    linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("RELOAD_PROGRAM_HK_ENABLEDHotkeySettings")
+    hotkeyFunction := (*) => hotkey_reloadProgram()
+    entry := SettingsGUIHotkeyDDLEntry(entryName, entryDescription, linkedConfigFileEntryHotkey,
+        linkedConfigFileEntryHotkeyEnabled, hotkeyFunction)
+    settingsGUIHotkeyDDLEntryMap.Set(entryName, entry)
+
+    ; Fill the drop down list with the hotkey entry names.
+    ddlContentArray := Array()
+    for (entryName, value in settingsGUIHotkeyDDLEntryMap) {
+        ddlContentArray.Push(entryName)
+    }
+    settingsGUIHotkeyDDL.Add(ddlContentArray)
+}
+
 ; Imports the config file content and sets the controls' values accordingly.
 importConfigFileValuesIntoSettingsGUI() {
     global desiredDownloadFormatArray
@@ -514,7 +765,12 @@ importConfigFileValuesIntoSettingsGUI() {
 
     ; Checkboxes.
     for (checkbox, linkedConfigEntryKey in checkboxLinkedConfigFileEntryMap) {
-        checkbox.Value := readConfigFile(linkedConfigEntryKey)
+        if (readConfigFile(linkedConfigEntryKey)) {
+            checkbox.Value := true
+        }
+        else {
+            checkbox.Value := false
+        }
     }
     /*
     Calls the handleSettingsGUI_allCheckBox_onClick() function to enable or disable the checkboxes correctly.
@@ -537,6 +793,53 @@ importConfigFileValuesIntoSettingsGUI() {
     settingsGUIVideoDesiredSubtitleDDL.Add(desiredSubtitleArray)
     selectedIndex := readConfigFile("DEFAULT_DESIRED_SUBTITLE_ARRAY_INDEX")
     settingsGUIVideoDesiredSubtitleDDL.Value := selectedIndex
+}
+
+/*
+Checks for any unsaved changes in the settings GUI and asks the user if they would like to discard the changes or not.
+@param pMsgBoxText [String] An optional text for the MsgBox. If omitted, the function will list all unsaved changes.
+@returns [boolean] True, if the user wants to continue without saving the changes (or there are no unsaved changes). False otherwise.
+*/
+askUserToDiscardUnsavedChanges(pMsgBoxText?) {
+    global booleanUnsavedDirectoryChangesExist
+    global booleanUnsavedPlaylistRangeIndexChangesExist
+    global booleanUnsavedHotkeyChangesExist
+    global booleanUnsavedHotkeyEnabledChangesExist
+
+    if (!booleanUnsavedDirectoryChangesExist && !booleanUnsavedPlaylistRangeIndexChangesExist &&
+        !booleanUnsavedHotkeyChangesExist && !booleanUnsavedHotkeyEnabledChangesExist) {
+        ; This means there are no unsaved changes.
+        return true
+    }
+
+    if (IsSet(pMsgBoxText)) {
+        msgBoxText := pMsgBoxText
+    }
+    else {
+        ; Creates a report with all settings with unsaved changes.
+        msgBoxText := "The following settings contain unsaved changes:`n`n"
+        if (booleanUnsavedDirectoryChangesExist) {
+            msgBoxText .= "Directory Settings`n"
+        }
+        if (booleanUnsavedPlaylistRangeIndexChangesExist) {
+            msgBoxText .= "Playlist Range Index`n"
+        }
+        if (booleanUnsavedHotkeyChangesExist) {
+            msgBoxText .= "Hotkey Combination`n"
+        }
+        if (booleanUnsavedHotkeyEnabledChangesExist) {
+            msgBoxText .= "Hotkey Enabled`n"
+        }
+        msgBoxText .= "`nContinue without saving?"
+    }
+
+    result := MsgBox(msgBoxText, "VD - Unsaved Changes", "YN Icon! Owner" . settingsGUI.Hwnd)
+    if (result != "Yes") {
+        ; This means the user does not want to continue without saving.
+        return false
+    }
+    ; This means the user wants to continue without saving.
+    return true
 }
 
 /*
@@ -568,5 +871,61 @@ class SettingsGUIDirectoryDDLEntry {
     resetDirectory() {
         this.directory := this.defaultDirectory
         this.linkedConfigFileEntry.changeValue(this.defaultDirectory)
+    }
+}
+
+/*
+This object will be used to display the hotkey information in the settings GUI.
+@param pEntryName [String] The name of the hotkey.
+@param pEntryDescription [String] The description of the hotkey.
+@param pLinkedConfigFileEntryHotkey [ConfigFileEntry] A config file entry object which is used to change the hotkey in the config file.
+@param pLinkedConfigFileEntryHotkeyEnabled [ConfigFileEntry] A config file entry object which is used to change the hotkey enabled status in the config file.
+@param pHotkeyFunction [Function] The function which will be called when the hotkey is pressed. Must be in the following format:
+    (*) => functionName()
+*/
+class SettingsGUIHotkeyDDLEntry {
+    __New(pEntryName, pEntryDescription, pLinkedConfigFileEntryHotkey, pLinkedConfigFileEntryHotkeyEnabled,
+        pHotkeyFunction) {
+        this.entryName := pEntryName
+        this.entryDescription := pEntryDescription
+        this.linkedConfigFileEntryHotkey := pLinkedConfigFileEntryHotkey
+        this.linkedConfigFileEntryHotkeyEnabled := pLinkedConfigFileEntryHotkeyEnabled
+        this.hotkeyFunction := pHotkeyFunction
+        ; Loads the hotkey from the config file.
+        this.hotkey := pLinkedConfigFileEntryHotkey.value
+        this.defaultHotkey := pLinkedConfigFileEntryHotkey.defaultValue
+        this.hotkeyEnabled := pLinkedConfigFileEntryHotkeyEnabled.value
+        this.defaultHotkeyEnabled := pLinkedConfigFileEntryHotkeyEnabled.defaultValue
+        ; Enables the hotkey.
+        if (this.hotkeyEnabled) {
+            Hotkey(this.hotkey, this.hotkeyFunction, "On")
+        }
+        ; Disables the hotkey.
+        else {
+            Hotkey(this.hotkey, this.hotkeyFunction, "Off")
+        }
+    }
+    changeHotkey(pNewHotkey) {
+        this.hotkey := pNewHotkey
+        this.linkedConfigFileEntryHotkey.changeValue(pNewHotkey)
+    }
+    resetHotkey() {
+        this.hotkey := this.defaultHotkey
+        this.linkedConfigFileEntryHotkey.changeValue(this.defaultHotkey)
+    }
+    changeHotkeyEnabled(pNewHotkeyEnabled) {
+        this.hotkeyEnabled := pNewHotkeyEnabled
+        this.linkedConfigFileEntryHotkeyEnabled.changeValue(pNewHotkeyEnabled)
+        ; Enables the hotkey.
+        if (this.hotkeyEnabled) {
+            Hotkey(this.hotkey, this.hotkeyFunction, "On")
+        }
+        ; Disables the hotkey.
+        else {
+            Hotkey(this.hotkey, this.hotkeyFunction, "Off")
+        }
+    }
+    resetHotkeyEnabled() {
+        this.changeHotkeyEnabled(this.defaultHotkeyEnabled)
     }
 }

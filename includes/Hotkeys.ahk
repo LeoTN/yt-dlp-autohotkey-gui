@@ -4,12 +4,10 @@ SendMode "Input"
 CoordMode "Mouse", "Window"
 
 hotkeys_onInit() {
-    try {
-        registerHotkeys()
-    }
-    catch as error {
-        displayErrorMessage(error)
-    }
+    /*
+    The non debug hotkeys will be initialized by the initializeSettingsGUIHotkeyDDLEntryMap() function
+    which creates the required SettingsGUIHotkeyDDLEntry objects.
+    */
     ; Sometimes the debug hotkeys might be needed.
     if (!readConfigFile("ENABLE_DEBUG_HOTKEYS")) {
         return
@@ -19,33 +17,6 @@ hotkeys_onInit() {
     }
     catch as error {
         displayErrorMessage(error)
-    }
-}
-
-registerHotkeys() {
-    ; Main hotkey (start download).
-    if (readConfigFile("START_DOWNLOAD_HK_ENABLED")) {
-        Hotkey(readConfigFile("START_DOWNLOAD_HK"), (*) => hotkey_startDownload(), "On")
-    }
-    ; First hotkey (collect URLs).
-    if (readConfigFile("URL_COLLECT_HK_ENABLED")) {
-        Hotkey(readConfigFile("URL_COLLECT_HK"), (*) => hotkey_extractVideoURLFromSearchBar(), "On")
-    }
-    ; Second hotkey (collect URLs from video thumbnail).
-    if (readConfigFile("THUMBNAIL_URL_COLLECT_HK_ENABLED")) {
-        Hotkey(readConfigFile("THUMBNAIL_URL_COLLECT_HK"), (*) => hotkey_extractVideoURLUnderMouseCursor(), "On")
-    }
-    ; Hotkey to open the video list GUI.
-    if (readConfigFile("VIDEO_LIST_GUI_HK_ENABLED")) {
-        Hotkey(readConfigFile("VIDEO_LIST_GUI_HK"), (*) => hotkey_openVideoListGUI(), "On")
-    }
-    ; Hotkey to terminate the program.
-    if (readConfigFile("TERMINATE_PROGRAM_HK_ENABLED")) {
-        Hotkey(readConfigFile("TERMINATE_PROGRAM_HK"), (*) => hotkey_terminateProgram(), "On")
-    }
-    ; Hotkey to reload the program.
-    if (readConfigFile("RELOAD_PROGRAM_HK_ENABLED")) {
-        Hotkey(readConfigFile("RELOAD_PROGRAM_HK"), (*) => hotkey_reloadProgram(), "On")
     }
 }
 

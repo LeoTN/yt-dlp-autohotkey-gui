@@ -161,7 +161,7 @@ class InteractiveTutorial {
         this.tutorialTitle := pTutorialTitle
         ; Contains the text for each step.
         this.textArray := Array()
-        ; Contains an internal function to call for each step. You can enter "empty" functions like that "(*) =>"
+        ; Contains an internal function to call for each step. You can enter "empty" functions like that "(*) =>".
         this.actionArray := Array()
         ; Can be filled with functions to execute when the user exits the tutorial.
         this.exitActionArray := Array()
