@@ -202,6 +202,8 @@ MENU FUNCTION SECTION
 -------------------------------------------------
 */
 
+; File menu items.
+
 ; Opens the config file.
 menu_openConfigFile() {
     global configFileLocation
@@ -220,31 +222,75 @@ menu_openConfigFile() {
     }
 }
 
-; Opens the explorer.
-menu_openDownloadLocation() {
-    try
-    {
-        /*
-        The reason why the path is opened explicitly with explorer.exe is, that sometimes it will attempt to sort of guess the file
-        extension and open other files.
-        */
-        downloadDirectory := readConfigFile("DEFAULT_DOWNLOAD_DIRECTORY")
-        if (DirExist(downloadDirectory)) {
-            Run('explorer.exe "' . downloadDirectory . '"')
-        }
-        else {
-            MsgBox("The directory`n[" . downloadDirectory . "]`ndoes not exist.", "VD - Nonexisting Directory!",
-                "O Icon! 262144 T3")
-        }
-    }
-    catch as error {
-        displayErrorMessage(error, "This error is rare.")
-    }
+; Reset the current config file to default.
+menu_resetConfigFile() {
+    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
 }
+
+; Import another (old) config file.
+menu_importConfigFile() {
+    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+}
+
+; Export the current config file.
+menu_exportConfigFile() {
+    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+}
+
+; Directory menu items.
+
+; Opens the default download directory in the explorer.
+menu_openDefaultDownloadDirectory() {
+    downloadDirectory := readConfigFile("DEFAULT_DOWNLOAD_DIRECTORY")
+    openDirectoryInExplorer(downloadDirectory)
+}
+
+; Opens the folder which contains the files from the latest download.
+menu_openLatestDownloadDirectory() {
+    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+}
+
+; Opens the default temp directory in the explorer.
+menu_openDefaultTempDirectory() {
+    tempDirectory := readConfigFile("TEMP_DIRECTORY")
+    openDirectoryInExplorer(tempDirectory)
+}
+
+; Opens the default download temp directory in the explorer.
+menu_openDefaultDownloadTempDirectory() {
+    downloadTempDirectory := readConfigFile("TEMP_DOWNLOAD_DIRECTORY")
+    openDirectoryInExplorer(downloadTempDirectory)
+}
+
+; Opens the application working directory in the explorer.
+menu_openApplicationWorkingDirectory() {
+    global scriptMainDirectory
+
+    openDirectoryInExplorer(scriptMainDirectory)
+}
+
+; Actions menu items.
+
+; Restart the program.
+menu_restartApplication() {
+    reloadScriptPrompt()
+}
+
+; Exit the program.
+menu_exitApplication() {
+    terminateScriptPrompt()
+}
+
+; Open GUI items.
 
 ; Opens the settings GUI.
 menu_openSettingsGUI() {
     settingsGUI.Show("AutoSize")
+}
+
+; Opens the help GUI.
+menu_openHelpGUI() {
+    helpGUI.Show("AutoSize")
 }
 
 /*

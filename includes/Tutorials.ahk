@@ -176,7 +176,7 @@ class InteractiveTutorial {
         this.guiNextButton := this.gui.Add("Button", "xp+110 w100", "Next")
         this.guiNextButton.OnEvent("Click", (*) => this.next())
         this.guiStatusBar := this.gui.Add("StatusBar", , "interactive_tutorial_statusbar_text")
-        this.guiStatusBar.SetIcon("shell32.dll", 222) ; ICON_DLL_USED_HERE ; REMOVE [ADD ICON FILE]
+        this.guiStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     }
     ; You can provide optional coordinates for the GUI to show up.
     start(pGuiX := unset, pGuiY := unset) {

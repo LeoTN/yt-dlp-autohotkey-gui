@@ -1,7 +1,7 @@
 ;@Ahk2Exe-SetCompanyName Made by LeoTN
 ;@Ahk2Exe-SetCopyright Licence available on my GitHub project (https://github.com/LeoTN/yt-dlp-autohotkey-gui)
 ;@Ahk2Exe-SetDescription VideoDownloader
-;@Ahk2Exe-SetMainIcon library\assets\icons\green_arrow_icon.ico
+;@Ahk2Exe-SetMainIcon library\assets\icons\1.ico
 
 #MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
@@ -35,7 +35,7 @@ onInit() {
     global ffmpegFileLocation := ffmpegDirectory . "\ffmpeg.exe"
 
     global iconDirectory := assetDirectory . "\icons"
-    global scriptIconLocation := iconDirectory . "\green_arrow_icon.ico"
+    global iconFileLocation := iconDirectory . "\video_downloader_icons.dll"
     global GUIBackgroundImageLocation := iconDirectory . "\main_gui_background.png"
 
     global psScriptDirectory := assetDirectory . "\scripts"
@@ -64,7 +64,7 @@ onInit() {
 
     try
     {
-        TraySetIcon(scriptIconLocation)
+        TraySetIcon(iconFileLocation, 1, true)
     }
     catch as error {
         displayErrorMessage(error, "This is not a fatal error.", , 10000)

@@ -41,7 +41,7 @@ createSetupGUI() {
 
     setupProgressBar := setupGUI.Add("Progress", "xp-120 x0 yp+50 w320")
     setupGUIStatusBar := setupGUI.Add("StatusBar", "-Theme BackgroundSilver")
-    setupGUIStatusBar.SetIcon("shell32.dll", 222) ; REMOVE USE ICON DLL HERE
+    setupGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     setupGUIStatusBar.SetText("Please start the setup process")
 
     ; When the window is closed without installing the required dependencies, the script must exit.
@@ -98,7 +98,7 @@ checkIfMSISetupIsRequired() {
         psUpdateScriptLocation,
         psRunYTDLPExecutableLocation,
         GUIBackgroundImageLocation,
-        scriptIconLocation
+        iconFileLocation
     ]
     for (i, requiredFile in requiredFiles) {
         if (!FileExist(requiredFile)) {

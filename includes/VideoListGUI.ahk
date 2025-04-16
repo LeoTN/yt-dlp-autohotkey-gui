@@ -85,7 +85,7 @@ createVideoListGUI() {
     downloadProgressBar := videoListGUI.Add("Progress", "yp+20 w280")
     ; Status bar
     videoListGUIStatusBar := videoListGUI.Add("StatusBar", , "Add a video URL to start")
-    videoListGUIStatusBar.SetIcon("shell32.dll", 222)
+    videoListGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     videoListGUIStatusBar.loadingAnimationIsPlaying := false
     videoListGUIStatusBar.loadingAnimationCurrentStatusBarText := ""
 
@@ -125,39 +125,53 @@ createVideoListGUI() {
     This section creates all the menus.
     ********************************************************************************************************************
     */
-    fileSelectionMenuOpen := Menu()
-    fileSelectionMenuOpen.Add("Config-File`tShift+1", (*) => menu_openConfigFile())
-    fileSelectionMenuOpen.SetIcon("Config-File`tShift+1", "shell32.dll", 70)
-    fileSelectionMenuOpen.Add("Download destination`tShift+2", (*) => menu_openDownloadLocation())
-    fileSelectionMenuOpen.SetIcon("Download destination`tShift+2", "shell32.dll", 116)
+    ; File menu items.
+    configFileActionMenu := Menu()
+    configFileActionMenu.Add("Open", (*) => menu_openConfigFile())
+    configFileActionMenu.SetIcon("Open", iconFileLocation, 10) ; ICON_DLL_USED_HERE
+    configFileActionMenu.Add("Reset", (*) => menu_resetConfigFile())
+    configFileActionMenu.SetIcon("Reset", iconFileLocation, 5) ; ICON_DLL_USED_HERE
+    configFileActionMenu.Add("Import", (*) => menu_importConfigFile())
+    configFileActionMenu.SetIcon("Import", iconFileLocation, 2) ; ICON_DLL_USED_HERE
+    configFileActionMenu.Add("Export", (*) => menu_exportConfigFile())
+    configFileActionMenu.SetIcon("Export", iconFileLocation, 17) ; ICON_DLL_USED_HERE
 
-    fileSelectionMenuReset := Menu()
-    fileSelectionMenuReset.Add("Config-File`tCtrl+1", (*) => createDefaultConfigFile(, true))
-    fileSelectionMenuReset.SetIcon("Config-File`tCtrl+1", "shell32.dll", 70)
+    fileSelectionMenu := Menu()
+    fileSelectionMenu.Add("Config File", configFileActionMenu)
+    fileSelectionMenu.SetIcon("Config File", iconFileLocation, 16) ; ICON_DLL_USED_HERE
 
-    fileMenu := Menu()
-    fileMenu.Add("&Open...", fileSelectionMenuOpen)
-    fileMenu.SetIcon("&Open...", "shell32.dll", 127)
-    fileMenu.Add("&Reset...", fileSelectionMenuReset)
-    fileMenu.SetIcon("&Reset...", "shell32.dll", 239)
+    ; Directory menu items.
+    directorySelectionMenu := Menu()
+    directorySelectionMenu.Add("Default Download", (*) => menu_openDefaultDownloadDirectory())
+    directorySelectionMenu.SetIcon("Default Download", iconFileLocation, 11) ; ICON_DLL_USED_HERE
+    directorySelectionMenu.Add("Latest Download", (*) => menu_openLatestDownloadDirectory())
+    directorySelectionMenu.SetIcon("Latest Download", iconFileLocation, 13) ; ICON_DLL_USED_HERE
+    directorySelectionMenu.Add()
+    directorySelectionMenu.Add("Temp", (*) => menu_openDefaultTempDirectory())
+    directorySelectionMenu.SetIcon("Temp", iconFileLocation, 7) ; ICON_DLL_USED_HERE
+    directorySelectionMenu.Add("Download Temp", (*) => menu_openDefaultDownloadTempDirectory())
+    directorySelectionMenu.SetIcon("Download Temp", iconFileLocation, 4) ; ICON_DLL_USED_HERE
+    directorySelectionMenu.Add("Working Directory", (*) => menu_openApplicationWorkingDirectory())
+    directorySelectionMenu.SetIcon("Working Directory", iconFileLocation, 3) ; ICON_DLL_USED_HERE
 
-    optionsMenu := Menu()
-    optionsMenu.Add("Settings",
-        (*) => menu_openSettingsGUI())
-    optionsMenu.SetIcon("Settings", "shell32.dll", 123) ; REMOVE USE ICON DLL HERE
-    optionsMenu.Add()
-    optionsMenu.Add("Terminate Script", (*) => terminateScriptPrompt())
-    optionsMenu.SetIcon("Terminate Script", "shell32.dll", 28)
-    optionsMenu.Add("Reload Script", (*) => reloadScriptPrompt())
-    optionsMenu.SetIcon("Reload Script", "shell32.dll", 207)
+    ; Actions menu items.
+    applicationActionsMenu := Menu()
+    applicationActionsMenu.Add("Restart Application", (*) => menu_restartApplication())
+    applicationActionsMenu.SetIcon("Restart Application", iconFileLocation, 8) ; ICON_DLL_USED_HERE
+    applicationActionsMenu.Add("Exit Application", (*) => menu_exitApplication())
+    applicationActionsMenu.SetIcon("Exit Application", iconFileLocation, 15) ; ICON_DLL_USED_HERE
 
     allMenus := MenuBar()
-    allMenus.Add("&File", fileMenu)
-    allMenus.SetIcon("&File", "shell32.dll", 4)
-    allMenus.Add("&Options", optionsMenu)
-    allMenus.SetIcon("&Options", "shell32.dll", 317)
-    allMenus.Add("&Help", (*) => helpGUI.Show("AutoSize"))
-    allMenus.SetIcon("&Help", "shell32.dll", 24)
+    allMenus.Add("&File", fileSelectionMenu)
+    allMenus.SetIcon("&File", iconFileLocation, 19) ; ICON_DLL_USED_HERE
+    allMenus.Add("&Directory", directorySelectionMenu)
+    allMenus.SetIcon("&Directory", iconFileLocation, 4) ; ICON_DLL_USED_HERE
+    allMenus.Add("&Actions", applicationActionsMenu)
+    allMenus.SetIcon("&Actions", iconFileLocation, 12) ; ICON_DLL_USED_HERE
+    allMenus.Add("&Settings", (*) => menu_openSettingsGUI())
+    allMenus.SetIcon("&Settings", iconFileLocation, 6) ; ICON_DLL_USED_HERE
+    allMenus.Add("&Help", (*) => menu_openHelpGUI())
+    allMenus.SetIcon("&Help", iconFileLocation, 14) ; ICON_DLL_USED_HERE
     videoListGUI.MenuBar := allMenus
 
     ; Add a temporary video list view element. When removing it, there will be the no entries entry.

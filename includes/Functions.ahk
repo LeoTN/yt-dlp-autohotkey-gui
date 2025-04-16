@@ -492,7 +492,7 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     }
     ; Status bar.
     customMsgBoxGUIStatusBar := customMsgBoxGUI.Add("StatusBar", , "Please choose an option")
-    customMsgBoxGUIStatusBar.SetIcon("shell32.dll", 222) ; REMOVE USE ICON DLL HERE
+    customMsgBoxGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     customMsgBoxGUI.Show("w490")
     ; OnEvent function for the buttons.
     handleCustomMsgBoxGUI_button_onClick(pButton, pInfo) {
@@ -552,6 +552,30 @@ directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRight
         return "_result_no_directory_selected"
     }
     return selectedDirectory
+}
+
+/*
+Opens a directory explicitly with the explorer executable.
+@param pDirectory [String] Should be an existing directory path.
+*/
+openDirectoryInExplorer(pDirectory) {
+    try
+    {
+        /*
+        The reason why the path is opened explicitly with the explorer.exe is,
+        that sometimes the system will attempt to sort of guess the file extension and open other files.
+        */
+        if (DirExist(pDirectory)) {
+            Run('explorer.exe "' . pDirectory . '"')
+        }
+        else {
+            MsgBox("The directory`n[" . pDirectory . "]`ndoes not exist.", "VD - Non-existing Directory",
+                "O Icon! 262144 T3")
+        }
+    }
+    catch as error {
+        displayErrorMessage(error, "This error is rare.")
+    }
 }
 
 /*
@@ -917,7 +941,7 @@ exitScriptWithNotification(pBooleanUseFallbackMessage := false) {
         TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
     }
     else {
-        TrayTip("VideoDownloader terminated. (NO LANGUAGE LOADED)", "VideoDownloader - Status", "Iconi Mute") ; REMOVE [ADD LANGUAGE OPTION]
+        TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
     }
     ; Using ExitApp() twice ensures that the script will be terminated entirely.
     ExitApp()

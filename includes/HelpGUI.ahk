@@ -36,7 +36,7 @@ createHelpGUI() {
     helpGUIFeatureAndBugSubmitLink := helpGUI.Add("Link", "yp+20", featureAndBugSubmitString)
 
     helpGUIStatusBar := helpGUI.Add("StatusBar", , "Double click an entry to access it's content.")
-    helpGUIStatusBar.SetIcon("shell32.dll", 222) ; ICON_DLL_USED_HERE ; REMOVE [ADD ICON FILE]
+    helpGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     ; This is used for the easter egg.
     helpGUIStatusBar.OnEvent("Click", (*) => handleHelpGUI_helpSectionEasterEgg())
 

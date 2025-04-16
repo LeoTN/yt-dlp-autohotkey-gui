@@ -110,7 +110,7 @@ createSettingsGUI() {
     settingsGUIHotkeyResetChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Reset to Default")
     ; Status bar.
     settingsGUIStatusBar := settingsGUI.Add("StatusBar", , "Some settings might require a restart of the application.")
-    settingsGUIStatusBar.SetIcon("shell32.dll", 222) ; REMOVE USE ICON DLL HERE
+    settingsGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
 
     ; Adds the event handlers for the settings GUI.
     /*
