@@ -5,13 +5,13 @@ SendMode "Input"
 CoordMode "Mouse", "Window"
 
 setup_onInit() {
-    ; Checks the system for other already running instances of this script.
-    findAlreadyRunningScriptInstance("VideoDownloader.exe")
+    ; Checks the system for other already running instances of this application.
+    findAlreadyRunningVDInstance("VideoDownloader.exe")
     createRequiredFolders()
     checkIfMSISetupIsRequired()
     ; Putting this behind the setup checks prevents issues when files are missing.
     createSetupGUI()
-    ; The script won't continue until the required dependencies are installed or the GUI is closed.
+    ; The application won't continue until the required dependencies are installed or the GUI is closed.
     while (checkIfFFmpegOrYTDLPSetupIsRequired()) {
         setupGUI.Show("AutoSize")
         Sleep(2000)
@@ -44,13 +44,13 @@ createSetupGUI() {
     setupGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     setupGUIStatusBar.SetText("Please start the setup process")
 
-    ; When the window is closed without installing the required dependencies, the script must exit.
-    setupGUI.OnEvent("Close", (*) => exitScriptWithNotification(true))
+    ; When the window is closed without installing the required dependencies, the application must exit.
+    setupGUI.OnEvent("Close", (*) => exitApplicationWithNotification(true))
     ; This does not allow the user to change the value of the checkbox.
     ffmpegCheckbox.OnEvent("Click", (*) => ffmpegCheckbox.Value := !ffmpegCheckbox.Value)
     ; This does not allow the user to change the value of the checkbox.
     YTDLPCheckbox.OnEvent("Click", (*) => YTDLPCheckbox.Value := !YTDLPCheckbox.Value)
-    cancelSetupButton.OnEvent("Click", (*) => exitScriptWithNotification(true))
+    cancelSetupButton.OnEvent("Click", (*) => exitApplicationWithNotification(true))
     startSetupButton.OnEvent("Click", (*) => handleSetupGUI_startSetupButton())
 }
 
@@ -78,7 +78,7 @@ updateDependencyCheckboxes() {
 ; Creates all folders in case they do not exist.
 createRequiredFolders() {
     requiredFolders := [
-        scriptMainDirectory,
+        applicationMainDirectory,
         assetDirectory,
         ffmpegDirectory,
         iconDirectory,
@@ -92,7 +92,7 @@ createRequiredFolders() {
     }
 }
 
-; Checks if all required files are present. In case a file is missing, the script will exit after informing the user.
+; Checks if all required files are present. In case a file is missing, the application will exit after informing the user.
 checkIfMSISetupIsRequired() {
     requiredFiles := [
         psUpdateScriptLocation,
@@ -106,7 +106,7 @@ checkIfMSISetupIsRequired() {
                 "] is missing.`n`nPlease reinstall or repair the software using the .MSI installer.",
                 "VideoDownloader - Reinstallation required",
                 "Icon! 262144")
-            exitScriptWithNotification(true)
+            exitApplicationWithNotification(true)
         }
     }
 }

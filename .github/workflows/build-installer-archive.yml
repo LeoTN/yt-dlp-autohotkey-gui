@@ -55,13 +55,13 @@ jobs:
         $null = Expand-Archive -Path "${{ github.workspace }}\compiler\ahk.zip" -DestinationPath $ahkFolder
         $null = Expand-Archive -Path "${{ github.workspace }}\compiler\ahk-v2.zip" -DestinationPath $ahkV2Folder
 
-    - name: Compile Autohotkey Main Script
+    - name: Compile Autohotkey Main Application
       run: |
         # Set the paths to execute more easily.
         $scriptPathIn = "${{ github.workspace }}\VideoDownloader.ahk"
         $scriptPathOut = "${{ github.workspace }}\$env:FINAL_EXECUTABLE_NAME"
 
-        # Compile the script.
+        # Compile the application.
         $null = Start-Process -FilePath ".\ahk\Compiler\Ahk2Exe.exe" -ArgumentList "/in $scriptPathIn /out $scriptPathOut /base "".\ahk-v2\AutoHotkey64.exe"" /silent verbose" -Wait
         $null = Write-Host "[INFO] The executable will be saved to [$scriptPathOut]."
 

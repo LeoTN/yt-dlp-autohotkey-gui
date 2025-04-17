@@ -20,11 +20,11 @@ createHelpGUI() {
     helpGUIListView := helpGUI.Add("ListView", "yp+40 w400 R10 -Multi", helpGUIListViewArray)
     helpGUIListView.OnEvent("DoubleClick", (*) => processDoubleClickedListViewItem())
 
-    helpGUIInfoGroupBox := helpGUI.Add("GroupBox", "xp+170 yp-65 w230 R2", "Script Info")
+    helpGUIInfoGroupBox := helpGUI.Add("GroupBox", "xp+170 yp-65 w230 R2", "Application Info")
 
     local currentVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/" . versionFullName
     local currentVersionString := 'Version: <a href="' . currentVersionLink . '">' . versionFullName . '</a>'
-    helpGUIScriptVersionLink := helpGUI.Add("Link", "xp+10 yp+18", currentVersionString)
+    helpGUIApplicationtVersionLink := helpGUI.Add("Link", "xp+10 yp+18", currentVersionString)
 
     ; These links need to be changed when renaming the .YAML files for the GitHub issues section.
     local featureRequestLink :=
@@ -263,8 +263,8 @@ handleHelpGUI_helpSectionEasterEgg() {
     if (i >= 5) {
         i := 0
         fakeErrorObject := Object()
-        fakeErrorObject.What := "WIP"
-        fakeErrorObject.Message := "WIP"
+        fakeErrorObject.What := "This is a tribute to my friend Elias who helps me a lot by testing this software :D"
+        fakeErrorObject.Message := "Is that an easter egg?"
         fakeErrorObject.Extra := "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         fakeErrorObject.File := "notavirus.exe"
         fakeErrorObject.Line := "69"

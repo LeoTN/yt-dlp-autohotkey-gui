@@ -236,9 +236,9 @@ menu_resetConfigFile() {
 
 ; Import another (old) config file.
 menu_importConfigFile() {
-    global scriptMainDirectory
+    global applicationMainDirectory
 
-    oldConfigFileLocation := fileSelectPrompt("VD - Please select a config file to import", scriptMainDirectory,
+    oldConfigFileLocation := fileSelectPrompt("VD - Please select a config file to import", applicationMainDirectory,
         "*.ini")
     if (oldConfigFileLocation != "_result_no_file_selected") {
         importOldConfigFile(oldConfigFileLocation)
@@ -284,9 +284,9 @@ menu_openDefaultDownloadTempDirectory() {
 
 ; Opens the application working directory in the explorer.
 menu_openApplicationWorkingDirectory() {
-    global scriptMainDirectory
+    global applicationMainDirectory
 
-    openDirectoryInExplorer(scriptMainDirectory)
+    openDirectoryInExplorer(applicationMainDirectory)
 }
 
 ; Actions menu items.

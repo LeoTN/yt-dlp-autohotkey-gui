@@ -25,11 +25,11 @@ CoordMode "Mouse", "Client"
 onInit()
 
 onInit() {
-    global scriptRegistryDirectory := "HKCU\SOFTWARE\LeoTN\VideoDownloader"
+    global applicationRegistryDirectory := "HKCU\SOFTWARE\LeoTN\VideoDownloader"
     ; This folder will contain all other files.
-    global scriptMainDirectory := A_ScriptDir . "\VideoDownloader"
+    global applicationMainDirectory := A_ScriptDir . "\VideoDownloader"
 
-    global assetDirectory := scriptMainDirectory . "\assets"
+    global assetDirectory := applicationMainDirectory . "\assets"
 
     global ffmpegDirectory := assetDirectory . "\ffmpeg"
     global ffmpegFileLocation := ffmpegDirectory . "\ffmpeg.exe"
@@ -47,8 +47,8 @@ onInit() {
     global YTDLPFileLocation := YTDLPDirectory . "\yt-dlp.exe"
 
     ; When this value is true, certain functions will behave differently and do not show unnecessary prompts.
-    global booleanFirstTimeLaunch := RegRead(scriptRegistryDirectory, "booleanFirstTimeLaunch", false)
-    ; The version of this script. For example "v1.2.3.4".
+    global booleanFirstTimeLaunch := RegRead(applicationRegistryDirectory, "booleanFirstTimeLaunch", false)
+    ; The version of this application. For example "v1.2.3.4".
     global versionFullName := getCorrectScriptVersionFromRegistry()
 
     ; Determine the available download formats and subtitle options.
@@ -65,6 +65,17 @@ onInit() {
     try
     {
         TraySetIcon(iconFileLocation, 1, true)
+        ; Clears the existing tray menu elements.
+        A_TrayMenu.Delete()
+        ; Adds a tray menu point to open the video list GUI.
+        A_TrayMenu.Add("Video List", (*) => hotkey_openVideoListGUI())
+        A_TrayMenu.Add("Settings", (*) => menu_openSettingsGUI())
+        A_TrayMenu.Add()
+        A_TrayMenu.Add("Restart", (*) => menu_restartApplication())
+        A_TrayMenu.Add("Exit", (*) => menu_exitApplication())
+        A_TrayMenu.Add("About", (*) => menu_openHelpGUI())
+        ; When clicking on the tray icon twice, this will make sure, that the video list GUI is shown to the user.
+        A_TrayMenu.Default := "Video List"
     }
     catch as error {
         displayErrorMessage(error, "This is not a fatal error.", , 10000)
@@ -101,10 +112,10 @@ onInit() {
 
     ; Shows a small tutorial to guide the user.
     if (readConfigFile("ASK_FOR_TUTORIAL")) {
-        ; scriptTutorial() ; REMOVE [TEMPORARILY DISABLED UNTIL TUTORIAL REWORK]
+        ; applicationTutorial() ; REMOVE [TEMPORARILY DISABLED UNTIL TUTORIAL REWORK]
     }
     ; Disables the firstTimeLaunch at the end of the first run.
     if (booleanFirstTimeLaunch) {
-        RegWrite(false, "REG_DWORD", scriptRegistryDirectory, "booleanFirstTimeLaunch")
+        RegWrite(false, "REG_DWORD", applicationRegistryDirectory, "booleanFirstTimeLaunch")
     }
 }

@@ -5,10 +5,10 @@ SendMode "Input"
 CoordMode "Mouse", "Client"
 
 configurationFile_onInit() {
-    global scriptMainDirectory
+    global applicationMainDirectory
 
-    ; Determines the location of the script's configuration file.
-    global configFileLocation := scriptMainDirectory . "\VideoDownloader.ini"
+    ; Determines the location of the application's configuration file.
+    global configFileLocation := applicationMainDirectory . "\VideoDownloader.ini"
     ; Creates the base set of config file entry objects.
     initializeConfigEntryMap()
     ; Checks the integrity of the config file and repairs it if necessary.
@@ -37,8 +37,8 @@ initializeConfigEntryMap() {
     ASK_FOR_TUTORIAL := true
     ; [DirectoryPaths]
     DirectoryPaths := "DirectoryPaths"
-    DEFAULT_DOWNLOAD_DIRECTORY := scriptMainDirectory . "\download"
-    TEMP_DIRECTORY := scriptMainDirectory . "\temp"
+    DEFAULT_DOWNLOAD_DIRECTORY := applicationMainDirectory . "\download"
+    TEMP_DIRECTORY := applicationMainDirectory . "\temp"
     TEMP_DOWNLOAD_DIRECTORY := TEMP_DIRECTORY . "\download_temp"
     ; [NotificationSettings]
     NotificationSettings := "NotificationSettings"
@@ -370,7 +370,7 @@ readConfigFile(pKey, pSection?) {
         msgButton3 := "Exit"
         result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
         if (result != msgButton1) {
-            exitScriptWithNotification(true)
+            exitApplicationWithNotification(true)
         }
     }
     else {
@@ -389,7 +389,7 @@ readConfigFile(pKey, pSection?) {
         msgButton3 := "Exit"
         result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
         if (result != msgButton1) {
-            exitScriptWithNotification(true)
+            exitApplicationWithNotification(true)
         }
     }
 }
@@ -445,7 +445,7 @@ editConfigFile(pNewValue, pKey, pSection?) {
         msgButton3 := "Exit"
         result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
         if (result != msgButton1) {
-            exitScriptWithNotification(true)
+            exitApplicationWithNotification(true)
         }
     }
     else {
@@ -464,7 +464,7 @@ editConfigFile(pNewValue, pKey, pSection?) {
         msgButton3 := "Exit"
         result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
         if (result != msgButton1) {
-            exitScriptWithNotification(true)
+            exitApplicationWithNotification(true)
         }
     }
 }
@@ -478,7 +478,7 @@ class ConfigFileEntry {
         if (!checkIfStringIsInArray(pValueType, allowedValueTypesArray)) {
             MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid value type received: [" . pValueType . "].",
                 "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
-            exitScriptWithNotification(true)
+            exitApplicationWithNotification(true)
         }
 
         /*
@@ -569,7 +569,7 @@ class ConfigFileEntry {
         if (configFileEntryMap.Has(this.identifierString)) {
             MsgBox("[" . A_ThisFunc . "()] [WARNING] Entry with identifier string [" . this.identifierString .
                 "] already exists.", "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
-            exitScriptWithNotification(true)
+            exitApplicationWithNotification(true)
         }
         configFileEntryMap.Set(this.identifierString, this)
     }

@@ -188,7 +188,7 @@ settingsGUI_onInit() {
 
 handleSettingsGUI_settingsGUIUpdateCheckForUpdatesButton_onClick(pButton, pInfo) {
     settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
-    ; Does not check for updates, if there is no Internet connection or the script isn't compiled.
+    ; Does not check for updates, if there is no Internet connection or the application isn't compiled.
     if (!checkInternetConnection()) {
         MsgBox("There seems to be no connection to the Internet.", "VD - Manual Update Check", "O Icon! 262144 T2")
     }

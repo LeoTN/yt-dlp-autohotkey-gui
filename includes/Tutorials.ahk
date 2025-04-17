@@ -92,13 +92,13 @@ createListViewContentCollectionArray() {
     return helpGUIListViewContentArray
 }
 
-; A small tutorial to show off the help GUI of this script.
-scriptTutorial() {
+; A small tutorial to show off the help GUI of this application.
+applicationTutorial() {
     result_1 := MsgBox("Would you like to have a short tutorial on how to use this software?",
         "VideoDownloader - Start Tutorial", "YN Iconi 262144")
     ; The dialog to disable the tutorial for the next time is only shown when the config file entry mentioned below is true.
     if (readConfigFile("ASK_FOR_TUTORIAL")) {
-        result_2 := MsgBox("Press [Yes] to disable the tutorialfor the next time you run this script.",
+        result_2 := MsgBox("Press [Yes] to disable the tutorialfor the next time you run this application.",
             "VideoDownloader - Disable Tutorial for Next Time", "YN Iconi 262144")
         if (result_2 == "Yes") {
             editConfigFile("ASK_FOR_TUTORIAL", false)
@@ -116,7 +116,7 @@ scriptTutorial() {
 }
 
 minimizeAllGUIs() {
-    ; Minimizes all script windows to reduce diversion.
+    ; Minimizes all application windows to reduce diversion.
     if (WinExist("ahk_id " . videoListGUI.Hwnd)) {
         WinMinimize()
     }

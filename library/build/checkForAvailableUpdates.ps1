@@ -16,7 +16,7 @@ Param (
 
 $Host.UI.RawUI.BackgroundColor = "Black"
 $Host.UI.RawUI.ForegroundColor = "White"
-$Host.UI.RawUI.WindowTitle = "VideoDownloader - Update Script"
+$Host.UI.RawUI.WindowTitle = "VideoDownloader - Update Application"
 $scriptParentDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $logFileName = "checkForAvailableUpdates.log"
 $logFilePath = Join-Path -Path $scriptParentDirectory -ChildPath $logFileName

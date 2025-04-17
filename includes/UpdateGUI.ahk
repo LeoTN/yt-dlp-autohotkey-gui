@@ -5,8 +5,8 @@ CoordMode "Mouse", "Window"
 
 updateGUI_onInit() {
     /*
-    The script won't check for updates if it is disabled in the config file
-    or the script has been launched for the very first time.
+    The application won't check for updates if it is disabled in the config file
+    or the application has been launched for the very first time.
     */
     if (!readConfigFile("CHECK_FOR_UPDATES_AT_LAUNCH") || booleanFirstTimeLaunch) {
         return
@@ -56,7 +56,7 @@ handleUpdateGUI_downloadMSIButton(pMSIDownloadURL) {
         "`n`nA backup of the old version will be created at`n[" . backupDirectory . "].",
         "VideoDownloader - Update Process", "OC Icon! 262144")
 
-    ; Exits the script if the user confirms.
+    ; Exits the application if the user confirms.
     if (result == "OK") {
         backupOldVersionFiles(backupDirectory)
     }

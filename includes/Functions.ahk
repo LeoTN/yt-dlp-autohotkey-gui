@@ -36,7 +36,7 @@ executeYTDLPCommand(pYTDLPCommandString, pLogFileLocation := A_Temp . "\yt-dlp.l
 
     exitCode := RunWait(commandString, , "Hide")
     if (exitCode == 1) {
-        ; Recreates the log file path because the script will put the log file in the same directory as itself.
+        ; Recreates the log file path because the application will put the log file in the same directory as itself.
         psRunYTDLPExecutableLocationLogFileLocation := StrReplace(psRunYTDLPExecutableLocation, ".ps1", ".log")
         errorExtraMessage := "The following log files might provide more information:`n`n"
         errorExtraMessage .= "[" . psRunYTDLPExecutableLocationLogFileLocation . "]`n"
@@ -319,7 +319,7 @@ Tries to find an existing process via a wildcard.
 NOTE: Currently only supports wildcards containing the beginning of the wanted process.
 @param pWildcard [String] Should be a wildcard process name for example "VideoDownloader.exe".
 */
-findAlreadyRunningScriptInstance(pWildcard) {
+findAlreadyRunningVDInstance(pWildcard) {
     SplitPath(pWildcard, , , &outExtension, &outNameNoExt)
     allRunningProcessesNameArray := []
     allRunningProcessesPathArray := []
@@ -333,7 +333,7 @@ findAlreadyRunningScriptInstance(pWildcard) {
         ; For example if you are process called "VideoDownloader.development-build-6.exe" it
         ; would be sufficient to search for "VideoDownloader.exe" as the [*]+ part allows an
         ; undefined amount of characters to appear between the wildcard name and it's extension.
-        ; The condition below makes sure that it does not find the current instance of this script as a proces.
+        ; The condition below makes sure that it does not find the current instance of this application as a process.
         if (RegExMatch(v, outNameNoExt . ".*." . outExtension) && v != A_ScriptName) {
             processPath := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
             msgText := "Another instance of VideoDownloader is already running."
@@ -365,13 +365,13 @@ findAlreadyRunningScriptInstance(pWildcard) {
                 }
                 case msgButton1:
                 {
-                    ; This option is not recommended because the script is not supposed to run with multiple instances active.
+                    ; This option is not recommended because the application is not supposed to run with multiple instances active.
                     return
                 }
                 Default:
                 {
-                    MsgBox("Script terminated.", "VD - Script Status", "O Iconi T1.5")
-                    exitScriptWithNotification(true)
+                    MsgBox("Application terminated.", "VD - Application Status", "O Iconi T1.5")
+                    exitApplicationWithNotification(true)
                 }
                     ; Stops after the first match.
                     break
@@ -414,7 +414,7 @@ terminateAllChildProcesses(pParentProcessPID, pChildProcessNameFilter?, pBoolean
 
 /*
 Copies all files from the old version into a backup folder using robocopy.
-@param pBackupParentDirectory [String] Usually the script directory with an additional folder called "VideoDownloader_old_version_backups" at the end.
+@param pBackupParentDirectory [String] Usually the application directory with an additional folder called "VideoDownloader_old_version_backups" at the end.
 */
 backupOldVersionFiles(pBackupParentDirectory) {
     global versionFullName
@@ -440,9 +440,9 @@ backupOldVersionFiles(pBackupParentDirectory) {
     parameterString .= "`"" . generalTempFolder . "`" "
     parameterString .= "/MAX:10485760"
 
-    ; Waits 3 seconds before starting the backup process to ensure that the main script has exited already.
+    ; Waits 3 seconds before starting the backup process to ensure that the main application has exited already.
     Run('cmd.exe /c "timeout /t 3 /nobreak && robocopy ' . parameterString . '"', , "Hide")
-    exitScriptWithNotification()
+    exitApplicationWithNotification()
 }
 
 /*
@@ -509,7 +509,7 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
             WinClose()
         }
     }
-    ; The script waits until the user made a choice or the timer runs out.
+    ; The application waits until the user made a choice or the timer runs out.
     if (IsSet(pMsgBoxTimeoutSeconds)) {
         loop (pMsgBoxTimeoutSeconds) {
             if (!WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
@@ -836,14 +836,14 @@ getSelectedVideoListViewElements() {
 }
 
 /*
-Reads the registry and extracts the current script version.
+Reads the registry and extracts the current application version.
 If the version in the registry has a build version other than 0, it will append the word "-beta".
 @returns [String] The version from the registry or "v0.0.0.1" in case the registry value is invalid.
 */
 getCorrectScriptVersionFromRegistry() {
-    global scriptRegistryDirectory
+    global applicationRegistryDirectory
 
-    regValue := RegRead(scriptRegistryDirectory, "CURRENT_VERSION", "v0.0.0.1")
+    regValue := RegRead(applicationRegistryDirectory, "CURRENT_VERSION", "v0.0.0.1")
     ; Finds versions matching this format [v1.2.3.4]
     if (RegExMatch(regValue, "^v\d+\.\d+\.\d+\.(\d+)$", &match)) {
         buildVersionNumber := match[1]
@@ -851,7 +851,7 @@ getCorrectScriptVersionFromRegistry() {
         if (buildVersionNumber != 0) {
             regValue := regValue . "-beta"
             ; Corrects the version number in the registry.
-            RegWrite(regValue, "REG_SZ", scriptRegistryDirectory, "CURRENT_VERSION")
+            RegWrite(regValue, "REG_SZ", applicationRegistryDirectory, "CURRENT_VERSION")
             return getCorrectScriptVersionFromRegistry()
         }
         return regValue
@@ -897,7 +897,7 @@ checkIfStringIsValidPlaylistIndexRange(pString) {
 }
 
 /*
-Checks a given path for writing permissions with the current user rights (the user who launched this script).
+Checks a given path for writing permissions with the current user rights (the user who launched this application).
 @returns [boolean] True, if the current permissions allow writing to the specified directory. False otherwise.
 */
 checkForWritingRights(pPath) {
@@ -925,9 +925,9 @@ Checks all GitHub Repository tags to find new versions.
 */
 checkForAvailableUpdates() {
     global psUpdateScriptLocation
-    global scriptRegistryDirectory
+    global applicationRegistryDirectory
 
-    ; Does not check for updates, if there is no Internet connection or the script isn't compiled.
+    ; Does not check for updates, if there is no Internet connection or the application isn't compiled.
     if (!checkInternetConnection() || !A_IsCompiled) {
         return "_result_no_update_available"
     }
@@ -935,7 +935,7 @@ checkForAvailableUpdates() {
     Changes "HKCU\SOFTWARE\LeoTN\VideoDownloader" to "HKCU:SOFTWARE\LeoTN\VideoDownloader"
     to make the path compatible with PowerShell.
     */
-    psCompatibleScriptRegistryPath := StrReplace(scriptRegistryDirectory, "\", ":", , , 1)
+    psCompatibleScriptRegistryPath := StrReplace(applicationRegistryDirectory, "\", ":", , , 1)
     parameterString :=
         '-pGitHubRepositoryLink "https://github.com/LeoTN/yt-dlp-autohotkey-gui"' .
         ' -pRegistryDirectory "' . psCompatibleScriptRegistryPath . '"'
@@ -951,7 +951,7 @@ checkForAvailableUpdates() {
         case 101:
         {
             ; Extracts the available update from the registry.
-            updateVersion := RegRead(scriptRegistryDirectory, "AVAILABLE_UPDATE", "v0.0.0.1")
+            updateVersion := RegRead(applicationRegistryDirectory, "AVAILABLE_UPDATE", "v0.0.0.1")
             if (updateVersion == "no_available_update") {
                 return "_result_no_update_available"
             }
@@ -984,18 +984,18 @@ checkInternetConnection() {
 }
 
 /*
-Terminates the script and shows a tray tip message to inform the user.
+Terminates the application and shows a tray tip message to inform the user.
 @param pBooleanUseFallbackMessage [boolean] If set to true, will use the hardcoded English version
 of the termination message. This can be useful if the language modules have not been loaded yet.
 */
-exitScriptWithNotification(pBooleanUseFallbackMessage := false) {
+exitApplicationWithNotification(pBooleanUseFallbackMessage := false) {
     if (pBooleanUseFallbackMessage) {
         TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
     }
     else {
         TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
     }
-    ; Using ExitApp() twice ensures that the script will be terminated entirely.
+    ; Using ExitApp() twice ensures that the application will be terminated entirely.
     ExitApp()
     ExitApp()
 }
@@ -1107,7 +1107,7 @@ terminateApplicationPrompt() {
 Outputs a little GUI containing information about the error. Allows to be copied to the clipboard.
 @param pErrorObject [Error Object] Usually created when catching an error via Try / Catch.
 @param pAdditionalErrorMessage [String] An optional error message to show.
-@param pBooleanTerminatingError [boolean] If set to true, will force the script to terminate once the message disappears.
+@param pBooleanTerminatingError [boolean] If set to true, will force the application to terminate once the message disappears.
 @param pMessageTimeoutMilliseconds [int] Optional message timeout. Closes the message after a delay of time.
 */
 displayErrorMessage(pErrorObject := unset, pAdditionalErrorMessage := unset, pBooleanTerminatingError := false,
@@ -1164,10 +1164,10 @@ displayErrorMessage(pErrorObject := unset, pAdditionalErrorMessage := unset, pBo
     errorGUIcopyErrorToClipboardButton.OnEvent("Click", (*) => A_Clipboard := errorMessageBlock)
 
     if (pBooleanTerminatingError) {
-        errorGUIActionButton := errorGUI.Add("Button", "xp+110 w100 R2", "Exit Script")
+        errorGUIActionButton := errorGUI.Add("Button", "xp+110 w100 R2", "Exit")
     }
     else {
-        errorGUIActionButton := errorGUI.Add("Button", "xp+110 w100 R2", "Continue Script")
+        errorGUIActionButton := errorGUI.Add("Button", "xp+110 w100 R2", "Continue")
     }
     errorGUIActionButton.OnEvent("Click", (*) => errorGUI.Destroy())
     errorGUI.Show("AutoSize")
@@ -1181,7 +1181,7 @@ displayErrorMessage(pErrorObject := unset, pAdditionalErrorMessage := unset, pBo
     }
 
     if (pBooleanTerminatingError) {
-        exitScriptWithNotification(true)
+        exitApplicationWithNotification(true)
     }
 }
 

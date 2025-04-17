@@ -573,7 +573,7 @@ handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
             . " files to [" . targetDownloadDirectory . "]")
     }
     if (downloadTerminateAfterDownloadCheckbox.Value) {
-        exitScriptWithNotification()
+        exitApplicationWithNotification()
     }
     currentYTDLPActionObject.booleanDownloadIsRunning := false
 }
@@ -627,7 +627,7 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
 }
 
 handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo) {
-    global scriptMainDirectory
+    global applicationMainDirectory
 
     if (downloadSelectDownloadDirectoryInputEdit.Value != "") {
         ; This will open the current directory (if one is already selected and the folder exists).
@@ -635,11 +635,11 @@ handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo)
             selectPath := downloadSelectDownloadDirectoryInputEdit.Value
         }
         else {
-            selectPath := scriptMainDirectory
+            selectPath := applicationMainDirectory
         }
     }
     else {
-        selectPath := scriptMainDirectory
+        selectPath := applicationMainDirectory
     }
 
     downloadDirectory := directorySelectPrompt("VD - Please select the download target folder", selectPath, true)
