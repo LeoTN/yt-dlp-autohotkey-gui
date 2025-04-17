@@ -188,8 +188,8 @@ initializeCurrentConfigFile() {
         We can now try to import the old configuration file to keep as many of the settings as possible.
         */
         createDefaultConfigFile(true, oldConfigFileLocation)
-        ; Do not ask for confirmation.
-        importOldConfigFile(oldConfigFileLocation, false)
+        ; Do not ask for confirmation and do not reload the application.
+        importOldConfigFile(oldConfigFileLocation, false, false)
         MsgBox("A corrupted or old config file has been imported.", "VD - Imported Config File", "O Iconi 262144 T3")
     }
 }
@@ -239,8 +239,9 @@ Tries to import old VideoDownloader config file even from older versions.
 This is required so that users don't loose their configuration between updates.
 @param pOldConfigFileLocation [String] The location of the config file to import.
 @param pBooleanAskForConfirmation [boolean] If set to true, will prompt the user to confirm any changes.
+@param pBooleanReloadAfterImport [boolean] If set to true, will reload the application after importing.
 */
-importOldConfigFile(pOldConfigFileLocation, pBooleanAskForConfirmation := true) {
+importOldConfigFile(pOldConfigFileLocation, pBooleanAskForConfirmation := true, pBooleanReloadAfterImport := true) {
     global configFileEntryMap
 
     ; We use a copy because we don't want to modify the live config yet.
@@ -263,6 +264,7 @@ importOldConfigFile(pOldConfigFileLocation, pBooleanAskForConfirmation := true) 
         msgText .= "`n********************"
         msgText .= "`nTotal amount of imported entries: " . importableConfigFileEntryMap.Count
         msgText .= "`n********************"
+        msgText .= "`n`nYou need to restart the application for the changes to take effect."
         msgText .= "`n`nView details to see which entries of the current config file will be changed."
         msgTitle := "VD - Confirm Config File Import"
         msgHeadLine := "Confirm Config File Import"
@@ -292,7 +294,7 @@ importOldConfigFile(pOldConfigFileLocation, pBooleanAskForConfirmation := true) 
             }
             FileAppend(tempChangesFileContent, tempChangesFileLocation)
             Run(tempChangesFileLocation)
-            return importOldConfigFile(pOldConfigFileLocation, pBooleanAskForConfirmation)
+            return importOldConfigFile(pOldConfigFileLocation, pBooleanAskForConfirmation, pBooleanReloadAfterImport)
         }
         else {
             return
@@ -303,6 +305,19 @@ importOldConfigFile(pOldConfigFileLocation, pBooleanAskForConfirmation := true) 
         configFileEntryMap.Set(key, configEntry)
         configFileEntryMap.Get(key).writeToFile()
     }
+    if (pBooleanReloadAfterImport) {
+        reloadApplicationPrompt()
+    }
+}
+
+/*
+Simply copies the currently used config file to a specified location.
+@param pNewConfigFileLocation [String] The file path (including the name and extension) for the config file copy.
+*/
+exportConfigFile(pNewConfigFileLocation) {
+    global configFileLocation
+
+    FileCopy(configFileLocation, pNewConfigFileLocation, true)
 }
 
 /*

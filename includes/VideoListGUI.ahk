@@ -165,7 +165,7 @@ createVideoListGUI() {
     allMenus.Add("&File", fileSelectionMenu)
     allMenus.SetIcon("&File", iconFileLocation, 19) ; ICON_DLL_USED_HERE
     allMenus.Add("&Directory", directorySelectionMenu)
-    allMenus.SetIcon("&Directory", iconFileLocation, 4) ; ICON_DLL_USED_HERE
+    allMenus.SetIcon("&Directory", iconFileLocation, 18) ; ICON_DLL_USED_HERE
     allMenus.Add("&Actions", applicationActionsMenu)
     allMenus.SetIcon("&Actions", iconFileLocation, 12) ; ICON_DLL_USED_HERE
     allMenus.Add("&Settings", (*) => menu_openSettingsGUI())
@@ -185,6 +185,10 @@ createVideoListGUI() {
     tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := ""
     tmpEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
     tmpEntry.removeEntryFromVideoListViewContentMap()
+
+    ; Makes the settings and help GUI the child window of the video list GUI.
+    settingsGUI.Opt("+Owner" . videoListGUI.Hwnd)
+    helpGUI.Opt("+Owner" . videoListGUI.Hwnd)
 }
 
 videoListGUI_onInit() {
@@ -404,9 +408,9 @@ handleVideoListGUI_removeVideoConfirmDeletionCheckbox_onClick(pCheckbox, pInfo) 
 
 handleVideoListGUI_importVideoListButton_onClick(pButton, pInfo) {
     importFileDefaultDirectory := A_MyDocuments
-    importFileLocation := FileSelect("3", importFileDefaultDirectory, "VD - Please select a file to import", "*.txt")
+    importFileLocation := fileSelectPrompt("VD - Please select a file to import", importFileDefaultDirectory, "*.txt")
     ; This usually happens, when the user cancels the selection.
-    if (importFileLocation == "") {
+    if (importFileLocation == "_result_no_file_selected") {
         return
     }
     ; Imports all URLs or only valid ones, depending on the value of the checkbox.
@@ -598,10 +602,11 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
 
     ; Ignores the cancel complete download when there is only one video in total.
     if (currentYTDLPActionObject.remainingVideos == 1) {
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, , , true)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, , , true, videoListGUI.Hwnd)
     }
     else {
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
+            videoListGUI.Hwnd)
     }
     if (result == msgButton1) {
         if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {

@@ -159,11 +159,11 @@ hotkey_openVideoListGUI() {
 }
 
 hotkey_terminateProgram() {
-    terminateScriptPrompt()
+    terminateApplicationPrompt()
 }
 
 hotkey_reloadProgram() {
-    reloadScriptPrompt()
+    reloadApplicationPrompt()
 }
 
 /*
@@ -224,17 +224,37 @@ menu_openConfigFile() {
 
 ; Reset the current config file to default.
 menu_resetConfigFile() {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    result := MsgBox(
+        "Do you really want to reset the config file?`n`nYou need to restart the application for the changes to take effect."
+        "`n`nA backup of the old file will be created.",
+        "VD - Reset Config File", "YN Icon! Owner" . videoListGUI.Hwnd)
+    if (result == "Yes") {
+        createDefaultConfigFile()
+        reloadApplicationPrompt()
+    }
 }
 
 ; Import another (old) config file.
 menu_importConfigFile() {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global scriptMainDirectory
+
+    oldConfigFileLocation := fileSelectPrompt("VD - Please select a config file to import", scriptMainDirectory,
+        "*.ini")
+    if (oldConfigFileLocation != "_result_no_file_selected") {
+        importOldConfigFile(oldConfigFileLocation)
+    }
 }
 
 ; Export the current config file.
 menu_exportConfigFile() {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    ; We use the current time stamp to generate a unique name for the exported file.
+    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
+    exportConfigFileDefaultLocation := A_MyDocuments . "\" . currentTime . "_VD_exported_config_file.ini"
+    exportConfigFileLocation := fileSavePrompt("VD - Please select a save location for the config file",
+        exportConfigFileDefaultLocation, ".ini")
+    if (exportConfigFileLocation != "_result_no_file_save_location_selected") {
+        exportConfigFile(exportConfigFileLocation)
+    }
 }
 
 ; Directory menu items.
@@ -273,12 +293,12 @@ menu_openApplicationWorkingDirectory() {
 
 ; Restart the program.
 menu_restartApplication() {
-    reloadScriptPrompt()
+    reloadApplicationPrompt()
 }
 
 ; Exit the program.
 menu_exitApplication() {
-    terminateScriptPrompt()
+    terminateApplicationPrompt()
 }
 
 ; Open GUI items.

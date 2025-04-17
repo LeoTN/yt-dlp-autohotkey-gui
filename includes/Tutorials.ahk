@@ -180,6 +180,10 @@ class InteractiveTutorial {
     }
     ; You can provide optional coordinates for the GUI to show up.
     start(pGuiX := unset, pGuiY := unset) {
+        ; Makes the help GUI the owner of the window.
+        if (IsSet(helpGUI) && WinExist("ahk_id " . helpGUI.Hwnd)) {
+            this.gui.Opt("+Owner" . helpGUI.Hwnd)
+        }
         ; Both parameters are omitted.
         if (!IsSet(pGuiX) && !IsSet(pGuiY)) {
             this.gui.Show("AutoSize")

@@ -28,7 +28,7 @@ createUpdateGUI(pUpdateVersion) {
     msiDownloadURL := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/download/"
         . pUpdateVersion . "/VideoDownloader_" . pUpdateVersion . "_Installer.msi"
 
-    global updateGUI := Gui(, "VideoDownloader - Update")
+    global updateGUI := Gui("+AlwaysOnTop", "VideoDownloader - Update")
     updateGUIUpdateText := updateGUI.Add("Text", "w320 R3 Center", "Update Available - [" . pUpdateVersion . "]")
     updateGUIUpdateText.SetFont("bold s12")
 

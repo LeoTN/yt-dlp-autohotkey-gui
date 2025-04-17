@@ -455,16 +455,23 @@ Displays a customizable message box with up to 3 buttons and a headline.
 @param pButton3Text [String] The text for the rightmost button. [Max. 50 characters]
 @param pMsgBoxTimeoutSeconds [int] Optional timeout in seconds. Closes the message box automatically after this duration.
 @param pBooleanAlwaysOnTop [boolean] If true, the message box will always stay on top of other windows.
+@param pOwnerWindowHwnd [int] An optional hwnd number of an existing window. This window will be the owner of the message box.
 @returns [String] The text of the button clicked by the user.
 @returns (alt) [String] "_result_gui_closed" if the GUI was closed.
 @returns (alt) [String] "_result_timeout" if the timeout was reached.
 */
 customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_ScriptName,
-    pButton1Text?, pButton2Text := "Okay", pButton3Text?, pMsgBoxTimeoutSeconds?, pBooleanAlwaysOnTop := false) {
+    pButton1Text?, pButton2Text := "Okay", pButton3Text?, pMsgBoxTimeoutSeconds?, pBooleanAlwaysOnTop := false,
+    pOwnerWindowHwnd?) {
     ; This value represents either the user choice or any other possible outcome like a timeout for example.
     returnValue := "_result_gui_closed"
     ; Create the GUI which will mimic the style of a message box.
-    customMsgBoxGUI := Gui(, pMsgBoxTitle)
+    if (IsSet(pOwnerWindowHwnd) && WinExist(pOwnerWindowHwnd)) {
+        customMsgBoxGUI := Gui("Owner" . pOwnerWindowHwnd, pMsgBoxTitle)
+    }
+    else {
+        customMsgBoxGUI := Gui(, pMsgBoxTitle)
+    }
     if (pBooleanAlwaysOnTop) {
         customMsgBoxGUI.Opt("+AlwaysOnTop")
     }
@@ -555,6 +562,50 @@ directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRight
 }
 
 /*
+Prompts the user to select a file.
+@param pPromptTitle [String] The title of the prompt window.
+@param pRootDirectory [String] The root directory to start the selection from.
+@param pFilter [String] An optional filter for the explorer window. For example, "*.txt" would only show text files.
+@returns [String] The selected file path.
+@returns (alt) [String] "_result_no_file_selected" if the user cancels the selection.
+*/
+fileSelectPrompt(pPromptTitle, pRootDirectory, pFilter?) {
+    if (IsSet(pFilter)) {
+        selectedFileLocation := FileSelect("3", pRootDirectory, pPromptTitle, pFilter)
+    }
+    else {
+        selectedFileLocation := FileSelect("3", pRootDirectory, pPromptTitle)
+    }
+    ; This usually happens, when the user cancels the selection.
+    if (selectedFileLocation == "") {
+        return "_result_no_file_selected"
+    }
+    return selectedFileLocation
+}
+
+/*
+Prompts the user to select a file save location.
+@param pPromptTitle [String] The title of the prompt window.
+@param pRootDirectory [String] The root directory to start the selection from. Can include a file name as well.
+@param pFilter [String] An optional filter for the explorer window. For example, "*.txt" would only show text files.
+@returns [String] The selected file save path.
+@returns (alt) [String] "_result_no_file_save_location_selected" if the user cancels the selection.
+*/
+fileSavePrompt(pPromptTitle, pRootDirectory, pFilter?) {
+    if (IsSet(pFilter)) {
+        selectedFileSaveLocation := FileSelect("S16", pRootDirectory, pPromptTitle, pFilter)
+    }
+    else {
+        selectedFileSaveLocation := FileSelect("S16", pRootDirectory, pPromptTitle)
+    }
+    ; This usually happens, when the user cancels the selection.
+    if (selectedFileSaveLocation == "") {
+        return "_result_no_file_save_location_selected"
+    }
+    return selectedFileSaveLocation
+}
+
+/*
 Opens a directory explicitly with the explorer executable.
 @param pDirectory [String] Should be an existing directory path.
 */
@@ -619,7 +670,8 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URLs"
         }
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
+            videoListGUI.Hwnd)
         ; If the users wishes, the invalid URLs will be imported as well.
         if (result == msgButton1) {
             for (invalidURL in invalidURLArray) {
@@ -660,10 +712,9 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
     currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     if (!IsSet(pExportFileLocation)) {
         exportFileDefaultLocation := A_MyDocuments . "\" . currentTime . "_VD_exported_urls.txt"
-        pExportFileLocation := FileSelect("S16", exportFileDefaultLocation, "VD - Please select a save location",
-            "*.txt")
+        pExportFileLocation := fileSavePrompt("VD - Please select a save location", exportFileDefaultLocation, "*.txt")
         ; This usually happens, when the user cancels the selection.
-        if (pExportFileLocation == "") {
+        if (pExportFileLocation == "_result_no_file_save_location_selected") {
             return
         }
     }
@@ -704,7 +755,8 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URLs"
         }
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
+            videoListGUI.Hwnd)
         ; If the users wishes, the invalid URLs will be included in the export.
         if (result == msgButton1) {
             ; Adds the separation line into the array.
@@ -948,21 +1000,28 @@ exitScriptWithNotification(pBooleanUseFallbackMessage := false) {
     ExitApp()
 }
 
-reloadScriptPrompt() {
+reloadApplicationPrompt() {
     ; Number in seconds.
     i := 4
 
-    reloadScriptGUI := Gui(, "VD - Reloading Script")
-    textField := reloadScriptGUI.Add("Text", "r3 w260 x20 y40", "The script will be`n reloaded in " . i . " seconds.")
+    ; Makes the video list GUI the owner of the window.
+    if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
+        reloadApplicationGUI := Gui("Owner" . videoListGUI.Hwnd, "VD - Reloading Application")
+    }
+    else {
+        reloadApplicationGUI := Gui(, "VD - Reloading Application")
+    }
+    textField := reloadApplicationGUI.Add("Text", "r3 w260 x20 y40", "The application will be`n reloaded in " . i .
+        " seconds.")
     textField.SetFont("s12")
     textField.SetFont("bold")
-    progressBar := reloadScriptGUI.Add("Progress", "w280 h20 x10 y100", 0)
-    buttonOkay := reloadScriptGUI.Add("Button", "Default w80 x60 y170", "Okay")
-    buttonCancel := reloadScriptGUI.Add("Button", "w80 x160 y170", "Cancel")
-    reloadScriptGUI.Show("w300 h200")
+    progressBar := reloadApplicationGUI.Add("Progress", "w280 h20 x10 y100", 0)
+    buttonOkay := reloadApplicationGUI.Add("Button", "Default w80 x60 y170", "Okay")
+    buttonCancel := reloadApplicationGUI.Add("Button", "w80 x160 y170", "Cancel")
+    reloadApplicationGUI.Show("w300 h200")
 
     buttonOkay.OnEvent("Click", (*) => Reload())
-    buttonCancel.OnEvent("Click", (*) => reloadScriptGUI.Destroy())
+    buttonCancel.OnEvent("Click", (*) => reloadApplicationGUI.Destroy())
 
     /*
     The try statement is needed to protect the code from crashing because
@@ -978,14 +1037,14 @@ reloadScriptPrompt() {
             }
 
             if (i = 1) {
-                textField.Text := "The script will be`n reloaded in " . i . " second."
+                textField.Text := "The application will be`n reloaded in " . i . " second."
             }
             else {
-                textField.Text := "The script will be`n reloaded in " . i . " seconds."
+                textField.Text := "The application will be`n reloaded in " . i . " seconds."
             }
             i--
         }
-        textField.Text := "The script has been reloaded."
+        textField.Text := "The application has been reloaded."
         Sleep(100)
         Reload()
         ExitApp()
@@ -993,22 +1052,28 @@ reloadScriptPrompt() {
     }
 }
 
-terminateScriptPrompt() {
+terminateApplicationPrompt() {
     ; Number in seconds.
     i := 4
 
-    terminateScriptGUI := Gui(, "VD - Terminating Script")
-    textField := terminateScriptGUI.Add("Text", "r3 w260 x20 y40", "The script will be`n terminated in " . i .
+    ; Makes the video list GUI the owner of the window.
+    if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
+        terminateApplicationGUI := Gui("Owner" . videoListGUI.Hwnd, "VD - Terminating Application")
+    }
+    else {
+        terminateApplicationGUI := Gui(, "VD - Terminating Application")
+    }
+    textField := terminateApplicationGUI.Add("Text", "r3 w260 x20 y40", "The application will be`n terminated in " . i .
         " seconds.")
     textField.SetFont("s12")
     textField.SetFont("bold")
-    progressBar := terminateScriptGUI.Add("Progress", "w280 h20 x10 y100 cRed backgroundBlack", 0)
-    buttonOkay := terminateScriptGUI.Add("Button", "Default w80 x60 y170", "Okay")
-    buttonCancel := terminateScriptGUI.Add("Button", "w80 x160 y170", "Cancel")
-    terminateScriptGUI.Show("w300 h200")
+    progressBar := terminateApplicationGUI.Add("Progress", "w280 h20 x10 y100 cRed backgroundBlack", 0)
+    buttonOkay := terminateApplicationGUI.Add("Button", "Default w80 x60 y170", "Okay")
+    buttonCancel := terminateApplicationGUI.Add("Button", "w80 x160 y170", "Cancel")
+    terminateApplicationGUI.Show("w300 h200")
 
     buttonOkay.OnEvent("Click", (*) => ExitApp())
-    buttonCancel.OnEvent("Click", (*) => terminateScriptGUI.Destroy())
+    buttonCancel.OnEvent("Click", (*) => terminateApplicationGUI.Destroy())
 
     /*
     The try statement is needed to protect the code from crashing because
@@ -1024,14 +1089,14 @@ terminateScriptPrompt() {
             }
 
             if (i = 1) {
-                textField.Text := "The script will be`n terminated in " . i . " second."
+                textField.Text := "The application will be`n terminated in " . i . " second."
             }
             else {
-                textField.Text := "The script will be`n terminated in " . i . " seconds."
+                textField.Text := "The application will be`n terminated in " . i . " seconds."
             }
             i--
         }
-        textField.Text := "The script has been terminated."
+        textField.Text := "The application has been terminated."
         Sleep(100)
         ExitApp()
         ExitApp()
