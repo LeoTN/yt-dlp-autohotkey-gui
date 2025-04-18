@@ -14,7 +14,7 @@ Add videos to the list, select your download preferences and start downloading. 
 
 <div>
   <div style="display: inline-block; text-align: center; margin-right: 10px;">
-    <img src="library/assets/video_list_gui_readme.png" alt="Main GUI" style="width: 80%;">
+    <img src="library/assets/video_list_gui_readme.png" alt="Main GUI" style="width: 100%;">
     <br>
     This is the main window <i>aka</i> the Video List
   </div>
