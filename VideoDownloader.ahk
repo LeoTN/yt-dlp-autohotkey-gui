@@ -36,7 +36,7 @@ onInit() {
 
     global iconDirectory := assetDirectory . "\icons"
     global iconFileLocation := iconDirectory . "\video_downloader_icons.dll"
-    global GUIBackgroundImageLocation := iconDirectory . "\main_gui_background.png"
+    global GUIBackgroundImageLocation := iconDirectory . "\video_list_gui_background.png"
 
     global psScriptDirectory := assetDirectory . "\scripts"
     global psUpdateScriptLocation := psScriptDirectory . "\checkForAvailableUpdates.ps1"

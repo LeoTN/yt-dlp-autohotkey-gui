@@ -8,7 +8,7 @@
     <ROW Property="AI_BITMAP_DISPLAY_MODE" Value="0"/>
     <ROW Property="AI_RUN_AS_ADMIN" Value="0"/>
     <ROW Property="ALLUSERS" Value="1" MultiBuildValue="DefaultBuild:"/>
-    <ROW Property="ARPCOMMENTS" Value="This installer will install [|ProductName] on your system." ValueLocId="*"/>
+    <ROW Property="ARPCOMMENTS" Value="This installer will install [|ProductName] version [|ProductVersion] on your system." ValueLocId="*"/>
     <ROW Property="ARPPRODUCTICON" Value="_.exe" Type="8"/>
     <ROW Property="ARPURLUPDATEINFO" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui"/>
     <ROW Property="AiLicenseAgreementLink" Value="https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENSE" Type="4"/>
@@ -62,8 +62,8 @@
     <ROW Component="browserType" ComponentId="{5130466E-5E48-48F1-BACD-A06161D2E77B}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="downloadProgressVisualizer.ps1" ComponentId="{B60DE057-8B94-4393-92DE-D1B13B0EB2ED}" Directory_="scripts_Dir" Attributes="0" KeyPath="downloadProgressVisualizer.ps1" Type="0"/>
     <ROW Component="ffmpeg" ComponentId="{520DBD59-C364-4AD5-BB5B-30338B320750}" Directory_="ffmpeg_Dir" Attributes="0"/>
-    <ROW Component="main_gui_background.png" ComponentId="{0DC0AD9A-8953-480B-A716-88F693B97E30}" Directory_="icons_Dir" Attributes="0" KeyPath="main_gui_background.png" Type="0"/>
     <ROW Component="video_downloader_icons.dll" ComponentId="{95E8681A-191E-4FFC-8418-4E581FF12479}" Directory_="icons_Dir" Attributes="0" KeyPath="video_downloader_icons.dll"/>
+    <ROW Component="video_list_gui_background.png" ComponentId="{03FFED2C-0401-4A38-A89E-27440D458E42}" Directory_="icons_Dir" Attributes="0" KeyPath="video_list_gui_background.png" Type="0"/>
     <ROW Component="ytdlp" ComponentId="{5551D314-C384-4E64-BACB-4FAA9B6B3F77}" Directory_="ytdlp_Dir" Attributes="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
@@ -71,12 +71,12 @@
     <ATTRIBUTE name="CurrentFeature" value="MainFeature"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
-    <ROW File="main_gui_background.png" Component_="main_gui_background.png" FileName="MAIN_G~1.PNG|main_gui_background.png" Attributes="0" SourcePath="..\library\assets\main_gui_background.png" SelfReg="false"/>
     <ROW File="downloadProgressVisualizer.ps1" Component_="downloadProgressVisualizer.ps1" FileName="DOWNLO~1.PS1|downloadProgressVisualizer.ps1" Attributes="0" SourcePath="..\library\build\downloadProgressVisualizer.ps1" SelfReg="false"/>
     <ROW File="VideoDownloader.exe" Component_="VideoDownloader.exe" FileName="VIDEOD~1.EXE|VideoDownloader.exe" Attributes="0" SourcePath="..\VideoDownloader.exe" SelfReg="false" DigSign="true"/>
     <ROW File="checkForAvailableUpdates.ps1" Component_="downloadProgressVisualizer.ps1" FileName="CHECKF~1.PS1|checkForAvailableUpdates.ps1" Attributes="0" SourcePath="..\library\build\checkForAvailableUpdates.ps1" SelfReg="false"/>
     <ROW File="runYTDLPExecutableWithRedirectedStdout.ps1" Component_="downloadProgressVisualizer.ps1" FileName="RUNYTD~1.PS1|runYTDLPExecutableWithRedirectedStdout.ps1" Attributes="0" SourcePath="..\library\build\runYTDLPExecutableWithRedirectedStdout.ps1" SelfReg="false"/>
     <ROW File="video_downloader_icons.dll" Component_="video_downloader_icons.dll" FileName="VIDEO_~1.DLL|video_downloader_icons.dll" Attributes="0" SourcePath="..\library\assets\icons\video_downloader_icons.dll" SelfReg="false"/>
+    <ROW File="video_list_gui_background.png" Component_="video_list_gui_background.png" FileName="VIDEO_~1.PNG|video_list_gui_background.png" Attributes="0" SourcePath="..\library\assets\video_list_gui_background.png" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BootstrOptComponent">
     <ROW BootstrOptKey="GlobalOptions" DownloadFolder="[AppDataFolder][|Manufacturer]\[|ProductName]\prerequisites" Options="2"/>
@@ -196,13 +196,13 @@
     <ROW Feature_="MainFeature" Component_="booleanFirstTimeLaunch"/>
     <ROW Feature_="MainFeature" Component_="ffmpeg"/>
     <ROW Feature_="MainFeature" Component_="ytdlp"/>
-    <ROW Feature_="MainFeature" Component_="main_gui_background.png"/>
     <ROW Feature_="MainFeature" Component_="downloadProgressVisualizer.ps1"/>
     <ROW Feature_="MainFeature" Component_="VideoDownloader.exe"/>
     <ROW Feature_="MainFeature" Component_="SHORTCUTDIR"/>
     <ROW Feature_="MainFeature" Component_="CURRENT_VERSION_LAST_UPDATED"/>
     <ROW Feature_="MainFeature" Component_="AVAILABLE_UPDATE"/>
     <ROW Feature_="MainFeature" Component_="video_downloader_icons.dll"/>
+    <ROW Feature_="MainFeature" Component_="video_list_gui_background.png"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="_.exe" SourcePath="..\library\assets\icons\1.ico" Index="0"/>
