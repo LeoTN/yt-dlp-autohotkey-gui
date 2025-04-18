@@ -9,6 +9,7 @@ tutorials_onInit() {
     tutorial_gettingStarted()
 }
 
+; This tutorial aims to show the user how they can find the help section.
 tutorial_howToFindHelpGUI() {
     global howToUseHelpGUITutorial := InteractiveTutorial("How to use the help database")
     currentlyHighlightedControlObject := ""
@@ -59,6 +60,7 @@ tutorial_howToFindHelpGUI() {
     }
 }
 
+; This tutorial wants to show a few basics to get the user up and running.
 tutorial_gettingStarted() {
     global gettingStartedTutorial := InteractiveTutorial("Getting started")
     currentlyHighlightedControlObject := ""
@@ -101,7 +103,7 @@ applicationTutorial() {
         result_2 := MsgBox("Press [Yes] to disable the tutorialfor the next time you run this application.",
             "VideoDownloader - Disable Tutorial for Next Time", "YN Iconi 262144")
         if (result_2 == "Yes") {
-            editConfigFile("ASK_FOR_TUTORIAL", false)
+            editConfigFile(false, "ASK_FOR_TUTORIAL")
         }
     }
     if (result_1 == "Yes") {
@@ -117,17 +119,18 @@ applicationTutorial() {
 
 minimizeAllGUIs() {
     ; Minimizes all application windows to reduce diversion.
-    if (WinExist("ahk_id " . videoListGUI.Hwnd)) {
-        WinMinimize()
-    }
-    if (WinExist("ahk_id " . helpGUI.Hwnd)) {
-        WinMinimize()
+    hwndArray := [videoListGUI.Hwnd, settingsGUI.Hwnd, helpGUI.Hwnd]
+    for (hwnd in hwndArray) {
+        if (WinExist("ahk_id " . hwnd)) {
+            WinMinimize()
+        }
     }
 }
 
 /*
 Calculates the position for the interactive tutorial window to appear.
 The position will be selected relatively to the right of a given window.
+@param pWindowHWND [int] The hwnd of the window to show the other GUI relatively to.
 @var coordinateX [int] The x coordinate for the window.
 @var coordinateY [int] The y coordinate for the window.
 */

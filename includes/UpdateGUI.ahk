@@ -23,6 +23,10 @@ Creates the user inface which asks the user to confirm the update.
 @param pUpdateVersion [String] The version of the update or rather the complete tag name.
 */
 createUpdateGUI(pUpdateVersion) {
+    ; Only creates the update GUI once.
+    if (IsSet(updateGUI)) {
+        updateGUI.Destroy()
+    }
     ; Required information for the update GUI.
     updatePatchNotesURL := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/tag/" . pUpdateVersion
     msiDownloadURL := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/download/"

@@ -18,13 +18,13 @@ createHelpGUI() {
     */
     helpGUISearchBarText := helpGUI.Add("Text", , "Search the Help List")
     helpGUISearchBarEdit := helpGUI.Add("Edit", "w150 -WantReturn")
-    helpGUISearchBarEdit.OnEvent("Change", (*) => updateListViewAccordinglyToSearch(helpGUISearchBarEdit.Text))
+    helpGUISearchBarEdit.OnEvent("Change", (*) => updateHelpListViewAccordinglyToSearch(helpGUISearchBarEdit.Text))
     ; This selects the text inside the edit once the user clicks on it again after loosing focus.
     helpGUISearchBarEdit.OnEvent("Focus", (*) => ControlSend("^A", helpGUISearchBarEdit))
 
     helpGUIListViewArray := Array("Topic", "Type", "Title")
     helpGUIListView := helpGUI.Add("ListView", "yp+40 w400 R10 -Multi", helpGUIListViewArray)
-    helpGUIListView.OnEvent("DoubleClick", (*) => processDoubleClickedListViewItem())
+    helpGUIListView.OnEvent("DoubleClick", (*) => processDoubleClickedHelpListViewItem())
 
     helpGUIInfoGroupBox := helpGUI.Add("GroupBox", "xp+170 yp-65 w230 R2", "Application Info")
 
@@ -50,32 +50,36 @@ createHelpGUI() {
 
     helpGUIListViewContentArray := createListViewContentCollectionArray()
     for (contentEntry in helpGUIListViewContentArray) {
-        addLineToListView(contentEntry)
+        addLineToHelpListView(contentEntry)
     }
     ; Sorts the data according to the title column.
     helpGUIListView.ModifyCol(3, "SortHdr")
 }
 
-updateListViewAccordinglyToSearch(pSearchString) {
+/*
+Updates the help GUI list view element's content according to the search string.
+@param pSearchString [String] The search string from the search bar.
+*/
+updateHelpListViewAccordinglyToSearch(pSearchString) {
     global helpGUIListViewContentArray
 
     helpGUIListView.Delete()
     ; Shows all data when the search bar is empty.
     if (pSearchString == "") {
         for (contentEntry in helpGUIListViewContentArray) {
-            addLineToListView(contentEntry)
+            addLineToHelpListView(contentEntry)
         }
         return
     }
     ; Calls the search function to search in all entries.
-    resultArray := searchInListView(pSearchString)
+    resultArray := searchInHelpListView(pSearchString)
     for (resultEntry in resultArray) {
-        addLineToListView(resultEntry)
+        addLineToHelpListView(resultEntry)
     }
     else {
         tmpListViewEntry := ListViewEntry("*****", "No results found.", "*****", (*) =>
             0)
-        addLineToListView(tmpListViewEntry)
+        addLineToHelpListView(tmpListViewEntry)
     }
 }
 
@@ -84,7 +88,7 @@ Allows to search for elements in the list view element.
 @param pSearchString [String] A string to search for.
 @returns [Array] This array contains all ListView objects matching the search string.
 */
-searchInListView(pSearchString) {
+searchInHelpListView(pSearchString) {
     global helpGUIListViewContentArray
 
     resultArrayCollection := Array()
@@ -108,7 +112,7 @@ Adds the content of a list view entry object into the list view element.
 @param pListViewObject [ListViewEntry] An object containing relevant information to create an item in the list view.
 @param pBooleanAutoAdjust [boolean] If set to true, the column width will be adjusted accordingly to the content.
 */
-addLineToListView(pListViewObject, pBooleanAutoAdjust := true) {
+addLineToHelpListView(pListViewObject, pBooleanAutoAdjust := true) {
     global helpGUIListViewArray
 
     helpGUIListView.Add(, pListViewObject.topic, pListViewObject.type, pListViewObject.title)
@@ -121,7 +125,7 @@ addLineToListView(pListViewObject, pBooleanAutoAdjust := true) {
 }
 
 ; Runs the bound action of the currently selected list view element.
-processDoubleClickedListViewItem() {
+processDoubleClickedHelpListViewItem() {
     global helpGUIListViewContentArray
     ; This map stores all visible list view entries together with their identifyer string.
     identifyerMap := Map()
