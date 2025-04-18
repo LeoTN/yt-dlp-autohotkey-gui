@@ -9,6 +9,12 @@ createSettingsGUI() {
     ; The space is intentional as it increases the tab size.
     local tabNames := ["   General   ", "   Video List   ", "   Hotkeys   "]
     settingsGUITabs := settingsGUI.Add("Tab3", , tabNames)
+
+    /*
+    ********************************************************************************************************************
+    This section creates all the GUI control elements and event handlers.
+    ********************************************************************************************************************
+    */
     /*
     GENERAL SETTINGS TAB
     -------------------------------------------------
@@ -84,7 +90,7 @@ createSettingsGUI() {
     settingsGUIDownloadRemoveVideosAfterDownloadCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
         "Automatically remove downloaded videos")
     settingsGUIDownloadTerminateAfterDownloadCheckbox := settingsGUI.Add("Checkbox", "yp+20",
-        "Terminate application after download")
+        "Terminate after download")
 
     /*
     HOTKEY SETTINGS TAB
@@ -109,7 +115,7 @@ createSettingsGUI() {
     settingsGUIHotkeyDiscardChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Discard Changes")
     settingsGUIHotkeyResetChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Reset to Default")
     ; Status bar.
-    settingsGUIStatusBar := settingsGUI.Add("StatusBar", , "Some settings might require a restart of the application.")
+    settingsGUIStatusBar := settingsGUI.Add("StatusBar", , "Some settings might require a restart of VideoDownloader")
     settingsGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
 
     ; Adds the event handlers for the settings GUI.
@@ -171,6 +177,91 @@ createSettingsGUI() {
     settingsGUIHotkeyResetChangesButton.OnEvent("Click", handleSettingsGUI_settingsGUIHotkeyResetChangesButton_onClick)
     ; Checks for any unsaved changes when closing the settings window.
     settingsGUI.OnEvent("Close", handleSettingsGUI_settingsGUI_onClose)
+
+    /*
+    ********************************************************************************************************************
+    This section creates all GUI element tooltips.
+    ********************************************************************************************************************
+    */
+    /*
+    GENERAL SETTINGS TAB
+    -------------------------------------------------
+    */
+    ; Startup settings.
+    settingsGUIShowVideoListGUIAtLaunchCheckbox.ToolTip := ""
+    settingsGUICheckForUpdatesAtLaunchCheckbox.ToolTip :=
+        "Starts a PowerShell script to check for a later version when starting VideoDownloader."
+    settingsGUIUpdateToBetaVersionsCheckbox.ToolTip :=
+        "Newer beta versions will be considered as available updates."
+    settingsGUIUpdateCheckForUpdatesButton.ToolTip := ""
+    ; Notification settings.
+    settingsGUIDisplayStartupNotificationCheckbox.ToolTip :=
+        "Shows a toast notification when starting VideoDownloader."
+    settingsGUIDisplayExitNotificationCheckbox.ToolTip :=
+        "Shows a toast notification when VideoDownloader exits."
+    settingsGUIDisplayFinishedDownloadNotificationCheckbox.ToolTip :=
+        "Shows a toast notification when finishing a download process."
+    ; Directory settings.
+    settingsGUIDirectoryDDL.ToolTip := "You can change the path of each directory here."
+    settingsGUIDirectoryDescriptionEdit.ToolTip := ""
+    settingsGUIDirectoryInputEdit.ToolTip := ""
+    settingsGUISelectDirectoryButton.ToolTip := ""
+    settingsGUIDirectorySaveChangesButton.ToolTip := ""
+    settingsGUIDirectoryDiscardChangesButton.ToolTip := ""
+    settingsGUIDirectoryResetChangesButton.ToolTip := ""
+
+    /*
+    VIDEO LIST SETTINGS TAB
+    -------------------------------------------------
+    */
+    ; Default video settings.
+    settingsGUIVideoDesiredFormatDDL.ToolTip :=
+        "Select a preferred download format. If available, the selected format will be downloaded directly."
+    settingsGUIVideoDesiredFormatDDL.ToolTip .=
+        "`nOtherwise a conversion with FFmpeg might be required which can take some time."
+    settingsGUIVideoDesiredSubtitleDDL.ToolTip :=
+        "More available subtitle options might be added in the future."
+    ; Default manage video list settings.
+    settingsGUIAddVideoURLIsAPlaylistCheckbox.ToolTip :=
+        "If a URL contains a reference or is itself a link to a playlist,"
+    settingsGUIAddVideoURLIsAPlaylistCheckbox.ToolTip .=
+        "`nonly the video specified in the URL or the very first video of the playlist will be added to the list."
+    settingsGUIAddVideoURLIsAPlaylistCheckbox.ToolTip .=
+        "`nEnable this option to instead download the complete playlist by default."
+    settingsGUIAddVideoURLUsePlaylistRangeCheckbox.ToolTip :=
+        "Allows for a fine grained selection of videos from the playlist. See the help section for more information."
+    settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.ToolTip :=
+        "Enter the index range to select the videos from the playlist.`nMore information can be found in the help section."
+    ; Remove video elements.
+    settingsGUIRemoveVideoConfirmDeletionCheckbox.ToolTip :=
+        "Shows a prompt to confirm the removal of one or more videos from the list."
+    settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox.ToolTip :=
+        "If enabled, will only prompt to confirm the removal of multiple videos at once."
+    ; Import and export elements.
+    settingsGUIExportOnlyValidURLsCheckbox.ToolTip :=
+        "Only video URLs that have been successfully extracted will be exported."
+    settingsGUIAutoExportVideoListCheckbox.ToolTip :=
+        "Automatically exports the downloaded video URLs into a file."
+    ; Default download settings.
+    settingsGUIDownloadRemoveVideosAfterDownloadCheckbox.ToolTip :=
+        "Removes the video from the list after downloading and processing it."
+    settingsGUIDownloadTerminateAfterDownloadCheckbox.ToolTip :=
+        "Closes VideoDownloader after downloading and processing all (selected) videos."
+
+    /*
+    HOTKEY SETTINGS TAB
+    -------------------------------------------------
+    */
+    settingsGUIHotkeyDDL.ToolTip := "You can change each hotkey here."
+    settingsGUIHotkeyHotkeyInputField.ToolTip := "Focus this input field an press a key combination."
+    settingsGUIHotkeyDescriptionEdit.ToolTip := ""
+    settingsGUIHotkeyEnabledRadio.ToolTip := "Enable the selected hotkey."
+    settingsGUIHotkeyDisabledRadio.ToolTip := "Disable the selected hotkey."
+    settingsGUIHotkeyEnableAllButton.ToolTip := ""
+    settingsGUIHotkeyDisableAllButton.ToolTip := ""
+    settingsGUIHotkeySaveChangesButton.ToolTip := ""
+    settingsGUIHotkeyDiscardChangesButton.ToolTip := ""
+    settingsGUIHotkeyResetChangesButton.ToolTip := ""
 }
 
 settingsGUI_onInit() {
@@ -731,7 +822,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; Hotkey to terminate the program.
     entryName := "Terminate Program Hotkey"
-    entryDescription := "This hotkey will terminate the application."
+    entryDescription := "This hotkey will terminate VideoDownloader."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("TERMINATE_PROGRAM_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("TERMINATE_PROGRAM_HK_ENABLEDHotkeySettings")
     hotkeyFunction := (*) => hotkey_terminateProgram()
@@ -741,7 +832,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; Hotkey to reload the program.
     entryName := "Reload Program Hotkey"
-    entryDescription := "This hotkey will reload the application."
+    entryDescription := "This hotkey will reload VideoDownloader."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("RELOAD_PROGRAM_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("RELOAD_PROGRAM_HK_ENABLEDHotkeySettings")
     hotkeyFunction := (*) => hotkey_reloadProgram()

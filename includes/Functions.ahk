@@ -5,13 +5,48 @@ SendMode "Input"
 CoordMode "Mouse", "Client"
 
 functions_onInit() {
-
+    /*
+    This causes the script to react upon the user moving his mouse and show
+    a tooltip if possible for the GUI element under the cursor.
+    */
+    OnMessage(0x0200, handleAllGUI_toolTips)
 }
 
 /*
 FUNCTION SECTION
 -------------------------------------------------
 */
+
+; This function determines the current control under the mouse cursor and if it has a tooltip, displays it.
+handleAllGUI_toolTips(not_used_1, not_used_2, not_used_3, pWindowHWND) {
+    static oldHWND := 0
+    if (pWindowHWND != oldHWND) {
+        ; Closes all existing tooltips.
+        toolTipText := ""
+        ToolTip()
+        currentControlElement := GuiCtrlFromHwnd(pWindowHWND)
+        if (currentControlElement) {
+            if (!currentControlElement.HasProp("ToolTip")) {
+                ; There is no tooltip for this control element.
+                return
+            }
+            toolTipText := currentControlElement.ToolTip
+            ; Displays the tooltip after the user hovers for 1.5 seconds over a control element.
+            SetTimer () => displayToolTip(toolTipText, currentControlElement.Hwnd), -1500
+        }
+        oldHWND := pWindowHWND
+    }
+    /*
+    This function makes sure that the tooltip is only displayed when the user hovers over the same control element for
+    more than 1.5 seconds. If the control element under the cursor changes by any means, the tooltip won't be displayed.
+    */
+    displayToolTip(pToolTipText, pCurrentControlElementHWND) {
+        MouseGetPos(, , , &currentControlElementUnderCursorHWND, 2)
+        if (pCurrentControlElementHWND == currentControlElementUnderCursorHWND) {
+            ToolTip(pToolTipText)
+        }
+    }
+}
 
 /*
 Executes a given command with the yt-dlp executable.
@@ -370,7 +405,7 @@ findAlreadyRunningVDInstance(pWildcard) {
                 }
                 Default:
                 {
-                    MsgBox("Application terminated.", "VD - Application Status", "O Iconi T1.5")
+                    MsgBox("VideoDownloader terminated.", "VD - Status", "O Iconi T1.5")
                     exitApplicationWithNotification(true)
                 }
                     ; Stops after the first match.
@@ -1006,12 +1041,12 @@ reloadApplicationPrompt() {
 
     ; Makes the video list GUI the owner of the window.
     if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
-        reloadApplicationGUI := Gui("Owner" . videoListGUI.Hwnd, "VD - Reloading Application")
+        reloadApplicationGUI := Gui("Owner" . videoListGUI.Hwnd, "VD - Reloading VideoDownloader")
     }
     else {
-        reloadApplicationGUI := Gui(, "VD - Reloading Application")
+        reloadApplicationGUI := Gui(, "VD - Reloading VideoDownloader")
     }
-    textField := reloadApplicationGUI.Add("Text", "r3 w260 x20 y40", "The application will be`n reloaded in " . i .
+    textField := reloadApplicationGUI.Add("Text", "r3 w260 x20 y40", "VideoDownloader will be`n reloaded in " . i .
         " seconds.")
     textField.SetFont("s12")
     textField.SetFont("bold")
@@ -1022,6 +1057,7 @@ reloadApplicationPrompt() {
 
     buttonOkay.OnEvent("Click", (*) => Reload())
     buttonCancel.OnEvent("Click", (*) => reloadApplicationGUI.Destroy())
+    reloadApplicationGUI.OnEvent("Escape", (*) => reloadApplicationGUI.Destroy())
 
     /*
     The try statement is needed to protect the code from crashing because
@@ -1037,14 +1073,14 @@ reloadApplicationPrompt() {
             }
 
             if (i = 1) {
-                textField.Text := "The application will be`n reloaded in " . i . " second."
+                textField.Text := "VideoDownloader will be`n reloaded in " . i . " second."
             }
             else {
-                textField.Text := "The application will be`n reloaded in " . i . " seconds."
+                textField.Text := "VideoDownloader will be`n reloaded in " . i . " seconds."
             }
             i--
         }
-        textField.Text := "The application has been reloaded."
+        textField.Text := "VideoDownloader has been reloaded."
         Sleep(100)
         Reload()
         ExitApp()
@@ -1058,12 +1094,12 @@ terminateApplicationPrompt() {
 
     ; Makes the video list GUI the owner of the window.
     if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
-        terminateApplicationGUI := Gui("Owner" . videoListGUI.Hwnd, "VD - Terminating Application")
+        terminateApplicationGUI := Gui("Owner" . videoListGUI.Hwnd, "VD - Terminating VideoDownloader")
     }
     else {
-        terminateApplicationGUI := Gui(, "VD - Terminating Application")
+        terminateApplicationGUI := Gui(, "VD - Terminating VideoDownloader")
     }
-    textField := terminateApplicationGUI.Add("Text", "r3 w260 x20 y40", "The application will be`n terminated in " . i .
+    textField := terminateApplicationGUI.Add("Text", "r3 w260 x20 y40", "VideoDownloader will be`n terminated in " . i .
         " seconds.")
     textField.SetFont("s12")
     textField.SetFont("bold")
@@ -1074,6 +1110,7 @@ terminateApplicationPrompt() {
 
     buttonOkay.OnEvent("Click", (*) => ExitApp())
     buttonCancel.OnEvent("Click", (*) => terminateApplicationGUI.Destroy())
+    terminateApplicationGUI.OnEvent("Escape", (*) => terminateApplicationGUI.Destroy())
 
     /*
     The try statement is needed to protect the code from crashing because
@@ -1089,14 +1126,14 @@ terminateApplicationPrompt() {
             }
 
             if (i = 1) {
-                textField.Text := "The application will be`n terminated in " . i . " second."
+                textField.Text := "VideoDownloader will be`n terminated in " . i . " second."
             }
             else {
-                textField.Text := "The application will be`n terminated in " . i . " seconds."
+                textField.Text := "VideoDownloader will be`n terminated in " . i . " seconds."
             }
             i--
         }
-        textField.Text := "The application has been terminated."
+        textField.Text := "VideoDownloader has been terminated."
         Sleep(100)
         ExitApp()
         ExitApp()

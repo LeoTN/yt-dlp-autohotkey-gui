@@ -35,7 +35,7 @@ Add functions that will be called by hotkeys below.
 
 ; Starts the video download process. Same as pressing the download button in the video list GUI.
 hotkey_startDownload() {
-    handleVideoListGUI_downloadAllVideosButton_onClick("", "")
+    handleVideoListGUI_downloadStartButton_onClick("", "")
 }
 
 ; Extracts the video URL from the browser search bar.
@@ -225,7 +225,7 @@ menu_openConfigFile() {
 ; Reset the current config file to default.
 menu_resetConfigFile() {
     result := MsgBox(
-        "Do you really want to reset the config file?`n`nYou need to restart the application for the changes to take effect."
+        "Do you really want to reset the config file?`n`nYou need to restart VideoDownloader for the changes to take effect."
         "`n`nA backup of the old file will be created.",
         "VD - Reset Config File", "YN Icon! Owner" . videoListGUI.Hwnd)
     if (result == "Yes") {

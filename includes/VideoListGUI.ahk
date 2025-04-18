@@ -30,6 +30,12 @@ Enter:: {
 createVideoListGUI() {
     global
     videoListGUI := Gui("+OwnDialogs", "VD - Video List")
+
+    /*
+    ********************************************************************************************************************
+    This section creates all the GUI control elements and event handlers.
+    ********************************************************************************************************************
+    */
     ; Controlls that display the currently selected video.
     currentlySelectedVideoGroupBox := videoListGUI.Add("GroupBox", "w300 h390", "Currently Selected Video")
     videoTitleText := videoListGUI.Add("Text", "xp+10 yp+20 w280 R1 -Wrap", "Video Title")
@@ -52,14 +58,14 @@ createVideoListGUI() {
     addVideoURLInputEdit := videoListGUI.Add("Edit", "xp+10 yp+20 w555 R1 -WantReturn")
     addVideoURLInputClearButton := videoListGUI.Add("Button", "xp+560 yp+1 w20 h20", "X")
     ; Add URL elements.
-    addVideoToListButton := videoListGUI.Add("Button", "xp-560 yp+29 w200", "Add Video URL To List")
+    addVideoToListButton := videoListGUI.Add("Button", "xp-560 yp+29 w200", "Add Video(s) to List")
     addVideoURLIsAPlaylistCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30", "Add videos from a playlist")
     addVideoURLUsePlaylistRangeCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
         "Only add videos in a specific range")
     addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
     addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w100 +Disabled", "1")
     ; Remove video elements.
-    removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200", "Remove Selected Video(s) From List")
+    removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200", "Remove Video(s) from List")
     removeVideoConfirmDeletionCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30",
         "Confirm deletion of selected videos")
     removeVideoConfirmOnlyWhenMultipleSelectedCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
@@ -71,12 +77,12 @@ createVideoListGUI() {
     autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Controls that are relevant for downloading the videos in the video list.
     downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download")
-    downloadAllVideosButton := videoListGUI.Add("Button", "xp+10 yp+20 w135", "Start Download")
+    downloadStartButton := videoListGUI.Add("Button", "xp+10 yp+20 w135", "Start Download")
     downloadCancelButton := videoListGUI.Add("Button", "xp+145 yp w135", "Cancel Download")
     downloadRemoveVideosAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "xp-135 yp+30 Checked",
         "Automatically remove downloaded videos")
     downloadTerminateAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "yp+20",
-        "Terminate application after download")
+        "Terminate after download")
     downloadSelectDownloadDirectoryText := videoListGUI.Add("Text", "xp-10 yp+20", "Download Directory")
     downloadSelectDownloadDirectoryInputEdit := videoListGUI.Add("Edit", "yp+20 w255 R1 -WantReturn +ReadOnly",
         "default")
@@ -114,15 +120,77 @@ createVideoListGUI() {
     ; Video list controls.
     videoListView.OnEvent("ItemSelect", handleVideoListGUI_videoListView_onItemSelect)
     ; Controls that are relevant for downloading the videos in the video list.
-    downloadAllVideosButton.OnEvent("Click", handleVideoListGUI_downloadAllVideosButton_onClick)
+    downloadStartButton.OnEvent("Click", handleVideoListGUI_downloadStartButton_onClick)
     downloadCancelButton.OnEvent("Click", handleVideoListGUI_downloadCancelButton_onClick)
     downloadSelectDownloadDirectoryButton.OnEvent("Click",
         handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick)
     ; Enables the help button in the MsgBox which informs the user once they entered an incorrect playlist range index.
     OnMessage(0x0053, handleVideoListGUI_invalidPlaylistRangeIndexMsgBoxHelpButton)
+
     /*
     ********************************************************************************************************************
-    This section creates all the menus.
+    This section creates all GUI element tooltips.
+    ********************************************************************************************************************
+    */
+    ; Controls that change the download settings for the video.
+    videoDesiredFormatDDL.ToolTip :=
+        "Select a preferred download format. If available, the selected format will be downloaded directly."
+    videoDesiredFormatDDL.ToolTip .=
+        "`nOtherwise a conversion with FFmpeg might be required which can take some time."
+    videoDesiredSubtitleDDL.ToolTip :=
+        "More available subtitle options might be added in the future."
+    videoAdvancedDownloadSettingsButton.ToolTip := ""
+    ; Video list controls.
+    videoListSearchBarInputEdit.ToolTip :=
+        "You can also search a video with it's URL."
+    videoListSearchBarInputClearButton.ToolTip := ""
+    ; Controls that belong to the video list.
+    addVideoURLInputEdit.ToolTip := ""
+    addVideoURLInputClearButton.ToolTip := ""
+    ; Add URL elements.
+    addVideoToListButton.ToolTip := ""
+    addVideoURLIsAPlaylistCheckbox.ToolTip :=
+        "If a URL contains a reference or is itself a link to a playlist,"
+    addVideoURLIsAPlaylistCheckbox.ToolTip .=
+        "`nonly the video specified in the URL or the very first video of the playlist will be added to the list."
+    addVideoURLIsAPlaylistCheckbox.ToolTip .=
+        "`nEnable this option to instead download the complete playlist by default."
+    addVideoURLUsePlaylistRangeCheckbox.ToolTip :=
+        "Allows for a fine grained selection of videos from the playlist. See the help section for more information."
+    addVideoSpecifyPlaylistRangeInputEdit.ToolTip :=
+        "Enter the index range to select the videos from the playlist.`nMore information can be found in the help section."
+    ; Remove video elements.
+    removeVideoFromListButton.ToolTip := ""
+    removeVideoConfirmDeletionCheckbox.ToolTip :=
+        "Shows a prompt to confirm the removal of one or more videos from the list."
+    removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.ToolTip :=
+        "If enabled, will only prompt to confirm the removal of multiple videos at once."
+    ; Import and export elements.
+    importVideoListButton.ToolTip :=
+        "Import a text file with video URLs. Each line must only contain one URL."
+    exportVideoListButton.ToolTip :=
+        "Export the URLs of all (selected) videos into a file."
+    exportOnlyValidURLsCheckbox.ToolTip :=
+        "Only video URLs that have been successfully extracted will be exported."
+    autoExportVideoListCheckbox.ToolTip :=
+        "Automatically exports the downloaded video URLs into a file."
+    ; Controls that are relevant for downloading the videos in the video list.
+    downloadStartButton.ToolTip :=
+        "Start the download of all (selected) videos in the list."
+    downloadCancelButton.ToolTip := ""
+    downloadRemoveVideosAfterDownloadCheckbox.ToolTip :=
+        "Removes the video from the list after downloading and processing it."
+    downloadTerminateAfterDownloadCheckbox.ToolTip :=
+        "Closes VideoDownloader after downloading and processing all (selected) videos."
+    downloadSelectDownloadDirectoryInputEdit.ToolTip :=
+        "Select a directory for the downloaded files."
+    downloadSelectDownloadDirectoryInputEdit.ToolTip .=
+        "`nOtherwise the default directory specified in the settings is used."
+    downloadSelectDownloadDirectoryButton.ToolTip := ""
+
+    /*
+    ********************************************************************************************************************
+    This section creates all the GUI menus.
     ********************************************************************************************************************
     */
     ; File menu items.
@@ -459,7 +527,7 @@ handleVideoListGUI_videoListView_onItemSelect(pListView, pSelectedElementIndex, 
     updateCurrentlySelectedVideo(currentlySelectedVideoListViewEntry)
 }
 
-handleVideoListGUI_downloadAllVideosButton_onClick(pButton, pInfo) {
+handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     global videoListViewContentMap
     global videoListViewContentMap
     global currentYTDLPActionObject

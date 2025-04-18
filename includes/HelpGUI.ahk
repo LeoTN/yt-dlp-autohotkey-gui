@@ -10,7 +10,13 @@ helpGUI_onInit() {
 createHelpGUI() {
     global
     helpGUI := Gui(, "VideoDownloader - Info & Help")
-    helpGUISearchBarText := helpGUI.Add("Text", , "Search Bar")
+
+    /*
+    ********************************************************************************************************************
+    This section creates all the GUI control elements and event handlers.
+    ********************************************************************************************************************
+    */
+    helpGUISearchBarText := helpGUI.Add("Text", , "Search the Help List")
     helpGUISearchBarEdit := helpGUI.Add("Edit", "w150 -WantReturn")
     helpGUISearchBarEdit.OnEvent("Change", (*) => updateListViewAccordinglyToSearch(helpGUISearchBarEdit.Text))
     ; This selects the text inside the edit once the user clicks on it again after loosing focus.
@@ -25,6 +31,8 @@ createHelpGUI() {
     local currentVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/" . versionFullName
     local currentVersionString := 'Version: <a href="' . currentVersionLink . '">' . versionFullName . '</a>'
     helpGUIApplicationtVersionLink := helpGUI.Add("Link", "xp+10 yp+18", currentVersionString)
+    helpGUIApplicationtVersionLink.ToolTip :=
+        "Made by LeoTN (https://github.com/LeoTN). © 2025. Licensed under the MIT License."
 
     ; These links need to be changed when renaming the .YAML files for the GitHub issues section.
     local featureRequestLink :=
