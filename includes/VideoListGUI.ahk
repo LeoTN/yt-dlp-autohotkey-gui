@@ -1168,21 +1168,6 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
 }
 
 /*
-Checks if a given string is in a given array.
-@param pString [String] The string to check.
-@param pArray [Array] The array to check.
-@returns [boolean] True if the string is in the array, false otherwise.
-*/
-checkIfStringIsInArray(pString, pArray) {
-    for (index, value in pArray) {
-        if (pString == value) {
-            return true
-        }
-    }
-    return false
-}
-
-/*
 Extracts the metadata of a video from a given URL using yt-dlp.
 This object is used as a data container for the video list view element.
 @param pVideoURL [String] The URL of the video OR a [videoMetaDataObject]. See extractVideoMetaData() for more information.

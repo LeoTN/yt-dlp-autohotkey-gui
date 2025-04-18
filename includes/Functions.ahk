@@ -91,30 +91,6 @@ executeYTDLPCommand(pYTDLPCommandString, pLogFileLocation := A_Temp . "\yt-dlp.l
 }
 
 /*
-This function will try to extract the video meta data from any given URL and add the video to the video list.
-@param pVideoURL [String] Should be a valid URL from a video.
-@returns [Array] A status code which is the first element in the array.
-The array might have different values at other indexes depending on the status code at the first index
-*/
-createVideoListViewEntry(pVideoURL) {
-    global videoListViewContentMap
-    ; This object will store the information about the given video URL.
-    extractedVideoMetaDataObject := extractVideoMetaData(pVideoURL)
-    extractedVideoIdentifierString := extractedVideoMetaDataObject.VIDEO_TITLE . extractedVideoMetaDataObject.VIDEO_UPLOADER .
-        extractedVideoMetaDataObject.VIDEO_DURATION_STRING
-    ; Parses through all entries in the video list.
-    for (identifierString, videoListEntry in videoListViewContentMap) {
-        if (identifierString == extractedVideoIdentifierString) {
-            returnArray := ["_result_video_already_in_list", extractedVideoMetaDataObject.VIDEO_TITLE]
-            return returnArray
-        }
-    }
-    ; Adds the video to the list.
-    VideoListViewEntry(extractedVideoMetaDataObject)
-    return ["_result_video_added_to_list"]
-}
-
-/*
 Reads the download log file during the download process. The progress will be displayed in the video list GUI.
 @param pYTDLPProcessPID [int] The PID of the yt-dlp process downloading the video.
 @param pYTDLPLogFileLocation [int] The location of the log file that the yt-dlp process writes to.
@@ -347,6 +323,268 @@ monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCurrently
         totalDownloadProgressBarValue += 0.1 * audioDownloadProgress
         return Round(totalDownloadProgressBarValue, 2)
     }
+}
+
+/*
+This function will try to extract the video meta data from any given URL and add the video to the video list.
+@param pVideoURL [String] Should be a valid URL from a video.
+@returns [Array] A status code which is the first element in the array.
+The array might have different values at other indexes depending on the status code at the first index
+*/
+createVideoListViewEntry(pVideoURL) {
+    global videoListViewContentMap
+    ; This object will store the information about the given video URL.
+    extractedVideoMetaDataObject := extractVideoMetaData(pVideoURL)
+    extractedVideoIdentifierString := extractedVideoMetaDataObject.VIDEO_TITLE . extractedVideoMetaDataObject.VIDEO_UPLOADER .
+        extractedVideoMetaDataObject.VIDEO_DURATION_STRING
+    ; Parses through all entries in the video list.
+    for (identifierString, videoListEntry in videoListViewContentMap) {
+        if (identifierString == extractedVideoIdentifierString) {
+            returnArray := ["_result_video_already_in_list", extractedVideoMetaDataObject.VIDEO_TITLE]
+            return returnArray
+        }
+    }
+    ; Adds the video to the list.
+    VideoListViewEntry(extractedVideoMetaDataObject)
+    return ["_result_video_added_to_list"]
+}
+
+/*
+Imports URLs from a text file which must contain one URL per line.
+@param pImportFileLocation [String] The location of the URL file.
+@param pBooleanSkipInvalidURLs [boolean] If set to true, all invalid URLs will automatically not be imported.
+*/
+importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := false) {
+    validURLArray := Array()
+    invalidURLArray := Array()
+    loop read (pImportFileLocation) {
+        ; Comments will be skipped.
+        if (InStr(A_LoopReadLine, "#")) {
+            continue
+        }
+        ; Sorts out all invalid URLs and saves them in the array.
+        if (!checkIfStringIsAValidURL(A_LoopReadLine)) {
+            invalidURLArray.Push(A_LoopReadLine)
+            continue
+        }
+        validURLArray.Push(A_LoopReadLine)
+    }
+
+    if (invalidURLArray.Length > 0 && !pBooleanSkipInvalidURLs) {
+        ; Asks the user if they would like to import the invalid URLs (if there are any).
+        if (invalidURLArray.Length == 1) {
+            msgText := "There is [1] invalid URL in the list."
+            msgText .= "`n`nWould you like to import it anyway?"
+            msgTitle := "VD - Invalid URL Found"
+            msgHeadLine := "Import Invalid URL?"
+            msgButton1 := "Import Invalid URL"
+            msgButton2 := ""
+            msgButton3 := "Exclude Invalid URL"
+        }
+        else {
+            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the list."
+            msgText .= "`n`nWould you like to import them anyway?"
+            msgTitle := "VD - Invalid URLs Found"
+            msgHeadLine := "Import Invalid URLs?"
+            msgButton1 := "Import Invalid URLs"
+            msgButton2 := ""
+            msgButton3 := "Exclude Invalid URLs"
+        }
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
+            videoListGUI.Hwnd)
+        ; If the users wishes, the invalid URLs will be imported as well.
+        if (result == msgButton1) {
+            for (invalidURL in invalidURLArray) {
+                validURLArray.Push(invalidURL)
+            }
+        }
+    }
+
+    ; Creates new video list view entry objects with the given URLs.
+    for (validURL in validURLArray) {
+        url := validURL
+        ; Removes the "invalid" marker. This gives the URL behind the marker a new "chance" to be found.
+        url := StrReplace(url, "video_not_found: ")
+        url := StrReplace(url, "playlist_not_found: ")
+        VideoListViewEntry(url)
+        ; Prevents the status bar animation from glitching out.
+        Sleep(100)
+    }
+    statusBarText := "Finished importing " . validURLArray.Length . " URLs"
+    videoListGUIStatusBar.SetText(statusBarText)
+}
+
+/*
+Exports all video list view elements in the given map to a text file.
+@param pVideoListViewElementMap [Map] A map filled with video list view elements to export.
+@param pExportFileLocation [String] An optional file path to save the exported URLs.
+If not provided, the user will be prompted to select a save location.
+@param pBooleanSkipInvalidURLs [boolean] If set to true, all invalid URLs will automatically not be exported.
+*/
+exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBooleanSkipInvalidURLs := false) {
+    global videoListViewContentMap
+
+    ; It does not make sense to start an with an empty map.
+    if (pVideoListViewElementMap.Count == 0) {
+        return
+    }
+    ; We use the current time stamp to generate a unique name for the exported file.
+    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
+    if (!IsSet(pExportFileLocation)) {
+        exportFileDefaultLocation := A_MyDocuments . "\" . currentTime . "_VD_exported_urls.txt"
+        pExportFileLocation := fileSavePrompt("VD - Please select a save location", exportFileDefaultLocation, "*.txt")
+        ; This usually happens, when the user cancels the selection.
+        if (pExportFileLocation == "_result_no_file_save_location_selected") {
+            return
+        }
+    }
+
+    validURLArray := Array()
+    invalidURLArray := Array()
+    for (key, videoListEntry in pVideoListViewElementMap) {
+        ; Skips all internal video list view entries used to communicate with the user.
+        if (videoListEntry.videoURL == "_internal_entry_no_results_found" || videoListEntry.videoURL ==
+            "_internal_entry_no_videos_added_yet") {
+            continue
+        }
+        ; Sorts out all invalid URLs and saves them in the array.
+        if (!checkIfStringIsAValidURL(videoListEntry.videoURL)) {
+            invalidURLArray.Push(videoListEntry.videoURL)
+            continue
+        }
+        validURLArray.Push(videoListEntry.videoURL)
+    }
+
+    if (invalidURLArray.Length > 0 && !pBooleanSkipInvalidURLs) {
+        ; Asks the user if they would like to include the invalid URLs (if there are any).
+        if (invalidURLArray.Length == 1) {
+            msgText := "There is [1] invalid URL in the list."
+            msgText .= "`n`nWould you like to export it anyway?"
+            msgTitle := "VD - Invalid URL Found"
+            msgHeadLine := "Export Invalid URL?"
+            msgButton1 := "Export Invalid URL"
+            msgButton2 := ""
+            msgButton3 := "Exclude Invalid URL"
+        }
+        else {
+            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the list."
+            msgText .= "`n`nWould you like to export them anyway?"
+            msgTitle := "VD - Invalid URLs Found"
+            msgHeadLine := "Export Invalid URLs?"
+            msgButton1 := "Export Invalid URLs"
+            msgButton2 := ""
+            msgButton3 := "Exclude Invalid URLs"
+        }
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
+            videoListGUI.Hwnd)
+        ; If the users wishes, the invalid URLs will be included in the export.
+        if (result == msgButton1) {
+            ; Adds the separation line into the array.
+            validURLArray.Push("# ********************`n# Invalid URLs below.`n# ********************")
+            for (invalidURL in invalidURLArray) {
+                validURLArray.Push(invalidURL)
+            }
+        }
+    }
+
+    for (validURL in validURLArray) {
+        exportFileContent .= validURL . "`n"
+    }
+    ; Removing the separator line must be done in a separate for loop.
+    for (validURL in validURLArray) {
+        if (validURL == "# ********************`n# Invalid URLs below.`n# ********************") {
+            ; Removes the separation line to correct the amount of exported URLs (which is the length of the array).
+            validURLArray.RemoveAt(A_Index)
+        }
+    }
+    exportFileContent := RTrim(exportFileContent, "`n")
+    exportFileContentFinal := "# ********************"
+    exportFileContentFinal .= "`n# VideoDownloader URL Export - " . currentTime
+    exportFileContentFinal .= "`n# Total URLs - " . validURLArray.Length
+    exportFileContentFinal .= "`n# ********************`n"
+    exportFileContentFinal .= exportFileContent
+
+    ; "Overwrites" the existing file.
+    if (FileExist(pExportFileLocation)) {
+        FileDelete(pExportFileLocation)
+    }
+    try
+    {
+        FileAppend(exportFileContentFinal, pExportFileLocation,)
+    }
+    catch as error {
+        displayErrorMessage(error, "File writing errors are usually rare. Please report this!")
+    }
+    statusBarText := "Finished exporting " . validURLArray.Length . " URLs"
+    videoListGUIStatusBar.SetText(statusBarText)
+}
+
+/*
+Creates a map containing all currently selected video list view elements in the video list.
+@Returns [Map] This map can contain no objects if no videos are currently selected.
+*/
+getSelectedVideoListViewElements() {
+    global videoListViewContentMap
+
+    selectedItemsIdentifierStringArray := Array()
+    selectedVideoListViewElementsMap := Map()
+
+    ; Get all selected list view items or rather their content in the form of a string.
+    listViewContent := ListViewGetContent("Selected", videoListView.Hwnd, "ahk_id " . videoListGUI.Hwnd)
+    ; The content is separated by new lines and tabs so we need two loops to get the identifier strings.
+    loop parse, listViewContent, "`n" {
+        entryIdentifierString := ""
+        loop parse, A_LoopField, A_Tab {
+            entryIdentifierString .= A_LoopField
+        }
+        selectedItemsIdentifierStringArray.Push(entryIdentifierString)
+    }
+    for (identifierString in selectedItemsIdentifierStringArray) {
+        if (!videoListViewContentMap.Has(identifierString)) {
+            continue
+        }
+        ; Retrieves the video list view element from the content map and adds it to the selected entries map.
+        videoListEntry := videoListViewContentMap.Get(identifierString)
+        ; Skips all internal video list view entries used to communicate with the user.
+        if (videoListEntry.videoURL == "_internal_entry_no_results_found" || videoListEntry.videoURL ==
+            "_internal_entry_no_videos_added_yet") {
+            continue
+        }
+        selectedVideoListViewElementsMap.Set(identifierString, videoListEntry)
+    }
+    return selectedVideoListViewElementsMap
+}
+
+/*
+Reads the registry and extracts the current application version.
+If the version in the registry has a build version other than 0, it will append the word "-beta".
+@returns [String] The version from the registry or "v0.0.0.1" in case the registry value is invalid.
+*/
+getCorrectScriptVersionFromRegistry() {
+    global applicationRegistryDirectory
+
+    regValue := RegRead(applicationRegistryDirectory, "CURRENT_VERSION", "v0.0.0.1")
+    ; Finds versions matching this format [v1.2.3.4]
+    if (RegExMatch(regValue, "^v\d+\.\d+\.\d+\.(\d+)$", &match)) {
+        buildVersionNumber := match[1]
+        ; A version number with a build version is only used for beta versions.
+        if (buildVersionNumber != 0) {
+            regValue := regValue . "-beta"
+            ; Corrects the version number in the registry.
+            RegWrite(regValue, "REG_SZ", applicationRegistryDirectory, "CURRENT_VERSION")
+            return getCorrectScriptVersionFromRegistry()
+        }
+        return regValue
+    }
+    ; Finds versions matching this format [v1.2.3], [v1.2.3-beta], [1.2.3] or [1.2.3-beta].
+    else if (RegExMatch(regValue, "^v?\d+\.\d+\.\d+(\.\d+)?(-beta)?$", &match)) {
+        return regValue
+    }
+    else {
+        ; In case the version in the registry is invalid.
+        regValue := "v0.0.0.1"
+    }
+    return regValue
 }
 
 /*
@@ -664,377 +902,6 @@ openDirectoryInExplorer(pDirectory) {
     }
 }
 
-/*
-Imports URLs from a text file which must contain one URL per line.
-@param pImportFileLocation [String] The location of the URL file.
-@param pBooleanSkipInvalidURLs [boolean] If set to true, all invalid URLs will automatically not be imported.
-*/
-importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := false) {
-    validURLArray := Array()
-    invalidURLArray := Array()
-    loop read (pImportFileLocation) {
-        ; Comments will be skipped.
-        if (InStr(A_LoopReadLine, "#")) {
-            continue
-        }
-        ; Sorts out all invalid URLs and saves them in the array.
-        if (!checkIfStringIsAValidURL(A_LoopReadLine)) {
-            invalidURLArray.Push(A_LoopReadLine)
-            continue
-        }
-        validURLArray.Push(A_LoopReadLine)
-    }
-
-    if (invalidURLArray.Length > 0 && !pBooleanSkipInvalidURLs) {
-        ; Asks the user if they would like to import the invalid URLs (if there are any).
-        if (invalidURLArray.Length == 1) {
-            msgText := "There is [1] invalid URL in the list."
-            msgText .= "`n`nWould you like to import it anyway?"
-            msgTitle := "VD - Invalid URL Found"
-            msgHeadLine := "Import Invalid URL?"
-            msgButton1 := "Import Invalid URL"
-            msgButton2 := ""
-            msgButton3 := "Exclude Invalid URL"
-        }
-        else {
-            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the list."
-            msgText .= "`n`nWould you like to import them anyway?"
-            msgTitle := "VD - Invalid URLs Found"
-            msgHeadLine := "Import Invalid URLs?"
-            msgButton1 := "Import Invalid URLs"
-            msgButton2 := ""
-            msgButton3 := "Exclude Invalid URLs"
-        }
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI.Hwnd)
-        ; If the users wishes, the invalid URLs will be imported as well.
-        if (result == msgButton1) {
-            for (invalidURL in invalidURLArray) {
-                validURLArray.Push(invalidURL)
-            }
-        }
-    }
-
-    ; Creates new video list view entry objects with the given URLs.
-    for (validURL in validURLArray) {
-        url := validURL
-        ; Removes the "invalid" marker. This gives the URL behind the marker a new "chance" to be found.
-        url := StrReplace(url, "video_not_found: ")
-        url := StrReplace(url, "playlist_not_found: ")
-        VideoListViewEntry(url)
-        ; Prevents the status bar animation from glitching out.
-        Sleep(100)
-    }
-    statusBarText := "Finished importing " . validURLArray.Length . " URLs"
-    videoListGUIStatusBar.SetText(statusBarText)
-}
-
-/*
-Exports all video list view elements in the given map to a text file.
-@param pVideoListViewElementMap [Map] A map filled with video list view elements to export.
-@param pExportFileLocation [String] An optional file path to save the exported URLs.
-If not provided, the user will be prompted to select a save location.
-@param pBooleanSkipInvalidURLs [boolean] If set to true, all invalid URLs will automatically not be exported.
-*/
-exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBooleanSkipInvalidURLs := false) {
-    global videoListViewContentMap
-
-    ; It does not make sense to start an with an empty map.
-    if (pVideoListViewElementMap.Count == 0) {
-        return
-    }
-    ; We use the current time stamp to generate a unique name for the exported file.
-    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
-    if (!IsSet(pExportFileLocation)) {
-        exportFileDefaultLocation := A_MyDocuments . "\" . currentTime . "_VD_exported_urls.txt"
-        pExportFileLocation := fileSavePrompt("VD - Please select a save location", exportFileDefaultLocation, "*.txt")
-        ; This usually happens, when the user cancels the selection.
-        if (pExportFileLocation == "_result_no_file_save_location_selected") {
-            return
-        }
-    }
-
-    validURLArray := Array()
-    invalidURLArray := Array()
-    for (key, videoListEntry in pVideoListViewElementMap) {
-        ; Skips all internal video list view entries used to communicate with the user.
-        if (videoListEntry.videoURL == "_internal_entry_no_results_found" || videoListEntry.videoURL ==
-            "_internal_entry_no_videos_added_yet") {
-            continue
-        }
-        ; Sorts out all invalid URLs and saves them in the array.
-        if (!checkIfStringIsAValidURL(videoListEntry.videoURL)) {
-            invalidURLArray.Push(videoListEntry.videoURL)
-            continue
-        }
-        validURLArray.Push(videoListEntry.videoURL)
-    }
-
-    if (invalidURLArray.Length > 0 && !pBooleanSkipInvalidURLs) {
-        ; Asks the user if they would like to include the invalid URLs (if there are any).
-        if (invalidURLArray.Length == 1) {
-            msgText := "There is [1] invalid URL in the list."
-            msgText .= "`n`nWould you like to export it anyway?"
-            msgTitle := "VD - Invalid URL Found"
-            msgHeadLine := "Export Invalid URL?"
-            msgButton1 := "Export Invalid URL"
-            msgButton2 := ""
-            msgButton3 := "Exclude Invalid URL"
-        }
-        else {
-            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the list."
-            msgText .= "`n`nWould you like to export them anyway?"
-            msgTitle := "VD - Invalid URLs Found"
-            msgHeadLine := "Export Invalid URLs?"
-            msgButton1 := "Export Invalid URLs"
-            msgButton2 := ""
-            msgButton3 := "Exclude Invalid URLs"
-        }
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI.Hwnd)
-        ; If the users wishes, the invalid URLs will be included in the export.
-        if (result == msgButton1) {
-            ; Adds the separation line into the array.
-            validURLArray.Push("# ********************`n# Invalid URLs below.`n# ********************")
-            for (invalidURL in invalidURLArray) {
-                validURLArray.Push(invalidURL)
-            }
-        }
-    }
-
-    for (validURL in validURLArray) {
-        exportFileContent .= validURL . "`n"
-    }
-    ; Removing the separator line must be done in a separate for loop.
-    for (validURL in validURLArray) {
-        if (validURL == "# ********************`n# Invalid URLs below.`n# ********************") {
-            ; Removes the separation line to correct the amount of exported URLs (which is the length of the array).
-            validURLArray.RemoveAt(A_Index)
-        }
-    }
-    exportFileContent := RTrim(exportFileContent, "`n")
-    exportFileContentFinal := "# ********************"
-    exportFileContentFinal .= "`n# VideoDownloader URL Export - " . currentTime
-    exportFileContentFinal .= "`n# Total URLs - " . validURLArray.Length
-    exportFileContentFinal .= "`n# ********************`n"
-    exportFileContentFinal .= exportFileContent
-
-    ; "Overwrites" the existing file.
-    if (FileExist(pExportFileLocation)) {
-        FileDelete(pExportFileLocation)
-    }
-    try
-    {
-        FileAppend(exportFileContentFinal, pExportFileLocation,)
-    }
-    catch as error {
-        displayErrorMessage(error, "File writing errors are usually rare. Please report this!")
-    }
-    statusBarText := "Finished exporting " . validURLArray.Length . " URLs"
-    videoListGUIStatusBar.SetText(statusBarText)
-}
-
-/*
-Creates a map containing all currently selected video list view elements in the video list.
-@Returns [Map] This map can contain no objects if no videos are currently selected.
-*/
-getSelectedVideoListViewElements() {
-    global videoListViewContentMap
-
-    selectedItemsIdentifierStringArray := Array()
-    selectedVideoListViewElementsMap := Map()
-
-    ; Get all selected list view items or rather their content in the form of a string.
-    listViewContent := ListViewGetContent("Selected", videoListView.Hwnd, "ahk_id " . videoListGUI.Hwnd)
-    ; The content is separated by new lines and tabs so we need two loops to get the identifier strings.
-    loop parse, listViewContent, "`n" {
-        entryIdentifierString := ""
-        loop parse, A_LoopField, A_Tab {
-            entryIdentifierString .= A_LoopField
-        }
-        selectedItemsIdentifierStringArray.Push(entryIdentifierString)
-    }
-    for (identifierString in selectedItemsIdentifierStringArray) {
-        if (!videoListViewContentMap.Has(identifierString)) {
-            continue
-        }
-        ; Retrieves the video list view element from the content map and adds it to the selected entries map.
-        videoListEntry := videoListViewContentMap.Get(identifierString)
-        ; Skips all internal video list view entries used to communicate with the user.
-        if (videoListEntry.videoURL == "_internal_entry_no_results_found" || videoListEntry.videoURL ==
-            "_internal_entry_no_videos_added_yet") {
-            continue
-        }
-        selectedVideoListViewElementsMap.Set(identifierString, videoListEntry)
-    }
-    return selectedVideoListViewElementsMap
-}
-
-/*
-Reads the registry and extracts the current application version.
-If the version in the registry has a build version other than 0, it will append the word "-beta".
-@returns [String] The version from the registry or "v0.0.0.1" in case the registry value is invalid.
-*/
-getCorrectScriptVersionFromRegistry() {
-    global applicationRegistryDirectory
-
-    regValue := RegRead(applicationRegistryDirectory, "CURRENT_VERSION", "v0.0.0.1")
-    ; Finds versions matching this format [v1.2.3.4]
-    if (RegExMatch(regValue, "^v\d+\.\d+\.\d+\.(\d+)$", &match)) {
-        buildVersionNumber := match[1]
-        ; A version number with a build version is only used for beta versions.
-        if (buildVersionNumber != 0) {
-            regValue := regValue . "-beta"
-            ; Corrects the version number in the registry.
-            RegWrite(regValue, "REG_SZ", applicationRegistryDirectory, "CURRENT_VERSION")
-            return getCorrectScriptVersionFromRegistry()
-        }
-        return regValue
-    }
-    ; Finds versions matching this format [v1.2.3], [v1.2.3-beta], [1.2.3] or [1.2.3-beta].
-    else if (RegExMatch(regValue, "^v?\d+\.\d+\.\d+(\.\d+)?(-beta)?$", &match)) {
-        return regValue
-    }
-    else {
-        ; In case the version in the registry is invalid.
-        regValue := "v0.0.0.1"
-    }
-    return regValue
-}
-
-/*
-Checks if a given string is a valid video URL.
-NOTE: URLs without any content after the top level domain won't be considered valid!
-For example [www.youtube.com] would be invalid but [https://www.youtube.com/watch?v=dQw4w9WgXcQ] would be valid.
-@param pString [String] The string that should be examined.
-@returns [boolean] True, if the provided string is a valid URL. False otherwise.
-*/
-checkIfStringIsAValidURL(pString) {
-    ; Checks if the entered string is a valid URL.
-    regExString := '^(https?:\/\/)?([\w\-]+\.)+[\w]{2,}\/[^\s]{3,}$'
-    if (RegExMatch(pString, regExString)) {
-        return true
-    }
-    return false
-}
-
-/*
-Checks if the provided playlist range index string has a correct syntaxt (1-2 or 1:2 for example).
-@param pString [String] The string that should be examined.
-@returns [boolean] True, if the provided string is a valid playlist range. False otherwise.
-*/
-checkIfStringIsValidPlaylistIndexRange(pString) {
-    regExString := '^([1-9]\d*([-:]\d+)?)(,[1-9]\d*([-:]\d+)?)*$'
-    if (RegExMatch(pString, regExString)) {
-        return true
-    }
-    return false
-}
-
-/*
-Checks a given path for writing permissions with the current user rights (the user who launched this application).
-@returns [boolean] True, if the current permissions allow writing to the specified directory. False otherwise.
-*/
-checkForWritingRights(pPath) {
-    try
-    {
-        FileAppend("checkForWritingRights(" . pPath . ")", pPath . "\checkForWritingRights.txt")
-        FileDelete(pPath . "\checkForWritingRights.txt")
-    }
-    catch as error {
-        if (InStr(error.message, "(5) ")) {
-            return false
-        }
-        else {
-            displayErrorMessage(error, "This error is rare. Please report this!")
-            return false
-        }
-    }
-    return true
-}
-
-/*
-Checks all GitHub Repository tags to find new versions.
-@returns [String] Returns the update version (which is usually the tag name), when an update is available.
-@returns (alt) [String] "_result_no_update_available", when no update is available.
-*/
-checkForAvailableUpdates() {
-    global psUpdateScriptLocation
-    global applicationRegistryDirectory
-
-    ; Does not check for updates, if there is no Internet connection or the application isn't compiled.
-    if (!checkInternetConnection() || !A_IsCompiled) {
-        return "_result_no_update_available"
-    }
-    /*
-    Changes "HKCU\SOFTWARE\LeoTN\VideoDownloader" to "HKCU:SOFTWARE\LeoTN\VideoDownloader"
-    to make the path compatible with PowerShell.
-    */
-    psCompatibleScriptRegistryPath := StrReplace(applicationRegistryDirectory, "\", ":", , , 1)
-    parameterString :=
-        '-pGitHubRepositoryLink "https://github.com/LeoTN/yt-dlp-autohotkey-gui"' .
-        ' -pRegistryDirectory "' . psCompatibleScriptRegistryPath . '"'
-
-    if (readConfigFile("UPDATE_TO_BETA_VERSIONS")) {
-        parameterString .= " -pSwitchConsiderBetaReleases"
-    }
-    ; Calls the PowerShell script to check for available updates.
-    exitCode := RunWait('powershell.exe -executionPolicy bypass -file "'
-        . psUpdateScriptLocation . '" ' . parameterString, , "Hide")
-    switch (exitCode) {
-        ; Available update found.
-        case 101:
-        {
-            ; Extracts the available update from the registry.
-            updateVersion := RegRead(applicationRegistryDirectory, "AVAILABLE_UPDATE", "v0.0.0.1")
-            if (updateVersion == "no_available_update") {
-                return "_result_no_update_available"
-            }
-            return updateVersion
-        }
-        Default:
-        {
-            return "_result_no_update_available"
-        }
-    }
-}
-
-/*
-Tries to ping google.com to determine the computer's Internet connection status.
-@returns [boolean] True, if the computer is connected to the Internet. False otherwise.
-*/
-checkInternetConnection() {
-    ; Checks if the user has an established Internet connection.
-    try
-    {
-        httpRequest := ComObject("WinHttp.WinHttpRequest.5.1")
-        httpRequest.Open("GET", "http://www.google.com", false)
-        httpRequest.Send()
-
-        if (httpRequest.Status = 200) {
-            return true
-        }
-    }
-    return false
-}
-
-/*
-Terminates the application and shows a tray tip message to inform the user.
-@param pBooleanUseFallbackMessage [boolean] If set to true, will use the hardcoded English version
-of the termination message. This can be useful if the language modules have not been loaded yet.
-*/
-exitApplicationWithNotification(pBooleanUseFallbackMessage := false) {
-    if (pBooleanUseFallbackMessage) {
-        TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
-    }
-    else {
-        TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
-    }
-    ; Using ExitApp() twice ensures that the application will be terminated entirely.
-    ExitApp()
-    ExitApp()
-}
-
 reloadApplicationPrompt() {
     ; Number in seconds.
     i := 4
@@ -1141,6 +1008,23 @@ terminateApplicationPrompt() {
 }
 
 /*
+Terminates the application and shows a tray tip message to inform the user.
+@param pBooleanUseFallbackMessage [boolean] If set to true, will use the hardcoded English version
+of the termination message. This can be useful if the language modules have not been loaded yet.
+*/
+exitApplicationWithNotification(pBooleanUseFallbackMessage := false) {
+    if (pBooleanUseFallbackMessage) {
+        TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
+    }
+    else {
+        TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
+    }
+    ; Using ExitApp() twice ensures that the application will be terminated entirely.
+    ExitApp()
+    ExitApp()
+}
+
+/*
 Outputs a little GUI containing information about the error. Allows to be copied to the clipboard.
 @param pErrorObject [Error Object] Usually created when catching an error via Try / Catch.
 @param pAdditionalErrorMessage [String] An optional error message to show.
@@ -1220,6 +1104,137 @@ displayErrorMessage(pErrorObject := unset, pAdditionalErrorMessage := unset, pBo
     if (pBooleanTerminatingError) {
         exitApplicationWithNotification(true)
     }
+}
+
+/*
+Checks a given path for writing permissions with the current user rights (the user who launched this application).
+@returns [boolean] True, if the current permissions allow writing to the specified directory. False otherwise.
+*/
+checkForWritingRights(pPath) {
+    try
+    {
+        FileAppend("checkForWritingRights(" . pPath . ")", pPath . "\checkForWritingRights.txt")
+        FileDelete(pPath . "\checkForWritingRights.txt")
+    }
+    catch as error {
+        if (InStr(error.message, "(5) ")) {
+            return false
+        }
+        else {
+            displayErrorMessage(error, "This error is rare. Please report this!")
+            return false
+        }
+    }
+    return true
+}
+
+/*
+Checks all GitHub Repository tags to find new versions.
+@returns [String] Returns the update version (which is usually the tag name), when an update is available.
+@returns (alt) [String] "_result_no_update_available", when no update is available.
+*/
+checkForAvailableUpdates() {
+    global psUpdateScriptLocation
+    global applicationRegistryDirectory
+
+    ; Does not check for updates, if there is no Internet connection or the application isn't compiled.
+    if (!checkInternetConnection() || !A_IsCompiled) {
+        return "_result_no_update_available"
+    }
+    /*
+    Changes "HKCU\SOFTWARE\LeoTN\VideoDownloader" to "HKCU:SOFTWARE\LeoTN\VideoDownloader"
+    to make the path compatible with PowerShell.
+    */
+    psCompatibleScriptRegistryPath := StrReplace(applicationRegistryDirectory, "\", ":", , , 1)
+    parameterString :=
+        '-pGitHubRepositoryLink "https://github.com/LeoTN/yt-dlp-autohotkey-gui"' .
+        ' -pRegistryDirectory "' . psCompatibleScriptRegistryPath . '"'
+
+    if (readConfigFile("UPDATE_TO_BETA_VERSIONS")) {
+        parameterString .= " -pSwitchConsiderBetaReleases"
+    }
+    ; Calls the PowerShell script to check for available updates.
+    exitCode := RunWait('powershell.exe -executionPolicy bypass -file "'
+        . psUpdateScriptLocation . '" ' . parameterString, , "Hide")
+    switch (exitCode) {
+        ; Available update found.
+        case 101:
+        {
+            ; Extracts the available update from the registry.
+            updateVersion := RegRead(applicationRegistryDirectory, "AVAILABLE_UPDATE", "v0.0.0.1")
+            if (updateVersion == "no_available_update") {
+                return "_result_no_update_available"
+            }
+            return updateVersion
+        }
+        Default:
+        {
+            return "_result_no_update_available"
+        }
+    }
+}
+
+/*
+Tries to ping google.com to determine the computer's Internet connection status.
+@returns [boolean] True, if the computer is connected to the Internet. False otherwise.
+*/
+checkInternetConnection() {
+    ; Checks if the user has an established Internet connection.
+    try
+    {
+        httpRequest := ComObject("WinHttp.WinHttpRequest.5.1")
+        httpRequest.Open("GET", "http://www.google.com", false)
+        httpRequest.Send()
+
+        if (httpRequest.Status = 200) {
+            return true
+        }
+    }
+    return false
+}
+
+/*
+Checks if a given string is a valid video URL.
+NOTE: URLs without any content after the top level domain won't be considered valid!
+For example [www.youtube.com] would be invalid but [https://www.youtube.com/watch?v=dQw4w9WgXcQ] would be valid.
+@param pString [String] The string that should be examined.
+@returns [boolean] True, if the provided string is a valid URL. False otherwise.
+*/
+checkIfStringIsAValidURL(pString) {
+    ; Checks if the entered string is a valid URL.
+    regExString := '^(https?:\/\/)?([\w\-]+\.)+[\w]{2,}\/[^\s]{3,}$'
+    if (RegExMatch(pString, regExString)) {
+        return true
+    }
+    return false
+}
+
+/*
+Checks if the provided playlist range index string has a correct syntaxt (1-2 or 1:2 for example).
+@param pString [String] The string that should be examined.
+@returns [boolean] True, if the provided string is a valid playlist range. False otherwise.
+*/
+checkIfStringIsValidPlaylistIndexRange(pString) {
+    regExString := '^([1-9]\d*([-:]\d+)?)(,[1-9]\d*([-:]\d+)?)*$'
+    if (RegExMatch(pString, regExString)) {
+        return true
+    }
+    return false
+}
+
+/*
+Checks if a given string is in a given array.
+@param pString [String] The string to check.
+@param pArray [Array] The array to check.
+@returns [boolean] True if the string is in the array, false otherwise.
+*/
+checkIfStringIsInArray(pString, pArray) {
+    for (index, value in pArray) {
+        if (pString == value) {
+            return true
+        }
+    }
+    return false
 }
 
 /*

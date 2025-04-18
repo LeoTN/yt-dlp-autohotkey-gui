@@ -37,7 +37,7 @@ createUpdateGUI(pUpdateVersion) {
     updateGUIPatchNotesLink.OnEvent("Click", (*) => Run(updatePatchNotesURL))
 
     updateGUIDownloadMSIButton := updateGUI.Add("Button", "yp+30 xp+50 w100 R2", "Download MSI Installer")
-    updateGUIDownloadMSIButton.OnEvent("Click", (*) => handleUpdateGUI_downloadMSIButton(msiDownloadURL))
+    updateGUIDownloadMSIButton.OnEvent("Click", (*) => handleUpdateGUI_downloadMSIButton_onClick(msiDownloadURL))
 
     updateGUINoUpdateButton := updateGUI.Add("Button", "xp+110 w100 R2", "No Thanks")
     updateGUINoUpdateButton.OnEvent("Click", (*) => updateGUI.Destroy())
@@ -45,7 +45,7 @@ createUpdateGUI(pUpdateVersion) {
     updateGUI.Show("AutoSize")
 }
 
-handleUpdateGUI_downloadMSIButton(pMSIDownloadURL) {
+handleUpdateGUI_downloadMSIButton_onClick(pMSIDownloadURL) {
     Run(pMSIDownloadURL)
     backupDirectory := A_ScriptDir . "\VideoDownloader_old_version_backups"
 

@@ -51,7 +51,7 @@ createSetupGUI() {
     ; This does not allow the user to change the value of the checkbox.
     YTDLPCheckbox.OnEvent("Click", (*) => YTDLPCheckbox.Value := !YTDLPCheckbox.Value)
     cancelSetupButton.OnEvent("Click", (*) => exitApplicationWithNotification(true))
-    startSetupButton.OnEvent("Click", (*) => handleSetupGUI_startSetupButton())
+    startSetupButton.OnEvent("Click", (*) => handleSetupGUI_startSetupButton_onClick())
 }
 
 updateDependencyCheckboxes() {
@@ -112,7 +112,7 @@ checkIfMSISetupIsRequired() {
 }
 
 ; Updates the GUI depending on the installation status of the dependencies.
-handleSetupGUI_startSetupButton() {
+handleSetupGUI_startSetupButton_onClick() {
     startSetupButton.Opt("+Disabled")
     ; Installs the dependencies and updates the GUI accordingly.
     if (getFFmpegInstallionStatus()) {

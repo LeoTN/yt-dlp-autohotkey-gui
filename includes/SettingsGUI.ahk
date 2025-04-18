@@ -3,6 +3,19 @@
 SendMode "Input"
 CoordMode "Mouse", "Window"
 
+settingsGUI_onInit() {
+    global booleanUnsavedDirectoryChangesExist := false
+    global booleanUnsavedPlaylistRangeIndexChangesExist := false
+    global booleanUnsavedHotkeyChangesExist := false
+    global booleanUnsavedHotkeyEnabledChangesExist := false
+
+    createSettingsGUI()
+    initializeCheckboxLinkedConfigFileEntryMap()
+    initializeSettingsGUIDirectoryDDLEntryMap()
+    initializeSettingsGUIHotkeyDDLEntryMap()
+    importConfigFileValuesIntoSettingsGUI()
+}
+
 createSettingsGUI() {
     global
     settingsGUI := Gui("+OwnDialogs", "VD - Settings")
@@ -262,19 +275,6 @@ createSettingsGUI() {
     settingsGUIHotkeySaveChangesButton.ToolTip := ""
     settingsGUIHotkeyDiscardChangesButton.ToolTip := ""
     settingsGUIHotkeyResetChangesButton.ToolTip := ""
-}
-
-settingsGUI_onInit() {
-    global booleanUnsavedDirectoryChangesExist := false
-    global booleanUnsavedPlaylistRangeIndexChangesExist := false
-    global booleanUnsavedHotkeyChangesExist := false
-    global booleanUnsavedHotkeyEnabledChangesExist := false
-
-    createSettingsGUI()
-    initializeCheckboxLinkedConfigFileEntryMap()
-    initializeSettingsGUIDirectoryDDLEntryMap()
-    initializeSettingsGUIHotkeyDDLEntryMap()
-    importConfigFileValuesIntoSettingsGUI()
 }
 
 handleSettingsGUI_settingsGUIUpdateCheckForUpdatesButton_onClick(pButton, pInfo) {
