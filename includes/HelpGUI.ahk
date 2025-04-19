@@ -350,7 +350,7 @@ class RectangleHollowBox {
         
         
         */
-        this.__line1 := Gui("+AlwaysOnTop -Caption +Disabled +ToolWindow", "")
+        this.__line1 := Gui("+AlwaysOnTop -Caption +Disabled -DPIScale +ToolWindow", "")
         this.__line1.BackColor := this.outerLineColor
         showWidth := this.boxWidth + this.outerLineThickness * 2
         showX := this.topLeftCornerX - this.outerLineThickness
@@ -364,7 +364,7 @@ class RectangleHollowBox {
         |
         |
         */
-        this.__line2 := Gui("+AlwaysOnTop -Caption +Disabled +ToolWindow", "")
+        this.__line2 := Gui("+AlwaysOnTop -Caption +Disabled -DPIScale +ToolWindow", "")
         this.__line2.BackColor := this.outerLineColor
         showX := this.topLeftCornerX - this.outerLineThickness
         showY := this.topLeftCornerY
@@ -377,7 +377,7 @@ class RectangleHollowBox {
                 |
                 |
         */
-        this.__line3 := Gui("+AlwaysOnTop -Caption +Disabled +ToolWindow", "")
+        this.__line3 := Gui("+AlwaysOnTop -Caption +Disabled -DPIScale +ToolWindow", "")
         this.__line3.BackColor := this.outerLineColor
         showX := this.topLeftCornerX + this.boxWidth
         showY := this.topLeftCornerY
@@ -390,7 +390,7 @@ class RectangleHollowBox {
         
         -----
         */
-        this.__line4 := Gui("+AlwaysOnTop -Caption +Disabled +ToolWindow", "")
+        this.__line4 := Gui("+AlwaysOnTop -Caption +Disabled -DPIScale +ToolWindow", "")
         this.__line4.BackColor := this.outerLineColor
         showWidth := this.boxWidth + this.outerLineThickness * 2
         showX := this.topLeftCornerX - this.outerLineThickness
