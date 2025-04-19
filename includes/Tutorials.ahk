@@ -18,8 +18,8 @@ tutorial_howToFindHelpGUI() {
         "This tutorial will basically teach you how to find more tutorials and information.")
     howToUseHelpGUITutorial.addAction((*) => hideAllHighlightedElements())
     howToUseHelpGUITutorial.addText(
-        "At first, you need to click on the [Help] menu in the top right corner of the main window.")
-    howToUseHelpGUITutorial.addAction((*) => showVideoListGUIAndHighlightMenu())
+        "At first, you need to click on the [Help] menu in the top right corner of the video list window.")
+    howToUseHelpGUITutorial.addAction((*) => showVideoListGUIAndHighlightHelpMenu())
     howToUseHelpGUITutorial.addText(
         "You can search these entries with the search bar (highlighted with a red border).")
     howToUseHelpGUITutorial.addAction((*) => highlightSearchBar())
@@ -28,10 +28,10 @@ tutorial_howToFindHelpGUI() {
     ; Makes sure the highlighted controls become normal again.
     howToUseHelpGUITutorial.addExitAction((*) => hideAllHighlightedElements())
 
-    showVideoListGUIAndHighlightMenu() {
+    showVideoListGUIAndHighlightHelpMenu() {
         hideAllHighlightedElements()
         videoListGUI.Show("AutoSize")
-        currentlyHighlightedControlObject := highlightMenuElement(videoListGUI.Hwnd, 3)
+        currentlyHighlightedControlObject := highlightMenuElement(videoListGUI.Hwnd, 5)
     }
     highlightSearchBar() {
         hideAllHighlightedElements()
@@ -65,8 +65,84 @@ tutorial_gettingStarted() {
     global gettingStartedTutorial := InteractiveTutorial("Getting started")
     currentlyHighlightedControlObject := ""
 
-    gettingStartedTutorial.addText("This tutorial is not finished yet.")
-    gettingStartedTutorial.addAction((*) =>)
+    ; Collect URL from browser hotkey showcase.
+    gettingStartedTutorial.addText(
+        "This tutorial will guide you through your first video download.")
+    gettingStartedTutorial.addAction((*) => hideAllHighlightedElements())
+    gettingStartedTutorial.addText(
+        "To add videos to the list, you need their URL."
+        "`n`nPlease open a (YouTube) video of your choice in your browser.")
+    gettingStartedTutorial.addAction((*) => hideAllHighlightedElements())
+    hotkeyString := expandHotkey(readConfigFile("URL_COLLECT_HK"))
+    gettingStartedTutorial.addText(
+        "Make sure that your browser is actively focused and the top most window."
+        "`n`nPlease press [" . hotkeyString . "] while the browser is the active window to collect the video URL.")
+    gettingStartedTutorial.addAction((*) => hideAllHighlightedElements())
+    ; Video list showcase.
+    gettingStartedTutorial.addText("This is the video list. All videos will be added here."
+        "`n`nIf everything worked, your video should be present in the list.")
+    gettingStartedTutorial.addAction((*) => showVideoListGUIAndHighlightVideoListView())
+    gettingStartedTutorial.addText("Please take a look at this input field (highlighted with a red border)."
+        "`n`nYou can enter video URLs here as well.")
+    gettingStartedTutorial.addAction((*) => showVideoListGUIAndHighlightURLInputEdit())
+    ; Download showcase.
+    hotkeyString := expandHotkey(readConfigFile("START_DOWNLOAD_HK"))
+    gettingStartedTutorial.addText(
+        "Please press the [Start Download] button to start the download."
+        "`n`nYou could also press [" . hotkeyString . "]."
+        "`n`nPlease wait for the download to finish. You will see a message in the status bar.")
+    gettingStartedTutorial.addAction((*) => showVideoListGUIAndHighlightDownloadButton())
+    ; Directory showcase.
+    gettingStartedTutorial.addText(
+        "Please select the sub menu [Latest Download] of the [Directory] menu to see your downloaded video.")
+    gettingStartedTutorial.addAction((*) => showVideoListGUIAndHighlightDirectoryMenu())
+    ; Tutorial end.
+    gettingStartedTutorial.addText(
+        "That is the end of the tutorial."
+        "`n`nThere are more features and download options but that might be too much for the beginning."
+        "`n`nYou can always take a look at the help section to get more information."
+    )
+    gettingStartedTutorial.addAction((*) => showVideoListGUIAndHighlightHelpMenu())
+
+    ; Makes sure the highlighted controls become normal again.
+    gettingStartedTutorial.addExitAction((*) => hideAllHighlightedElements())
+
+    showVideoListGUIAndHighlightVideoListView() {
+        ; Closes the help window.
+        if (WinExist("ahk_id " . helpGUI.Hwnd)) {
+            WinClose()
+        }
+        hideAllHighlightedElements()
+        videoListGUI.Show("AutoSize")
+        currentlyHighlightedControlObject := highlightControl(videoListView)
+    }
+    showVideoListGUIAndHighlightURLInputEdit() {
+        hideAllHighlightedElements()
+        videoListGUI.Show("AutoSize")
+        currentlyHighlightedControlObject := highlightControl(addVideoURLInputEdit)
+    }
+    showVideoListGUIAndHighlightDownloadButton() {
+        hideAllHighlightedElements()
+        videoListGUI.Show("AutoSize")
+        currentlyHighlightedControlObject := highlightControl(downloadStartButton)
+    }
+    showVideoListGUIAndHighlightDirectoryMenu() {
+        hideAllHighlightedElements()
+        videoListGUI.Show("AutoSize")
+        currentlyHighlightedControlObject := highlightMenuElement(videoListGUI.Hwnd, 2)
+    }
+    showVideoListGUIAndHighlightHelpMenu() {
+        hideAllHighlightedElements()
+        videoListGUI.Show("AutoSize")
+        currentlyHighlightedControlObject := highlightMenuElement(videoListGUI.Hwnd, 5)
+    }
+
+    hideAllHighlightedElements() {
+        if (IsObject(currentlyHighlightedControlObject)) {
+            ; Hides the highlighted control box.
+            currentlyHighlightedControlObject.destroy()
+        }
+    }
 }
 
 /*
@@ -109,9 +185,9 @@ applicationTutorial() {
     if (result_1 == "Yes") {
         minimizeAllGUIs()
         ; Welcome message.
-        MsgBox("Hello there... General Kenobi!`n`nThank you for downloading VideoDownloader!",
+        MsgBox("Hello there... General Kenobi!`n`nThank you for installing VideoDownloader!",
             "VideoDownloader - Thanks for Installing", "YN Iconi 262144")
-        ; This will show the window relatively to the main GUI.
+        ; This will show the window relatively to the video list GUI.
         calculateInteractiveTutorialGUICoordinates(videoListGUI.Hwnd, &x, &y)
         howToUseHelpGUITutorial.start(x, y)
     }

@@ -267,7 +267,14 @@ menu_openDefaultDownloadDirectory() {
 
 ; Opens the folder which contains the files from the latest download.
 menu_openLatestDownloadDirectory() {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+    global currentYTDLPActionObject
+
+    if (DirExist(currentYTDLPActionObject.latestDownloadDirectory)) {
+        openDirectoryInExplorer(currentYTDLPActionObject.latestDownloadDirectory)
+    }
+    else {
+        MsgBox("Please download at least one file.", "VD - No Recent Download", "O Iconi T1")
+    }
 }
 
 ; Opens the default temp directory in the explorer.

@@ -27,6 +27,28 @@ Enter:: {
 }
 #HotIf
 
+videoListGUI_onInit() {
+    ; This object will be used to share data between different functions about currently ongoing yt-dlp processes.
+    global currentYTDLPActionObject := Object()
+
+    ; Download related variables.
+    currentYTDLPActionObject.booleanDownloadIsRunning := false
+    currentYTDLPActionObject.booleanCancelOneVideoDownload := false
+    currentYTDLPActionObject.booleanCancelCompleteDownload := false
+    currentYTDLPActionObject.currentlyDownloadedVideoTitle := ""
+    currentYTDLPActionObject.alreadyDownloadedVideoAmount := 0
+    currentYTDLPActionObject.completeVideoAmount := 0
+    currentYTDLPActionObject.canceledDownloadVideoAmount := 0
+    currentYTDLPActionObject.remainingVideos := 0
+    currentYTDLPActionObject.downloadProcessYTDLPPID := 0
+    currentYTDLPActionObject.latestDownloadDirectory := "_no_latest_directory_now"
+    createVideoListGUI()
+    importConfigFileValuesIntoVideoListGUI()
+    if (readConfigFile("SHOW_VIDEO_LIST_GUI_ON_LAUNCH")) {
+        hotkey_openVideoListGUI()
+    }
+}
+
 createVideoListGUI() {
     global
     videoListGUI := Gui("+OwnDialogs", "VD - Video List")
@@ -257,27 +279,6 @@ createVideoListGUI() {
     ; Makes the settings and help GUI the child window of the video list GUI.
     settingsGUI.Opt("+Owner" . videoListGUI.Hwnd)
     helpGUI.Opt("+Owner" . videoListGUI.Hwnd)
-}
-
-videoListGUI_onInit() {
-    ; This object will be used to share data between different functions about currently ongoing yt-dlp processes.
-    global currentYTDLPActionObject := Object()
-
-    ; Download related variables.
-    currentYTDLPActionObject.booleanDownloadIsRunning := false
-    currentYTDLPActionObject.booleanCancelOneVideoDownload := false
-    currentYTDLPActionObject.booleanCancelCompleteDownload := false
-    currentYTDLPActionObject.currentlyDownloadedVideoTitle := ""
-    currentYTDLPActionObject.alreadyDownloadedVideoAmount := 0
-    currentYTDLPActionObject.completeVideoAmount := 0
-    currentYTDLPActionObject.canceledDownloadVideoAmount := 0
-    currentYTDLPActionObject.remainingVideos := 0
-    currentYTDLPActionObject.downloadProcessYTDLPPID := 0
-    createVideoListGUI()
-    importConfigFileValuesIntoVideoListGUI()
-    if (readConfigFile("SHOW_VIDEO_LIST_GUI_ON_LAUNCH")) {
-        hotkey_openVideoListGUI()
-    }
 }
 
 handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
@@ -626,7 +627,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         exportVideoListViewElements(actuallyDownloadedVideoListViewElements, exportFileLocation, true)
     }
 
-    ; Calculates the remaining amount of videos which are left to be downloaded.
+    ; Calculates the remaining amount of videos which are left to be downloaded once again.
     currentYTDLPActionObject.remainingVideos := currentYTDLPActionObject.completeVideoAmount -
         currentYTDLPActionObject.alreadyDownloadedVideoAmount - currentYTDLPActionObject.canceledDownloadVideoAmount
     ; Updates the downloaded video progress text.
@@ -635,10 +636,14 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         "] Remaining"
     if (currentYTDLPActionObject.alreadyDownloadedVideoAmount == 1) {
         videoListGUIStatusBar.SetText("Downloaded 1 file to [" . targetDownloadDirectory . "]")
+        ; Updates the latest download directory.
+        currentYTDLPActionObject.latestDownloadDirectory := targetDownloadDirectory
     }
     else if (currentYTDLPActionObject.alreadyDownloadedVideoAmount > 1) {
         videoListGUIStatusBar.SetText("Downloaded " . currentYTDLPActionObject.alreadyDownloadedVideoAmount
             . " files to [" . targetDownloadDirectory . "]")
+        ; Updates the latest download directory.
+        currentYTDLPActionObject.latestDownloadDirectory := targetDownloadDirectory
     }
     if (downloadTerminateAfterDownloadCheckbox.Value) {
         exitApplicationWithNotification()

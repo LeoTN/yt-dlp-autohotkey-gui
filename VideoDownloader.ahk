@@ -112,7 +112,7 @@ onInit() {
 
     ; Shows a small tutorial to guide the user.
     if (readConfigFile("ASK_FOR_TUTORIAL")) {
-        ; applicationTutorial() ; REMOVE [TEMPORARILY DISABLED UNTIL TUTORIAL REWORK]
+        applicationTutorial()
     }
     ; Disables the firstTimeLaunch at the end of the first run.
     if (booleanFirstTimeLaunch) {
