@@ -23,7 +23,8 @@ tutorial_howToFindHelpGUI() {
     howToUseHelpGUITutorial.addText(
         "You can search these entries with the search bar (highlighted with a red border).")
     howToUseHelpGUITutorial.addAction((*) => highlightSearchBar())
-    howToUseHelpGUITutorial.addText("Double clicking them can start interactive tutorials or just a simple info text.")
+    howToUseHelpGUITutorial.addText('Double clicking them can start interactive tutorials or just a simple info text.'
+        '`n`nYou may start the "Getting started" tutorial now.')
     howToUseHelpGUITutorial.addAction((*) => demonstrateSearchBar())
     ; Makes sure the highlighted controls become normal again.
     howToUseHelpGUITutorial.addExitAction((*) => hideAllHighlightedElements())
@@ -79,8 +80,9 @@ tutorial_gettingStarted() {
         "`n`nPlease press [" . hotkeyString . "] while the browser is the active window to collect the video URL.")
     gettingStartedTutorial.addAction((*) => hideAllHighlightedElements())
     ; Video list showcase.
-    gettingStartedTutorial.addText("This is the video list. All videos will be added here."
-        "`n`nIf everything worked, your video should be present in the list.")
+    gettingStartedTutorial.addText(
+        "This is the video list. All videos will be added here, but the video extraction process might take some time."
+        "`n`nIf everything worked, your video should be present in the list after a while.")
     gettingStartedTutorial.addAction((*) => showVideoListGUIAndHighlightVideoListView())
     gettingStartedTutorial.addText("Please take a look at this input field (highlighted with a red border)."
         "`n`nYou can enter video URLs here as well.")
@@ -145,6 +147,31 @@ tutorial_gettingStarted() {
     }
 }
 
+; A small tutorial to show off the help GUI of this application.
+applicationTutorial() {
+    ; Welcome message.
+    result_1 := MsgBox("Hello there... General Kenobi!`n`nThank you for installing VideoDownloader!"
+        "`n`nWould you like to start a short tutorial?",
+        "VD - Start Tutorial", "YN Iconi Owner" . videoListGUI.Hwnd)
+    editConfigFile(false, "ASK_FOR_TUTORIAL")
+    if (result_1 == "Yes") {
+        minimizeAllGUIs()
+        ; This will show the window relatively to the video list GUI.
+        calculateInteractiveTutorialGUICoordinates(videoListGUI.Hwnd, &x, &y)
+        howToUseHelpGUITutorial.start(x, y)
+    }
+}
+
+minimizeAllGUIs() {
+    ; Minimizes all application windows to reduce diversion.
+    hwndArray := [videoListGUI.Hwnd, settingsGUI.Hwnd, helpGUI.Hwnd]
+    for (hwnd in hwndArray) {
+        if (WinExist("ahk_id " . hwnd)) {
+            WinMinimize()
+        }
+    }
+}
+
 /*
 Creates an array, which contains list view entry objects. They contain the required data to be added into a list view element.
 @returns [Array] This array is filled with list view objects.
@@ -168,39 +195,6 @@ createListViewContentCollectionArray() {
         helpGUIListViewContentArray.InsertAt(A_Index, %"listViewEntry_" . A_Index%)
     }
     return helpGUIListViewContentArray
-}
-
-; A small tutorial to show off the help GUI of this application.
-applicationTutorial() {
-    result_1 := MsgBox("Would you like to have a short tutorial on how to use this software?",
-        "VideoDownloader - Start Tutorial", "YN Iconi 262144")
-    ; The dialog to disable the tutorial for the next time is only shown when the config file entry mentioned below is true.
-    if (readConfigFile("ASK_FOR_TUTORIAL")) {
-        result_2 := MsgBox("Press [Yes] to disable the tutorialfor the next time you run this application.",
-            "VideoDownloader - Disable Tutorial for Next Time", "YN Iconi 262144")
-        if (result_2 == "Yes") {
-            editConfigFile(false, "ASK_FOR_TUTORIAL")
-        }
-    }
-    if (result_1 == "Yes") {
-        minimizeAllGUIs()
-        ; Welcome message.
-        MsgBox("Hello there... General Kenobi!`n`nThank you for installing VideoDownloader!",
-            "VideoDownloader - Thanks for Installing", "YN Iconi 262144")
-        ; This will show the window relatively to the video list GUI.
-        calculateInteractiveTutorialGUICoordinates(videoListGUI.Hwnd, &x, &y)
-        howToUseHelpGUITutorial.start(x, y)
-    }
-}
-
-minimizeAllGUIs() {
-    ; Minimizes all application windows to reduce diversion.
-    hwndArray := [videoListGUI.Hwnd, settingsGUI.Hwnd, helpGUI.Hwnd]
-    for (hwnd in hwndArray) {
-        if (WinExist("ahk_id " . hwnd)) {
-            WinMinimize()
-        }
-    }
 }
 
 /*
