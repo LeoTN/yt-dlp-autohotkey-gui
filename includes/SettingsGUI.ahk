@@ -227,6 +227,8 @@ createSettingsGUI() {
         "`nSome exit events ignore this setting."
     settingsGUIDisplayFinishedDownloadNotificationCheckbox.ToolTip :=
         "Shows a toast notification when finishing a download process."
+    settingsGUIDisplayFinishedDownloadNotificationCheckbox.ToolTip .=
+        "`nClicking on this notification opens the directory containing the downloaded file(s)."
     ; Directory settings.
     settingsGUIDirectoryDDL.ToolTip := "You can change the path of each directory here."
     settingsGUIDirectoryDescriptionEdit.ToolTip := ""

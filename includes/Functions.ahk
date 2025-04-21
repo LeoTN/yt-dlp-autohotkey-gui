@@ -6,10 +6,12 @@ CoordMode "Mouse", "Client"
 
 functions_onInit() {
     /*
-    This causes the script to react upon the user moving his mouse and show
+    This causes the application to react upon the user moving his mouse and show
     a tooltip if possible for the GUI element under the cursor.
     */
     OnMessage(0x0200, handleAllGUI_toolTips)
+    ; Causes VideoDownloader to react upon toast notification events.
+    OnMessage(0x404, handleAllApplication_toastNotifications_onClick)
 }
 
 /*
@@ -18,13 +20,13 @@ FUNCTION SECTION
 */
 
 ; This function determines the current control under the mouse cursor and if it has a tooltip, displays it.
-handleAllGUI_toolTips(not_used_1, not_used_2, not_used_3, pWindowHWND) {
+handleAllGUI_toolTips(wParam, lParam, msg, hwnd) {
     static oldHWND := 0
-    if (pWindowHWND != oldHWND) {
+    if (hwnd != oldHWND) {
         ; Closes all existing tooltips.
         toolTipText := ""
         ToolTip()
-        currentControlElement := GuiCtrlFromHwnd(pWindowHWND)
+        currentControlElement := GuiCtrlFromHwnd(hwnd)
         if (currentControlElement) {
             if (!currentControlElement.HasProp("ToolTip")) {
                 ; There is no tooltip for this control element.
@@ -34,7 +36,7 @@ handleAllGUI_toolTips(not_used_1, not_used_2, not_used_3, pWindowHWND) {
             ; Displays the tooltip after the user hovers for 1.5 seconds over a control element.
             SetTimer () => displayToolTip(toolTipText, currentControlElement.Hwnd), -1500
         }
-        oldHWND := pWindowHWND
+        oldHWND := hwnd
     }
     /*
     This function makes sure that the tooltip is only displayed when the user hovers over the same control element for
@@ -45,6 +47,23 @@ handleAllGUI_toolTips(not_used_1, not_used_2, not_used_3, pWindowHWND) {
         if (pCurrentControlElementHWND == currentControlElementUnderCursorHWND) {
             ToolTip(pToolTipText)
         }
+    }
+}
+
+; This function reacts upon the user left-clicking on a toast notification.
+handleAllApplication_toastNotifications_onClick(wParam, lParam, msg, hwnd) {
+    global currentYTDLPActionObject
+
+    ; Ignore messages from other applications and all events that are not a left click.
+    if (hwnd != A_ScriptHwnd || lParam != 1029) {
+        return
+    }
+    /*
+    This technically works for every toast notification from VideoDownloader,
+    but it is meant for the finished download notification.
+    */
+    if (IsSet(currentYTDLPActionObject) && DirExist(currentYTDLPActionObject.latestDownloadDirectory)) {
+        openDirectoryInExplorer(currentYTDLPActionObject.latestDownloadDirectory)
     }
 }
 
