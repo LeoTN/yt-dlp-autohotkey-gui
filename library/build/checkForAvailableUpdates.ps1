@@ -109,7 +109,7 @@ function evaluateUpdate() {
 }
 
 function extractVersionInformation() {
-    # Checks if the provided tag has a valid syntaxt.
+    # Checks if the provided tag has a valid syntax.
     $tmpTag = $global:currentVersion.Replace("v", "").Replace("-beta", "")
     If (-not ($tmpTag -match '^\d+\.\d+\.\d+(\.\d+)?$')) {
         $null = Write-Host "[extractVersionInformation()] [ERROR] Found tag name which couldn't be converted to version: [$global:currentVersion]." -ForegroundColor "Red"

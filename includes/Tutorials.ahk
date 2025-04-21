@@ -7,12 +7,13 @@ tutorials_onInit() {
     ; Initializes all tutorials and info texts.
     tutorial_howToFindHelpGUI()
     tutorial_gettingStarted()
+    tutorial_howToUsePlaylistRangeIndex()
 }
 
 ; This tutorial aims to show the user how they can find the help section.
 tutorial_howToFindHelpGUI() {
     global howToUseHelpGUITutorial :=
-        InteractiveTutorialListViewEntry("General", "Tutorial", "How to use the help database")
+        InteractiveTutorialListViewEntry("General", "Tutorial", "How to use the Help Database")
     currentlyHighlightedControlObject := ""
 
     howToUseHelpGUITutorial.addText(
@@ -42,16 +43,16 @@ tutorial_howToFindHelpGUI() {
     }
     demonstrateSearchBar() {
         hideAllHighlightedElements()
+        helpGUI.Show("AutoSize")
         helpGUISearchBarEdit.Focus()
+        ; Waits a little to avoid loosing the first few letters.
+        Sleep(100)
         ; This array contains the letters "typed" into the search bar for demonstration purposes.
-        searchBarDemoLetterArray := stringToArray("Getting started")
+        searchBarDemoLetterArray := StrSplit("Getting started")
         ; Demonstrates the search bar to the user.
         for (letter in searchBarDemoLetterArray) {
-            if (WinExist("ahk_id " . helpGUI.Hwnd)) {
-                WinActivate()
-            }
             ControlSend(letter, helpGUISearchBarEdit, "ahk_id " . helpGUI.Hwnd)
-            Sleep(20)
+            Sleep(10)
         }
     }
     hideAllHighlightedElements() {
@@ -71,7 +72,7 @@ tutorial_gettingStarted() {
     ; Collect URL from browser hotkey showcase.
     gettingStartedTutorial.addText(
         "This tutorial will guide you through your first video download.")
-    gettingStartedTutorial.addAction((*) => hideAllHighlightedElements())
+    gettingStartedTutorial.addAction((*) => closeHowToUseHelpGUITutorial())
     gettingStartedTutorial.addText(
         "To add videos to the list, you need their URL."
         "`n`nPlease open a (YouTube) video of your choice in your browser.")
@@ -104,13 +105,20 @@ tutorial_gettingStarted() {
     gettingStartedTutorial.addText(
         "That is the end of the tutorial."
         "`n`nThere are more features and download options but that might be too much for the beginning."
-        "`n`nYou can always take a look at the help section to get more information."
-    )
+        "`n`nYou can always take a look at the help section to get more information.")
     gettingStartedTutorial.addAction((*) => showVideoListGUIAndHighlightHelpMenu())
 
     ; Makes sure the highlighted controls become normal again.
     gettingStartedTutorial.addExitAction((*) => hideAllHighlightedElements())
 
+    closeHowToUseHelpGUITutorial() {
+        hideAllHighlightedElements()
+        /*
+        The howToUseHelpGUITutorial refers to this tutorial at its end. It asks the user to start this tutorial
+        and to avoid multiple unnecessary windows, we close the old tutorial if the user forgets it.
+        */
+        howToUseHelpGUITutorial.exit()
+    }
     showVideoListGUIAndHighlightVideoListView() {
         ; Closes the help window.
         if (WinExist("ahk_id " . helpGUI.Hwnd)) {
@@ -140,7 +148,106 @@ tutorial_gettingStarted() {
         videoListGUI.Show("AutoSize")
         currentlyHighlightedControlObject := highlightMenuElement(videoListGUI.Hwnd, 5)
     }
+    hideAllHighlightedElements() {
+        if (IsObject(currentlyHighlightedControlObject)) {
+            ; Hides the highlighted control box.
+            currentlyHighlightedControlObject.destroy()
+        }
+    }
+}
 
+; Shows the syntax and use of the playlist range index.
+tutorial_howToUsePlaylistRangeIndex() {
+    global howToUsePlaylistRangeIndexTutorial :=
+        InteractiveTutorialListViewEntry("Video Extraction", "Information", "How to use the Playlist Range Index")
+    currentlyHighlightedControlObject := ""
+
+    ; Explain the need for the playlist range index.
+    howToUsePlaylistRangeIndexTutorial.addText(
+        "Why would I need to use the playlist range index?"
+        "`n`nIf a URL contains a reference or is itself a link to a playlist, "
+        . "only the video specified in the URL or the very first video of the playlist "
+        . "will be added to the list by default.")
+    howToUsePlaylistRangeIndexTutorial.addAction((*) => hideAllHighlightedElements())
+    howToUsePlaylistRangeIndexTutorial.addText(
+        "Why would I need to use the playlist range index?"
+        "`n`nImagine a playlist with 20 videos, but you only want to download the first 10 videos."
+        "`n`nIt would be possible to copy each video URL individually or to simply use the playlist range index.")
+    howToUsePlaylistRangeIndexTutorial.addAction((*) => hideAllHighlightedElements())
+    ; Show the input field.
+    howToUsePlaylistRangeIndexTutorial.addText(
+        "Where can I enter the playlist range index?"
+        "`n`nPlease take a look at this input field. It indicates the validity in the text above."
+        "`n`nThe entered string is not a valid index.")
+    howToUsePlaylistRangeIndexTutorial.addAction((*) =>
+        showVideoListGUIAndHighlightPlaylistRangeIndexInputEditAndEnterInvalidIndex())
+    howToUsePlaylistRangeIndexTutorial.addText(
+        "Where can I enter the playlist range index?"
+        "`n`nHowever this time, the playlist range index is valid."
+        "`n`n[1,2,3] and [1-3] would have the same effect. Note, that [1:3] is the same as [1-3].")
+    howToUsePlaylistRangeIndexTutorial.addAction((*) =>
+        showVideoListGUIAndHighlightPlaylistRangeIndexInputEditAndEnterValidIndex())
+    ; Explain the syntax.
+    howToUsePlaylistRangeIndexTutorial.addText(
+        "Playlist Range Index Syntax Example"
+        "`n`nLet's get back to our example from the beginning. "
+        . "We have a playlist with 20 videos, but only want to download the first 10 of them."
+        "`n`nTo achieve this, we select the videos similar to pages in a document."
+        "`n`n1 (the first video) and 10 (the last video) → [1-10].")
+    howToUsePlaylistRangeIndexTutorial.addAction((*) => hideAllHighlightedElements())
+    howToUsePlaylistRangeIndexTutorial.addText(
+        "Playlist Range Index Syntax Example"
+        "`n`nIf we now wanted to have the 15th video as well, the index would have to be adjusted as follows:"
+        "`n`n1 (the first video) and 10 (the last video) and 15 (the 15th video) → [1-10,15].")
+    howToUsePlaylistRangeIndexTutorial.addAction((*) => hideAllHighlightedElements())
+    howToUsePlaylistRangeIndexTutorial.addText(
+        "Playlist Range Index Summary"
+        "`n`nUse ranges to select a range of videos.`nFor example [1-10]."
+        "`n`nUse single index numbers to select specific videos.`nFor example [1]."
+        "`n`nEach new instruction must be seperated by a comma.`nFor example [1,2,3,4,5-10]")
+    howToUsePlaylistRangeIndexTutorial.addAction((*) => hideAllHighlightedElements())
+
+    ; Makes sure the highlighted controls become normal again.
+    howToUsePlaylistRangeIndexTutorial.addExitAction((*) => hideAllHighlightedElements())
+
+    showVideoListGUIAndHighlightPlaylistRangeIndexInputEditAndEnterInvalidIndex() {
+        hideAllHighlightedElements()
+        videoListGUI.Show("AutoSize")
+        currentlyHighlightedControlObject := highlightControl(addVideoSpecifyPlaylistRangeInputEdit)
+        ; Enables the required checkboxes.
+        addVideoURLIsAPlaylistCheckbox.Value := 1
+        handleVideoListGUI_addVideoURLIsAPlaylistCheckbox_onClick(addVideoURLIsAPlaylistCheckbox, "")
+        addVideoURLUsePlaylistRangeCheckbox.Value := 1
+        handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick(addVideoURLUsePlaylistRangeCheckbox, "")
+        ; Demonstrates the playlist range input field.
+        addVideoSpecifyPlaylistRangeInputEdit.Value := ""
+        addVideoSpecifyPlaylistRangeInputEdit.Focus()
+        ; This array contains the letters "typed" into the edit for demonstration purposes.
+        charArray := StrSplit("Example Invalid Index Value")
+        for (char in charArray) {
+            ControlSend(char, addVideoSpecifyPlaylistRangeInputEdit, "ahk_id " . videoListGUI.Hwnd)
+            Sleep(10)
+        }
+    }
+    showVideoListGUIAndHighlightPlaylistRangeIndexInputEditAndEnterValidIndex() {
+        hideAllHighlightedElements()
+        videoListGUI.Show("AutoSize")
+        currentlyHighlightedControlObject := highlightControl(addVideoSpecifyPlaylistRangeInputEdit)
+        ; Enables the required checkboxes.
+        addVideoURLIsAPlaylistCheckbox.Value := 1
+        handleVideoListGUI_addVideoURLIsAPlaylistCheckbox_onClick(addVideoURLIsAPlaylistCheckbox, "")
+        addVideoURLUsePlaylistRangeCheckbox.Value := 1
+        handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick(addVideoURLUsePlaylistRangeCheckbox, "")
+        ; Demonstrates the playlist range input field.
+        addVideoSpecifyPlaylistRangeInputEdit.Value := ""
+        addVideoSpecifyPlaylistRangeInputEdit.Focus()
+        ; This array contains the letters "typed" into the edit for demonstration purposes.
+        charArray := StrSplit("1,2,3,1-3,1:3")
+        for (char in charArray) {
+            ControlSend(char, addVideoSpecifyPlaylistRangeInputEdit, "ahk_id " . videoListGUI.Hwnd)
+            Sleep(10)
+        }
+    }
     hideAllHighlightedElements() {
         if (IsObject(currentlyHighlightedControlObject)) {
             ; Hides the highlighted control box.

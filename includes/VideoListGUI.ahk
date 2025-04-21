@@ -85,7 +85,7 @@ createVideoListGUI() {
     addVideoURLUsePlaylistRangeCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
         "Only add videos in a specific range")
     addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
-    addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w100 +Disabled", "1")
+    addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled", "1")
     ; Remove video elements.
     removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200", "Remove Video(s) from List")
     removeVideoConfirmDeletionCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30",
@@ -146,8 +146,11 @@ createVideoListGUI() {
     downloadCancelButton.OnEvent("Click", handleVideoListGUI_downloadCancelButton_onClick)
     downloadSelectDownloadDirectoryButton.OnEvent("Click",
         handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick)
-    ; Enables the help button in the MsgBox which informs the user once they entered an incorrect playlist range index.
-    OnMessage(0x0053, handleVideoListGUI_invalidPlaylistRangeIndexMsgBoxHelpButton)
+    /*
+    Makes the video list GUI sensible for the help event.
+    It is caused by pressing F1 while it is the active window or any owned MsgBox with a help button.
+    */
+    OnMessage(0x0053, handleVideoListGUI_onEventHelp)
 
     /*
     ********************************************************************************************************************
@@ -352,7 +355,7 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
     }
     ; Checks if the entered string is a valid URL.
     if (!checkIfStringIsAValidURL(videoURL)) {
-        MsgBox("Please enter a valid URL.", "VD - Invalid URL", "O Icon! 262144 T1")
+        MsgBox("Please enter a valid URL.", "VD - Invalid URL", "O Icon! T1 Owner" . videoListGUI.Hwnd)
         return
     }
     ; Only relevant when downloading specific parts of a playlist.
@@ -453,7 +456,7 @@ handleVideoListGUI_removeVideoFromListButton_onClick(pButton, pInfo) {
     else if (selectedVideoListViewElementsMap.Count > 1 &&
         (removeVideoConfirmDeletionCheckbox.Value || removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.Value)) {
         result := MsgBox("Do you really want to delete " . selectedVideoListViewElementsMap.Count . " videos?",
-            "VD - Confirm Deletion", "YN Icon? 262144 T15")
+            "VD - Confirm Deletion", "YN Icon? Owner" . videoListGUI.Hwnd)
         if (result != "Yes") {
             return
         }
@@ -540,7 +543,8 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         currentYTDLPActionObject.booleanCancelCompleteDownload := false
     }
     else {
-        MsgBox("There is already another download in progress.", "VD - Other Download Running", "O Iconi 262144 T1")
+        MsgBox("There is already another download in progress.", "VD - Other Download Running",
+            "O Iconi Owner" . videoListGUI.Hwnd)
         return
     }
 
@@ -722,8 +726,15 @@ handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo)
     downloadSelectDownloadDirectoryInputEdit.Value := downloadDirectory
 }
 
-handleVideoListGUI_invalidPlaylistRangeIndexMsgBoxHelpButton(*) {
-    MsgBox("Not implemented yet.", "VD - WIP", "O Iconi 262144 T1") ; REMOVE
+handleVideoListGUI_onEventHelp(wParam, lParam, msg, hwnd) {
+    ; Checks if the help event was caused by the invalid playlist range index MsgBox.
+    if (WinExist("VD - Invalid Playlist Range Index ahk_class ahk_class #32770")) {
+        WinClose()
+        howToUsePlaylistRangeIndexTutorial.start()
+    }
+    else {
+        menu_openHelpGUI()
+    }
 }
 
 /*

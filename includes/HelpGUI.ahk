@@ -81,7 +81,7 @@ handleHelpGUI_helpGUISearchBarEdit_onChange(pEdit, pInfo) {
 
 handleHelpGUI_helpGUISearchBaredit_onFocus(pEdit, pInfo) {
     ; Selects the text inside the edit once the user clicks on it again after loosing focus.
-    ControlSend("^A", pEdit)
+    ControlSend("^A", pEdit, "ahk_id " . helpGUI.Hwnd)
 }
 
 handleHelpGUI_helpGUIListView_onDoubleClick(pListView, pSelectedElementIndex) {

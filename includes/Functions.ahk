@@ -1210,7 +1210,7 @@ checkIfStringIsAValidURL(pString) {
 }
 
 /*
-Checks if the provided playlist range index string has a correct syntaxt (1-2 or 1:2 for example).
+Checks if the provided playlist range index string has a correct syntax (1-2 or 1:2 for example).
 @param pString [String] The string that should be examined.
 @returns [boolean] True, if the provided string is a valid playlist range. False otherwise.
 */
@@ -1254,16 +1254,6 @@ arrayToString(pArray) {
 
     string .= "]"
     return string
-}
-
-/*
-A simple method to convert a string (in array form) into an array.
-@param pString [String] Should be a string (in array form) to convert.
-@returns [Array] The string converted into an array form.
-*/
-stringToArray(pString) {
-    array := StrSplit(pString, ",")
-    return array
 }
 
 /*
