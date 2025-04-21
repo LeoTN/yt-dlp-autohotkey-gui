@@ -802,7 +802,7 @@ importConfigFileValuesIntoVideoListGUI() {
 /*
 Allows to search for elements in the video list view element.
 @param pSearchString [String] A string to search for.
-@returns [Array] This array contains all ListView objects matching the search string.
+@returns [Array] This array contains all VideoListViewEntry objects matching the search string.
 */
 searchInVideoListView(pSearchString) {
     global videoListViewContentMap
@@ -1272,7 +1272,7 @@ class VideoListViewEntry {
     }
     /*
     Adds the object to the video list view content map.
-    @param pBooleanUpdateVideoListViewElement[boolean] if set to true, the video list view element will be updated.
+    @param pBooleanUpdateVideoListViewElement[boolean] If set to true, the video list view element will be updated.
     */
     addEntryToVideoListViewContentMap(pBooleanUpdateVideoListViewElement := true) {
         global videoListViewContentMap
@@ -1323,8 +1323,8 @@ class VideoListViewEntry {
         }
         ; Clears the old data from the list view element.
         videoListView.Delete()
-        for (key, value in videoListViewContentMap) {
-            addVideoListViewEntryToListView(value)
+        for (key, videoListEntry in videoListViewContentMap) {
+            addVideoListViewEntryToListView(videoListEntry)
         }
         ; Sorts the videos in case a search prompt is present in the search field.
         if (videoListSearchBarInputEdit.Value != "") {

@@ -18,13 +18,12 @@ createHelpGUI() {
     */
     helpGUISearchBarText := helpGUI.Add("Text", , "Search the Help List")
     helpGUISearchBarEdit := helpGUI.Add("Edit", "w150 -WantReturn")
-    helpGUISearchBarEdit.OnEvent("Change", (*) => updateHelpListViewAccordinglyToSearch(helpGUISearchBarEdit.Text))
-    ; This selects the text inside the edit once the user clicks on it again after loosing focus.
-    helpGUISearchBarEdit.OnEvent("Focus", (*) => ControlSend("^A", helpGUISearchBarEdit))
+    helpGUISearchBarEdit.OnEvent("Change", handleHelpGUI_helpGUISearchBarEdit_onChange)
+    helpGUISearchBarEdit.OnEvent("Focus", handleHelpGUI_helpGUISearchBaredit_onFocus)
 
     helpGUIListViewArray := Array("Topic", "Type", "Title")
-    helpGUIListView := helpGUI.Add("ListView", "yp+40 w400 R10 -Multi", helpGUIListViewArray)
-    helpGUIListView.OnEvent("DoubleClick", (*) => processDoubleClickedHelpListViewItem())
+    helpGUIListView := helpGUI.Add("ListView", "yp+40 w400 R10 +Grid -Multi", helpGUIListViewArray)
+    helpGUIListView.OnEvent("DoubleClick", handleHelpGUI_helpGUIListView_onDoubleClick)
 
     helpGUIInfoGroupBox := helpGUI.Add("GroupBox", "xp+170 yp-65 w230 R2", "Application Info")
 
@@ -34,7 +33,7 @@ createHelpGUI() {
     helpGUIApplicationtVersionLink.ToolTip :=
         "Made by LeoTN (https://github.com/LeoTN). © 2025. Licensed under the MIT License."
 
-    ; These links need to be changed when renaming the .YAML files for the GitHub issues section.
+    ; These links need to be changed when renaming the .YML files for the GitHub issues section.
     local featureRequestLink :=
         "https://github.com/LeoTN/yt-dlp-autohotkey-gui/issues/new?assignees=&labels=enhancement&projects=&template=feature-request.yml&title=Feature+Request"
     local bugReportLink :=
@@ -46,101 +45,108 @@ createHelpGUI() {
     helpGUIStatusBar := helpGUI.Add("StatusBar", , "Double click an entry to access it's content.")
     helpGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     ; This is used for the easter egg.
-    helpGUIStatusBar.OnEvent("Click", (*) => handleHelpGUI_helpSectionEasterEgg())
-
-    helpGUIListViewContentArray := createListViewContentCollectionArray()
-    for (contentEntry in helpGUIListViewContentArray) {
-        addLineToHelpListView(contentEntry)
-    }
-    ; Sorts the data according to the title column.
-    helpGUIListView.ModifyCol(3, "SortHdr")
+    helpGUIStatusBar.OnEvent("Click", handleHelpGUI_helpGUIStatusBar_onClick)
 }
 
-/*
-Updates the help GUI list view element's content according to the search string.
-@param pSearchString [String] The search string from the search bar.
-*/
-updateHelpListViewAccordinglyToSearch(pSearchString) {
-    global helpGUIListViewContentArray
+handleHelpGUI_helpGUISearchBarEdit_onChange(pEdit, pInfo) {
+    global interactiveTutorialEntryMap
 
+    searchString := pEdit.Value
     helpGUIListView.Delete()
     ; Shows all data when the search bar is empty.
-    if (pSearchString == "") {
-        for (contentEntry in helpGUIListViewContentArray) {
-            addLineToHelpListView(contentEntry)
+    if (searchString == "") {
+        for (key, tutorialEntry in interactiveTutorialEntryMap) {
+            addInteractiveTutorialListViewEntryToListView(tutorialEntry)
         }
         return
     }
+
     ; Calls the search function to search in all entries.
-    resultArray := searchInHelpListView(pSearchString)
+    resultArray := searchInHelpListView(searchString)
     for (resultEntry in resultArray) {
-        addLineToHelpListView(resultEntry)
+        addInteractiveTutorialListViewEntryToListView(resultEntry)
     }
     else {
-        tmpListViewEntry := ListViewEntry("*****", "No results found.", "*****", (*) =>
-            0)
-        addLineToHelpListView(tmpListViewEntry)
+        /*
+        The addInteractiveTutorialListViewEntryToListView() function does not care if the object is a real
+        InteractiveTutorialListViewEntry object. Using a real object would cause a lot of unnecessary other issues.
+        */
+        noEntriesHelpListEntry := Object()
+        noEntriesHelpListEntry.topic := "*****"
+        noEntriesHelpListEntry.type := "No results found."
+        noEntriesHelpListEntry.title := "*****"
+        addInteractiveTutorialListViewEntryToListView(noEntriesHelpListEntry)
     }
 }
 
+handleHelpGUI_helpGUISearchBaredit_onFocus(pEdit, pInfo) {
+    ; Selects the text inside the edit once the user clicks on it again after loosing focus.
+    ControlSend("^A", pEdit)
+}
+
+handleHelpGUI_helpGUIListView_onDoubleClick(pListView, pSelectedElementIndex) {
+    global interactiveTutorialEntryMap
+
+    ; This means the user double clicked on the empty space.
+    if (pSelectedElementIndex == 0) {
+        return
+    }
+    ; The identifier string is created by merging the topic, the type and the title.
+    entryTopic := helpGUIListView.GetText(pSelectedElementIndex, 1)
+    entryType := helpGUIListView.GetText(pSelectedElementIndex, 2)
+    entryTitle := helpGUIListView.GetText(pSelectedElementIndex, 3)
+    focusedEntryIdentifierString := entryTopic . entryType . entryTitle
+
+    doubleClickedInteractiveTutorialListViewEntry := interactiveTutorialEntryMap.Get(focusedEntryIdentifierString)
+    ; Closes the help window.
+    if (WinExist("ahk_id " . helpGUI.Hwnd)) {
+        WinClose()
+    }
+    ; Starts the tutorial or information dialogue.
+    doubleClickedInteractiveTutorialListViewEntry.start()
+}
+
 /*
-Allows to search for elements in the list view element.
+Allows to search for elements in the help list view element.
 @param pSearchString [String] A string to search for.
-@returns [Array] This array contains all ListView objects matching the search string.
+@returns [Array] This array contains all InteractiveTutorialListViewEntry objects matching the search string.
 */
 searchInHelpListView(pSearchString) {
-    global helpGUIListViewContentArray
+    global interactiveTutorialEntryMap
 
     resultArrayCollection := Array()
-    ; Scans every string in the content array.
-    for (contentEntry in helpGUIListViewContentArray) {
-        if (InStr(contentEntry.topic, pSearchString)) {
-            resultArrayCollection.Push(contentEntry)
+    ; Iterates through all help list view elements.
+    for (key, tutorialEntry in interactiveTutorialEntryMap) {
+        ; Search in the topic.
+        if (InStr(tutorialEntry.topic, pSearchString)) {
+            ; Add the entry to the result array.
+            resultArrayCollection.Push(tutorialEntry)
         }
-        else if (InStr(contentEntry.type, pSearchString)) {
-            resultArrayCollection.Push(contentEntry)
+        ; Search in the type.
+        else if (InStr(tutorialEntry.type, pSearchString)) {
+            ; Add the entry to the result array.
+            resultArrayCollection.Push(tutorialEntry)
         }
-        else if (InStr(contentEntry.title, pSearchString)) {
-            resultArrayCollection.Push(contentEntry)
+        ; Search in the title.
+        else if (InStr(tutorialEntry.title, pSearchString)) {
+            ; Add the entry to the result array.
+            resultArrayCollection.Push(tutorialEntry)
         }
     }
     return resultArrayCollection
 }
 
 /*
-Adds the content of a list view entry object into the list view element.
-@param pListViewObject [ListViewEntry] An object containing relevant information to create an item in the list view.
-@param pBooleanAutoAdjust [boolean] If set to true, the column width will be adjusted accordingly to the content.
+Adds a interactive tutorial list view entry object to the help list view.
+@param pInteractiveTutorialListViewEntry [InteractiveTutorialListViewEntry] The interactive tutorial object to add.
 */
-addLineToHelpListView(pListViewObject, pBooleanAutoAdjust := true) {
-    global helpGUIListViewArray
-
-    helpGUIListView.Add(, pListViewObject.topic, pListViewObject.type, pListViewObject.title)
-    if (pBooleanAutoAdjust) {
-        ; Adjust the width accordingly to the content.
-        loop (helpGUIListViewArray.Length) {
-            helpGUIListView.ModifyCol(A_Index, "AutoHdr")
-        }
+addInteractiveTutorialListViewEntryToListView(pInteractiveTutorialListViewEntry) {
+    helpGUIListView.Add("", pInteractiveTutorialListViewEntry.topic, pInteractiveTutorialListViewEntry.type,
+        pInteractiveTutorialListViewEntry.title)
+    ; Adjust the width accordingly to the content.
+    loop (helpGUIListView.GetCount()) {
+        helpGUIListView.ModifyCol(A_Index, "AutoHdr")
     }
-}
-
-; Runs the bound action of the currently selected list view element.
-processDoubleClickedHelpListViewItem() {
-    global helpGUIListViewContentArray
-    ; This map stores all visible list view entries together with their identifyer string.
-    identifyerMap := Map()
-    for (contentEntry in helpGUIListViewContentArray) {
-        identifyerMap[contentEntry.identifyerString] := contentEntry
-    }
-    ; Finds out the currently selected entry's index.
-    focusedEntryColumnNumber := helpGUIListView.GetNext(, "Focused")
-    ; The identifyer string is created by merging the topic, the type and the title of the ListView object.
-    entryTopic := helpGUIListView.GetText(focusedEntryColumnNumber, 1)
-    entryType := helpGUIListView.GetText(focusedEntryColumnNumber, 2)
-    entryTitle := helpGUIListView.GetText(focusedEntryColumnNumber, 3)
-    focusedEntryIdentifyerString := entryTopic . entryType . entryTitle
-    ; Runs the action from the identified ListView object.
-    identifyerMap[focusedEntryIdentifyerString].runAction()
 }
 
 /*
@@ -268,7 +274,7 @@ getMenuBarInfo(pWindowHWND) {
     }
 }
 
-handleHelpGUI_helpSectionEasterEgg() {
+handleHelpGUI_helpGUIStatusBar_onClick(pStatusBar, pInfo) {
     static i := 0
 
     i++
@@ -282,27 +288,6 @@ handleHelpGUI_helpSectionEasterEgg() {
         fakeErrorObject.Line := "69"
         fakeErrorObject.Stack := "( ˶ˆ꒳ˆ˵ )`n(づ◡﹏◡)づ`n(,,>﹏<,,)"
         displayErrorMessage(fakeErrorObject, "This is a totally real error btw")
-    }
-}
-
-/*
-Stores all data required to create an entry in a list view element.
-@param pTopic [String] The topic this entry is about (e.g. General, Macros, etc.).
-@param pType [String] The type of content, for instance, Tutorial or Info.
-@param pTitle[String] The title of the entry.
-@param pAction [Function] Can be a fat arrow function ((*) =>) or a function call (doSomething()).
-*/
-class ListViewEntry {
-    __New(pTopic, pType, pTitle, pAction) {
-        this.topic := pTopic
-        this.type := pType
-        this.title := pTitle
-        this.action := pAction
-        ; This string will be used to identify the entry.
-        this.identifyerString := this.topic . this.type . this.title
-    }
-    runAction() {
-        this.action
     }
 }
 
@@ -344,6 +329,7 @@ class RectangleHollowBox {
         this.outerLineThickness := pOuterLineThickness
         this.outerLineTransparicy := pOuterLineTransparicy
     }
+    ; Creates and shows the rectangle box.
     draw() {
         /*
         ------

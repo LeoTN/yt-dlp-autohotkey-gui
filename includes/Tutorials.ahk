@@ -11,7 +11,8 @@ tutorials_onInit() {
 
 ; This tutorial aims to show the user how they can find the help section.
 tutorial_howToFindHelpGUI() {
-    global howToUseHelpGUITutorial := InteractiveTutorial("How to use the help database")
+    global howToUseHelpGUITutorial :=
+        InteractiveTutorialListViewEntry("General", "Tutorial", "How to use the help database")
     currentlyHighlightedControlObject := ""
 
     howToUseHelpGUITutorial.addText(
@@ -63,7 +64,8 @@ tutorial_howToFindHelpGUI() {
 
 ; This tutorial wants to show a few basics to get the user up and running.
 tutorial_gettingStarted() {
-    global gettingStartedTutorial := InteractiveTutorial("Getting started")
+    global gettingStartedTutorial :=
+        InteractiveTutorialListViewEntry("General", "Tutorial", "Getting started")
     currentlyHighlightedControlObject := ""
 
     ; Collect URL from browser hotkey showcase.
@@ -173,31 +175,6 @@ minimizeAllGUIs() {
 }
 
 /*
-Creates an array, which contains list view entry objects. They contain the required data to be added into a list view element.
-@returns [Array] This array is filled with list view objects.
-*/
-createListViewContentCollectionArray() {
-    ; This array contains all list view entries.
-    helpGUIListViewContentArray := Array()
-    ; 1. Topic 2. Type 3. Title 4. Action
-    listViewEntry_1 := ListViewEntry(
-        "General", "Tutorial", "How to use the help database",
-        ; This will show the window relatively to the main GUI.
-        (*) => calculateInteractiveTutorialGUICoordinates(videoListGUI.Hwnd, &x, &y) howToUseHelpGUITutorial.start(
-            x, y)
-    )
-    listViewEntry_2 := ListViewEntry("General", "Tutorial", "Getting started",
-        ; This will show the window relatively to the help GUI.
-        (*) => calculateInteractiveTutorialGUICoordinates(helpGUI.Hwnd, &x, &y) gettingStartedTutorial.start(x, y))
-
-    ; The number needes to be updated depending on how many list view entries there are.
-    loop (2) {
-        helpGUIListViewContentArray.InsertAt(A_Index, %"listViewEntry_" . A_Index%)
-    }
-    return helpGUIListViewContentArray
-}
-
-/*
 Calculates the position for the interactive tutorial window to appear.
 The position will be selected relatively to the right of a given window.
 @param pWindowHWND [int] The hwnd of the window to show the other GUI relatively to.
@@ -224,14 +201,42 @@ calculateInteractiveTutorialGUICoordinates(pWindowHWND, &coordinateX, &coordinat
 }
 
 /*
-Can be used to create an interactive tutorial with a navigation window for the user.
-@param pTutorialTitle [String] The title of the navigation window.
-IMPORTANT: When adding text to a step, a height of 10 lines must not be exceeded!
-In other words: ([K]eep [I]t [S]hort and [S]imple => KISS).
+This object is used to create interactive tutorials and information texts. They will be shown in the help GUI.
+@param pTopic [string] The topic of the tutorial.
+@param pType [string] The type of the tutorial.
+@param pTitle [string] The title of the tutorial.
 */
-class InteractiveTutorial {
-    __New(pTutorialTitle) {
-        this.tutorialTitle := pTutorialTitle
+class InteractiveTutorialListViewEntry {
+    __New(pTopic, pType, pTitle) {
+        ; Used to determine input errors while creating new tutorial entries.
+        allowedTopicsArray := ["General", "Video Extraction"]
+        if (!checkIfStringIsInArray(pTopic, allowedTopicsArray)) {
+            MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid topic received: [" . pTopic . "].",
+                "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            exitApplicationWithNotification(true)
+        }
+        ; Used to determine input errors while creating new tutorial entries.
+        allowedTypesArray := ["Tutorial", "Information"]
+        if (!checkIfStringIsInArray(pType, allowedTypesArray)) {
+            MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid type received: [" . pType . "].",
+                "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            exitApplicationWithNotification(true)
+        }
+        /*
+        This map stores all interactive tutorial objects with their identifier string as key.
+        It is used to provide the content for the help GUI list view element.
+        */
+        if (!isSet(interactiveTutorialEntryMap)) {
+            global interactiveTutorialEntryMap := Map()
+        }
+        this.topic := pTopic
+        this.type := pType
+        this.title := pTitle
+        this.identifierString := pTopic . pType . pTitle
+        ; Updates the help GUI list view element.
+        this.addEntryToInteractiveTutorialEntryMap()
+        this.updateHelpListViewElement()
+
         ; Contains the text for each step.
         this.textArray := Array()
         ; Contains an internal function to call for each step. You can enter "empty" functions like that "(*) =>".
@@ -239,7 +244,7 @@ class InteractiveTutorial {
         ; Can be filled with functions to execute when the user exits the tutorial.
         this.exitActionArray := Array()
         this.currentStepIndex := 1
-        this.gui := Gui("AlwaysOnTop", pTutorialTitle)
+        this.gui := Gui("AlwaysOnTop", this.title)
         this.gui.OnEvent("Close", (*) => this.exit())
         this.guiText := this.gui.Add("Text", "yp+10 w320 R10", "interactive_tutorial_text")
         this.guiPreviousButton := this.gui.Add("Button", "yp+150 w100", "Previous")
@@ -250,6 +255,25 @@ class InteractiveTutorial {
         this.guiNextButton.OnEvent("Click", (*) => this.next())
         this.guiStatusBar := this.gui.Add("StatusBar", , "interactive_tutorial_statusbar_text")
         this.guiStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
+    }
+    ; Adds the object to the tutorial list view entry map.
+    addEntryToInteractiveTutorialEntryMap() {
+        global interactiveTutorialEntryMap
+        interactiveTutorialEntryMap.Set(this.identifierString, this)
+    }
+    ; Removes the object from the tutorial list view entry map.
+    removeEntryFromInteractiveTutorialEntryMap() {
+        global interactiveTutorialEntryMap
+        interactiveTutorialEntryMap.Delete(this.identifierString)
+    }
+    ; Updates the help list view element with the current content of the tutorial list view entry map.
+    updateHelpListViewElement() {
+        global interactiveTutorialEntryMap
+        ; Clears the old data from the list view element.
+        helpGUIListView.Delete()
+        for (key, tutorialEntry in interactiveTutorialEntryMap) {
+            addInteractiveTutorialListViewEntryToListView(tutorialEntry)
+        }
     }
     ; You can provide optional coordinates for the GUI to show up.
     start(pGuiX := unset, pGuiY := unset) {
