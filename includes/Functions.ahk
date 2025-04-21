@@ -1016,12 +1016,44 @@ exitApplicationWithNotification(pBooleanUseFallbackMessage := false) {
     if (pBooleanUseFallbackMessage) {
         TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
     }
-    else {
+    else if (readConfigFile("DISPLAY_EXIT_NOTIFICATION")) {
         TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
     }
     ; Using ExitApp() twice ensures that the application will be terminated entirely.
     ExitApp()
     ExitApp()
+}
+
+setAutoStart(pBooleanAutoStartStatus) {
+    ; Does not work for uncompiled versions of VideoDownloader.
+    if (!A_IsCompiled) {
+        return
+    }
+
+    autoStartShortcutFileLocation := A_Startup . "\VideoDownloader.lnk"
+    ; Checks for an already existing shortcut file and extracts the target path.
+    if (FileExist(autoStartShortcutFileLocation)) {
+        FileGetShortcut(autoStartShortcutFileLocation, &outShortcutTarget)
+    }
+    else {
+        outShortcutTarget := "_result_no_existing_autostart_shortcut_file"
+    }
+
+    ; Checks if the existing shortcut file was not created by this instance of VideoDownloader.
+    if (pBooleanAutoStartStatus && (A_ScriptFullPath != outShortcutTarget)) {
+        ; Creates (or overwrites) the (existing) shortcut to start VideoDownloader with Windows.
+        FileCreateShortcut(A_ScriptFullPath, autoStartShortcutFileLocation, A_ScriptDir, ,
+            "Auto start shortcut for VideoDownloader.")
+        TrayTip("VideoDownloader added to startup folder.", "VideoDownloader - Status", "Iconi Mute")
+        SetTimer () => TrayTip(), -1500
+    }
+    ; Checks if the existing shortcut file was created by this instance of VideoDownloader and removes it.
+    else if (!pBooleanAutoStartStatus && (A_ScriptFullPath == outShortcutTarget)) {
+        ; Disables the automatic start with windows.
+        TrayTip("VideoDownloader removed from startup folder.", "VideoDownloader - Status", "Iconi Mute")
+        SetTimer () => TrayTip(), -1500
+        FileDelete(autoStartShortcutFileLocation)
+    }
 }
 
 /*

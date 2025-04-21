@@ -110,6 +110,10 @@ onInit() {
     -------------------------------------------------
     */
 
+    if (readConfigFile("DISPLAY_STARTUP_NOTIFICATION")) {
+        TrayTip("VideoDownloader launched.", "VideoDownloader - Status", "Iconi Mute")
+        SetTimer () => TrayTip(), -1500
+    }
     ; Shows a small tutorial to guide the user.
     if (readConfigFile("ASK_FOR_TUTORIAL")) {
         applicationTutorial()

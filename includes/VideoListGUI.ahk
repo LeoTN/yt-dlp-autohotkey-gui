@@ -544,7 +544,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     }
     else {
         MsgBox("There is already another download in progress.", "VD - Other Download Running",
-            "O Iconi Owner" . videoListGUI.Hwnd)
+            "O Iconi T1 Owner" . videoListGUI.Hwnd)
         return
     }
 
@@ -639,15 +639,25 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         currentYTDLPActionObject.completeVideoAmount . ") - [" . currentYTDLPActionObject.remainingVideos .
         "] Remaining"
     if (currentYTDLPActionObject.alreadyDownloadedVideoAmount == 1) {
-        videoListGUIStatusBar.SetText("Downloaded 1 file to [" . targetDownloadDirectory . "]")
+        statusText := "Downloaded 1 file to [" . targetDownloadDirectory . "]"
+        videoListGUIStatusBar.SetText(statusText)
         ; Updates the latest download directory.
         currentYTDLPActionObject.latestDownloadDirectory := targetDownloadDirectory
+        if (readConfigFile("DISPLAY_FINISHED_DOWNLOAD_NOTIFICATION")) {
+            TrayTip(statusText, "VideoDownloader - Status", "Iconi Mute")
+            SetTimer () => TrayTip(), -5000
+        }
     }
     else if (currentYTDLPActionObject.alreadyDownloadedVideoAmount > 1) {
-        videoListGUIStatusBar.SetText("Downloaded " . currentYTDLPActionObject.alreadyDownloadedVideoAmount
-            . " files to [" . targetDownloadDirectory . "]")
+        statusText := "Downloaded " . currentYTDLPActionObject.alreadyDownloadedVideoAmount
+        statusText .= " files to [" . targetDownloadDirectory . "]"
+        videoListGUIStatusBar.SetText(statusText)
         ; Updates the latest download directory.
         currentYTDLPActionObject.latestDownloadDirectory := targetDownloadDirectory
+        if (readConfigFile("DISPLAY_FINISHED_DOWNLOAD_NOTIFICATION")) {
+            TrayTip(statusText, "VideoDownloader - Status", "Iconi Mute")
+            SetTimer () => TrayTip(), -5000
+        }
     }
     if (downloadTerminateAfterDownloadCheckbox.Value) {
         exitApplicationWithNotification()

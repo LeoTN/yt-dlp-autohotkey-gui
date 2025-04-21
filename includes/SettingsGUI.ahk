@@ -14,6 +14,21 @@ settingsGUI_onInit() {
     initializeSettingsGUIDirectoryDDLEntryMap()
     initializeSettingsGUIHotkeyDDLEntryMap()
     importConfigFileValuesIntoSettingsGUI()
+
+    if (!A_IsCompiled) {
+        ; Certain options are unavailable with an uncompiled version of VideoDownloader.
+        settingsGUIEnableAutoStartCheckbox.Opt("+Disabled")
+        settingsGUICheckForUpdatesAtLaunchCheckbox.Opt("+Disabled")
+        settingsGUIUpdateToBetaVersionsCheckbox.Opt("+Disabled")
+        settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
+    }
+    ; Set the autostart according to the config file.
+    if (readConfigFile("START_WITH_WINDOWS")) {
+        setAutoStart(true)
+    }
+    else {
+        setAutoStart(false)
+    }
 }
 
 createSettingsGUI() {
@@ -35,7 +50,7 @@ createSettingsGUI() {
     settingsGUITabs.UseTab(1)
     ; Startup settings.
     settingsGUIStartupSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+30 w600 h140", "Startup")
-    settingsGUIEnableAutoStartCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20", "Start with Windows (WIP)") ; REMOVE
+    settingsGUIEnableAutoStartCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20", "Start with Windows")
     settingsGUIShowVideoListGUIAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "Open the video list window at the start")
     settingsGUICheckForUpdatesAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+30 Checked",
@@ -70,18 +85,14 @@ createSettingsGUI() {
     */
     settingsGUITabs.UseTab(2)
     ; Default video settings.
-    settingsGUIDefaultVideoSettings := settingsGUI.Add("GroupBox", "xm+10 ym+30 w600 h180",
+    settingsGUIDefaultVideoSettings := settingsGUI.Add("GroupBox", "xm+10 ym+30 w600 h120",
         "Default Video Preferences")
     settingsGUIVideoDesiredFormatText := settingsGUI.Add("Text", "xp+10 yp+20", "Desired Format")
     settingsGUIVideoDesiredFormatDDL := settingsGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
     settingsGUIVideoDesiredSubtitleText := settingsGUI.Add("Text", "yp+30", "Desired Subtitle")
     settingsGUIVideoDesiredSubtitleDDL := settingsGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
-    settingsGUIVideoAdvancedDownloadSettingsText := settingsGUI.Add("Text", "yp+30 w580 h40",
-        "Advanced Download Settings")
-    settingsGUIVideoAdvancedDownloadSettingsText.SetFont("bold s12")
-    settingsGUIVideoAdvancedDownloadSettingsPlaceHolderText := settingsGUI.Add("Text", "yp+20", "Not implemented yet.") ; REMOVE
     ; Default manage video list settings.
-    settingsGUIDefaultManageVideoListSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+220 w600 h210",
+    settingsGUIDefaultManageVideoListSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+160 w600 h210",
         "Default Manage Video List Preferences")
     settingsGUIAddVideoURLIsAPlaylistCheckbox := settingsGUI.Add("CheckBox", "xp+10 yp+20",
         "Add videos from a playlist")
@@ -98,7 +109,7 @@ createSettingsGUI() {
     settingsGUIExportOnlyValidURLsCheckbox := settingsGUI.Add("CheckBox", "yp+30", "Only consider valid URLs")
     settingsGUIAutoExportVideoListCheckbox := settingsGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Default download settings.
-    settingsGUIDefaultDownloadSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+440 w600 h60",
+    settingsGUIDefaultDownloadSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+380 w600 h60",
         "Default Download Preferences")
     settingsGUIDownloadRemoveVideosAfterDownloadCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
         "Automatically remove downloaded videos")
@@ -212,6 +223,8 @@ createSettingsGUI() {
         "Shows a toast notification when starting VideoDownloader."
     settingsGUIDisplayExitNotificationCheckbox.ToolTip :=
         "Shows a toast notification when VideoDownloader exits."
+    settingsGUIDisplayExitNotificationCheckbox.ToolTip .=
+        "`nSome exit events ignore this setting."
     settingsGUIDisplayFinishedDownloadNotificationCheckbox.ToolTip :=
         "Shows a toast notification when finishing a download process."
     ; Directory settings.
@@ -652,6 +665,17 @@ handleSettingsGUI_allCheckBox_onClick(pCheckBox, pInfo) {
         else {
             MsgBox("[" . A_ThisFunc . "()] [WARNING] The following checkbox is not linked with a config file entry [" .
                 pCheckBox.Text . "]", "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+        }
+    }
+
+    ; Applies the changes made to the auto start configuration.
+    if (pCheckBox.Text == "Start with Windows") {
+        ; Set the autostart according to the config file.
+        if (readConfigFile("START_WITH_WINDOWS")) {
+            setAutoStart(true)
+        }
+        else {
+            setAutoStart(false)
         }
     }
 }
