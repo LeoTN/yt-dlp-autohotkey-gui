@@ -8,7 +8,7 @@
         <a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENSE" style="text-decoration: none;"><img src="https://img.shields.io/github/license/LeoTN/yt-dlp-autohotkey-gui?style=for-the-badge&logo=Google%20Docs&logoColor=blue&label=License&color=blue"></a>
 </p>
 
-**A video downloader with graphical user interface and hotkey control.**
+**A video downloader with a graphical user interface and hotkeys.**
 
 Add videos to the list, select your download preferences and start downloading. No yt-dlp command knowledge required. 
 
@@ -50,9 +50,10 @@ Add videos to the list, select your download preferences and start downloading. 
 
 ## Credits & License
 
-* **yt-dlp** (<https://github.com/yt-dlp/yt-dlp>) for providing such an incredibly useful piece of software.
-* **FFmpeg** (<https://ffmpeg.org>) for providing additional functionality for yt-dlp.
-* **Acc library** (<https://github.com/Descolada/Acc-v2>) for important functions regarding direct URL capture.
+* **yt-dlp** (<https://github.com/yt-dlp/yt-dlp>) → incredibly useful piece of software
+* **FFmpeg** (<https://ffmpeg.org>) → additional functionality for yt-dlp
+* **Acc library** (<https://github.com/Descolada/Acc-v2>) → important functions regarding direct URL capture
+* **ColorButton library** (<https://github.com/nperovic/ColorButton.ahk>) → colored button functionality
 
 I appreciate your **constructive** and **honest** feedback. Feel free to create an **issue** or **feature** request.
 

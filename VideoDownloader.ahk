@@ -12,6 +12,7 @@ CoordMode "Mouse", "Client"
 ; Sets the directory for all following files.
 #Include "includes\"
 #Include "Acc.ahk"
+#Include "ColorButton.ahk"
 #Include "ConfigurationFile.ahk"
 #Include "Functions.ahk"
 #Include "HelpGUI.ahk"
@@ -96,12 +97,12 @@ onInit() {
     hotkeys_onInit()
     ; Creates the help GUI.
     helpGUI_onInit()
+    ; Creates the video list GUI.
+    videoListGUI_onInit()
     ; Creates the settings GUI.
     settingsGUI_onInit()
     ; Initializes the tutorials for the help GUI.
     tutorials_onInit()
-    ; Creates the video list GUI.
-    videoListGUI_onInit()
     ; Checks for available updates (depending on the user's choice regarding updates).
     updateGUI_onInit()
 

@@ -34,9 +34,11 @@ settingsGUI_onInit() {
 createSettingsGUI() {
     global
     settingsGUI := Gui("+OwnDialogs", "VD - Settings")
+    settingsGUI.MarginX := 0
+    settingsGUI.MarginY := 0
     ; The space is intentional as it increases the tab size.
     local tabNames := ["   General   ", "   Video List   ", "   Hotkeys   "]
-    settingsGUITabs := settingsGUI.Add("Tab3", , tabNames)
+    settingsGUITabs := settingsGUI.Add("Tab3", "xm ym w620 h455", tabNames)
 
     /*
     ********************************************************************************************************************
@@ -75,9 +77,13 @@ createSettingsGUI() {
     settingsGUIDirectoryHeadLineSeparatorLineProgressBar.Value := 100
     settingsGUIDirectoryInputEdit := settingsGUI.Add("Edit", "yp+15 w555 R1 -WantReturn +ReadOnly")
     settingsGUISelectDirectoryButton := settingsGUI.Add("Button", "xp+560 yp+1 w20 h20", "...")
+    settingsGUISelectDirectoryButton.SetColor("ced4da", "000000", -1, "808080")
     settingsGUIDirectorySaveChangesButton := settingsGUI.Add("Button", "xp-560 yp+29 w187 +Disabled", "Save Changes")
+    settingsGUIDirectorySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIDirectoryDiscardChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Discard Changes")
+    settingsGUIDirectoryDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
     settingsGUIDirectoryResetChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Reset to Default")
+    settingsGUIDirectoryResetChangesButton.SetColor("ffe8a1", "000000", -1, "808080")
 
     /*
     VIDEO LIST SETTINGS TAB
@@ -136,8 +142,11 @@ createSettingsGUI() {
     settingsGUIHotkeyHeadLineSeparatorLineProgressBar := settingsGUI.Add("Progress", "xp-450 yp+30 w580 h5 cSilver")
     settingsGUIHotkeyHeadLineSeparatorLineProgressBar.Value := 100
     settingsGUIHotkeySaveChangesButton := settingsGUI.Add("Button", "yp+10 w187 +Disabled", "Save Changes")
+    settingsGUIHotkeySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIHotkeyDiscardChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Discard Changes")
+    settingsGUIHotkeyDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
     settingsGUIHotkeyResetChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Reset to Default")
+    settingsGUIHotkeyResetChangesButton.SetColor("ffe8a1", "000000", -1, "808080")
     ; Status bar.
     settingsGUIStatusBar := settingsGUI.Add("StatusBar", , "Some settings might require a restart of VideoDownloader")
     settingsGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
@@ -331,7 +340,9 @@ handleSettingsGUI_settingsGUIDirectoryDDL_onChange(pDDL, pInfo) {
     else {
         booleanUnsavedDirectoryChangesExist := false
         settingsGUIDirectorySaveChangesButton.Opt("+Disabled")
+        settingsGUIDirectorySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
         settingsGUIDirectoryDiscardChangesButton.Opt("+Disabled")
+        settingsGUIDirectoryDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
     }
 
     previouslySelectedDDLEntryIndex := pDDL.Value
@@ -342,9 +353,11 @@ handleSettingsGUI_settingsGUIDirectoryDDL_onChange(pDDL, pInfo) {
     ; Enables the button to reset the directory to default.
     if (selectedDirectoryDDLEntry.directory != selectedDirectoryDDLEntry.defaultDirectory) {
         settingsGUIDirectoryResetChangesButton.Opt("-Disabled")
+        settingsGUIDirectoryResetChangesButton.SetColor("ffc107", "000000", -1, "808080")
     }
     else {
         settingsGUIDirectoryResetChangesButton.Opt("+Disabled")
+        settingsGUIDirectoryResetChangesButton.SetColor("ffe8a1", "000000", -1, "808080")
     }
 }
 
@@ -365,7 +378,9 @@ handleSettingsGUI_settingsGUISelectDirectoryButton_onClick(pButton, pInfo) {
         if (settingsGUIDirectoryInputEdit.Value != previousDirectory) {
             booleanUnsavedDirectoryChangesExist := true
             settingsGUIDirectorySaveChangesButton.Opt("-Disabled")
+            settingsGUIDirectorySaveChangesButton.SetColor("28a745", "000000", -1, "808080")
             settingsGUIDirectoryDiscardChangesButton.Opt("-Disabled")
+            settingsGUIDirectoryDiscardChangesButton.SetColor("dc3545", "000000", -1, "808080")
         }
     }
 }
@@ -379,7 +394,9 @@ handleSettingsGUI_settingsGUIDirectorySaveChangesButton_onClick(pButton, pInfo) 
     handleSettingsGUI_settingsGUIDirectoryDDL_onChange(settingsGUIDirectoryDDL, "")
     ; Disables the save and discard button.
     settingsGUIDirectorySaveChangesButton.Opt("+Disabled")
+    settingsGUIDirectorySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIDirectoryDiscardChangesButton.Opt("+Disabled")
+    settingsGUIDirectoryDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
 }
 
 handleSettingsGUI_settingsGUIDirectoryDiscardChangesButton_onClick(pButton, pInfo) {
@@ -389,7 +406,9 @@ handleSettingsGUI_settingsGUIDirectoryDiscardChangesButton_onClick(pButton, pInf
     handleSettingsGUI_settingsGUIDirectoryDDL_onChange(settingsGUIDirectoryDDL, "")
     ; Disables the save and discard button.
     settingsGUIDirectorySaveChangesButton.Opt("+Disabled")
+    settingsGUIDirectorySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIDirectoryDiscardChangesButton.Opt("+Disabled")
+    settingsGUIDirectoryDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
 }
 
 handleSettingsGUI_settingsGUIDirectoryResetChangesButton_onClick(pButton, pInfo) {
@@ -401,7 +420,9 @@ handleSettingsGUI_settingsGUIDirectoryResetChangesButton_onClick(pButton, pInfo)
     handleSettingsGUI_settingsGUIDirectoryDDL_onChange(settingsGUIDirectoryDDL, "")
     ; Disables the save and discard button.
     settingsGUIDirectorySaveChangesButton.Opt("+Disabled")
+    settingsGUIDirectorySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIDirectoryDiscardChangesButton.Opt("+Disabled")
+    settingsGUIDirectoryDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
 }
 
 handleSettingsGUI_settingsGUIVideoDesiredFormatDDL_onChange(pDDL, pInfo) {
@@ -434,7 +455,9 @@ handleSettingsGUI_settingsGUIHotkeyDDL_onChange(pDDL, pInfo) {
         booleanUnsavedHotkeyChangesExist := false
         booleanUnsavedHotkeyEnabledChangesExist := false
         settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+        settingsGUIHotkeySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
         settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+        settingsGUIHotkeyDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
     }
 
     previouslySelectedDDLEntryIndex := pDDL.Value
@@ -453,9 +476,11 @@ handleSettingsGUI_settingsGUIHotkeyDDL_onChange(pDDL, pInfo) {
     if ((selectedHotkeyDDLEntry.hotkey != selectedHotkeyDDLEntry.defaultHotkey) ||
     (selectedHotkeyDDLEntry.hotkeyEnabled != selectedHotkeyDDLEntry.defaultHotkeyEnabled)) {
         settingsGUIHotkeyResetChangesButton.Opt("-Disabled")
+        settingsGUIHotkeyResetChangesButton.SetColor("ffc107", "000000", -1, "808080")
     }
     else {
         settingsGUIHotkeyResetChangesButton.Opt("+Disabled")
+        settingsGUIHotkeyResetChangesButton.SetColor("ffe8a1", "000000", -1, "808080")
     }
 }
 
@@ -471,12 +496,16 @@ handleSettingsGUI_settingsGUIHotkeyHotkeyInputField_onChange(pHotkey, pInfo) {
     if (pHotkey.Value != selectedHotkeyDDLEntry.hotkey) {
         booleanUnsavedHotkeyChangesExist := true
         settingsGUIHotkeySaveChangesButton.Opt("-Disabled")
+        settingsGUIHotkeySaveChangesButton.SetColor("28a745", "000000", -1, "808080")
         settingsGUIHotkeyDiscardChangesButton.Opt("-Disabled")
+        settingsGUIHotkeyDiscardChangesButton.SetColor("dc3545", "000000", -1, "808080")
     }
     else {
         booleanUnsavedHotkeyChangesExist := false
         settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+        settingsGUIHotkeySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
         settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+        settingsGUIHotkeyDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
     }
 
 }
@@ -494,12 +523,16 @@ handleSettingsGUI_allHotkeyRadio_onChange(pRadio, pInfo) {
     if (settingsGUIHotkeyEnabledRadio.Value != selectedHotkeyDDLEntry.hotkeyEnabled) {
         booleanUnsavedHotkeyEnabledChangesExist := true
         settingsGUIHotkeySaveChangesButton.Opt("-Disabled")
+        settingsGUIHotkeySaveChangesButton.SetColor("28a745", "000000", -1, "808080")
         settingsGUIHotkeyDiscardChangesButton.Opt("-Disabled")
+        settingsGUIHotkeyDiscardChangesButton.SetColor("dc3545", "000000", -1, "808080")
     }
     else {
         booleanUnsavedHotkeyEnabledChangesExist := false
         settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+        settingsGUIHotkeySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
         settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+        settingsGUIHotkeyDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
     }
 }
 
@@ -520,7 +553,9 @@ handleSettingsGUI_settingsGUIHotkeyEnableAllButton_onClick(pButton, pInfo) {
         booleanUnsavedHotkeyChangesExist := false
         booleanUnsavedHotkeyEnabledChangesExist := false
         settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+        settingsGUIHotkeySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
         settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+        settingsGUIHotkeyDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
     }
 
     ; Enables all hotkeys.
@@ -551,7 +586,9 @@ handleSettingsGUI_settingsGUIHotkeyDisableAllButton_onClick(pButton, pInfo) {
         booleanUnsavedHotkeyChangesExist := false
         booleanUnsavedHotkeyEnabledChangesExist := false
         settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+        settingsGUIHotkeySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
         settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+        settingsGUIHotkeyDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
     }
 
     ; Disables all hotkeys.
@@ -576,7 +613,9 @@ handleSettingsGUI_settingsGUIHotkeySaveChangesButton_onClick(pButton, pInfo) {
     handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
     ; Disables the save and discard button.
     settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+    settingsGUIHotkeySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+    settingsGUIHotkeyDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
 }
 
 handleSettingsGUI_settingsGUIHotkeyDiscardChangesButton_onClick(pButton, pInfo) {
@@ -587,7 +626,9 @@ handleSettingsGUI_settingsGUIHotkeyDiscardChangesButton_onClick(pButton, pInfo) 
     handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
     ; Disables the save and discard button.
     settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+    settingsGUIHotkeySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+    settingsGUIHotkeyDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
 }
 
 handleSettingsGUI_settingsGUIHotkeyResetChangesButton_onClick(pButton, pInfo) {
@@ -602,7 +643,9 @@ handleSettingsGUI_settingsGUIHotkeyResetChangesButton_onClick(pButton, pInfo) {
     handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
     ; Disables the save and discard button.
     settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+    settingsGUIHotkeySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+    settingsGUIHotkeyDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
 }
 
 handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange(pEdit, pInfo) {
@@ -697,7 +740,9 @@ handleSettingsGUI_settingsGUI_onClose(pGUI) {
     ; Discards the directory changes.
     booleanUnsavedDirectoryChangesExist := false
     settingsGUIDirectorySaveChangesButton.Opt("+Disabled")
+    settingsGUIDirectorySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIDirectoryDiscardChangesButton.Opt("+Disabled")
+    settingsGUIDirectoryDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
     ; This makes sure that there is a selected entry.
     if (settingsGUIDirectoryDDL.Value != 0) {
         handleSettingsGUI_settingsGUIDirectoryDDL_onChange(settingsGUIDirectoryDDL, "")
@@ -718,7 +763,9 @@ handleSettingsGUI_settingsGUI_onClose(pGUI) {
         handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
     }
     settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
+    settingsGUIHotkeySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
+    settingsGUIHotkeyDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
 }
 
 initializeCheckboxLinkedConfigFileEntryMap() {
@@ -804,7 +851,8 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
     ; Main hotkey (start download).
     entryName := "Start Download Hotkey"
     entryDescription := "This hotkey will start the download process. "
-    entryDescription .= "It has the same effect as pressing the [Start Download] button in the video list window."
+    entryDescription .= "It has the same effect as pressing the "
+    entryDescription .= "[" . downloadStartButton.Text . "] button in the video list window."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("START_DOWNLOAD_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("START_DOWNLOAD_HK_ENABLEDHotkeySettings")
     hotkeyFunction := (*) => hotkey_startDownload()
@@ -872,6 +920,10 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
         ddlContentArray.Push(entryName)
     }
     settingsGUIHotkeyDDL.Add(ddlContentArray)
+
+    ; Makes the settings and help GUI the child window of the video list GUI.
+    settingsGUI.Opt("+Owner" . videoListGUI.Hwnd)
+    helpGUI.Opt("+Owner" . videoListGUI.Hwnd)
 }
 
 ; Imports the config file content and sets the controls' values accordingly.

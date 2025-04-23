@@ -93,7 +93,7 @@ tutorial_gettingStarted() {
     ; Download showcase.
     hotkeyString := expandHotkey(readConfigFile("START_DOWNLOAD_HK"))
     gettingStartedTutorial.addText(
-        "Please press the [Start Download] button to start the download."
+        "Please press the [" . downloadStartButton.Text . "] button to start the download."
         "`n`nYou could also press [" . hotkeyString . "]."
         "`n`nPlease wait for the download to finish. You will see a message in the status bar.")
     gettingStartedTutorial.addAction((*) => showVideoListGUIAndHighlightDownloadButton())

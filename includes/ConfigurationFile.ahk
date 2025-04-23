@@ -23,6 +23,8 @@ initializeConfigEntryMap() {
     global versionFullName
     global configFileEntryMap := Map()
 
+    SplitPath(A_WinDir, , , , , &windowsDrive)
+
     ; [DebugSettings]
     DebugSettings := "DebugSettings"
     ENABLE_DEBUG_HOTKEYS := false
@@ -37,7 +39,7 @@ initializeConfigEntryMap() {
     ASK_FOR_TUTORIAL := true
     ; [DirectoryPaths]
     DirectoryPaths := "DirectoryPaths"
-    DEFAULT_DOWNLOAD_DIRECTORY := applicationMainDirectory . "\download"
+    DEFAULT_DOWNLOAD_DIRECTORY := windowsDrive . "\Users\" . A_UserName . "\Downloads"
     TEMP_DIRECTORY := applicationMainDirectory . "\temp"
     TEMP_DOWNLOAD_DIRECTORY := TEMP_DIRECTORY . "\download_temp"
     ; [NotificationSettings]

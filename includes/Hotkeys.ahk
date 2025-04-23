@@ -312,6 +312,16 @@ menu_exitApplication() {
 
 ; Opens the settings GUI.
 menu_openSettingsGUI() {
+    /*
+    Selects another tab element before returning to the original element
+    to avoid an issue with "ghost" control elements from other tabs appearing in the current tab.
+    */
+    currentTabNumber := settingsGUITabs.Value
+    maxTabNumber := 3
+    selectTabNumber := (maxTabNumber - currentTabNumber) ? (maxTabNumber - currentTabNumber) : 1
+    settingsGUITabs.Choose(selectTabNumber)
+    ; Switches back to the original tab.
+    settingsGUITabs.Choose(currentTabNumber)
     settingsGUI.Show("AutoSize")
 }
 

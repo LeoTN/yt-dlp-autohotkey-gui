@@ -74,11 +74,13 @@ createVideoListGUI() {
     videoListSearchBarText := videoListGUI.Add("Text", "xm+310 ym", "Search the Video List")
     videoListSearchBarInputEdit := videoListGUI.Add("Edit", "yp+20 w300", "")
     videoListSearchBarInputClearButton := videoListGUI.Add("Button", "xp+305 yp+1 w20 h20", "X")
+    videoListSearchBarInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     videoListView := videoListGUI.Add("ListView", "xp-305 yp+29 w600  R20 +Grid", ["Title", "Uploader", "Duration"])
     ; Controls that belong to the video list.
     manageVideoListGroupBox := videoListGUI.Add("GroupBox", "w600 xm ym+400 h185", "Manage Video List")
     addVideoURLInputEdit := videoListGUI.Add("Edit", "xp+10 yp+20 w555 R1 -WantReturn")
     addVideoURLInputClearButton := videoListGUI.Add("Button", "xp+560 yp+1 w20 h20", "X")
+    addVideoURLInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     ; Add URL elements.
     addVideoToListButton := videoListGUI.Add("Button", "xp-560 yp+29 w200", "Add Video(s) to List")
     addVideoURLIsAPlaylistCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30", "Add videos from a playlist")
@@ -87,20 +89,22 @@ createVideoListGUI() {
     addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
     addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled", "1")
     ; Remove video elements.
-    removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200", "Remove Video(s) from List")
+    removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200 +Disabled", "Remove Video(s) from List")
     removeVideoConfirmDeletionCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30",
         "Confirm deletion of selected videos")
     removeVideoConfirmOnlyWhenMultipleSelectedCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
         "Only multiple videos")
     ; Import and export elements.
     importVideoListButton := videoListGUI.Add("Button", "xp+200 yp-50 w75", "Import")
-    exportVideoListButton := videoListGUI.Add("Button", "yp xp+85 w75", "Export")
-    exportOnlyValidURLsCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Only consider valid URLs")
+    exportVideoListButton := videoListGUI.Add("Button", "yp xp+85 w75 +Disabled", "Export")
+    exportOnlyValidURLsCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Export only valid URLs")
     autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Controls that are relevant for downloading the videos in the video list.
     downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download")
-    downloadStartButton := videoListGUI.Add("Button", "xp+10 yp+20 w135", "Start Download")
-    downloadCancelButton := videoListGUI.Add("Button", "xp+145 yp w135", "Cancel Download")
+    downloadStartButton := videoListGUI.Add("Button", "xp+10 yp+20 w135 +Disabled", "Start Download")
+    downloadStartButton.SetColor("94d3a2", "000000", -1, "808080")
+    downloadCancelButton := videoListGUI.Add("Button", "xp+145 yp w135 +Disabled", "Cancel Download")
+    downloadCancelButton.SetColor("e6a4aa", "000000", -1, "808080")
     downloadRemoveVideosAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "xp-135 yp+30 Checked",
         "Automatically remove downloaded videos")
     downloadTerminateAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "yp+20",
@@ -109,6 +113,7 @@ createVideoListGUI() {
     downloadSelectDownloadDirectoryInputEdit := videoListGUI.Add("Edit", "yp+20 w255 R1 -WantReturn +ReadOnly",
         "default")
     downloadSelectDownloadDirectoryButton := videoListGUI.Add("Button", "xp+260 yp+1 w20 h20", "...")
+    downloadSelectDownloadDirectoryButton.SetColor("ced4da", "000000", -1, "808080")
     downloadProgressText := videoListGUI.Add("Text", "xp-260 yp+29 w280", "Downloaded (0 / 0)")
     downloadProgressBar := videoListGUI.Add("Progress", "yp+20 w280")
     ; Status bar
@@ -132,7 +137,7 @@ createVideoListGUI() {
     addVideoURLUsePlaylistRangeCheckbox.OnEvent("Click",
         handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick)
     addVideoSpecifyPlaylistRangeInputEdit.OnEvent("Change",
-        handleSettingsGUI_addVideoSpecifyPlaylistRangeInputEdit_onChange)
+        handleVideoListGUI_addVideoSpecifyPlaylistRangeInputEdit_onChange)
     ; Remove video elements.
     removeVideoFromListButton.OnEvent("Click", handleVideoListGUI_removeVideoFromListButton_onClick)
     removeVideoConfirmDeletionCheckbox.OnEvent("Click", handleVideoListGUI_removeVideoConfirmDeletionCheckbox_onClick)
@@ -170,7 +175,7 @@ createVideoListGUI() {
         "You can also search a video with it's URL."
     videoListSearchBarInputClearButton.ToolTip := ""
     ; Controls that belong to the video list.
-    addVideoURLInputEdit.ToolTip := ""
+    addVideoURLInputEdit.ToolTip := "Enter a video URL here and press [Enter] or the [" . addVideoToListButton.Text "] button."
     addVideoURLInputClearButton.ToolTip := ""
     ; Add URL elements.
     addVideoToListButton.ToolTip := ""
@@ -179,13 +184,13 @@ createVideoListGUI() {
     addVideoURLIsAPlaylistCheckbox.ToolTip .=
         "`nonly the video specified in the URL or the very first video of the playlist will be added to the list."
     addVideoURLIsAPlaylistCheckbox.ToolTip .=
-        "`nEnable this option to instead download the complete playlist by default."
+        "`nEnable this option to instead extract the complete playlist by default."
     addVideoURLUsePlaylistRangeCheckbox.ToolTip :=
         "Allows for a fine grained selection of videos from the playlist. See the help section for more information."
     addVideoSpecifyPlaylistRangeInputEdit.ToolTip :=
-        "Enter the index range to select the videos from the playlist.`nMore information can be found in the help section."
+        "Enter the index range to select specific videos from the playlist.`nMore information can be found in the help section."
     ; Remove video elements.
-    removeVideoFromListButton.ToolTip := ""
+    removeVideoFromListButton.ToolTip := "Removes all selected videos from the list."
     removeVideoConfirmDeletionCheckbox.ToolTip :=
         "Shows a prompt to confirm the removal of one or more videos from the list."
     removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.ToolTip :=
@@ -196,9 +201,11 @@ createVideoListGUI() {
     exportVideoListButton.ToolTip :=
         "Export the URLs of all (selected) videos into a file."
     exportOnlyValidURLsCheckbox.ToolTip :=
-        "Only video URLs that have been successfully extracted will be exported."
+        "Only successfully extracted video URLs will be exported "
+    exportOnlyValidURLsCheckbox.ToolTip .=
+        "when clicking the [" . exportVideoListButton.Text . "] button."
     autoExportVideoListCheckbox.ToolTip :=
-        "Automatically exports the downloaded video URLs into a file."
+        "Automatically export the downloaded video URLs into a file."
     ; Controls that are relevant for downloading the videos in the video list.
     downloadStartButton.ToolTip :=
         "Start the download of all (selected) videos in the list."
@@ -278,10 +285,6 @@ createVideoListGUI() {
     tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := ""
     tmpEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
     tmpEntry.removeEntryFromVideoListViewContentMap()
-
-    ; Makes the settings and help GUI the child window of the video list GUI.
-    settingsGUI.Opt("+Owner" . videoListGUI.Hwnd)
-    helpGUI.Opt("+Owner" . videoListGUI.Hwnd)
 }
 
 handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
@@ -429,7 +432,7 @@ handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick(pCheckbox, pInfo)
     }
 }
 
-handleSettingsGUI_addVideoSpecifyPlaylistRangeInputEdit_onChange(pEdit, pInfo) {
+handleVideoListGUI_addVideoSpecifyPlaylistRangeInputEdit_onChange(pEdit, pInfo) {
     ; Displays an inidicator in the text to show the validity status.
     if (checkIfStringIsValidPlaylistIndexRange(pEdit.Value)) {
         addVideoSpecifyPlaylistRangeText.Text := "Index Range (valid)"
@@ -541,6 +544,12 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         currentYTDLPActionObject.booleanDownloadIsRunning := true
         currentYTDLPActionObject.booleanCancelOneVideoDownload := false
         currentYTDLPActionObject.booleanCancelCompleteDownload := false
+        ; Disables the download start button.
+        downloadStartButton.Opt("+Disabled")
+        downloadStartButton.SetColor("94d3a2", "000000", -1, "808080")
+        ; Enables the download cancel button.
+        downloadCancelButton.Opt("-Disabled")
+        downloadCancelButton.SetColor("dc3545", "000000", -1, "808080")
     }
     else {
         MsgBox("There is already another download in progress.", "VD - Other Download Running",
@@ -663,6 +672,16 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         exitApplicationWithNotification()
     }
     currentYTDLPActionObject.booleanDownloadIsRunning := false
+
+    ; The download start button will only be activated when there are still videos left in the list.
+    if (!videoListViewContentMap.Has("*****No videos added yet.*****")) {
+        ; Enables the download start button.
+        downloadStartButton.Opt("-Disabled")
+        downloadStartButton.SetColor("28a745", "000000", -1, "808080")
+    }
+    ; Disables the download cancel button.
+    downloadCancelButton.Opt("+Disabled")
+    downloadCancelButton.SetColor("e6a4aa", "000000", -1, "808080")
 }
 
 handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
@@ -1332,6 +1351,14 @@ class VideoListViewEntry {
             noEntriesVideoListEntry.desiredFormatArray := ["None"]
             noEntriesVideoListEntry.desiredSubtitleArray := ["None"]
             updateCurrentlySelectedVideo(noEntriesVideoListEntry)
+
+            ; Disables the download start button.
+            downloadStartButton.Opt("+Disabled")
+            downloadStartButton.SetColor("94d3a2", "000000", -1, "808080")
+            ; Disables the video export button.
+            exportVideoListButton.Opt("+Disabled")
+            ; Disables the remove video button.
+            removeVideoFromListButton.Opt("+Disabled")
         }
         ; This means there is at least one video together with the no entries entry in the list view.
         else if (videoListViewContentMap.Count >= 2) {
@@ -1341,6 +1368,14 @@ class VideoListViewEntry {
                 ; Select the video. Otherwise the currently selected video would stay at the no entries entry.
                 updateCurrentlySelectedVideo(this)
             }
+
+            ; Enables the download start button.
+            downloadStartButton.Opt("-Disabled")
+            downloadStartButton.SetColor("28a745", "000000", -1, "808080")
+            ; Enables the video export button.
+            exportVideoListButton.Opt("-Disabled")
+            ; Enables the remove video button.
+            removeVideoFromListButton.Opt("-Disabled")
         }
         ; Clears the old data from the list view element.
         videoListView.Delete()
