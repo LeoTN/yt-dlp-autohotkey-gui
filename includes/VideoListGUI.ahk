@@ -52,6 +52,8 @@ videoListGUI_onInit() {
 createVideoListGUI() {
     global
     videoListGUI := Gui("+OwnDialogs", "VD - Video List")
+    ; Explicitly set the background color to avoid an issue with the ColorButton library.
+    videoListGUI.BackColor := "f0f0f0"
 
     /*
     ********************************************************************************************************************
@@ -75,7 +77,7 @@ createVideoListGUI() {
     videoListSearchBarInputEdit := videoListGUI.Add("Edit", "yp+20 w300", "")
     videoListSearchBarInputClearButton := videoListGUI.Add("Button", "xp+305 yp+1 w20 h20", "X")
     videoListSearchBarInputClearButton.SetColor("ced4da", "000000", -1, "808080")
-    videoListView := videoListGUI.Add("ListView", "xp-305 yp+29 w600  R20 +Grid", ["Title", "Uploader", "Duration"])
+    videoListView := videoListGUI.Add("ListView", "xp-304 yp+28 w600 h340 +Grid", ["Title", "Uploader", "Duration"])
     ; Controls that belong to the video list.
     manageVideoListGroupBox := videoListGUI.Add("GroupBox", "w600 xm ym+400 h185", "Manage Video List")
     addVideoURLInputEdit := videoListGUI.Add("Edit", "xp+10 yp+20 w555 R1 -WantReturn")
@@ -883,10 +885,10 @@ addVideoListViewEntryToListView(pVideoListViewEntry, pBooleanAutoAdjust := true)
     videoListView.Add("", pVideoListViewEntry.videoTitle, pVideoListViewEntry.videoUploader,
         pVideoListViewEntry.videoDurationString)
     if (pBooleanAutoAdjust) {
-        ; Adjust the width accordingly to the content.
-        loop (videoListView.GetCount()) {
-            videoListView.ModifyCol(A_Index, "AutoHdr")
-        }
+        ; Adjust the column width accordingly to the content.
+        videoListView.ModifyCol(1, "AutoHdr")
+        videoListView.ModifyCol(2, "AutoHdr")
+        videoListView.ModifyCol(3, "AutoHdr")
     }
 }
 

@@ -34,11 +34,13 @@ settingsGUI_onInit() {
 createSettingsGUI() {
     global
     settingsGUI := Gui("+OwnDialogs", "VD - Settings")
-    settingsGUI.MarginX := 0
-    settingsGUI.MarginY := 0
+    ; Explicitly set the background color to avoid an issue with the ColorButton library.
+    settingsGUI.BackColor := "f0f0f0"
+    settingsGUI.MarginX := -5
+    settingsGUI.MarginY := -5
     ; The space is intentional as it increases the tab size.
     local tabNames := ["   General   ", "   Video List   ", "   Hotkeys   "]
-    settingsGUITabs := settingsGUI.Add("Tab3", "xm ym w620 h455", tabNames)
+    settingsGUITabs := settingsGUI.Add("Tab3", "xm+5 ym+5 w626 h459", tabNames)
 
     /*
     ********************************************************************************************************************
@@ -51,7 +53,7 @@ createSettingsGUI() {
     */
     settingsGUITabs.UseTab(1)
     ; Startup settings.
-    settingsGUIStartupSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+30 w600 h140", "Startup")
+    settingsGUIStartupSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h140", "Startup")
     settingsGUIEnableAutoStartCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20", "Start with Windows")
     settingsGUIShowVideoListGUIAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "Open the video list window at the start")
@@ -61,14 +63,14 @@ createSettingsGUI() {
         "I want to receive beta versions")
     settingsGUIUpdateCheckForUpdatesButton := settingsGUI.Add("Button", "yp+20 w200", "Check for Updates now")
     ; Notification settings.
-    settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+180 w600 h80", "Notifications")
+    settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+185 w600 h80", "Notifications")
     settingsGUIDisplayStartupNotificationCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
         "Program launch")
     settingsGUIDisplayExitNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked", "Program exit")
     settingsGUIDisplayFinishedDownloadNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "Download finished")
     ; Directory settings.
-    settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+270 w600 h175", "Directories")
+    settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+275 w600 h175", "Directories")
     settingsGUIDirectoryDDL := settingsGUI.Add("DropDownList", "xp+10 yp+20 w580")
     settingsGUIDirectoryDescriptionEdit := settingsGUI.Add("Edit", "yp+30 w580 h40 -WantReturn +ReadOnly",
         "Please select a directory above.")
@@ -91,14 +93,14 @@ createSettingsGUI() {
     */
     settingsGUITabs.UseTab(2)
     ; Default video settings.
-    settingsGUIDefaultVideoSettings := settingsGUI.Add("GroupBox", "xm+10 ym+30 w600 h120",
+    settingsGUIDefaultVideoSettings := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h120",
         "Default Video Preferences")
     settingsGUIVideoDesiredFormatText := settingsGUI.Add("Text", "xp+10 yp+20", "Desired Format")
     settingsGUIVideoDesiredFormatDDL := settingsGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
     settingsGUIVideoDesiredSubtitleText := settingsGUI.Add("Text", "yp+30", "Desired Subtitle")
     settingsGUIVideoDesiredSubtitleDDL := settingsGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
     ; Default manage video list settings.
-    settingsGUIDefaultManageVideoListSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+160 w600 h210",
+    settingsGUIDefaultManageVideoListSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+165 w600 h210",
         "Default Manage Video List Preferences")
     settingsGUIAddVideoURLIsAPlaylistCheckbox := settingsGUI.Add("CheckBox", "xp+10 yp+20",
         "Add videos from a playlist")
@@ -115,7 +117,7 @@ createSettingsGUI() {
     settingsGUIExportOnlyValidURLsCheckbox := settingsGUI.Add("CheckBox", "yp+30", "Only consider valid URLs")
     settingsGUIAutoExportVideoListCheckbox := settingsGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Default download settings.
-    settingsGUIDefaultDownloadSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+380 w600 h60",
+    settingsGUIDefaultDownloadSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+385 w600 h60",
         "Default Download Preferences")
     settingsGUIDownloadRemoveVideosAfterDownloadCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
         "Automatically remove downloaded videos")
@@ -127,7 +129,7 @@ createSettingsGUI() {
     -------------------------------------------------
     */
     settingsGUITabs.UseTab(3)
-    settingsGUIHotkeysSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+10 ym+30 w600 h175",
+    settingsGUIHotkeysSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h175",
         "Hotkey Management Settings")
     settingsGUIHotkeyDDL := settingsGUI.Add("DropDownList", "xp+10 yp+20 w300")
     settingsGUIHotkeyText := settingsGUI.Add("Text", "yp+30", "Key Combination")

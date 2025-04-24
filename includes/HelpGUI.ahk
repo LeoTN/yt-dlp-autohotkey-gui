@@ -281,7 +281,8 @@ handleHelpGUI_helpGUIStatusBar_onClick(pStatusBar, pInfo) {
     if (i >= 5) {
         i := 0
         fakeErrorObject := Object()
-        fakeErrorObject.What := "This is a tribute to my friend Elias who helps me a lot by testing this software :D"
+        fakeErrorObject.What :=
+            "This is a tribute to my friend Elias and my sister who help me a lot by testing this software :D"
         fakeErrorObject.Message := "Is that an easter egg?"
         fakeErrorObject.Extra := "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         fakeErrorObject.File := "notavirus.exe"

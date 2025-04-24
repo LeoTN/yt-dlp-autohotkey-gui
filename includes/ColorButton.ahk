@@ -302,8 +302,16 @@ class _BtnColor extends Gui.Button {
         ; Uncomment the line blow if the button corner is a bit off.
         ; this.Gui.OnMessage(WM_CTLCOLORBTN, ON_WM_CTLCOLORBTN)
 
-        if this._btnBkColor
-            this.Gui.OnEvent("Close", (*) => DeleteObject(this.__hbrush))
+        if this._btnBkColor {
+            ; I created an issue on GitHub, but for now I can only "fix" the problem this way.
+            this.Gui.OnEvent("Close", (*) => deleteBrush())
+            deleteBrush() {
+                if (this.HasOwnProp("__hbrush")) {
+                    MsgBox "raus mit dem brush" ; REMOVE
+                    DeleteObject(this.__hbrush)
+                }
+            }
+        }
 
         this.Opt(BTN_STYLE (IsSet(colorBehindBtn) ? " Background" colorBehindBtn : "")) ;
         this.OnNotify(NM_CUSTOMDRAW, ON_NM_CUSTOMDRAW)

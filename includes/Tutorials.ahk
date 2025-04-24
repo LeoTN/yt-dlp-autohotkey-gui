@@ -265,9 +265,7 @@ applicationTutorial() {
     editConfigFile(false, "ASK_FOR_TUTORIAL")
     if (result_1 == "Yes") {
         minimizeAllGUIs()
-        ; This will show the window relatively to the video list GUI.
-        calculateInteractiveTutorialGUICoordinates(videoListGUI.Hwnd, &x, &y)
-        howToUseHelpGUITutorial.start(x, y)
+        howToUseHelpGUITutorial.start()
     }
 }
 
