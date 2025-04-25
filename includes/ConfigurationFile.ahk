@@ -230,6 +230,24 @@ createDefaultConfigFile(pBooleanCreateBackup := true, pBackupFileLocation?) {
     configFileComments .=
         "`n; A hotkey list can be found here (https://www.autohotkey.com/docs/v2/Hotkeys.htm#Symbols)`n"
     FileAppend(configFileComments, configFileLocation, "UTF-16")
+    /*
+    The configFileEntryMap contains all config file entry objects in a random order.
+    This is not a problem for the program itself, but it is nice to keep the config file organized.
+    Therefore, we create the sections first in a fixed order and then write the config file entries to the config file.
+    */
+    configFileSectionOrderArray := Array(
+        "DebugSettings",
+        "GeneralSettings",
+        "DirectoryPaths",
+        "NotificationSettings",
+        "HotkeySettings",
+        "VideoListDefaultPreferences"
+    )
+    ; Creates the sections in the config file.
+    for (configFileSection in configFileSectionOrderArray) {
+        FileAppend("[" . configFileSection . "]`n", configFileLocation, "UTF-16")
+    }
+
     ; Writes each config file entry to the config file.
     for (key, configEntry in configFileEntryMap) {
         configEntry.writeToFile()

@@ -5,14 +5,20 @@ SendMode "Input"
 CoordMode "Mouse", "Window"
 
 setup_onInit() {
+
     ; Checks the system for other already running instances of this application.
     findAlreadyRunningVDInstance("VideoDownloader.exe")
     createRequiredFolders()
     checkIfMSISetupIsRequired()
     ; Putting this behind the setup checks prevents issues when files are missing.
     createSetupGUI()
+    ; After installing the components, a reload is required.
+    booleanSetupReloadRequired := false
+    if (checkIfFFmpegOrYTDLPSetupIsRequired()) {
+        booleanSetupReloadRequired := true
+    }
     ; The application won't continue until the required dependencies are installed or the GUI is closed.
-    while (checkIfFFmpegOrYTDLPSetupIsRequired()) {
+    while (booleanSetupReloadRequired) {
         setupGUI.Show("AutoSize")
         Sleep(2000)
     }
