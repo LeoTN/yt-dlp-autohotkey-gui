@@ -5,12 +5,21 @@ SendMode "Input"
 CoordMode "Mouse", "Window"
 
 setup_onInit() {
-    createSetupGUI()
+
+    ; Checks the system for other already running instances of this application.
+    findAlreadyRunningVDInstance("VideoDownloader.exe")
     createRequiredFolders()
     checkIfMSISetupIsRequired()
-    ; The script won't continue until the required dependencies are installed or the GUI is closed.
-    while (checkIfFFmpegOrYTDLPSetupIsRequired()) {
-        setupGUI.Show()
+    ; Putting this behind the setup checks prevents issues when files are missing.
+    createSetupGUI()
+    ; After installing the components, a reload is required.
+    booleanSetupReloadRequired := false
+    if (checkIfFFmpegOrYTDLPSetupIsRequired()) {
+        booleanSetupReloadRequired := true
+    }
+    ; The application won't continue until the required dependencies are installed or the GUI is closed.
+    while (booleanSetupReloadRequired) {
+        setupGUI.Show("AutoSize")
         Sleep(2000)
     }
 }
@@ -21,7 +30,7 @@ createSetupGUI() {
     setupGUI.MarginX := 0
     setupGUI.MarginY := 0
     ; Add a background image to the GUI.
-    setupGUI.Add("Picture", "x0 y0 w320 h-1 +Center", mainGUIBackGroundLocation)
+    setupGUI.Add("Picture", "x0 y0 w320 h-1 +Center", GUIBackgroundImageLocation)
     dependencyText := setupGUI.Add("Text", "xp+10 yp+5 wp-20 R2 +BackgroundTrans",
         "Required Dependencies")
     dependencyText.SetFont("s12 bold")
@@ -38,17 +47,17 @@ createSetupGUI() {
 
     setupProgressBar := setupGUI.Add("Progress", "xp-120 x0 yp+50 w320")
     setupGUIStatusBar := setupGUI.Add("StatusBar", "-Theme BackgroundSilver")
-    setupGUIStatusBar.SetIcon("shell32.dll", 222) ; REMOVE USE ICON DLL HERE
-    setupGUIStatusBar.SetText("Please start the setup process.")
+    setupGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
+    setupGUIStatusBar.SetText("Please start the setup process")
 
-    ; When the window is closed without installing the required dependencies, the script must exit.
-    setupGUI.OnEvent("Close", (*) => exitScriptWithNotification(true))
+    ; When the window is closed without installing the required dependencies, the application must exit.
+    setupGUI.OnEvent("Close", (*) => exitApplicationWithNotification(true))
     ; This does not allow the user to change the value of the checkbox.
     ffmpegCheckbox.OnEvent("Click", (*) => ffmpegCheckbox.Value := !ffmpegCheckbox.Value)
     ; This does not allow the user to change the value of the checkbox.
     YTDLPCheckbox.OnEvent("Click", (*) => YTDLPCheckbox.Value := !YTDLPCheckbox.Value)
-    cancelSetupButton.OnEvent("Click", (*) => exitScriptWithNotification(true))
-    startSetupButton.OnEvent("Click", (*) => handleSetupGUI_startSetupButton())
+    cancelSetupButton.OnEvent("Click", (*) => exitApplicationWithNotification(true))
+    startSetupButton.OnEvent("Click", (*) => handleSetupGUI_startSetupButton_onClick())
 }
 
 updateDependencyCheckboxes() {
@@ -75,8 +84,7 @@ updateDependencyCheckboxes() {
 ; Creates all folders in case they do not exist.
 createRequiredFolders() {
     requiredFolders := [
-        scriptMainDirectory,
-        scriptWorkingDirectory,
+        applicationMainDirectory,
         assetDirectory,
         ffmpegDirectory,
         iconDirectory,
@@ -90,13 +98,13 @@ createRequiredFolders() {
     }
 }
 
-; Checks if all required files are present. In case a file is missing, the script will exit after informing the user.
+; Checks if all required files are present. In case a file is missing, the application will exit after informing the user.
 checkIfMSISetupIsRequired() {
     requiredFiles := [
         psUpdateScriptLocation,
-        downloadOptionsGUITooltipFileLocation,
-        mainGUIBackGroundLocation,
-        scriptIconLocation
+        psRunYTDLPExecutableLocation,
+        GUIBackgroundImageLocation,
+        iconFileLocation
     ]
     for (i, requiredFile in requiredFiles) {
         if (!FileExist(requiredFile)) {
@@ -104,17 +112,17 @@ checkIfMSISetupIsRequired() {
                 "] is missing.`n`nPlease reinstall or repair the software using the .MSI installer.",
                 "VideoDownloader - Reinstallation required",
                 "Icon! 262144")
-            exitScriptWithNotification(true)
+            exitApplicationWithNotification(true)
         }
     }
 }
 
 ; Updates the GUI depending on the installation status of the dependencies.
-handleSetupGUI_startSetupButton() {
+handleSetupGUI_startSetupButton_onClick() {
     startSetupButton.Opt("+Disabled")
     ; Installs the dependencies and updates the GUI accordingly.
     if (getFFmpegInstallionStatus()) {
-        setupGUIStatusBar.SetText("FFmpeg installed.")
+        setupGUIStatusBar.SetText("FFmpeg installed")
         setupProgressBar.Value += 50
     }
     else {
@@ -122,14 +130,14 @@ handleSetupGUI_startSetupButton() {
     }
     updateDependencyCheckboxes()
     if (getYTDLPInstallionStatus()) {
-        setupGUIStatusBar.SetText("yt-dlp installed.")
+        setupGUIStatusBar.SetText("yt-dlp installed")
         setupProgressBar.Value += 50
     }
     else {
         installYTDLP()
     }
     updateDependencyCheckboxes()
-    setupGUIStatusBar.SetText("Setup completed.")
+    setupGUIStatusBar.SetText("Setup completed")
     Sleep(2000)
     Reload()
 }
@@ -188,7 +196,7 @@ installYTDLP() {
 
 /*
 Checks if the FFmpeg and yt-dlp executables are present.
-@Returns [boolean] True, if the files are not present. False otherwise.
+@returns [boolean] True, if the files are not present. False otherwise.
 */
 checkIfFFmpegOrYTDLPSetupIsRequired() {
     if (!getFFmpegInstallionStatus() || !getYTDLPInstallionStatus()) {
@@ -199,7 +207,7 @@ checkIfFFmpegOrYTDLPSetupIsRequired() {
 
 /*
 Checks if the FFmpeg executables are installed.
-@Returns [boolean] True if all FFmpeg executables are installed, false otherwise.
+@returns [boolean] True if all FFmpeg executables are installed, false otherwise.
 */
 getFFmpegInstallionStatus() {
     global ffmpegDirectory
@@ -215,7 +223,7 @@ getFFmpegInstallionStatus() {
 
 /*
 Checks if yt-dlp is installed.
-@Returns [boolean] True if yt-dlp is installed, false otherwise.
+@returns [boolean] True if yt-dlp is installed, false otherwise.
 */
 getYTDLPInstallionStatus() {
     global YTDLPDirectory

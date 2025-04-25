@@ -16,7 +16,7 @@ Param (
 
 $Host.UI.RawUI.BackgroundColor = "Black"
 $Host.UI.RawUI.ForegroundColor = "White"
-$Host.UI.RawUI.WindowTitle = "VideoDownloader - Update Script"
+$Host.UI.RawUI.WindowTitle = "VideoDownloader - Update Application"
 $scriptParentDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $logFileName = "checkForAvailableUpdates.log"
 $logFilePath = Join-Path -Path $scriptParentDirectory -ChildPath $logFileName
@@ -78,11 +78,12 @@ function exitScript() {
         [int]$pExitCode
     )
 
-    $null = Write-Host "[onInit()] [exitScript()] Exiting with exit code [$pExitCode]."
+    $null = Write-Host "[exitScript()] Exiting with exit code [$pExitCode]."
     # Speeds up the script when it's ran without the user seeing it.
     If (checkIfScriptWindowIsHidden) {
         $null = Start-Sleep -Seconds 3
     }
+    $null = Stop-Transcript
     Exit $pExitCode
 }
 
@@ -108,7 +109,7 @@ function evaluateUpdate() {
 }
 
 function extractVersionInformation() {
-    # Checks if the provided tag has a valid syntaxt.
+    # Checks if the provided tag has a valid syntax.
     $tmpTag = $global:currentVersion.Replace("v", "").Replace("-beta", "")
     If (-not ($tmpTag -match '^\d+\.\d+\.\d+(\.\d+)?$')) {
         $null = Write-Host "[extractVersionInformation()] [ERROR] Found tag name which couldn't be converted to version: [$global:currentVersion]." -ForegroundColor "Red"

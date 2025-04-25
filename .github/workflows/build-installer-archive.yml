@@ -31,7 +31,6 @@ on:
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
-  FINAL_TOOLTIP_EXECUTABLE_NAME: DownloadOptionsGUITooltips.exe
   FINAL_INSTALLER_NAME: VideoDownloader_v${{ inputs.version }}_Installer.msi
   RELEASE_VERSION: ${{ inputs.version }}
   RELEASE_NAME: ""
@@ -56,23 +55,13 @@ jobs:
         $null = Expand-Archive -Path "${{ github.workspace }}\compiler\ahk.zip" -DestinationPath $ahkFolder
         $null = Expand-Archive -Path "${{ github.workspace }}\compiler\ahk-v2.zip" -DestinationPath $ahkV2Folder
 
-    - name: Compile Autohotkey Main Script
+    - name: Compile Autohotkey Main Application
       run: |
         # Set the paths to execute more easily.
         $scriptPathIn = "${{ github.workspace }}\VideoDownloader.ahk"
         $scriptPathOut = "${{ github.workspace }}\$env:FINAL_EXECUTABLE_NAME"
 
-        # Compile the script.
-        $null = Start-Process -FilePath ".\ahk\Compiler\Ahk2Exe.exe" -ArgumentList "/in $scriptPathIn /out $scriptPathOut /base "".\ahk-v2\AutoHotkey64.exe"" /silent verbose" -Wait
-        $null = Write-Host "[INFO] The executable will be saved to [$scriptPathOut]."
-
-    - name: Compile Autohotkey Tooltip Script
-      run: |
-        # Set the paths to execute more easily.
-        $scriptPathIn = "${{ github.workspace }}\library\build\DownloadOptionsGUITooltips.ahk"
-        $scriptPathOut = "${{ github.workspace }}\$env:FINAL_TOOLTIP_EXECUTABLE_NAME"
-
-        # Compile the script.
+        # Compile the application.
         $null = Start-Process -FilePath ".\ahk\Compiler\Ahk2Exe.exe" -ArgumentList "/in $scriptPathIn /out $scriptPathOut /base "".\ahk-v2\AutoHotkey64.exe"" /silent verbose" -Wait
         $null = Write-Host "[INFO] The executable will be saved to [$scriptPathOut]."
 
@@ -81,12 +70,6 @@ jobs:
       with:
         name: ${{ env.FINAL_EXECUTABLE_NAME }}
         path: ${{ github.workspace }}\${{ env.FINAL_EXECUTABLE_NAME }}
-
-    - name: Upload Tooltip Executable as Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.FINAL_TOOLTIP_EXECUTABLE_NAME }}
-        path: ${{ github.workspace }}\${{ env.FINAL_TOOLTIP_EXECUTABLE_NAME }}
 
   build_msi_file:
     runs-on: windows-2019
@@ -102,12 +85,6 @@ jobs:
           name: ${{ env.FINAL_EXECUTABLE_NAME }}
           path: ${{ github.workspace }}
 
-      - name: Download Tooltip Executable Artifact
-        uses: actions/download-artifact@v4
-        with:
-         name: ${{ env.FINAL_TOOLTIP_EXECUTABLE_NAME }}
-         path: ${{ github.workspace }}\library\build
-        
       - name: Define Final Installer Name
         run: |
           # The name only changes when the release is a beta release.

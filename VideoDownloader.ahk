@@ -1,7 +1,7 @@
 ;@Ahk2Exe-SetCompanyName Made by LeoTN
 ;@Ahk2Exe-SetCopyright Licence available on my GitHub project (https://github.com/LeoTN/yt-dlp-autohotkey-gui)
 ;@Ahk2Exe-SetDescription VideoDownloader
-;@Ahk2Exe-SetMainIcon library\assets\icons\green_arrow_icon.ico
+;@Ahk2Exe-SetMainIcon library\assets\icons\1.ico
 
 #MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
@@ -12,121 +12,114 @@ CoordMode "Mouse", "Client"
 ; Sets the directory for all following files.
 #Include "includes\"
 #Include "Acc.ahk"
-#Include "ConfigFile.ahk"
-#Include "DownloadOptionsGUI.ahk"
-#Include "FileManager.ahk"
-#Include "HotKeys & Functions.ahk"
-#Include "MainGUI.ahk"
+#Include "ColorButton.ahk"
+#Include "ConfigurationFile.ahk"
+#Include "Functions.ahk"
+#Include "HelpGUI.ahk"
+#Include "Hotkeys.ahk"
+#Include "SettingsGUI.ahk"
 #Include "Setup.ahk"
+#Include "Tutorials.ahk"
 #Include "UpdateGUI.ahk"
+#Include "VideoListGUI.ahk"
 
 onInit()
 
 onInit() {
-    global scriptRegistryDirectory := "HKCU\SOFTWARE\LeoTN\VideoDownloader"
+    global applicationRegistryDirectory := "HKCU\SOFTWARE\LeoTN\VideoDownloader"
     ; This folder will contain all other files.
-    global scriptMainDirectory := A_ScriptDir . "\VideoDownloader"
-    ; Working directory for downloads, settings and presets.
-    global scriptWorkingDirectory := scriptMainDirectory ; REMOVE ADD OPTION TO CHANGE
+    global applicationMainDirectory := A_ScriptDir . "\VideoDownloader"
 
-    global assetDirectory := scriptMainDirectory . "\assets"
+    global assetDirectory := applicationMainDirectory . "\assets"
 
     global ffmpegDirectory := assetDirectory . "\ffmpeg"
     global ffmpegFileLocation := ffmpegDirectory . "\ffmpeg.exe"
 
     global iconDirectory := assetDirectory . "\icons"
-    global scriptIconLocation := iconDirectory . "\green_arrow_icon.ico"
-    global mainGUIBackGroundLocation := iconDirectory . "\main_gui_background.png"
+    global iconFileLocation := iconDirectory . "\video_downloader_icons.dll"
+    global GUIBackgroundImageLocation := iconDirectory . "\video_list_gui_background.png"
 
     global psScriptDirectory := assetDirectory . "\scripts"
     global psUpdateScriptLocation := psScriptDirectory . "\checkForAvailableUpdates.ps1"
-    global downloadOptionsGUITooltipFileLocation := psScriptDirectory . "\DownloadOptionsGUITooltips.exe"
-    global psDownloadProgressVisualizerLocation := psScriptDirectory . "\downloadProgressVisualizer.ps1"
+    global psRunYTDLPExecutableLocation := psScriptDirectory . "\runYTDLPExecutableWithRedirectedStdout.ps1"
 
     global YTDLPDirectory := assetDirectory . "\yt-dlp"
     global YTDLPFileLocation := YTDLPDirectory . "\yt-dlp.exe"
 
     ; When this value is true, certain functions will behave differently and do not show unnecessary prompts.
-    global booleanFirstTimeLaunch := RegRead(scriptRegistryDirectory, "booleanFirstTimeLaunch", false)
-    ; The version of this script. For example "v1.2.3.4".
+    global booleanFirstTimeLaunch := RegRead(applicationRegistryDirectory, "booleanFirstTimeLaunch", false)
+    ; The version of this application. For example "v1.2.3.4".
     global versionFullName := getCorrectScriptVersionFromRegistry()
+
+    ; Determine the available download formats and subtitle options.
+    global desiredDownloadFormatArray := [
+        ; Video formats.
+        "Automatically choose best video format", "mp4", "webm", "avi", "flv", "mkv", "mov",
+        ; Audio formats.
+        "Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "opus", "vorbis"
+    ]
+    global desiredSubtitleArray := [
+        "Do not download subtitles", "Embed all available subtitles"
+    ]
 
     try
     {
-        TraySetIcon(scriptIconLocation)
+        TraySetIcon(iconFileLocation, 1, true)
+        ; Clears the existing tray menu elements.
+        A_TrayMenu.Delete()
+        ; Adds a tray menu point to open the video list GUI.
+        A_TrayMenu.Add("Video List", (*) => hotkey_openVideoListGUI())
+        A_TrayMenu.Add("Settings", (*) => menu_openSettingsGUI())
+        A_TrayMenu.Add()
+        A_TrayMenu.Add("Restart", (*) => menu_restartApplication())
+        A_TrayMenu.Add("Exit", (*) => menu_exitApplication())
+        A_TrayMenu.Add("About", (*) => menu_openHelpGUI())
+        ; When clicking on the tray icon twice, this will make sure, that the video list GUI is shown to the user.
+        A_TrayMenu.Default := "Video List"
     }
+    catch as error {
+        displayErrorMessage(error, "This is not a fatal error.", , 10000)
+    }
+
+    /*
+    INCLUDED COMPONENTS INIT FUNCTIONS
+    -------------------------------------------------
+    */
+
     ; Basically checks if all required files and folders are present.
     setup_onInit()
+    ; Checks and loads the config file.
+    configurationFile_onInit()
+    ; Currently has no purpose.
+    functions_onInit()
+    ; Initializes the hotkeys.
+    hotkeys_onInit()
+    ; Creates the help GUI.
+    helpGUI_onInit()
+    ; Creates the video list GUI.
+    videoListGUI_onInit()
+    ; Creates the settings GUI.
+    settingsGUI_onInit()
+    ; Initializes the tutorials for the help GUI.
+    tutorials_onInit()
+    ; Checks for available updates (depending on the user's choice regarding updates).
+    updateGUI_onInit()
 
-    ; Checks the system for other already running instances of this script.
-    findProcessWithWildcard("VideoDownloader.exe")
-    config_onInit()
-    ; Only called to check the config file status.
-    readConfigFile("booleanDebugMode")
-    checkBlackListFile("createBlackListFile")
-    hotkey_onInit()
-    mainGUI_onInit()
-    optionsGUI_onInit()
+    /*
+    INCLUDED COMPONENTS INIT FUNCTIONS END
+    -------------------------------------------------
+    */
+
+    if (readConfigFile("DISPLAY_STARTUP_NOTIFICATION")) {
+        TrayTip("VideoDownloader launched.", "VideoDownloader - Status", "Iconi Mute")
+        SetTimer () => TrayTip(), -1500
+    }
     ; Shows a small tutorial to guide the user.
     if (readConfigFile("ASK_FOR_TUTORIAL")) {
-        ; scriptTutorial() ; REMOVE [TEMPORARILY DISABLED UNTIL TUTORIAL REWORK]
-    }
-    if (readConfigFile("SHOW_OPTIONS_GUI_ON_LAUNCH")) {
-        if (!WinExist("ahk_id " . downloadOptionsGUI.Hwnd)) {
-            hotkey_openOptionsGUI()
-        }
-        else {
-            WinActivate("ahk_id " . downloadOptionsGUI.Hwnd)
-        }
-    }
-    if (readConfigFile("SHOW_MAIN_GUI_ON_LAUNCH")) {
-        if (!WinExist("ahk_id " . mainGUI.Hwnd)) {
-            hotkey_openMainGUI()
-        }
-        else {
-            WinActivate("ahk_id " . mainGUI.Hwnd)
-        }
-    }
-    if (readConfigFile("CHECK_FOR_UPDATES_AT_LAUNCH") && !booleanFirstTimeLaunch) {
-        checkForAvailableUpdates()
+        applicationTutorial()
     }
     ; Disables the firstTimeLaunch at the end of the first run.
     if (booleanFirstTimeLaunch) {
-        RegWrite(false, "REG_DWORD", scriptRegistryDirectory, "booleanFirstTimeLaunch")
+        RegWrite(false, "REG_DWORD", applicationRegistryDirectory, "booleanFirstTimeLaunch")
     }
 }
-
-/*
-DEBUG SECTION
--------------------------------------------------
-Add debug hotkeys here.
-*/
-
-; Debug hotkey template.
-F5::
-{
-    if (readConfigFile("booleanDebugMode")) {
-        ; Enter code below.
-        A_Clipboard := A_ComSpec ' /k ' . buildCommandString() . '> "' . readConfigFile("DOWNLOAD_LOG_FILE_LOCATION") .
-        '"'
-    }
-}
-
-F6::
-{
-    if (readConfigFile("booleanDebugMode")) {
-        ; Enter code below.
-    }
-}
-
-F7::
-{
-    if (readConfigFile("booleanDebugMode")) {
-        ; Enter code below.
-    }
-}
-
-/*
-DEBUG SECTION END
--------------------------------------------------
-*/

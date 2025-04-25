@@ -10,4 +10,3 @@ compiler/*.zip
 compiler/*.autosave.aip
 compiler/*.back*.aip
 compiler/VideoDownloaderInstaller-cache/
-library/build/DownloadOptionsGUITooltips.exe
