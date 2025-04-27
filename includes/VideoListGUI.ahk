@@ -99,7 +99,7 @@ createVideoListGUI() {
     ; Import and export elements.
     importVideoListButton := videoListGUI.Add("Button", "xp+200 yp-50 w75", "Import")
     exportVideoListButton := videoListGUI.Add("Button", "yp xp+85 w75 +Disabled", "Export")
-    exportOnlyValidURLsCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Export only valid URLs")
+    importAndExportOnlyValidURLsCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Only consider valid URLs")
     autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Controls that are relevant for downloading the videos in the video list.
     downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download")
@@ -158,6 +158,8 @@ createVideoListGUI() {
     It is caused by pressing F1 while it is the active window or any owned MsgBox with a help button.
     */
     OnMessage(0x0053, handleVideoListGUI_onEventHelp)
+    ; Makes the video list GUI sensible for drag and drop events.
+    videoListGUI.OnEvent("DropFiles", handleVideoListGUI_onEventDropFiles)
 
     /*
     ********************************************************************************************************************
@@ -201,11 +203,13 @@ createVideoListGUI() {
     importVideoListButton.ToolTip :=
         "Import a text file with video URLs. Each line must only contain one URL."
     exportVideoListButton.ToolTip :=
-        "Export the URLs of all (selected) videos into a file."
-    exportOnlyValidURLsCheckbox.ToolTip :=
+        "Export the URLs of all (selected) videos into a text file."
+    importAndExportOnlyValidURLsCheckbox.ToolTip :=
         "Only successfully extracted video URLs will be exported "
-    exportOnlyValidURLsCheckbox.ToolTip .=
+    importAndExportOnlyValidURLsCheckbox.ToolTip .=
         "when clicking the [" . exportVideoListButton.Text . "] button."
+    importAndExportOnlyValidURLsCheckbox.ToolTip .=
+        "`nThe same goes for the import function which only imports valid URLs in case this checkbox is enabled."
     autoExportVideoListCheckbox.ToolTip :=
         "Automatically export the downloaded video URLs into a file."
     ; Controls that are relevant for downloading the videos in the video list.
@@ -491,7 +495,7 @@ handleVideoListGUI_importVideoListButton_onClick(pButton, pInfo) {
         return
     }
     ; Imports all URLs or only valid ones, depending on the value of the checkbox.
-    importVideoListViewElements(importFileLocation, exportOnlyValidURLsCheckbox.Value)
+    importVideoListViewElements(importFileLocation, importAndExportOnlyValidURLsCheckbox.Value)
 }
 
 handleVideoListGUI_exportVideoListButton_onClick(pButton, pInfo) {
@@ -506,12 +510,12 @@ handleVideoListGUI_exportVideoListButton_onClick(pButton, pInfo) {
     ; Only export the selected videos.
     if (selectedVideoListViewElementsMap.Count > 0) {
         ; Exports all URLs or only valid ones, depending on the value of the checkbox.
-        exportVideoListViewElements(selectedVideoListViewElementsMap, , exportOnlyValidURLsCheckbox.Value)
+        exportVideoListViewElements(selectedVideoListViewElementsMap, , importAndExportOnlyValidURLsCheckbox.Value)
     }
     ; Export all videos.
     else {
         ; Exports all URLs or only valid ones, depending on the value of the checkbox.
-        exportVideoListViewElements(videoListViewContentMap, , exportOnlyValidURLsCheckbox.Value)
+        exportVideoListViewElements(videoListViewContentMap, , importAndExportOnlyValidURLsCheckbox.Value)
     }
 }
 
@@ -768,6 +772,32 @@ handleVideoListGUI_onEventHelp(wParam, lParam, msg, hwnd) {
     }
 }
 
+handleVideoListGUI_onEventDropFiles(pGUI, pGUIElement, pFileArray, pX, pY) {
+    textFileArray := Array()
+    for (file in pFileArray) {
+        ; This means the user dropped a text file into the GUI.
+        if (InStr(file, ".txt")) {
+            textFileArray.Push(file)
+        }
+    }
+    if (textFileArray.Length == 0) {
+        MsgBox("Please drop at least one text file with video URLs into the GUI.", "VD - Invalid File",
+            "O Iconi T3 Owner" . videoListGUI.Hwnd)
+        return
+    }
+    if (textFileArray.Length > 1) {
+        result := MsgBox("You dropped " . textFileArray.Length . " text files.`n`nDo you want to import all of them?",
+            "VD - Import Multiple Files", "YN Icon? Owner" . videoListGUI.Hwnd)
+        if (result != "Yes") {
+            return
+        }
+    }
+    ; Imports all URLs or only valid ones, depending on the value of the checkbox.
+    for (file in textFileArray) {
+        importVideoListViewElements(file, importAndExportOnlyValidURLsCheckbox.Value)
+    }
+}
+
 /*
 Shows a neat little loading animation in the status bar.
 This function can be called again to overwrite the currently playing animation.
@@ -829,7 +859,7 @@ importConfigFileValuesIntoVideoListGUI() {
     removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.Value := readConfigFile(
         "REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED")
     ; Import and export elements.
-    exportOnlyValidURLsCheckbox.Value := readConfigFile("EXPORT_ONLY_VALID_URLS")
+    importAndExportOnlyValidURLsCheckbox.Value := readConfigFile("IMPORT_AND_EXPORT_ONLY_VALID_URLS")
     autoExportVideoListCheckbox.Value := readConfigFile("AUTO_EXPORT_VIDEO_LIST")
     ; Controls that are relevant for downloading the videos in the video list.
     downloadRemoveVideosAfterDownloadCheckbox.Value := readConfigFile("REMOVE_VIDEOS_AFTER_DOWNLOAD")

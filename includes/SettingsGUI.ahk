@@ -114,7 +114,7 @@ createSettingsGUI() {
     settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox := settingsGUI.Add("CheckBox", "yp+20 +Disabled",
         "Only multiple videos")
     ; Import and export elements.
-    settingsGUIExportOnlyValidURLsCheckbox := settingsGUI.Add("CheckBox", "yp+30", "Only consider valid URLs")
+    settingsGUIimportAndExportOnlyValidURLsCheckbox := settingsGUI.Add("CheckBox", "yp+30", "Only consider valid URLs")
     settingsGUIAutoExportVideoListCheckbox := settingsGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Default download settings.
     settingsGUIDefaultDownloadSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+385 w600 h60",
@@ -191,7 +191,7 @@ createSettingsGUI() {
     settingsGUIRemoveVideoConfirmDeletionCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox.OnEvent("Click",
         handleSettingsGUI_allCheckBox_onClick)
-    settingsGUIExportOnlyValidURLsCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
+    settingsGUIimportAndExportOnlyValidURLsCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIAutoExportVideoListCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDownloadRemoveVideosAfterDownloadCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDownloadTerminateAfterDownloadCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
@@ -277,8 +277,10 @@ createSettingsGUI() {
     settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox.ToolTip :=
         "If enabled, will only prompt to confirm the removal of multiple videos at once."
     ; Import and export elements.
-    settingsGUIExportOnlyValidURLsCheckbox.ToolTip :=
+    settingsGUIimportAndExportOnlyValidURLsCheckbox.ToolTip :=
         "Only video URLs that have been successfully extracted will be exported."
+    settingsGUIimportAndExportOnlyValidURLsCheckbox.ToolTip .=
+        "`nThe same goes for the import function which only imports valid URLs in case this checkbox is enabled."
     settingsGUIAutoExportVideoListCheckbox.ToolTip :=
         "Automatically exports the downloaded video URLs into a file."
     ; Default download settings.
@@ -803,7 +805,8 @@ initializeCheckboxLinkedConfigFileEntryMap() {
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox,
         "REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED")
     ; Import and export elements.
-    checkboxLinkedConfigFileEntryMap.Set(settingsGUIExportOnlyValidURLsCheckbox, "EXPORT_ONLY_VALID_URLS")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIimportAndExportOnlyValidURLsCheckbox,
+        "IMPORT_AND_EXPORT_ONLY_VALID_URLS")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIAutoExportVideoListCheckbox, "AUTO_EXPORT_VIDEO_LIST")
     ; Default download settings.
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIDownloadRemoveVideosAfterDownloadCheckbox,

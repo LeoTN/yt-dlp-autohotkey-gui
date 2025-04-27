@@ -392,7 +392,7 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
     if (invalidURLArray.Length > 0 && !pBooleanSkipInvalidURLs) {
         ; Asks the user if they would like to import the invalid URLs (if there are any).
         if (invalidURLArray.Length == 1) {
-            msgText := "There is [1] invalid URL in the list."
+            msgText := "There is [1] invalid URL in the file [" . pImportFileLocation . "]."
             msgText .= "`n`nWould you like to import it anyway?"
             msgTitle := "VD - Invalid URL Found"
             msgHeadLine := "Import Invalid URL?"
@@ -401,7 +401,8 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
             msgButton3 := "Exclude Invalid URL"
         }
         else {
-            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the list."
+            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the file ["
+                . pImportFileLocation . "]."
             msgText .= "`n`nWould you like to import them anyway?"
             msgTitle := "VD - Invalid URLs Found"
             msgHeadLine := "Import Invalid URLs?"
