@@ -51,7 +51,7 @@ videoListGUI_onInit() {
 
 createVideoListGUI() {
     global
-    videoListGUI := Gui("+OwnDialogs", "VD - Video List")
+    videoListGUI := Gui("+MinSize +OwnDialogs +Resize", "VD - Video List")
     ; Explicitly set the background color to avoid an issue with the ColorButton library.
     videoListGUI.BackColor := "f0f0f0"
 
@@ -65,22 +65,22 @@ createVideoListGUI() {
     videoTitleText := videoListGUI.Add("Text", "xp+10 yp+20 w280 R1 -Wrap", "Video Title")
     videoUploaderText := videoListGUI.Add("Text", "yp+20 w280 R1 -Wrap", "Uploader")
     videoDurationText := videoListGUI.Add("Text", "yp+20 w280 R1 -Wrap", "Duration")
-    videoThumbnailImage := videoListGUI.Add("Picture", "w280 h157.5 yp+20 +AltSubmit", GUIBackgroundImageLocation)
+    videoThumbnailImage := videoListGUI.Add("Picture", "w280 h158 yp+20", GUIBackgroundImageLocation)
     ; Controls that change the download settings for the video.
-    videoDesiredFormatText := videoListGUI.Add("Text", "yp+172.5", "Desired Format")
+    videoDesiredFormatText := videoListGUI.Add("Text", "yp+173", "Desired Format")
     videoDesiredFormatDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
     videoDesiredSubtitleText := videoListGUI.Add("Text", "yp+30", "Desired Subtitle")
     videoDesiredSubtitleDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
     videoAdvancedDownloadSettingsButton := videoListGUI.Add("Button", "w280 yp+30", "Advanced Download Settings")
     ; Video list controls.
     videoListSearchBarText := videoListGUI.Add("Text", "xm+310 ym", "Search the Video List")
-    videoListSearchBarInputEdit := videoListGUI.Add("Edit", "yp+20 w300", "")
+    videoListSearchBarInputEdit := videoListGUI.Add("Edit", "yp+20 w300 -Multi", "")
     videoListSearchBarInputClearButton := videoListGUI.Add("Button", "xp+305 yp+1 w20 h20", "X")
     videoListSearchBarInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     videoListView := videoListGUI.Add("ListView", "xp-304 yp+28 w600 h340 +Grid", ["Title", "Uploader", "Duration"])
     ; Controls that belong to the video list.
     manageVideoListGroupBox := videoListGUI.Add("GroupBox", "w600 xm ym+400 h185", "Manage Video List")
-    addVideoURLInputEdit := videoListGUI.Add("Edit", "xp+10 yp+20 w555 R1 -WantReturn")
+    addVideoURLInputEdit := videoListGUI.Add("Edit", "xp+10 yp+20 w555 R1 -WantReturn -Multi")
     addVideoURLInputClearButton := videoListGUI.Add("Button", "xp+560 yp+1 w20 h20", "X")
     addVideoURLInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     ; Add URL elements.
@@ -89,7 +89,7 @@ createVideoListGUI() {
     addVideoURLUsePlaylistRangeCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
         "Only add videos in a specific range")
     addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
-    addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled", "1")
+    addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled -Multi", "1")
     ; Remove video elements.
     removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200 +Disabled", "Remove Video(s) from List")
     removeVideoConfirmDeletionCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30",
@@ -160,6 +160,8 @@ createVideoListGUI() {
     OnMessage(0x0053, handleVideoListGUI_onEventHelp)
     ; Makes the video list GUI sensible for drag and drop events.
     videoListGUI.OnEvent("DropFiles", handleVideoListGUI_onEventDropFiles)
+    ; Calls this function when the GUI is resized.
+    videoListGUI.OnEvent("Size", (*) => handleVideoListGUI_onResize())
 
     /*
     ********************************************************************************************************************
@@ -291,6 +293,56 @@ createVideoListGUI() {
     tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := ""
     tmpEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
     tmpEntry.removeEntryFromVideoListViewContentMap()
+
+    /*
+    ********************************************************************************************************************
+    This section links every GUI control to a GUIControlResizeLink object.
+    ********************************************************************************************************************
+    */
+
+    ; The GUI must be shown to calculate the original size.
+    videoListGUI.Show("AutoSize Hide")
+
+    GUIControlResizeLink(currentlySelectedVideoGroupBox)
+    GUIControlResizeLink(videoTitleText)
+    GUIControlResizeLink(videoUploaderText)
+    GUIControlResizeLink(videoDurationText)
+    GUIControlResizeLink(videoThumbnailImage)
+    GUIControlResizeLink(videoDesiredFormatText)
+    GUIControlResizeLink(videoDesiredFormatDDL)
+    GUIControlResizeLink(videoDesiredSubtitleText)
+    GUIControlResizeLink(videoDesiredSubtitleDDL)
+    GUIControlResizeLink(videoAdvancedDownloadSettingsButton)
+    GUIControlResizeLink(videoListSearchBarText)
+    GUIControlResizeLink(videoListSearchBarInputEdit)
+    GUIControlResizeLink(videoListSearchBarInputClearButton)
+    GUIControlResizeLink(videoListView)
+    GUIControlResizeLink(manageVideoListGroupBox)
+    GUIControlResizeLink(addVideoURLInputEdit)
+    GUIControlResizeLink(addVideoURLInputClearButton)
+    GUIControlResizeLink(addVideoToListButton)
+    GUIControlResizeLink(addVideoURLIsAPlaylistCheckbox)
+    GUIControlResizeLink(addVideoURLUsePlaylistRangeCheckbox)
+    GUIControlResizeLink(addVideoSpecifyPlaylistRangeText)
+    GUIControlResizeLink(addVideoSpecifyPlaylistRangeInputEdit)
+    GUIControlResizeLink(removeVideoFromListButton)
+    GUIControlResizeLink(removeVideoConfirmDeletionCheckbox)
+    GUIControlResizeLink(removeVideoConfirmOnlyWhenMultipleSelectedCheckbox)
+    GUIControlResizeLink(importVideoListButton)
+    GUIControlResizeLink(exportVideoListButton)
+    GUIControlResizeLink(importAndExportOnlyValidURLsCheckbox)
+    GUIControlResizeLink(autoExportVideoListCheckbox)
+    GUIControlResizeLink(downloadVideoGroupBox)
+    GUIControlResizeLink(downloadStartButton)
+    GUIControlResizeLink(downloadCancelButton)
+    GUIControlResizeLink(downloadRemoveVideosAfterDownloadCheckbox)
+    GUIControlResizeLink(downloadTerminateAfterDownloadCheckbox)
+    GUIControlResizeLink(downloadSelectDownloadDirectoryText)
+    GUIControlResizeLink(downloadSelectDownloadDirectoryInputEdit)
+    GUIControlResizeLink(downloadSelectDownloadDirectoryButton)
+    GUIControlResizeLink(downloadProgressText)
+    GUIControlResizeLink(downloadProgressBar)
+    GUIControlResizeLink(videoListGUIStatusBar)
 }
 
 handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
@@ -795,6 +847,29 @@ handleVideoListGUI_onEventDropFiles(pGUI, pGUIElement, pFileArray, pX, pY) {
     ; Imports all URLs or only valid ones, depending on the value of the checkbox.
     for (file in textFileArray) {
         importVideoListViewElements(file, importAndExportOnlyValidURLsCheckbox.Value)
+    }
+}
+
+handleVideoListGUI_onResize() {
+    ; Checks if the GUI has any linked resize objects.
+    if (!videoListGUI.HasOwnProp("linkedResizeObjectMap")) {
+        return
+    }
+
+    static debounceTimer := 0
+    ; Makes sure that the function is not called multiple times in a very short time span.
+    if (debounceTimer) {
+        SetTimer(debounceTimer, 0)
+    }
+    ; Runs the code if it has "cooled down" (or not been called) for 50ms.
+    debounceTimer := SetTimer(resizeControl, -50)
+
+    resizeControl() {
+        for (control, linkedResizeObject in videoListGUI.linkedResizeObjectMap) {
+            linkedResizeObject.resizeControl()
+            ; Reduces visual errors.
+            control.Redraw()
+        }
     }
 }
 
@@ -1418,5 +1493,54 @@ class VideoListViewEntry {
         if (videoListSearchBarInputEdit.Value != "") {
             handleVideoListGUI_videoListSearchBarInputEdit_onChange(videoListSearchBarInputEdit, "")
         }
+    }
+}
+
+/*
+This object can be linked to a GUI control to resize it when the GUI is resized.
+@param pControl [Gui.Control] The control to be linked to the GUI.
+*/
+class GUIControlResizeLink {
+    __New(pControl) {
+        this.control := pControl
+        this.gui := this.control.gui
+
+        ; This map will contain all linked resize objects that are linked to controls belonging to the same GUI.
+        if (!this.gui.HasOwnProp("linkedResizeObjectMap")) {
+            this.gui.linkedResizeObjectMap := Map()
+        }
+        ; Checks if the control is not already in the map.
+        if (!this.gui.linkedResizeObjectMap.Has(this.control)) {
+            ; Adds the linked resize object to the GUI's linked resize object map.
+            this.gui.linkedResizeObjectMap.Set(this.control, this)
+        }
+
+        ; Save the original width and height of the control.
+        this.control.GetPos(&x, &y, &width, &height)
+        this.controlOriginalX := x
+        this.controlOriginalY := y
+        this.controlOriginalWidth := width
+        this.controlOriginalHeight := height
+        ; Save the original position and size of the GUI.
+        this.gui.GetClientPos(&x, &y, &width, &height)
+        this.guiOriginalX := x
+        this.guiOriginalY := y
+        this.guiOriginalWidth := width
+        this.guiOriginalHeight := height
+    }
+    ; This function calculates the new position and size of the control based on the GUI's size.
+    resizeControl() {
+        this.gui.GetClientPos(, , &width, &height)
+        xRatio := width / this.guiOriginalWidth
+        yRatio := height / this.guiOriginalHeight
+
+        ; Calculate the new position of the control based on the GUI's size.
+        newX := this.controlOriginalX * xRatio
+        newY := this.controlOriginalY * yRatio
+        ; Calculate the new width and height of the control based on the GUI's size.
+        newWidth := this.controlOriginalWidth * xRatio
+        newHeight := this.controlOriginalHeight * yRatio
+        ; Resize the control to the new width and height.
+        this.control.Move(newX, newY, newWidth, newHeight)
     }
 }
