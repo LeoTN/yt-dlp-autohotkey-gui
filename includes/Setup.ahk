@@ -7,7 +7,7 @@ CoordMode "Mouse", "Window"
 setup_onInit() {
 
     ; Checks the system for other already running instances of this application.
-    findAlreadyRunningVDInstance("VideoDownloader.exe")
+    findAlreadyRunningVDInstance()
     createRequiredFolders()
     checkIfMSISetupIsRequired()
     ; Putting this behind the setup checks prevents issues when files are missing.

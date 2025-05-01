@@ -23,12 +23,16 @@ Creates the user inface which asks the user to confirm the update.
 @param pUpdateVersion [String] The version of the update or rather the complete tag name.
 */
 createUpdateGUI(pUpdateVersion) {
+    global versionFullName
+
     ; Only creates the update GUI once.
     if (IsSet(updateGUI)) {
         updateGUI.Destroy()
     }
     ; Required information for the update GUI.
     updatePatchNotesURL := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/tag/" . pUpdateVersion
+    compareVersionsURL := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/compare/"
+        . versionFullName . "..." . pUpdateVersion
     msiDownloadURL := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/download/"
         . pUpdateVersion . "/VideoDownloader_" . pUpdateVersion . "_Installer.msi"
 
@@ -39,6 +43,17 @@ createUpdateGUI(pUpdateVersion) {
     updateGUIPatchNotesLink := updateGUI.Add("Text", "yp+40 w320 R2 Center", "Patch Notes")
     updateGUIPatchNotesLink.SetFont("s10 underline cBlue")
     updateGUIPatchNotesLink.OnEvent("Click", (*) => Run(updatePatchNotesURL))
+
+    /*
+    If the current version is a beta version and the available update is another beta version,
+    the old beta version tag will be already deleted which would eliminate the ability to compare the versions.
+    */
+    if (!(InStr(versionFullName, "-beta") && InStr(pUpdateVersion, "-beta"))
+    && !(InStr(versionFullName, "-beta") && !InStr(pUpdateVersion, "-beta"))) {
+        updateGUICompareVersionsLink := updateGUI.Add("Text", "yp+30 w320 R2 Center", "Compare Versions")
+        updateGUICompareVersionsLink.SetFont("s10 underline cBlue")
+        updateGUICompareVersionsLink.OnEvent("Click", (*) => Run(compareVersionsURL))
+    }
 
     updateGUIDownloadMSIButton := updateGUI.Add("Button", "yp+30 xp+50 w100 R2", "Download MSI Installer")
     updateGUIDownloadMSIButton.OnEvent("Click", (*) => handleUpdateGUI_downloadMSIButton_onClick(msiDownloadURL))

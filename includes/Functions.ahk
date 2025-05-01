@@ -607,67 +607,54 @@ getCorrectScriptVersionFromRegistry() {
     return regValue
 }
 
-/*
-Tries to find an existing process via a wildcard.
-NOTE: Currently only supports wildcards containing the beginning of the wanted process.
-@param pWildcard [String] Should be a wildcard process name for example "VideoDownloader.exe".
-*/
-findAlreadyRunningVDInstance(pWildcard) {
-    SplitPath(pWildcard, , , &outExtension, &outNameNoExt)
-    allRunningProcessesNameArray := []
-    allRunningProcessesPathArray := []
-    ; Filles the array with all existing process names.
-    for (Process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")) {
-        allRunningProcessesNameArray.InsertAt(A_Index, Process.Name)
-        allRunningProcessesPathArray.InsertAt(A_Index, Process.CommandLine)
-    }
-    ; Traveres through every object to compare it with the wildcard.
-    for (v in allRunningProcessesNameArray) {
-        ; For example if you are process called "VideoDownloader.development-build-6.exe" it
-        ; would be sufficient to search for "VideoDownloader.exe" as the [*]+ part allows an
-        ; undefined amount of characters to appear between the wildcard name and it's extension.
-        ; The condition below makes sure that it does not find the current instance of this application as a process.
-        if (RegExMatch(v, outNameNoExt . ".*." . outExtension) && v != A_ScriptName) {
-            processPath := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
-            msgText := "Another instance of VideoDownloader is already running."
-            msgText .= "`n`n********************"
-            msgText .= "`nName: [ " . v . "]"
-            msgText .= "`nPath: [ " . processPath . "]"
-            msgText .= "`n********************"
-            msgText .= "`n`nRunning multiple instances can cause unpredictable issues."
-            msgText .= "`n`nContinue at your own risk."
-            msgTitle := "VD - Multiple Instances Found!"
-            msgHeadLine := "Multiple Instances Found!"
-            msgButton1 := "Continue"
-            msgButton2 := "Abort"
-            msgButton3 := "Terminate Other Instance"
-            result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+; Tries to find currently running instances of the application and warns the user about it.
+findAlreadyRunningVDInstance() {
+    ; Searches for the process name and excludes this instance.
+    query := 'SELECT * FROM Win32_Process WHERE ProcessId <> "' . A_ScriptHwnd . '" '
+    query .= 'AND Name = "VideoDownloader.exe"'
+    childProcesses := ComObjGet("winmgmts:").ExecQuery(query)
 
-            switch (result) {
-                case msgButton3:
+    for (childProcess in childProcesses) {
+        askUserToTerminateOtherInstance(childProcess)
+    }
+    askUserToTerminateOtherInstance(pProcessObject) {
+        processName := pProcessObject.Name
+        processPath := RTrim(StrReplace(pProcessObject.CommandLine, '"'))
+        msgText := "Another instance of VideoDownloader is already running."
+        msgText .= "`n`n********************"
+        msgText .= "`nName: [" . processName . "]"
+        msgText .= "`nPath: [" . processPath . "]"
+        msgText .= "`n********************"
+        msgText .= "`n`nRunning multiple instances can cause unpredictable issues."
+        msgText .= "`n`nContinue at your own risk."
+        msgTitle := "VD - Multiple Instances Found!"
+        msgHeadLine := "Multiple Instances Found!"
+        msgButton1 := "Continue"
+        msgButton2 := "Abort"
+        msgButton3 := "Terminate Other Instance"
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+
+        switch (result) {
+            case msgButton3:
+            {
+                try
                 {
-                    try
-                    {
-                        ProcessClose(v)
-                    }
-                    catch as error {
-                        errorAdditionalMessage :=
-                            "The process might be elevated (which means it was launched with higher permissions)."
-                        displayErrorMessage(error, errorAdditionalMessage, true)
-                    }
+                    ProcessClose(pProcessObject.ProcessId)
                 }
-                case msgButton1:
-                {
-                    ; This option is not recommended because the application is not supposed to run with multiple instances active.
-                    return
+                catch as error {
+                    errorAdditionalMessage :=
+                        "The process might be elevated (which means it was launched with higher permissions)."
+                    displayErrorMessage(error, errorAdditionalMessage, true)
                 }
-                Default:
-                {
-                    MsgBox("VideoDownloader terminated.", "VD - Status", "O Iconi T1.5")
-                    exitApplicationWithNotification(true)
-                }
-                    ; Stops after the first match.
-                    break
+            }
+            case msgButton1:
+            {
+                ; This option is not recommended because the application is not supposed to run with multiple instances active.
+                return
+            }
+            default:
+            {
+                exitApplicationWithNotification(true)
             }
         }
     }
@@ -681,10 +668,10 @@ This function will close every child process with that corresponding parent's pr
 For safety and performance reasons, this will only go one layer deeper and stop after that.
 */
 terminateAllChildProcesses(pParentProcessPID, pChildProcessNameFilter?, pBooleanRecursive := false) {
-    ; Searches for the process nane and the matching parent process id.
-    query := "SELECT * FROM Win32_Process WHERE ParentProcessId = '" . pParentProcessPID . "' "
+    ; Searches for the process name and the matching parent process id.
+    query := 'SELECT * FROM Win32_Process WHERE ParentProcessId = "' . pParentProcessPID . '" '
     if (IsSet(pChildProcessNameFilter)) {
-        query .= "AND Name = '" . pChildProcessNameFilter . "'"
+        query .= 'AND Name = "' . pChildProcessNameFilter . '"'
     }
     childProcesses := ComObjGet("winmgmts:").ExecQuery(query)
 
