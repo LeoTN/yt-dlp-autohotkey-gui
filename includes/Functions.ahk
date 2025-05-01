@@ -610,16 +610,19 @@ getCorrectScriptVersionFromRegistry() {
 ; Tries to find currently running instances of the application and warns the user about it.
 findAlreadyRunningVDInstance() {
     ; Searches for the process name and excludes this instance.
-    query := 'SELECT * FROM Win32_Process WHERE ProcessId <> "' . A_ScriptHwnd . '" '
-    query .= 'AND Name = "VideoDownloader.exe"'
+    query := 'SELECT * FROM Win32_Process WHERE Name = "VideoDownloader.exe"'
     childProcesses := ComObjGet("winmgmts:").ExecQuery(query)
 
     for (childProcess in childProcesses) {
+        ; Skipts this instance of the application.
+        if (childProcess.ExecutablePath == A_ScriptFullPath) {
+            continue
+        }
         askUserToTerminateOtherInstance(childProcess)
     }
     askUserToTerminateOtherInstance(pProcessObject) {
         processName := pProcessObject.Name
-        processPath := RTrim(StrReplace(pProcessObject.CommandLine, '"'))
+        processPath := pProcessObject.ExecutablePath
         msgText := "Another instance of VideoDownloader is already running."
         msgText .= "`n`n********************"
         msgText .= "`nName: [" . processName . "]"
