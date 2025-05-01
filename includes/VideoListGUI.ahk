@@ -65,6 +65,7 @@ createVideoListGUI() {
     videoTitleText := videoListGUI.Add("Text", "xp+10 yp+20 w280 R1 -Wrap", "Video Title")
     videoUploaderText := videoListGUI.Add("Text", "yp+20 w280 R1 -Wrap", "Uploader")
     videoDurationText := videoListGUI.Add("Text", "yp+20 w280 R1 -Wrap", "Duration")
+    ; The value of the variable "originalVideoThumbnailImageHeight" must be changed as well when changing the height.
     videoThumbnailImage := videoListGUI.Add("Picture", "w280 h158 yp+20", GUIBackgroundImageLocation)
     ; Controls that change the download settings for the video.
     videoDesiredFormatText := videoListGUI.Add("Text", "yp+173", "Desired Format")
@@ -77,7 +78,7 @@ createVideoListGUI() {
     videoListSearchBarInputEdit := videoListGUI.Add("Edit", "yp+20 w300 -Multi", "")
     videoListSearchBarInputClearButton := videoListGUI.Add("Button", "xp+305 yp+1 w20 h20", "X")
     videoListSearchBarInputClearButton.SetColor("ced4da", "000000", -1, "808080")
-    videoListView := videoListGUI.Add("ListView", "xp-304 yp+28 w600 h340 +Grid", ["Title", "Uploader", "Duration"])
+    videoListView := videoListGUI.Add("ListView", "xp-304 yp+28 w599 h340 +Grid", ["Title", "Uploader", "Duration"])
     ; Controls that belong to the video list.
     manageVideoListGroupBox := videoListGUI.Add("GroupBox", "w600 xm ym+400 h185", "Manage Video List")
     addVideoURLInputEdit := videoListGUI.Add("Edit", "xp+10 yp+20 w555 R1 -WantReturn -Multi")
@@ -303,46 +304,50 @@ createVideoListGUI() {
     ; The GUI must be shown to calculate the original size.
     videoListGUI.Show("AutoSize Hide")
 
-    GUIControlResizeLink(currentlySelectedVideoGroupBox)
-    GUIControlResizeLink(videoTitleText)
-    GUIControlResizeLink(videoUploaderText)
-    GUIControlResizeLink(videoDurationText)
-    GUIControlResizeLink(videoThumbnailImage)
-    GUIControlResizeLink(videoDesiredFormatText)
-    GUIControlResizeLink(videoDesiredFormatDDL)
-    GUIControlResizeLink(videoDesiredSubtitleText)
-    GUIControlResizeLink(videoDesiredSubtitleDDL)
-    GUIControlResizeLink(videoAdvancedDownloadSettingsButton)
-    GUIControlResizeLink(videoListSearchBarText)
-    GUIControlResizeLink(videoListSearchBarInputEdit)
-    GUIControlResizeLink(videoListSearchBarInputClearButton)
-    GUIControlResizeLink(videoListView)
-    GUIControlResizeLink(manageVideoListGroupBox)
-    GUIControlResizeLink(addVideoURLInputEdit)
-    GUIControlResizeLink(addVideoURLInputClearButton)
-    GUIControlResizeLink(addVideoToListButton)
-    GUIControlResizeLink(addVideoURLIsAPlaylistCheckbox)
-    GUIControlResizeLink(addVideoURLUsePlaylistRangeCheckbox)
-    GUIControlResizeLink(addVideoSpecifyPlaylistRangeText)
-    GUIControlResizeLink(addVideoSpecifyPlaylistRangeInputEdit)
-    GUIControlResizeLink(removeVideoFromListButton)
-    GUIControlResizeLink(removeVideoConfirmDeletionCheckbox)
-    GUIControlResizeLink(removeVideoConfirmOnlyWhenMultipleSelectedCheckbox)
-    GUIControlResizeLink(importVideoListButton)
-    GUIControlResizeLink(exportVideoListButton)
-    GUIControlResizeLink(importAndExportOnlyValidURLsCheckbox)
-    GUIControlResizeLink(autoExportVideoListCheckbox)
-    GUIControlResizeLink(downloadVideoGroupBox)
-    GUIControlResizeLink(downloadStartButton)
-    GUIControlResizeLink(downloadCancelButton)
-    GUIControlResizeLink(downloadRemoveVideosAfterDownloadCheckbox)
-    GUIControlResizeLink(downloadTerminateAfterDownloadCheckbox)
-    GUIControlResizeLink(downloadSelectDownloadDirectoryText)
-    GUIControlResizeLink(downloadSelectDownloadDirectoryInputEdit)
-    GUIControlResizeLink(downloadSelectDownloadDirectoryButton)
-    GUIControlResizeLink(downloadProgressText)
-    GUIControlResizeLink(downloadProgressBar)
-    GUIControlResizeLink(videoListGUIStatusBar)
+    GUIControlResizeLink(currentlySelectedVideoGroupBox, 2)
+
+    GUIControlResizeLink(videoTitleText, 3)
+    GUIControlResizeLink(videoUploaderText, 3)
+    GUIControlResizeLink(videoDurationText, 3)
+    GUIControlResizeLink(videoThumbnailImage, 3)
+
+    GUIControlResizeLink(videoDesiredFormatText, 4)
+    GUIControlResizeLink(videoDesiredFormatDDL, 4)
+    GUIControlResizeLink(videoDesiredSubtitleText, 4)
+    GUIControlResizeLink(videoDesiredSubtitleDDL, 4)
+    GUIControlResizeLink(videoAdvancedDownloadSettingsButton, 4)
+
+    GUIControlResizeLink(videoListSearchBarText, 5)
+    GUIControlResizeLink(videoListSearchBarInputEdit, 5)
+    GUIControlResizeLink(videoListSearchBarInputClearButton, 5)
+
+    GUIControlResizeLink(videoListView, 2)
+
+    GUIControlResizeLink(manageVideoListGroupBox, 1)
+    GUIControlResizeLink(addVideoURLInputEdit, 1)
+    GUIControlResizeLink(addVideoURLInputClearButton, 1)
+    GUIControlResizeLink(addVideoToListButton, 1)
+    GUIControlResizeLink(addVideoURLIsAPlaylistCheckbox, 1)
+    GUIControlResizeLink(addVideoURLUsePlaylistRangeCheckbox, 1)
+    GUIControlResizeLink(addVideoSpecifyPlaylistRangeText, 1)
+    GUIControlResizeLink(addVideoSpecifyPlaylistRangeInputEdit, 1)
+    GUIControlResizeLink(removeVideoFromListButton, 1)
+    GUIControlResizeLink(removeVideoConfirmDeletionCheckbox, 1)
+    GUIControlResizeLink(removeVideoConfirmOnlyWhenMultipleSelectedCheckbox, 1)
+    GUIControlResizeLink(importVideoListButton, 1)
+    GUIControlResizeLink(exportVideoListButton, 1)
+    GUIControlResizeLink(importAndExportOnlyValidURLsCheckbox, 1)
+    GUIControlResizeLink(autoExportVideoListCheckbox, 1)
+    GUIControlResizeLink(downloadVideoGroupBox, 1)
+    GUIControlResizeLink(downloadStartButton, 1)
+    GUIControlResizeLink(downloadCancelButton, 1)
+    GUIControlResizeLink(downloadRemoveVideosAfterDownloadCheckbox, 1)
+    GUIControlResizeLink(downloadTerminateAfterDownloadCheckbox, 1)
+    GUIControlResizeLink(downloadSelectDownloadDirectoryText, 1)
+    GUIControlResizeLink(downloadSelectDownloadDirectoryInputEdit, 1)
+    GUIControlResizeLink(downloadSelectDownloadDirectoryButton, 1)
+    GUIControlResizeLink(downloadProgressText, 1)
+    GUIControlResizeLink(downloadProgressBar, 1)
 }
 
 handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
@@ -862,9 +867,9 @@ handleVideoListGUI_onResize() {
         SetTimer(debounceTimer, 0)
     }
     ; Runs the code if it has "cooled down" (or not been called) for 50ms.
-    debounceTimer := SetTimer(resizeControl, -50)
+    debounceTimer := SetTimer(resizeControls, -50)
 
-    resizeControl() {
+    resizeControls() {
         for (control, linkedResizeObject in videoListGUI.linkedResizeObjectMap) {
             linkedResizeObject.resizeControl()
             ; Reduces visual errors.
@@ -1499,10 +1504,18 @@ class VideoListViewEntry {
 /*
 This object can be linked to a GUI control to resize it when the GUI is resized.
 @param pControl [Gui.Control] The control to be linked to the GUI.
+@param pScaleMode [int] The scale mode to be used which depends on the control type or group.
+    1: All controls in the manageVideoListGroupBox and downloadVideoGroupBox.
+    2: currentlySelectedVideoGroupBox and videoListView.
+    3: videoTitleText, videoUploaderText, videoDurationText and videoThumbnailImage.
+    4: videoDesiredFormatText, videoDesiredSubtitleText, videoDesiredFormatDDL,
+       videoDesiredSubtitleDDL and videoAdvancedDownloadSettingsButton.
+    5: videoListSearchBarText, videoListSearchBarInputEdit and videoListSearchBarInputClearButton.
 */
 class GUIControlResizeLink {
-    __New(pControl) {
+    __New(pControl, pScaleMode) {
         this.control := pControl
+        this.scaleMode := pScaleMode
         this.gui := this.control.gui
 
         ; This map will contain all linked resize objects that are linked to controls belonging to the same GUI.
@@ -1530,17 +1543,66 @@ class GUIControlResizeLink {
     }
     ; This function calculates the new position and size of the control based on the GUI's size.
     resizeControl() {
-        this.gui.GetClientPos(, , &width, &height)
-        xRatio := width / this.guiOriginalWidth
-        yRatio := height / this.guiOriginalHeight
-
-        ; Calculate the new position of the control based on the GUI's size.
-        newX := this.controlOriginalX * xRatio
-        newY := this.controlOriginalY * yRatio
-        ; Calculate the new width and height of the control based on the GUI's size.
-        newWidth := this.controlOriginalWidth * xRatio
-        newHeight := this.controlOriginalHeight * yRatio
-        ; Resize the control to the new width and height.
-        this.control.Move(newX, newY, newWidth, newHeight)
+        ; These values will be used to calculate the new position and size of the control.
+        this.gui.GetClientPos(&x, &y, &GUICurrentWidth, &guiCurrentHeight)
+        xRatio := GUICurrentWidth / this.guiOriginalWidth
+        yRatio := guiCurrentHeight / this.guiOriginalHeight
+        newControlWidth := this.controlOriginalWidth * xRatio
+        newControlHeight := this.controlOriginalHeight * yRatio
+        /*
+        Each control or group of controls needs to be handled differently.
+        The scale mode is used to determine how the control should be resized.
+        */
+        switch (this.scaleMode) {
+            case 1:
+            {
+                ; All controls in the manageVideoListGroupBox and downloadVideoGroupBox.
+                yDifference := guiCurrentHeight - this.guiOriginalHeight
+                newX := this.controlOriginalX * xRatio
+                newY := this.controlOriginalY + yDifference
+                this.control.Move(newX, newY, newControlWidth)
+            }
+            case 2:
+            {
+                ; currentlySelectedVideoGroupBox and videoListView.
+                yDifference := guiCurrentHeight - this.guiOriginalHeight
+                newX := this.controlOriginalX * xRatio
+                newControlHeight := this.controlOriginalHeight + yDifference
+                this.control.Move(newX, , newControlWidth, newControlHeight)
+            }
+            case 3:
+            {
+                ; videoTitleText, videoUploaderText, videoDurationText and videoThumbnailImage.
+                newX := this.controlOriginalX * xRatio
+                this.control.Move(newX, , newControlWidth, newControlHeight)
+            }
+            case 4:
+            {
+                /*
+                videoDesiredFormatText, videoDesiredFormatDDL, videoDesiredSubtitleText,
+                videoDesiredSubtitleDDL and videoAdvancedDownloadSettingsButton.
+                */
+                originalVideoThumbnailImageHeight := 158
+                currentVideoThumbnailImageHeight := originalVideoThumbnailImageHeight * yRatio
+                ; This variable will be used to position elements right below the video thumbnail image.
+                videoThumbnailImageHeightDifference :=
+                    currentVideoThumbnailImageHeight - originalVideoThumbnailImageHeight
+                newX := this.controlOriginalX * xRatio
+                newY := this.controlOriginalY + videoThumbnailImageHeightDifference
+                this.control.Move(newX, newY, newControlWidth)
+            }
+            case 5:
+            {
+                ; videoListSearchBarText, videoListSearchBarInputEdit and videoListSearchBarInputClearButton.
+                newX := this.controlOriginalX * xRatio
+                this.control.Move(newX, , newControlWidth)
+            }
+            default:
+            {
+                MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid scale mode received [" . this.scaleMode .
+                    "] for control [" . this.control.Text . "] with class [" . this.control.ClassNN . "].",
+                    "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            }
+        }
     }
 }

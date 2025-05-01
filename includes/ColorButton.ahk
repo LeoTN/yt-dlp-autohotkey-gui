@@ -307,7 +307,6 @@ class _BtnColor extends Gui.Button {
             this.Gui.OnEvent("Close", (*) => deleteBrush())
             deleteBrush() {
                 if (this.HasOwnProp("__hbrush")) {
-                    MsgBox "raus mit dem brush" ; REMOVE
                     DeleteObject(this.__hbrush)
                 }
             }
