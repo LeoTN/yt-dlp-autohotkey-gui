@@ -40,7 +40,7 @@ createSettingsGUI() {
     settingsGUI.MarginY := -5
     ; The space is intentional as it increases the tab size.
     local tabNames := ["   General   ", "   Video List   ", "   Hotkeys   "]
-    settingsGUITabs := settingsGUI.Add("Tab3", "xm+5 ym+5 w626 h459", tabNames)
+    settingsGUITabs := settingsGUI.Add("Tab3", "xm+5 ym+5 w626 h479", tabNames)
 
     /*
     ********************************************************************************************************************
@@ -52,25 +52,27 @@ createSettingsGUI() {
     -------------------------------------------------
     */
     settingsGUITabs.UseTab(1)
-    ; Startup settings.
-    settingsGUIStartupSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h140", "Startup")
+    ; Application behavior settings.
+    settingsGUIStartupSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h160", "Behavior")
     settingsGUIEnableAutoStartCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20", "Start with Windows")
     settingsGUIShowVideoListGUIAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "Open the video list window at the start")
+    settingsGUIRememberWindowPositionAndSizeCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
+        "Remember the video list window position and size")
     settingsGUICheckForUpdatesAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+30 Checked",
         "Check for updates at the start")
     settingsGUIUpdateToBetaVersionsCheckbox := settingsGUI.Add("Checkbox", "yp+20",
         "I want to receive beta versions")
     settingsGUIUpdateCheckForUpdatesButton := settingsGUI.Add("Button", "yp+20 w200", "Check for Updates now")
     ; Notification settings.
-    settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+185 w600 h80", "Notifications")
+    settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+205 w600 h80", "Notifications")
     settingsGUIDisplayStartupNotificationCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
         "Program launch")
     settingsGUIDisplayExitNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked", "Program exit")
     settingsGUIDisplayFinishedDownloadNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "Download finished")
     ; Directory settings.
-    settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+275 w600 h175", "Directories")
+    settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+295 w600 h175", "Directories")
     settingsGUIDirectoryDDL := settingsGUI.Add("DropDownList", "xp+10 yp+20 w580")
     settingsGUIDirectoryDescriptionEdit := settingsGUI.Add("Edit", "yp+30 w580 h40 -WantReturn +ReadOnly",
         "Please select a directory above.")
@@ -171,6 +173,7 @@ createSettingsGUI() {
     ; Ckeckboxes
     settingsGUIEnableAutoStartCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIShowVideoListGUIAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
+    settingsGUIRememberWindowPositionAndSizeCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUICheckForUpdatesAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIUpdateToBetaVersionsCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDisplayStartupNotificationCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
@@ -222,8 +225,13 @@ createSettingsGUI() {
     GENERAL SETTINGS TAB
     -------------------------------------------------
     */
-    ; Startup settings.
-    settingsGUIShowVideoListGUIAtLaunchCheckbox.ToolTip := ""
+    ; Application behavior settings.
+    settingsGUIShowVideoListGUIAtLaunchCheckbox.ToolTip :=
+        "Opens the video list window when VideoDownloader is launched."
+    settingsGUIRememberWindowPositionAndSizeCheckbox.ToolTip :=
+        "The state of the video list window will be saved when exiting VideoDownloader."
+    settingsGUIRememberWindowPositionAndSizeCheckbox.ToolTip .=
+        "`nNext time, it will be opened in the same position, size and minimized or maximized."
     settingsGUICheckForUpdatesAtLaunchCheckbox.ToolTip :=
         "Starts a PowerShell script to check for a later version when starting VideoDownloader."
     settingsGUIUpdateToBetaVersionsCheckbox.ToolTip :=
@@ -780,9 +788,11 @@ initializeCheckboxLinkedConfigFileEntryMap() {
     GENERAL SETTINGS TAB
     -------------------------------------------------
     */
-    ; Startup settings.
+    ; Application behavior settings.
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIEnableAutoStartCheckbox, "START_WITH_WINDOWS")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIShowVideoListGUIAtLaunchCheckbox, "SHOW_VIDEO_LIST_GUI_ON_LAUNCH")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIRememberWindowPositionAndSizeCheckbox,
+        "REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUICheckForUpdatesAtLaunchCheckbox, "CHECK_FOR_UPDATES_AT_LAUNCH")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIUpdateToBetaVersionsCheckbox, "UPDATE_TO_BETA_VERSIONS")
     ; Notification settings.

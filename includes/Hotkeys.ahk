@@ -142,7 +142,7 @@ hotkey_openVideoListGUI() {
     {
         static flipflop := true
         if (!WinExist("ahk_id " . videoListGUI.Hwnd)) {
-            videoListGUI.Show("AutoSize")
+            showVideoListGUIWithSavedStateData()
             flipflop := false
         }
         else if (!flipflop && WinActive("ahk_id " . videoListGUI.Hwnd)) {
@@ -189,7 +189,9 @@ hotkey_debug_3() {
 }
 
 hotkey_debug_4() {
-    MsgBox("This debug hotkey is currently not used.", "VD - WIP", "O Iconi 262144 T1")
+    saveCurrentVideoListGUIStateToConfigFile()
+    MsgBox("[" . A_ThisFunc . "()] [INFO] Debug hotkey 4 executed.",
+        "VideoDownloader - [" . A_ThisFunc . "()]", "Iconi 262144 T1")
 }
 
 /*

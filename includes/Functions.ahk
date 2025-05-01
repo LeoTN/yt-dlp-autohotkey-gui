@@ -725,6 +725,48 @@ backupOldVersionFiles(pBackupParentDirectory) {
     exitApplicationWithNotification()
 }
 
+; Gets the current position, size and maximized/minimized state of the video list GUI and saves it to the config file.
+saveCurrentVideoListGUIStateToConfigFile() {
+    if (!IsSet(videoListGUI) || !WinExist("ahk_id" . videoListGUI.Hwnd
+        || !readConfigFile("REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE"))) {
+        return
+    }
+
+    videoListGUI.GetPos(&x, &y, &width, &height)
+    windowStateString := "x" . x . " y" . y . " w" . width . " h" . height
+    state := WinGetMinMax("ahk_id " . videoListGUI.Hwnd)
+    switch (state) {
+        case -1:
+        {
+            ; We need to generate a new string because minimized windows return invalid coordinates.
+            windowStateString := "w" . width . " h" . height . " Minimize"
+        }
+        case 1:
+        {
+            windowStateString .= " Maximize"
+        }
+    }
+    ; Saves the current video list GUI state to the config file.
+    editConfigFile(windowStateString, "REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE_VALUES")
+}
+
+; Shows the video list GUI with the saved position state data from the config file.
+showVideoListGUIWithSavedStateData() {
+    if (!readConfigFile("REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE")) {
+        videoListGUI.Show("AutoSize")
+        return
+    }
+
+    windowStateString := readConfigFile("REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE_VALUES")
+    try {
+        videoListGUI.Show(windowStateString)
+    }
+    catch {
+        videoListGUI.Show("AutoSize")
+        saveCurrentVideoListGUIStateToConfigFile()
+    }
+}
+
 /*
 Displays a customizable message box with up to 3 buttons and a headline.
 @param pMsgBoxText [String] The main body text of the message box. [Max. 78 characters without line breaks (`n)]
@@ -929,7 +971,7 @@ reloadApplicationPrompt() {
     buttonCancel := reloadApplicationGUI.Add("Button", "w80 x160 y170", "Cancel")
     reloadApplicationGUI.Show("w300 h200")
 
-    buttonOkay.OnEvent("Click", (*) => Reload())
+    buttonOkay.OnEvent("Click", (*) => saveCurrentVideoListGUIStateToConfigFile() Reload())
     buttonCancel.OnEvent("Click", (*) => reloadApplicationGUI.Destroy())
     reloadApplicationGUI.OnEvent("Escape", (*) => reloadApplicationGUI.Destroy())
 
@@ -955,10 +997,9 @@ reloadApplicationPrompt() {
             i--
         }
         textField.Text := "VideoDownloader has been reloaded."
+        saveCurrentVideoListGUIStateToConfigFile()
         Sleep(100)
         Reload()
-        ExitApp()
-        ExitApp()
     }
 }
 
@@ -982,7 +1023,7 @@ terminateApplicationPrompt() {
     buttonCancel := terminateApplicationGUI.Add("Button", "w80 x160 y170", "Cancel")
     terminateApplicationGUI.Show("w300 h200")
 
-    buttonOkay.OnEvent("Click", (*) => ExitApp())
+    buttonOkay.OnEvent("Click", (*) => saveCurrentVideoListGUIStateToConfigFile() ExitApp())
     buttonCancel.OnEvent("Click", (*) => terminateApplicationGUI.Destroy())
     terminateApplicationGUI.OnEvent("Escape", (*) => terminateApplicationGUI.Destroy())
 
@@ -1008,8 +1049,8 @@ terminateApplicationPrompt() {
             i--
         }
         textField.Text := "VideoDownloader has been terminated."
+        saveCurrentVideoListGUIStateToConfigFile()
         Sleep(100)
-        ExitApp()
         ExitApp()
     }
 }
@@ -1026,8 +1067,7 @@ exitApplicationWithNotification(pBooleanUseFallbackMessage := false) {
     else if (readConfigFile("DISPLAY_EXIT_NOTIFICATION")) {
         displayTrayTip("VideoDownloader terminated.", "VideoDownloader - Status")
     }
-    ; Using ExitApp() twice ensures that the application will be terminated entirely.
-    ExitApp()
+    saveCurrentVideoListGUIStateToConfigFile()
     ExitApp()
 }
 

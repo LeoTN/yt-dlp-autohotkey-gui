@@ -139,6 +139,7 @@ handleSetupGUI_startSetupButton_onClick() {
     updateDependencyCheckboxes()
     setupGUIStatusBar.SetText("Setup completed")
     Sleep(2000)
+    ; The video list GUI is usually not present at this moment so we don't need to save it's state.
     Reload()
 }
 

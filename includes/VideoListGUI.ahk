@@ -162,7 +162,7 @@ createVideoListGUI() {
     ; Makes the video list GUI sensible for drag and drop events.
     videoListGUI.OnEvent("DropFiles", handleVideoListGUI_onEventDropFiles)
     ; Calls this function when the GUI is resized.
-    videoListGUI.OnEvent("Size", (*) => handleVideoListGUI_onResize())
+    videoListGUI.OnEvent("Size", handleVideoListGUI_onResize)
 
     /*
     ********************************************************************************************************************
@@ -853,9 +853,9 @@ handleVideoListGUI_onEventDropFiles(pGUI, pGUIElement, pFileArray, pX, pY) {
     }
 }
 
-handleVideoListGUI_onResize() {
-    ; Checks if the GUI has any linked resize objects.
-    if (!videoListGUI.HasOwnProp("linkedResizeObjectMap")) {
+handleVideoListGUI_onResize(pGUI, pMinMax, pWidth, pHeight) {
+    ; Aborts if the GUI hasn't got any linked resize objects.
+    if (!pGUI.HasOwnProp("linkedResizeObjectMap")) {
         return
     }
 
@@ -868,7 +868,7 @@ handleVideoListGUI_onResize() {
     debounceTimer := SetTimer(resizeControls, -50)
 
     resizeControls() {
-        for (control, linkedResizeObject in videoListGUI.linkedResizeObjectMap) {
+        for (control, linkedResizeObject in pGUI.linkedResizeObjectMap) {
             linkedResizeObject.resizeControl()
             ; Reduces visual errors.
             control.Redraw()
