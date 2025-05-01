@@ -716,8 +716,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         ; Updates the latest download directory.
         currentYTDLPActionObject.latestDownloadDirectory := targetDownloadDirectory
         if (readConfigFile("DISPLAY_FINISHED_DOWNLOAD_NOTIFICATION")) {
-            TrayTip(statusText, "VideoDownloader - Status", "Iconi Mute")
-            SetTimer () => TrayTip(), -5000
+            displayTrayTip(statusText, "VideoDownloader - Status", , 5000)
         }
     }
     else if (currentYTDLPActionObject.alreadyDownloadedVideoAmount > 1) {
@@ -727,8 +726,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         ; Updates the latest download directory.
         currentYTDLPActionObject.latestDownloadDirectory := targetDownloadDirectory
         if (readConfigFile("DISPLAY_FINISHED_DOWNLOAD_NOTIFICATION")) {
-            TrayTip(statusText, "VideoDownloader - Status", "Iconi Mute")
-            SetTimer () => TrayTip(), -5000
+            displayTrayTip(statusText, "VideoDownloader - Status", , 5000)
         }
     }
     if (downloadTerminateAfterDownloadCheckbox.Value) {

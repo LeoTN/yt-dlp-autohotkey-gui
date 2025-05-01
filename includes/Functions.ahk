@@ -1034,10 +1034,10 @@ of the termination message. This can be useful if the language modules have not 
 */
 exitApplicationWithNotification(pBooleanUseFallbackMessage := false) {
     if (pBooleanUseFallbackMessage) {
-        TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
+        displayTrayTip("VideoDownloader terminated.", "VideoDownloader - Status")
     }
     else if (readConfigFile("DISPLAY_EXIT_NOTIFICATION")) {
-        TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
+        displayTrayTip("VideoDownloader terminated.", "VideoDownloader - Status")
     }
     ; Using ExitApp() twice ensures that the application will be terminated entirely.
     ExitApp()
@@ -1064,16 +1064,26 @@ setAutoStart(pBooleanAutoStartStatus) {
         ; Creates (or overwrites) the (existing) shortcut to start VideoDownloader with Windows.
         FileCreateShortcut(A_ScriptFullPath, autoStartShortcutFileLocation, A_ScriptDir, ,
             "Auto start shortcut for VideoDownloader.")
-        TrayTip("VideoDownloader added to startup folder.", "VideoDownloader - Status", "Iconi Mute")
-        SetTimer () => TrayTip(), -1500
+        displayTrayTip("VideoDownloader added to startup folder.", "VideoDownloader - Status")
     }
     ; Checks if the existing shortcut file was created by this instance of VideoDownloader and removes it.
     else if (!pBooleanAutoStartStatus && (A_ScriptFullPath == outShortcutTarget)) {
         ; Disables the automatic start with windows.
-        TrayTip("VideoDownloader removed from startup folder.", "VideoDownloader - Status", "Iconi Mute")
-        SetTimer () => TrayTip(), -1500
+        displayTrayTip("VideoDownloader removed from startup folder.", "VideoDownloader - Status")
         FileDelete(autoStartShortcutFileLocation)
     }
+}
+
+/*
+Displays a tray tip message for a given amount of time.
+@param pText [String] The text of the tray tip message.
+@param pTitle [String] The title of the tray tip message.
+@param pOptions [String] The options for the tray tip message. For example "Iconi Mute" or "Icon!".
+@param pTimeoutMilliseconds [int] The time in milliseconds that the tray tip message will be displayed.
+*/
+displayTrayTip(pText, pTitle, pOptions := "Iconi Mute", pTimeoutMilliseconds := 3000) {
+    TrayTip(pText, pTitle, pOptions)
+    SetTimer () => TrayTip(), -pTimeoutMilliseconds
 }
 
 /*
@@ -1287,25 +1297,6 @@ checkIfStringIsInArray(pString, pArray) {
         }
     }
     return false
-}
-
-/*
-A simple method to convert an array into a string form.
-@param pArray [Array] Should be an array to convert.
-@returns [String] The array converted into a string form.
-*/
-arrayToString(pArray) {
-    string := "["
-
-    for (index, value in pArray) {
-        string .= value
-        if (index < pArray.Length) {
-            string .= ","
-        }
-    }
-
-    string .= "]"
-    return string
 }
 
 /*
