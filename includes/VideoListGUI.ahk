@@ -889,6 +889,7 @@ handleVideoListGUI_onResize(pGUI, pMinMax, pWidth, pHeight) {
 
 handleVideoListGUI_onClose(pGUI) {
     global videoListViewContentMap
+    global currentYTDLPActionObject
 
     if (!readConfigFile("EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")) {
         return
@@ -898,8 +899,14 @@ handleVideoListGUI_onClose(pGUI) {
         exitApplicationWithNotification()
     }
 
+    ; Warning message when there is an active download running at the moment.
+    if (currentYTDLPActionObject.booleanDownloadIsRunning) {
+        result := MsgBox(
+            "There is an active download running right now.`n`nDo you want to close VideoDownloader anyway?",
+            "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
+    }
     ; Warning message when there are still videos in the list view element.
-    if (videoListViewContentMap.Count == 1) {
+    else if (videoListViewContentMap.Count == 1) {
         result := MsgBox(
             "There is still one video in the video list.`n`nDo you want to close VideoDownloader anyway?",
             "VD - Confirm Exit", "YN Icon? Owner" . videoListGUI.Hwnd)

@@ -1089,7 +1089,7 @@ terminateApplicationPrompt() {
     buttonCancel := terminateApplicationGUI.Add("Button", "w80 x160 y170", "Cancel")
     terminateApplicationGUI.Show("w300 h200")
 
-    buttonOkay.OnEvent("Click", (*) => saveCurrentVideoListGUIStateToConfigFile() ExitApp())
+    buttonOkay.OnEvent("Click", (*) => saveCurrentVideoListGUIStateToConfigFile() exitApplicationWithNotification())
     buttonCancel.OnEvent("Click", (*) => terminateApplicationGUI.Destroy())
     terminateApplicationGUI.OnEvent("Escape", (*) => terminateApplicationGUI.Destroy())
 
@@ -1117,7 +1117,7 @@ terminateApplicationPrompt() {
         textField.Text := "VideoDownloader has been terminated."
         saveCurrentVideoListGUIStateToConfigFile()
         Sleep(100)
-        ExitApp()
+        exitApplicationWithNotification()
     }
 }
 
@@ -1127,13 +1127,22 @@ Terminates the application and shows a tray tip message to inform the user.
 of the termination message. This can be useful if the language modules have not been loaded yet.
 */
 exitApplicationWithNotification(pBooleanUseFallbackMessage := false) {
+    global currentYTDLPActionObject
+
+    ; Terminates all running downloads.
+    if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
+        ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
+        ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
+        terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
+    }
+    saveCurrentVideoListGUIStateToConfigFile()
+
     if (pBooleanUseFallbackMessage) {
         displayTrayTip("VideoDownloader terminated.", "VideoDownloader - Status")
     }
     else if (readConfigFile("DISPLAY_EXIT_NOTIFICATION")) {
         displayTrayTip("VideoDownloader terminated.", "VideoDownloader - Status")
     }
-    saveCurrentVideoListGUIStateToConfigFile()
     ExitApp()
 }
 

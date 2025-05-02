@@ -879,7 +879,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; Main hotkey (start download).
     entryName := "Start Download Hotkey"
-    entryDescription := "This hotkey will start the download process. "
+    entryDescription := "This hotkey starts the download process. "
     entryDescription .= "It has the same effect as pressing the "
     entryDescription .= "[" . downloadStartButton.Text . "] button in the video list window."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("START_DOWNLOAD_HKHotkeySettings")
@@ -891,7 +891,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; First hotkey (collect URL).
     entryName := "Collect URL Hotkey"
-    entryDescription := "This hotkey will collect the video URL from your browser search bar. "
+    entryDescription := "This hotkey collects the video URL from your browser search bar. "
     entryDescription .= "Your browser must be the active window for this to work."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("URL_COLLECT_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("URL_COLLECT_HK_ENABLEDHotkeySettings")
@@ -903,7 +903,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
     ; Second hotkey (collect URL from video thumbnail).
     entryName := "Collect URL from Thumbnail Hotkey"
     entryDescription :=
-        "This hotkey will collect the video URL while hovering over the video thumbnail (for example on YouTube). "
+        "This hotkey collects the video URL while hovering over the video thumbnail (for example on YouTube). "
     entryDescription .= "Your browser must be the active window for this to work. "
     entryDescription .= "The hotkey won't work most of the time because it is still experimental."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("THUMBNAIL_URL_COLLECT_HKHotkeySettings")
@@ -915,7 +915,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; Hotkey to open the video list GUI.
     entryName := "Open Video List GUI Hotkey"
-    entryDescription := "This hotkey will open the video list GUI."
+    entryDescription := "This hotkey opens the video list GUI."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("VIDEO_LIST_GUI_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("VIDEO_LIST_GUI_HK_ENABLEDHotkeySettings")
     hotkeyFunction := (*) => hotkey_openVideoListGUI()
@@ -925,7 +925,9 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; Hotkey to terminate the program.
     entryName := "Terminate Program Hotkey"
-    entryDescription := "This hotkey will terminate VideoDownloader."
+    entryDescription := "This hotkey terminates VideoDownloader without any prompts. "
+    entryDescription .=
+        "You will not be warned about an ongoing download process or any remaining videos in the video list."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("TERMINATE_PROGRAM_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("TERMINATE_PROGRAM_HK_ENABLEDHotkeySettings")
     hotkeyFunction := (*) => hotkey_terminateProgram()
@@ -935,7 +937,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; Hotkey to reload the program.
     entryName := "Reload Program Hotkey"
-    entryDescription := "This hotkey will reload VideoDownloader."
+    entryDescription := "This hotkey reloads VideoDownloader."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("RELOAD_PROGRAM_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("RELOAD_PROGRAM_HK_ENABLEDHotkeySettings")
     hotkeyFunction := (*) => hotkey_reloadProgram()

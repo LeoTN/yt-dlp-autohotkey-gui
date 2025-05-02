@@ -307,7 +307,32 @@ menu_restartApplication() {
 
 ; Exit the program.
 menu_exitApplication() {
-    terminateApplicationPrompt()
+    ; Warning message when there is an active download running at the moment.
+    if (currentYTDLPActionObject.booleanDownloadIsRunning) {
+        result := MsgBox(
+            "There is an active download running right now.`n`nDo you want to close VideoDownloader anyway?",
+            "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
+    }
+    ; This means there are no videos in the list view element.
+    else if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
+        exitApplicationWithNotification()
+    }
+    ; Warning message when there are still videos in the list view element.
+    else if (videoListViewContentMap.Count == 1) {
+        result := MsgBox(
+            "There is still one video in the video list.`n`nDo you want to close VideoDownloader anyway?",
+            "VD - Confirm Exit", "YN Icon? Owner" . videoListGUI.Hwnd)
+    }
+    else if (videoListViewContentMap.Count > 1) {
+        result := MsgBox(
+            "There are still " . videoListViewContentMap.Count . " videos in the video list."
+            "`n`nDo you want to close VideoDownloader anyway?", "VD - Confirm Exit",
+            "YN Icon? Owner" . videoListGUI.Hwnd)
+    }
+    ; This means the user wants to close the application anyway.
+    if (result == "Yes") {
+        exitApplicationWithNotification()
+    }
 }
 
 ; Open GUI items.
