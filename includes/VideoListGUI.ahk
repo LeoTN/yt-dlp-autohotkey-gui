@@ -163,6 +163,8 @@ createVideoListGUI() {
     videoListGUI.OnEvent("DropFiles", handleVideoListGUI_onEventDropFiles)
     ; Calls this function when the GUI is resized.
     videoListGUI.OnEvent("Size", handleVideoListGUI_onResize)
+    ; Calls this function when the GUI is closed.
+    videoListGUI.OnEvent("Close", handleVideoListGUI_onClose)
 
     /*
     ********************************************************************************************************************
@@ -874,6 +876,37 @@ handleVideoListGUI_onResize(pGUI, pMinMax, pWidth, pHeight) {
             control.Redraw()
         }
     }
+}
+
+handleVideoListGUI_onClose(pGUI) {
+    global videoListViewContentMap
+
+    if (!readConfigFile("EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")) {
+        return
+    }
+    ; This means there are no videos in the list view element.
+    if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
+        exitApplicationWithNotification()
+    }
+
+    ; Warning message when there are still videos in the list view element.
+    if (videoListViewContentMap.Count == 1) {
+        result := MsgBox(
+            "There is still one video in the video list.`n`nDo you want to close VideoDownloader anyway?",
+            "VD - Confirm Exit", "YN Icon? Owner" . videoListGUI.Hwnd)
+    }
+    else if (videoListViewContentMap.Count > 1) {
+        result := MsgBox(
+            "There are still " . videoListViewContentMap.Count . " videos in the video list."
+            "`n`nDo you want to close VideoDownloader anyway?", "VD - Confirm Exit",
+            "YN Icon? Owner" . videoListGUI.Hwnd)
+    }
+    ; This means the user wants to close the GUI anyway.
+    if (result == "Yes") {
+        exitApplicationWithNotification()
+    }
+    ; This stops the GUI from closing.
+    return true
 }
 
 /*
