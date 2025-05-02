@@ -45,7 +45,7 @@ hotkey_extractVideoURLFromSearchBar() {
     Sleep(150)
     Send("^{c}")
     if (!ClipWait(0.5)) {
-        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1")
+        MsgBox("No URL detected.", "VD - Missing URL", "O Iconi T1")
         return
     }
     clipboardContent := A_Clipboard
@@ -53,13 +53,13 @@ hotkey_extractVideoURLFromSearchBar() {
     Send("{Escape}")
     Send("{Escape}")
     if (!checkIfStringIsAValidURL(clipboardContent)) {
-        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1")
+        MsgBox("No URL detected.", "VD - Missing URL", "O Iconi T1")
         return
     }
     ; Extracts the video meta data and checks if it is already in the video list.
     resultArray := createVideoListViewEntry(clipboardContent)
     if (resultArray[1] == "_result_video_already_in_list") {
-        MsgBox(resultArray[2] . "`n`nis already in the video list.", "VD - Duplicate URL!", "O Iconi T2")
+        MsgBox(resultArray[2] . "`n`nis already in the video list.", "VD - Duplicate URL", "O Iconi T2")
         return
     }
 }
@@ -71,13 +71,13 @@ For example when the user hovers over a video thumbnail on YouTube.
 hotkey_extractVideoURLUnderMouseCursor() {
     url := getBrowserURLUnderMouseCursor()
     if (!checkIfStringIsAValidURL(url)) {
-        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1")
+        MsgBox("No URL detected.", "VD - Missing URL", "O Iconi T1")
         return
     }
     ; Extracts the video meta data and checks if it is already in the video list.
     resultArray := createVideoListViewEntry(url)
     if (resultArray[1] == "_result_video_already_in_list") {
-        MsgBox(resultArray[2] . "`n`nis already in the video list.", "VD - Duplicate URL!", "O Iconi T2")
+        MsgBox(resultArray[2] . "`n`nis already in the video list.", "VD - Duplicate URL", "O Iconi T2")
         return
     }
     /*
@@ -241,7 +241,7 @@ menu_importConfigFile() {
     global applicationMainDirectory
 
     oldConfigFileLocation := fileSelectPrompt("VD - Please select a config file to import", applicationMainDirectory,
-        "*.ini")
+        "*.ini", videoListGUI)
     if (oldConfigFileLocation != "_result_no_file_selected") {
         importOldConfigFile(oldConfigFileLocation)
     }
@@ -253,7 +253,7 @@ menu_exportConfigFile() {
     currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     exportConfigFileDefaultLocation := A_MyDocuments . "\" . currentTime . "_VD_exported_config_file.ini"
     exportConfigFileLocation := fileSavePrompt("VD - Please select a save location for the config file",
-        exportConfigFileDefaultLocation, ".ini")
+        exportConfigFileDefaultLocation, ".ini", videoListGUI)
     if (exportConfigFileLocation != "_result_no_file_save_location_selected") {
         exportConfigFile(exportConfigFileLocation)
     }
@@ -275,7 +275,7 @@ menu_openLatestDownloadDirectory() {
         openDirectoryInExplorer(currentYTDLPActionObject.latestDownloadDirectory)
     }
     else {
-        MsgBox("Please download at least one file.", "VD - No Recent Download", "O Iconi T1")
+        MsgBox("Please download at least one file.", "VD - No Recent Download", "O Iconi T3 Owner" . videoListGUI.Hwnd)
     }
 }
 

@@ -327,16 +327,18 @@ handleSettingsGUI_settingsGUIUpdateCheckForUpdatesButton_onClick(pButton, pInfo)
     settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
     ; Does not check for updates, if there is no Internet connection or the application isn't compiled.
     if (!checkInternetConnection()) {
-        MsgBox("There seems to be no connection to the Internet.", "VD - Manual Update Check", "O Icon! 262144 T2")
+        MsgBox("There seems to be no connection to the Internet.", "VD - Manual Update Check",
+            "O Icon! T2 Owner" . settingsGUI.Hwnd)
     }
     else if (!A_IsCompiled) {
         MsgBox("You cannot use this function with an uncompiled version.", "VD - Manual Update Check",
-            "O Icon! 262144 T2")
+            "O Icon! T2 Owner" . settingsGUI.Hwnd)
     }
     else {
         availableUpdateVersion := checkForAvailableUpdates()
         if (availableUpdateVersion == "_result_no_update_available") {
-            MsgBox("There are currently no updates available.", "VD - Manual Update Check", "O Iconi 262144 T2")
+            MsgBox("There are currently no updates available.", "VD - Manual Update Check",
+                "O Icon! T2 Owner" . settingsGUI.Hwnd)
         }
         else {
             createUpdateGUI(availableUpdateVersion)
@@ -392,7 +394,7 @@ handleSettingsGUI_settingsGUISelectDirectoryButton_onClick(pButton, pInfo) {
     else {
         rootDirectory := A_ScriptDir
     }
-    selectedDirectory := directorySelectPrompt("VD - Please select a directory", rootDirectory, true)
+    selectedDirectory := directorySelectPrompt("VD - Please select a directory", rootDirectory, true, settingsGUI)
     if (selectedDirectory != "_result_no_directory_selected") {
         previousDirectory := settingsGUIDirectoryInputEdit.Value
         settingsGUIDirectoryInputEdit.Value := selectedDirectory

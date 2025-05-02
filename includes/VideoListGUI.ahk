@@ -429,7 +429,7 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
     ; Only relevant when downloading specific parts of a playlist.
     if (addVideoURLUsePlaylistRangeCheckbox.Value &&
         !checkIfStringIsValidPlaylistIndexRange(addVideoSpecifyPlaylistRangeInputEdit.Value)) {
-        MsgBox("The provided playlist range index is invalid!", "VD - Invalid Playlist Range Index",
+        MsgBox("The provided playlist range index is invalid.", "VD - Invalid Playlist Range Index",
             "O Icon! 16384 Owner" . videoListGUI.Hwnd)
         return
     }
@@ -515,7 +515,7 @@ handleVideoListGUI_removeVideoFromListButton_onClick(pButton, pInfo) {
     if (selectedVideoListViewElementsMap.Count == 1 &&
         removeVideoConfirmDeletionCheckbox.Value && !removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.Value) {
         result := MsgBox("Do you really want to delete this video?", "VD - Confirm Deletion",
-            "YN Icon? 262144 T15")
+            "YN Icon? Owner" . videoListGUI.Hwnd)
         if (result != "Yes") {
             return
         }
@@ -548,7 +548,8 @@ handleVideoListGUI_removeVideoConfirmDeletionCheckbox_onClick(pCheckbox, pInfo) 
 
 handleVideoListGUI_importVideoListButton_onClick(pButton, pInfo) {
     importFileDefaultDirectory := A_MyDocuments
-    importFileLocation := fileSelectPrompt("VD - Please select a file to import", importFileDefaultDirectory, "*.txt")
+    importFileLocation := fileSelectPrompt("VD - Please select a URL file to import", importFileDefaultDirectory,
+        "*.txt", videoListGUI)
     ; This usually happens, when the user cancels the selection.
     if (importFileLocation == "_result_no_file_selected") {
         return
@@ -604,6 +605,13 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     global videoListViewContentMap
     global currentYTDLPActionObject
 
+    ; Checks if there are videos in the video list.
+    if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
+        MsgBox("Please add at least one video to the list.", "VD - Canceled Download",
+            "O Iconi T3 Owner" . videoListGUI.Hwnd)
+        return
+    }
+
     ; This ensures that there can only be one download process at the time.
     if (!currentYTDLPActionObject.booleanDownloadIsRunning) {
         currentYTDLPActionObject.booleanDownloadIsRunning := true
@@ -618,7 +626,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     }
     else {
         MsgBox("There is already another download in progress.", "VD - Other Download Running",
-            "O Iconi T1 Owner" . videoListGUI.Hwnd)
+            "O Iconi T3 Owner" . videoListGUI.Hwnd)
         return
     }
 
@@ -811,7 +819,8 @@ handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo)
         selectPath := applicationMainDirectory
     }
 
-    downloadDirectory := directorySelectPrompt("VD - Please select the download target folder", selectPath, true)
+    downloadDirectory := directorySelectPrompt("VD - Please select the download target folder", selectPath, true,
+        videoListGUI)
     if (downloadDirectory == "_result_no_directory_selected") {
         return
     }

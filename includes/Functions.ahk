@@ -448,16 +448,6 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
     if (pVideoListViewElementMap.Count == 0) {
         return
     }
-    ; We use the current time stamp to generate a unique name for the exported file.
-    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
-    if (!IsSet(pExportFileLocation)) {
-        exportFileDefaultLocation := A_MyDocuments . "\" . currentTime . "_VD_exported_urls.txt"
-        pExportFileLocation := fileSavePrompt("VD - Please select a save location", exportFileDefaultLocation, "*.txt")
-        ; This usually happens, when the user cancels the selection.
-        if (pExportFileLocation == "_result_no_file_save_location_selected") {
-            return
-        }
-    }
 
     validURLArray := Array()
     invalidURLArray := Array()
@@ -473,6 +463,19 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             continue
         }
         validURLArray.Push(videoListEntry.videoURL)
+    }
+
+    ; This happens when the user only selected invalid URLs but the option to ignore them is still enabled.
+    if (pBooleanSkipInvalidURLs && validURLArray.Length == 0) {
+        highlightedCheckbox := highlightControl(importAndExportOnlyValidURLsCheckbox)
+        MsgBox("You only selected invalid URLs to export.`n`nDisable the checkbox [" .
+            importAndExportOnlyValidURLsCheckbox.Text . "] to export invalid URLs.", "VD - Canceled URL Export",
+            "O Icon! Owner" . videoListGUI.Hwnd)
+        highlightedCheckbox.destroy()
+
+        statusBarText := "Canceled URL export - There are no valid URLs to export"
+        videoListGUIStatusBar.SetText(statusBarText)
+        return
     }
 
     if (invalidURLArray.Length > 0 && !pBooleanSkipInvalidURLs) {
@@ -497,10 +500,11 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
         }
         result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
             videoListGUI.Hwnd)
-        ; If the users wishes, the invalid URLs will be included in the export.
+        ; If the user wishes, the invalid URLs will be included in the export.
         if (result == msgButton1) {
             ; Adds the separation line into the array.
             validURLArray.Push("# ********************`n# Invalid URLs below.`n# ********************")
+            ; Includes the invalid URLs in the export.
             for (invalidURL in invalidURLArray) {
                 validURLArray.Push(invalidURL)
             }
@@ -517,6 +521,28 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             validURLArray.RemoveAt(A_Index)
         }
     }
+
+    ; Checks if there are any URLs to export. Sometimes there are only invalid URLs and the user decides to exclude them.
+    if (!isSet(exportFileContent)) {
+        MsgBox("There are no valid URLs to export.", "VD - Canceled URL Export",
+            "O Icon! T3 Owner" . videoListGUI.Hwnd)
+        statusBarText := "Canceled URL export - There are no valid URLs to export"
+        videoListGUIStatusBar.SetText(statusBarText)
+        return
+    }
+
+    ; We use the current time stamp to generate a unique name for the exported file.
+    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
+    if (!IsSet(pExportFileLocation)) {
+        exportFileDefaultLocation := A_MyDocuments . "\" . currentTime . "_VD_exported_urls.txt"
+        pExportFileLocation := fileSavePrompt("VD - Please select a save location for the URL file",
+            exportFileDefaultLocation, "*.txt", videoListGUI)
+        ; This usually happens, when the user cancels the selection.
+        if (pExportFileLocation == "_result_no_file_save_location_selected") {
+            return
+        }
+    }
+
     exportFileContent := RTrim(exportFileContent, "`n")
     exportFileContentFinal := "# ********************"
     exportFileContentFinal .= "`n# VideoDownloader URL Export - " . currentTime
@@ -866,19 +892,35 @@ Prompts the user to select a directory.
 @param pRootDirectory [String] The root directory to start the selection from.
 @param pBooleanCheckForWritingRights [boolean] Checks if the user is able to write into the selected directory.
 If that is not the case, they will be prompted to select another directory.
+@param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the file save prompt to make it modal.
 @returns [String] The selected directory path.
 @returns (alt) [String] "_result_no_directory_selected" if the user cancels the selection.
 */
-directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRights) {
+directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRights, pOwnerGUI?) {
+    ; To make this specific file dialog modal, we need to explicitly set the +OwnDialogs option in this current thread.
+    if (IsSet(pOwnerGUI)) {
+        pOwnerGUI.Opt("+OwnDialogs")
+    }
+
     selectedDirectory := FileSelect("D3", pRootDirectory, pPromptTitle)
     ; This usually happens, when the user cancels the selection.
     if (selectedDirectory == "") {
         return "_result_no_directory_selected"
     }
     if (pBooleanCheckForWritingRights && !checkForWritingRights(selectedDirectory)) {
-        result := MsgBox("You do not have permission to write in this directory. Please choose a different one.",
-            "VD - Invalid Directory", "RC Icon! 262144")
+        if (IsSet(pOwnerGUI)) {
+            result := MsgBox("You do not have permission to write in this directory. Please choose a different one.",
+                "VD - Invalid Directory", "RC Icon! Owner" . pOwnerGUI.Hwnd)
+        }
+        else {
+            result := MsgBox("You do not have permission to write in this directory. Please choose a different one.",
+                "VD - Invalid Directory", "RC Icon! 262144")
+        }
+
         if (result == "Retry") {
+            if (isSet(pOwnerGUI)) {
+                return directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRights, pOwnerGUI)
+            }
             return directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRights)
         }
         return "_result_no_directory_selected"
@@ -891,10 +933,16 @@ Prompts the user to select a file.
 @param pPromptTitle [String] The title of the prompt window.
 @param pRootDirectory [String] The root directory to start the selection from.
 @param pFilter [String] An optional filter for the explorer window. For example, "*.txt" would only show text files.
+@param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the file save prompt to make it modal.
 @returns [String] The selected file path.
 @returns (alt) [String] "_result_no_file_selected" if the user cancels the selection.
 */
-fileSelectPrompt(pPromptTitle, pRootDirectory, pFilter?) {
+fileSelectPrompt(pPromptTitle, pRootDirectory, pFilter?, pOwnerGUI?) {
+    ; To make this specific file dialog modal, we need to explicitly set the +OwnDialogs option in this current thread.
+    if (IsSet(pOwnerGUI)) {
+        pOwnerGUI.Opt("+OwnDialogs")
+    }
+
     if (IsSet(pFilter)) {
         selectedFileLocation := FileSelect("3", pRootDirectory, pPromptTitle, pFilter)
     }
@@ -913,12 +961,27 @@ Prompts the user to select a file save location.
 @param pPromptTitle [String] The title of the prompt window.
 @param pRootDirectory [String] The root directory to start the selection from. Can include a file name as well.
 @param pFilter [String] An optional filter for the explorer window. For example, "*.txt" would only show text files.
+Due to internal limitations, it is recommended to only use one filter at a time.
+@param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the file save prompt to make it modal.
 @returns [String] The selected file save path.
 @returns (alt) [String] "_result_no_file_save_location_selected" if the user cancels the selection.
 */
-fileSavePrompt(pPromptTitle, pRootDirectory, pFilter?) {
+fileSavePrompt(pPromptTitle, pRootDirectory, pFilter?, pOwnerGUI?) {
+    ; To make this specific file dialog modal, we need to explicitly set the +OwnDialogs option in this current thread.
+    if (IsSet(pOwnerGUI)) {
+        pOwnerGUI.Opt("+OwnDialogs")
+    }
+
     if (IsSet(pFilter)) {
+        ; Caution: This currently only works with one filter at a time.
+        SplitPath(pFilter, , , &expectedFileExtension)
         selectedFileSaveLocation := FileSelect("S16", pRootDirectory, pPromptTitle, pFilter)
+        ; Checks if the selected file save location has the expected file extension.
+        SplitPath(selectedFileSaveLocation, , &outDir, &outExt, &outName)
+        if (selectedFileSaveLocation && (expectedFileExtension != outExt)) {
+            ; Adds the expected file extension to the selected file save location to make the path valid.
+            selectedFileSaveLocation := outDir . "\" . outName . "." . expectedFileExtension
+        }
     }
     else {
         selectedFileSaveLocation := FileSelect("S16", pRootDirectory, pPromptTitle)
