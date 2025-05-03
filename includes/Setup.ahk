@@ -119,6 +119,14 @@ checkIfMSISetupIsRequired() {
 
 ; Updates the GUI depending on the installation status of the dependencies.
 handleSetupGUI_startSetupButton_onClick() {
+    if (!checkInternetConnection()) {
+        result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?",
+            "VD - No Internet Connection", "YN Icon! Owner" . setupGUI.Hwnd)
+        if (result != "Yes") {
+            return
+        }
+    }
+
     startSetupButton.Opt("+Disabled")
     ; Installs the dependencies and updates the GUI accordingly.
     if (getFFmpegInstallionStatus()) {

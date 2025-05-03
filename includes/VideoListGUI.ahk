@@ -162,7 +162,7 @@ createVideoListGUI() {
     ; Makes the video list GUI sensible for drag and drop events.
     videoListGUI.OnEvent("DropFiles", handleVideoListGUI_onEventDropFiles)
     ; Calls this function when the GUI is resized.
-    videoListGUI.OnEvent("Size", handleVideoListGUI_onResize)
+    videoListGUI.OnEvent("Size", handleVideoListGUI_onSize)
     ; Calls this function when the GUI is closed.
     videoListGUI.OnEvent("Close", handleVideoListGUI_onClose)
 
@@ -867,26 +867,32 @@ handleVideoListGUI_onEventDropFiles(pGUI, pGUIElement, pFileArray, pX, pY) {
     }
 }
 
-handleVideoListGUI_onResize(pGUI, pMinMax, pWidth, pHeight) {
+handleVideoListGUI_onSize(pGUI, pMinMax, pWidth, pHeight) {
     ; Aborts if the GUI hasn't got any linked resize objects.
     if (!pGUI.HasOwnProp("linkedResizeObjectMap")) {
         return
     }
 
-    static debounceTimer := 0
-    ; Makes sure that the function is not called multiple times in a very short time span.
-    if (debounceTimer) {
-        SetTimer(debounceTimer, 0)
+    static booleanDebounce := false
+    ; Makes sure that the resizeControls() function is not called multiple times in a very short time span.
+    if (booleanDebounce) {
+        SetTimer(resizeControls, 0)
     }
-    ; Runs the code if it has "cooled down" (or not been called) for 50ms.
-    debounceTimer := SetTimer(resizeControls, -50)
+    ; Runs the code if this function has not been called for 100ms.
+    SetTimer(resizeControls, -100)
+    booleanDebounce := true
 
-    resizeControls() {
-        for (control, linkedResizeObject in pGUI.linkedResizeObjectMap) {
+    /*
+    This function must be static to allow the SetTimer() function to reset previous timers.
+    If the resizeControls() was initialized again with each "Size" event, the timer reset would not work.
+    */
+    static resizeControls() {
+        for (control, linkedResizeObject in videoListGUI.linkedResizeObjectMap) {
             linkedResizeObject.resizeControl()
             ; Reduces visual errors.
             control.Redraw()
         }
+        booleanDebounce := false
     }
 }
 

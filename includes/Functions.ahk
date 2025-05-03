@@ -1267,7 +1267,7 @@ exitApplicationWithNotification(pBooleanUseFallbackMessage := false) {
     global currentYTDLPActionObject
 
     ; Terminates all running downloads.
-    if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
+    if (IsSet(currentYTDLPActionObject) && (currentYTDLPActionObject.downloadProcessYTDLPPID)) {
         ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
         ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
         terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
@@ -1322,7 +1322,7 @@ Displays a tray tip message for a given amount of time.
 */
 displayTrayTip(pText, pTitle, pOptions := "Iconi Mute", pTimeoutMilliseconds := 3000) {
     TrayTip(pText, pTitle, pOptions)
-    SetTimer () => TrayTip(), -pTimeoutMilliseconds
+    SetTimer((*) => TrayTip(), -pTimeoutMilliseconds)
 }
 
 /*
