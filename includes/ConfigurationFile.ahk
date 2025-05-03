@@ -5,10 +5,6 @@ SendMode "Input"
 CoordMode "Mouse", "Client"
 
 configurationFile_onInit() {
-    global applicationMainDirectory
-
-    ; Determines the location of the application's configuration file.
-    global configFileLocation := applicationMainDirectory . "\VideoDownloader.ini"
     ; Creates the base set of config file entry objects.
     initializeConfigEntryMap()
     ; Checks the integrity of the config file and repairs it if necessary.

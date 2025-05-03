@@ -1480,12 +1480,21 @@ Tries to reach google.com to determine the computer's Internet connection status
 @returns [boolean] True, if the computer is connected to the Internet. False otherwise.
 */
 checkInternetConnection() {
-    ; This option should only be used for debugging purposes.
-    overwriteValue := readConfigFile("OVERWRITE_CHECK_INTERNET_CONNECTION")
+    global configFileLocation
+
+    /*
+    This option should only be used for debugging purposes.
+    We use IniRead() here, because the config file might not be loaded yet.
+    */
+    overwriteValue := IniRead(configFileLocation, "DebugSettings", "OVERWRITE_CHECK_INTERNET_CONNECTION", -1)
     if (overwriteValue == 1) {
+        MsgBox("[" . A_ThisFunc . "()] [INFO] Forced overwrite to value [1].",
+            "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! T3 262144")
         return true
     }
     else if (overwriteValue == 0) {
+        MsgBox("[" . A_ThisFunc . "()] [INFO] Forced overwrite to value [0].",
+            "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! T3 262144")
         return false
     }
 

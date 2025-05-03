@@ -278,18 +278,8 @@ applicationTutorial() {
         "VD - Start Tutorial", "YN Iconi Owner" . videoListGUI.Hwnd)
     editConfigFile(false, "ASK_FOR_TUTORIAL")
     if (result_1 == "Yes") {
-        minimizeAllGUIs()
+        videoListGUI.Maximize()
         howToUseHelpGUITutorial.start()
-    }
-}
-
-minimizeAllGUIs() {
-    ; Minimizes all application windows to reduce diversion.
-    hwndArray := [videoListGUI.Hwnd, settingsGUI.Hwnd, helpGUI.Hwnd]
-    for (hwnd in hwndArray) {
-        if (WinExist("ahk_id " . hwnd)) {
-            WinMinimize()
-        }
     }
 }
 

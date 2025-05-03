@@ -30,6 +30,9 @@ onInit() {
     ; This folder will contain all other files.
     global applicationMainDirectory := A_ScriptDir . "\VideoDownloader"
 
+    ; Determines the location of the application's configuration file.
+    global configFileLocation := applicationMainDirectory . "\VideoDownloader.ini"
+
     global assetDirectory := applicationMainDirectory . "\assets"
 
     global ffmpegDirectory := assetDirectory . "\ffmpeg"
