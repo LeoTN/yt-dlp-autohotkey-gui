@@ -761,7 +761,9 @@ saveCurrentVideoListGUIStateToConfigFile() {
         return
     }
 
-    videoListGUI.GetPos(&x, &y, &width, &height)
+    videoListGUI.GetPos(&x, &y)
+    ; We need to use GetClientPos() because the Show() function defines the client width and height.
+    videoListGUI.GetClientPos(, , &width, &height)
     windowStateString := "x" . x . " y" . y . " w" . width . " h" . height
     state := WinGetMinMax("ahk_id " . videoListGUI.Hwnd)
     switch (state) {
@@ -787,6 +789,30 @@ showVideoListGUIWithSavedStateData() {
     }
 
     windowStateString := readConfigFile("REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE_VALUES")
+    ; Checks if the video list GUI is already in the correct position to avoid flickering.
+    videoListGUIHwndString := "ahk_id " . videoListGUI.Hwnd
+    if (WinExist(videoListGUIHwndString)) {
+        videoListGUI.GetPos(&x, &y)
+        ; We need to use GetClientPos() because the Show() function defines the client width and height as well.
+        videoListGUI.GetClientPos(, , &width, &height)
+        currentWindowStateString := "x" . x . " y" . y . " w" . width . " h" . height
+        state := WinGetMinMax("ahk_id " . videoListGUI.Hwnd)
+        switch (state) {
+            case -1:
+            {
+                ; We need to generate a new string because minimized windows return invalid coordinates.
+                currentWindowStateString := "w" . width . " h" . height . " Minimize"
+            }
+            case 1:
+            {
+                currentWindowStateString .= " Maximize"
+            }
+        }
+        ; The video list GUI is already in the correct position.
+        if (currentWindowStateString == windowStateString) {
+            return
+        }
+    }
     try {
         videoListGUI.Show(windowStateString)
     }
@@ -794,6 +820,113 @@ showVideoListGUIWithSavedStateData() {
         videoListGUI.Show("AutoSize")
         saveCurrentVideoListGUIStateToConfigFile()
     }
+}
+
+/*
+Positions the given relative GUI in 1 out of 9 possible positions relative to the base GUI.
+@param pBaseGUI [Gui] The base GUI which will be used to position the relative GUI.
+@param pRelativeGUI [Gui] The relative GUI which will be positioned.
+@param pPosition [String] The position of the relative GUI. Possible values are:
+    "TopLeftCorner", "TopMiddleCenter", "TopRightCorner",
+    "MiddleLeftCorner", "MiddleCenter", "MiddleRightCorner",
+    "BottomLeftCorner", "BottomMiddleCenter", "BottomRightCorner"
+@param pAdditonalShowParameters [String] Additional show parameters for the relative GUI. For example, "AutoSize".
+*/
+showGUIRelativeToOtherGUI(pBaseGUI, pRelativeGUI, pPosition, pAdditonalShowParameters?) {
+    baseGUIHwndString := "ahk_id " . pBaseGUI.Hwnd
+    realtiveGUIHwndString := "ahk_id " . pRelativeGUI.Hwnd
+    ; Gather information about the base GUI which will be used to position the relative GUI.
+    if ((!WinExist(baseGUIHwndString)) || (WinGetMinMax(baseGUIHwndString) == -1)) {
+        ; Shows the GUI hidden which allows the x and y coordinates to have valid values.
+        pBaseGUI.Show("NoActivate")
+    }
+    /*
+    We can't use pBaseGUI.GetPos() here because it would output wrong coordinates
+    when the screen is scaled in the Windows display settings.
+    */
+    WinGetPos(&baseX, &baseY, &baseWidth, &baseHeight, baseGUIHwndString)
+    ; Get the information about the relative GUI.
+    if ((!WinExist(realtiveGUIHwndString)) || (WinGetMinMax(realtiveGUIHwndString) == -1)) {
+        ; Shows the GUI hidden which allows the x and y coordinates to have valid values.
+        pRelativeGUI.Show("NoActivate")
+    }
+    /*
+    We can't use pRelativeGUI.GetPos() here because it would output wrong coordinates
+    when the screen is scaled in the Windows display settings.
+    */
+    WinGetPos(&relativeX, &relativeY, &relativeWidth, &relativeHeight, realtiveGUIHwndString)
+
+    ; Keep a small distance to the edge of the base GUI.
+    baseMarginX := 20
+    if (WinGetMinMax("ahk_id " . pBaseGUI.Hwnd) == 1) {
+        ; The y margin must be 10 pixels larger to keep the same distance when the base GUI is maximized.
+        baseMarginYTop := 30
+        baseMarginYBottom := 20
+    }
+    else {
+        baseMarginYTop := 20
+        baseMarginYBottom := 20
+    }
+
+    switch (pPosition) {
+        case "TopLeftCorner":
+        {
+            newX := baseX + baseMarginX
+            newY := baseY + baseMarginYTop
+        }
+        case "TopMiddleCenter":
+        {
+            newX := baseX + (baseWidth - relativeWidth) / 2
+            newY := baseY + baseMarginYTop
+        }
+        case "TopRightCorner":
+        {
+            newX := baseX + baseWidth - relativeWidth - baseMarginX
+            newY := baseY + baseMarginYTop
+        }
+        case "MiddleLeftCorner":
+        {
+            newX := baseX + baseMarginX
+            newY := baseY + (baseHeight - relativeHeight) / 2
+        }
+        case "MiddleCenter":
+        {
+            newX := baseX + (baseWidth - relativeWidth) / 2
+            newY := baseY + (baseHeight - relativeHeight) / 2
+        }
+        case "MiddleRightCorner":
+        {
+            newX := baseX + baseWidth - relativeWidth - baseMarginX
+            newY := baseY + (baseHeight - relativeHeight) / 2
+        }
+        case "BottomLeftCorner":
+        {
+            newX := baseX + baseMarginX
+            newY := baseY + baseHeight - relativeHeight - baseMarginYBottom
+        }
+        case "BottomMiddleCenter":
+        {
+            newX := baseX + (baseWidth - relativeWidth) / 2
+            newY := baseY + baseHeight - relativeHeight - baseMarginYBottom
+        }
+        case "BottomRightCorner":
+        {
+            newX := baseX + baseWidth - relativeWidth - baseMarginX
+            newY := baseY + baseHeight - relativeHeight - baseMarginYBottom
+        }
+        default:
+        {
+            MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid position received [" . pPosition . "] for relative GUI [" .
+                pRelativeGUI.Title . "]", "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            return
+        }
+    }
+    if (IsSet(pAdditonalShowParameters)) {
+        ; Shows the relative GUI with the provided additional parameters.
+        pRelativeGUI.Show("x" . newX . " y" . newY . " " . pAdditonalShowParameters)
+        return
+    }
+    pRelativeGUI.Show("x" . newX . " y" . newY)
 }
 
 /*
@@ -1021,13 +1154,7 @@ reloadApplicationPrompt() {
     ; Number in seconds.
     i := 4
 
-    ; Makes the video list GUI the owner of the window.
-    if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
-        reloadApplicationGUI := Gui("Owner" . videoListGUI.Hwnd, "VD - Reloading VideoDownloader")
-    }
-    else {
-        reloadApplicationGUI := Gui(, "VD - Reloading VideoDownloader")
-    }
+    reloadApplicationGUI := Gui(, "VD - Reloading VideoDownloader")
     textField := reloadApplicationGUI.Add("Text", "r3 w260 x20 y40", "VideoDownloader will be`n reloaded in " . i .
         " seconds.")
     textField.SetFont("s12")
@@ -1035,7 +1162,15 @@ reloadApplicationPrompt() {
     progressBar := reloadApplicationGUI.Add("Progress", "w280 h20 x10 y100", 0)
     buttonOkay := reloadApplicationGUI.Add("Button", "Default w80 x60 y170", "Okay")
     buttonCancel := reloadApplicationGUI.Add("Button", "w80 x160 y170", "Cancel")
-    reloadApplicationGUI.Show("w300 h200")
+
+    ; Makes the video list GUI the owner of the window.
+    if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
+        reloadApplicationGUI.Opt("Owner" . videoListGUI.Hwnd)
+        showGUIRelativeToOtherGUI(videoListGUI, reloadApplicationGUI, "MiddleCenter", "AutoSize")
+    }
+    else {
+        reloadApplicationGUI.Show("AutoSize")
+    }
 
     buttonOkay.OnEvent("Click", (*) => saveCurrentVideoListGUIStateToConfigFile() Reload())
     buttonCancel.OnEvent("Click", (*) => reloadApplicationGUI.Destroy())
@@ -1073,13 +1208,7 @@ terminateApplicationPrompt() {
     ; Number in seconds.
     i := 4
 
-    ; Makes the video list GUI the owner of the window.
-    if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
-        terminateApplicationGUI := Gui("Owner" . videoListGUI.Hwnd, "VD - Terminating VideoDownloader")
-    }
-    else {
-        terminateApplicationGUI := Gui(, "VD - Terminating VideoDownloader")
-    }
+    terminateApplicationGUI := Gui(, "VD - Terminating VideoDownloader")
     textField := terminateApplicationGUI.Add("Text", "r3 w260 x20 y40", "VideoDownloader will be`n terminated in " . i .
         " seconds.")
     textField.SetFont("s12")
@@ -1087,7 +1216,15 @@ terminateApplicationPrompt() {
     progressBar := terminateApplicationGUI.Add("Progress", "w280 h20 x10 y100 cRed backgroundBlack", 0)
     buttonOkay := terminateApplicationGUI.Add("Button", "Default w80 x60 y170", "Okay")
     buttonCancel := terminateApplicationGUI.Add("Button", "w80 x160 y170", "Cancel")
-    terminateApplicationGUI.Show("w300 h200")
+
+    ; Makes the video list GUI the owner of the window.
+    if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
+        terminateApplicationGUI.Opt("Owner" . videoListGUI.Hwnd)
+        showGUIRelativeToOtherGUI(videoListGUI, terminateApplicationGUI, "MiddleCenter", "AutoSize")
+    }
+    else {
+        terminateApplicationGUI.Show("AutoSize")
+    }
 
     buttonOkay.OnEvent("Click", (*) => saveCurrentVideoListGUIStateToConfigFile() exitApplicationWithNotification())
     buttonCancel.OnEvent("Click", (*) => terminateApplicationGUI.Destroy())

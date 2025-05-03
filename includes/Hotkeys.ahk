@@ -349,12 +349,12 @@ menu_openSettingsGUI() {
     settingsGUITabs.Choose(selectTabNumber)
     ; Switches back to the original tab.
     settingsGUITabs.Choose(currentTabNumber)
-    settingsGUI.Show("AutoSize")
+    showGUIRelativeToOtherGUI(videoListGUI, settingsGUI, "MiddleCenter", "AutoSize")
 }
 
 ; Opens the help GUI.
 menu_openHelpGUI() {
-    helpGUI.Show("AutoSize")
+    showGUIRelativeToOtherGUI(videoListGUI, helpGUI, "MiddleCenter", "AutoSize")
 }
 
 /*

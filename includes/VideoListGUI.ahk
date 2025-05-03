@@ -297,6 +297,9 @@ createVideoListGUI() {
     tmpEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
     tmpEntry.removeEntryFromVideoListViewContentMap()
 
+    ; Focus the URL input edit.
+    addVideoURLInputEdit.Focus()
+
     /*
     ********************************************************************************************************************
     This section links every GUI control to a GUIControlResizeLink object.

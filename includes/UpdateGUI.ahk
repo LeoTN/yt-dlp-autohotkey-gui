@@ -37,6 +37,7 @@ createUpdateGUI(pUpdateVersion) {
         . pUpdateVersion . "/VideoDownloader_" . pUpdateVersion . "_Installer.msi"
 
     global updateGUI := Gui("+AlwaysOnTop", "VideoDownloader - Update")
+
     updateGUIUpdateText := updateGUI.Add("Text", "w320 R3 Center", "Update Available - [" . pUpdateVersion . "]")
     updateGUIUpdateText.SetFont("bold s12")
 
@@ -61,6 +62,10 @@ createUpdateGUI(pUpdateVersion) {
     updateGUINoUpdateButton := updateGUI.Add("Button", "xp+110 w100 R2", "No Thanks")
     updateGUINoUpdateButton.OnEvent("Click", (*) => updateGUI.Destroy())
 
+    if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
+        showGUIRelativeToOtherGUI(videoListGUI, updateGUI, "MiddleCenter", "AutoSize")
+        return
+    }
     updateGUI.Show("AutoSize")
 }
 
