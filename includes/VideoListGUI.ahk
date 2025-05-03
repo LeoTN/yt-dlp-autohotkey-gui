@@ -615,6 +615,14 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         return
     }
 
+    if (!checkInternetConnection()) {
+        result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?",
+            "VD - No Internet Connection", "YN Icon! Owner" . videoListGUI.Hwnd)
+        if (result != "Yes") {
+            return
+        }
+    }
+
     ; This ensures that there can only be one download process at the time.
     if (!currentYTDLPActionObject.booleanDownloadIsRunning) {
         currentYTDLPActionObject.booleanDownloadIsRunning := true
@@ -1495,7 +1503,9 @@ class VideoListViewEntry {
     */
     removeEntryFromVideoListViewContentMap(pBooleanUpdateVideoListViewElement := true) {
         global videoListViewContentMap
-        videoListViewContentMap.Delete(this.identifierString)
+        if (videoListViewContentMap.Has(this.identifierString)) {
+            videoListViewContentMap.Delete(this.identifierString)
+        }
         if (pBooleanUpdateVideoListViewElement) {
             this.updateVideoListViewElement()
         }

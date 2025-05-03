@@ -29,6 +29,7 @@ initializeConfigEntryMap() {
     DebugSettings := "DebugSettings"
     ENABLE_DEBUG_HOTKEYS := false
     ENABLE_DEBUG_MODE := false
+    OVERWRITE_CHECK_INTERNET_CONNECTION := -1
     CONFIG_FILE_VD_VERSION := versionFullName
     ; [GeneralSettings]
     GeneralSettings := "GeneralSettings"
@@ -82,6 +83,8 @@ initializeConfigEntryMap() {
     ConfigFileEntry(ENABLE_DEBUG_HOTKEYS, "ENABLE_DEBUG_HOTKEYS", DebugSettings, ENABLE_DEBUG_HOTKEYS, "boolean")
     ConfigFileEntry(ENABLE_DEBUG_MODE, "ENABLE_DEBUG_MODE", DebugSettings, ENABLE_DEBUG_MODE, "boolean")
     ConfigFileEntry(CONFIG_FILE_VD_VERSION, "CONFIG_FILE_VD_VERSION", DebugSettings, CONFIG_FILE_VD_VERSION, "string")
+    ConfigFileEntry(OVERWRITE_CHECK_INTERNET_CONNECTION, "OVERWRITE_CHECK_INTERNET_CONNECTION", DebugSettings,
+        OVERWRITE_CHECK_INTERNET_CONNECTION, "boolean")
     ; [GeneralSettings]
     ConfigFileEntry(START_WITH_WINDOWS, "START_WITH_WINDOWS", GeneralSettings,
         START_WITH_WINDOWS, "boolean")

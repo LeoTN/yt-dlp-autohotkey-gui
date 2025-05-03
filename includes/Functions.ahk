@@ -1476,17 +1476,33 @@ checkForAvailableUpdates() {
 }
 
 /*
-Tries to ping google.com to determine the computer's Internet connection status.
+Tries to reach google.com to determine the computer's Internet connection status.
 @returns [boolean] True, if the computer is connected to the Internet. False otherwise.
 */
 checkInternetConnection() {
-    ; Checks if the user has an established Internet connection.
+    ; This option should only be used for debugging purposes.
+    overwriteValue := readConfigFile("OVERWRITE_CHECK_INTERNET_CONNECTION")
+    if (overwriteValue == 1) {
+        return true
+    }
+    else if (overwriteValue == 0) {
+        return false
+    }
+
+    targetURL := "https://www.google.com"
+    try {
+        ; https://learn.microsoft.com/de-de/windows/win32/api/wininet/nf-wininet-internetcheckconnectionw
+        booleanIsConnected :=
+            DllCall("Wininet.dll\InternetCheckConnectionW", "Str", targetURL, "UInt", 1, "UInt", 0)
+        if (booleanIsConnected) {
+            return true
+        }
+    }
     try
     {
         httpRequest := ComObject("WinHttp.WinHttpRequest.5.1")
-        httpRequest.Open("GET", "http://www.google.com", false)
+        httpRequest.Open("GET", targetURL, false)
         httpRequest.Send()
-
         if (httpRequest.Status = 200) {
             return true
         }

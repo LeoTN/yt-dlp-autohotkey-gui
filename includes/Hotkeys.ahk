@@ -185,7 +185,9 @@ hotkey_debug_2() {
 }
 
 hotkey_debug_3() {
-    MsgBox("This debug hotkey is currently not used.", "VD - WIP", "O Iconi 262144 T1")
+    booleanIsConnected := checkInternetConnection()
+    MsgBox("[" . A_ThisFunc . "()] [INFO] Internet Connection Status: " . booleanIsConnected .
+        "`nDebug hotkey 3 executed.", "VideoDownloader - [" . A_ThisFunc . "()]", "Iconi 262144")
 }
 
 hotkey_debug_4() {
