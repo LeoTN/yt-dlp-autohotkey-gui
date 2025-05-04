@@ -895,8 +895,15 @@ handleVideoListGUI_onSize(pGUI, pMinMax, pWidth, pHeight) {
     If the resizeControls() was initialized again with each "Size" event, the timer reset would not work.
     */
     static resizeControls() {
+        Critical(-1)
+        ; The calculation and move process have been seperated to help reducing visual errors and to increase performance.
+        for (control, linkedResizeObject in videoListGUI.linkedResizeObjectMap) {
+            linkedResizeObject.calculateNewPositionAndSize()
+        }
         for (control, linkedResizeObject in videoListGUI.linkedResizeObjectMap) {
             linkedResizeObject.resizeControl()
+        }
+        for (control, linkedResizeObject in videoListGUI.linkedResizeObjectMap) {
             ; Reduces visual errors.
             control.Redraw()
         }
@@ -1606,41 +1613,40 @@ class GUIControlResizeLink {
         this.guiOriginalY := y
         this.guiOriginalWidth := width
         this.guiOriginalHeight := height
+
+        this.calculateNewPositionAndSize()
     }
-    ; This function calculates the new position and size of the control based on the GUI's size.
-    resizeControl() {
+    ; Step 1 ist to calculate the new dimensions and position of the control.
+    calculateNewPositionAndSize() {
         ; These values will be used to calculate the new position and size of the control.
-        this.gui.GetClientPos(&x, &y, &GUICurrentWidth, &guiCurrentHeight)
-        xRatio := GUICurrentWidth / this.guiOriginalWidth
-        yRatio := guiCurrentHeight / this.guiOriginalHeight
-        newControlWidth := this.controlOriginalWidth * xRatio
-        newControlHeight := this.controlOriginalHeight * yRatio
+        this.gui.GetClientPos(, , &guiCurrentWidth, &guiCurrentHeight)
+        xRatio := guiCurrentWidth / this.guiOriginalWidth
+        this.newControlWidth := this.controlOriginalWidth * xRatio
         /*
-        Each control or group of controls needs to be handled differently.
-        The scale mode is used to determine how the control should be resized.
+        Each control or group of controls needs to be calculated differently.
+        The scale mode is used to determine how the control should be calculated.
         */
         switch (this.scaleMode) {
             case 1:
             {
                 ; All controls in the manageVideoListGroupBox and downloadVideoGroupBox.
                 yDifference := guiCurrentHeight - this.guiOriginalHeight
-                newX := this.controlOriginalX * xRatio
-                newY := this.controlOriginalY + yDifference
-                this.control.Move(newX, newY, newControlWidth)
+                this.newX := this.controlOriginalX * xRatio
+                this.newY := this.controlOriginalY + yDifference
             }
             case 2:
             {
                 ; currentlySelectedVideoGroupBox and videoListView.
                 yDifference := guiCurrentHeight - this.guiOriginalHeight
-                newX := this.controlOriginalX * xRatio
-                newControlHeight := this.controlOriginalHeight + yDifference
-                this.control.Move(newX, , newControlWidth, newControlHeight)
+                this.newX := this.controlOriginalX * xRatio
+                this.newControlHeight := this.controlOriginalHeight + yDifference
             }
             case 3:
             {
                 ; videoTitleText, videoUploaderText, videoDurationText and videoThumbnailImage.
-                newX := this.controlOriginalX * xRatio
-                this.control.Move(newX, , newControlWidth, newControlHeight)
+                yRatio := guiCurrentHeight / this.guiOriginalHeight
+                this.newX := this.controlOriginalX * xRatio
+                this.newControlHeight := this.controlOriginalHeight * yRatio
             }
             case 4:
             {
@@ -1648,20 +1654,62 @@ class GUIControlResizeLink {
                 videoDesiredFormatText, videoDesiredFormatDDL, videoDesiredSubtitleText,
                 videoDesiredSubtitleDDL and videoAdvancedDownloadSettingsButton.
                 */
+                yRatio := guiCurrentHeight / this.guiOriginalHeight
                 originalVideoThumbnailImageHeight := 158
                 currentVideoThumbnailImageHeight := originalVideoThumbnailImageHeight * yRatio
                 ; This variable will be used to position elements right below the video thumbnail image.
                 videoThumbnailImageHeightDifference :=
                     currentVideoThumbnailImageHeight - originalVideoThumbnailImageHeight
-                newX := this.controlOriginalX * xRatio
-                newY := this.controlOriginalY + videoThumbnailImageHeightDifference
-                this.control.Move(newX, newY, newControlWidth)
+                this.newX := this.controlOriginalX * xRatio
+                this.newY := this.controlOriginalY + videoThumbnailImageHeightDifference
             }
             case 5:
             {
                 ; videoListSearchBarText, videoListSearchBarInputEdit and videoListSearchBarInputClearButton.
-                newX := this.controlOriginalX * xRatio
-                this.control.Move(newX, , newControlWidth)
+                this.newX := this.controlOriginalX * xRatio
+            }
+            default:
+            {
+                MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid scale mode received [" . this.scaleMode .
+                    "] for control [" . this.control.Text . "] with class [" . this.control.ClassNN . "].",
+                    "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            }
+        }
+    }
+    ; Step 2 is to move the control to the new position and to change its size.
+    resizeControl() {
+        /*
+        Each control or group of controls needs to be moved differently.
+        The scale mode is used to determine how the control should be moved.
+        */
+        switch (this.scaleMode) {
+            case 1:
+            {
+                ; All controls in the manageVideoListGroupBox and downloadVideoGroupBox.
+                this.control.Move(this.newX, this.newY, this.newControlWidth)
+            }
+            case 2:
+            {
+                ; currentlySelectedVideoGroupBox and videoListView.
+                this.control.Move(this.newX, , this.newControlWidth, this.newControlHeight)
+            }
+            case 3:
+            {
+                ; videoTitleText, videoUploaderText, videoDurationText and videoThumbnailImage.
+                this.control.Move(this.newX, , this.newControlWidth, this.newControlHeight)
+            }
+            case 4:
+            {
+                /*
+                videoDesiredFormatText, videoDesiredFormatDDL, videoDesiredSubtitleText,
+                videoDesiredSubtitleDDL and videoAdvancedDownloadSettingsButton.
+                */
+                this.control.Move(this.newX, this.newY, this.newControlWidth)
+            }
+            case 5:
+            {
+                ; videoListSearchBarText, videoListSearchBarInputEdit and videoListSearchBarInputClearButton.
+                this.control.Move(this.newX, , this.newControlWidth)
             }
             default:
             {
