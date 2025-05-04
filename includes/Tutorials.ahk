@@ -18,7 +18,7 @@ tutorial_howToFindHelpGUI() {
 
     howToUseHelpGUITutorial.addText(
         "This tutorial will basically teach you how to find more tutorials and information.")
-    howToUseHelpGUITutorial.addAction((*) => hideAllHighlightedElements())
+    howToUseHelpGUITutorial.addAction((*) => start())
     howToUseHelpGUITutorial.addText(
         "At first, you need to click on the [Help] menu in the top right corner of the video list window.")
     howToUseHelpGUITutorial.addAction((*) => showVideoListGUIAndHighlightHelpMenu())
@@ -31,19 +31,25 @@ tutorial_howToFindHelpGUI() {
     ; Makes sure the highlighted controls become normal again.
     howToUseHelpGUITutorial.addExitAction((*) => hideAllHighlightedElements())
 
+    start() {
+        hideAllHighlightedElements()
+        saveCurrentVideoListGUIStateToConfigFile()
+        showVideoListGUIWithSavedStateData()
+        showGUIRelativeToOtherGUI(videoListGUI, howToUseHelpGUITutorial.gui, "MiddleRightCorner")
+    }
     showVideoListGUIAndHighlightHelpMenu() {
         hideAllHighlightedElements()
-        videoListGUI.Show("AutoSize")
+        videoListGUI.Show()
         currentlyHighlightedControlObject := highlightMenuElement(videoListGUI.Hwnd, 5)
     }
     highlightSearchBar() {
         hideAllHighlightedElements()
-        helpGUI.Show("AutoSize")
+        showGUIRelativeToOtherGUI(videoListGUI, helpGUI, "MiddleCenter", "AutoSize")
         currentlyHighlightedControlObject := highlightControl(helpGUISearchBarEdit)
     }
     demonstrateSearchBar() {
         hideAllHighlightedElements()
-        helpGUI.Show("AutoSize")
+        showGUIRelativeToOtherGUI(videoListGUI, helpGUI, "MiddleCenter", "AutoSize")
         helpGUISearchBarEdit.Focus()
         ; Waits a little to avoid loosing the first few letters.
         Sleep(100)
@@ -113,6 +119,9 @@ tutorial_gettingStarted() {
 
     closeHowToUseHelpGUITutorial() {
         hideAllHighlightedElements()
+        saveCurrentVideoListGUIStateToConfigFile()
+        showVideoListGUIWithSavedStateData()
+        showGUIRelativeToOtherGUI(videoListGUI, gettingStartedTutorial.gui, "MiddleLeftCorner")
         /*
         The howToUseHelpGUITutorial refers to this tutorial at its end. It asks the user to start this tutorial
         and to avoid multiple unnecessary windows, we close the old tutorial if the user forgets it.
@@ -125,27 +134,27 @@ tutorial_gettingStarted() {
             WinClose()
         }
         hideAllHighlightedElements()
-        videoListGUI.Show("AutoSize")
+        videoListGUI.Show()
         currentlyHighlightedControlObject := highlightControl(videoListView)
     }
     showVideoListGUIAndHighlightURLInputEdit() {
         hideAllHighlightedElements()
-        videoListGUI.Show("AutoSize")
+        videoListGUI.Show()
         currentlyHighlightedControlObject := highlightControl(addVideoURLInputEdit)
     }
     showVideoListGUIAndHighlightDownloadButton() {
         hideAllHighlightedElements()
-        videoListGUI.Show("AutoSize")
+        videoListGUI.Show()
         currentlyHighlightedControlObject := highlightControl(downloadStartButton)
     }
     showVideoListGUIAndHighlightDirectoryMenu() {
         hideAllHighlightedElements()
-        videoListGUI.Show("AutoSize")
+        videoListGUI.Show()
         currentlyHighlightedControlObject := highlightMenuElement(videoListGUI.Hwnd, 2)
     }
     showVideoListGUIAndHighlightHelpMenu() {
         hideAllHighlightedElements()
-        videoListGUI.Show("AutoSize")
+        videoListGUI.Show()
         currentlyHighlightedControlObject := highlightMenuElement(videoListGUI.Hwnd, 5)
     }
     hideAllHighlightedElements() {
@@ -168,7 +177,7 @@ tutorial_howToUsePlaylistRangeIndex() {
         "`n`nIf a URL contains a reference or is itself a link to a playlist, "
         . "only the video specified in the URL or the very first video of the playlist "
         . "will be added to the list by default.")
-    howToUsePlaylistRangeIndexTutorial.addAction((*) => hideAllHighlightedElements())
+    howToUsePlaylistRangeIndexTutorial.addAction((*) => start())
     howToUsePlaylistRangeIndexTutorial.addText(
         "Why would I need to use the playlist range index?"
         "`n`nImagine a playlist with 20 videos, but you only want to download the first 10 videos."
@@ -210,9 +219,14 @@ tutorial_howToUsePlaylistRangeIndex() {
     ; Makes sure the highlighted controls become normal again.
     howToUsePlaylistRangeIndexTutorial.addExitAction((*) => hideAllHighlightedElements())
 
+    start() {
+        hideAllHighlightedElements()
+        saveCurrentVideoListGUIStateToConfigFile()
+        showVideoListGUIWithSavedStateData()
+    }
     showVideoListGUIAndHighlightPlaylistRangeIndexInputEditAndEnterInvalidIndex() {
         hideAllHighlightedElements()
-        videoListGUI.Show("AutoSize")
+        videoListGUI.Show()
         currentlyHighlightedControlObject := highlightControl(addVideoSpecifyPlaylistRangeInputEdit)
         ; Enables the required checkboxes.
         addVideoURLIsAPlaylistCheckbox.Value := 1
@@ -231,7 +245,7 @@ tutorial_howToUsePlaylistRangeIndex() {
     }
     showVideoListGUIAndHighlightPlaylistRangeIndexInputEditAndEnterValidIndex() {
         hideAllHighlightedElements()
-        videoListGUI.Show("AutoSize")
+        videoListGUI.Show()
         currentlyHighlightedControlObject := highlightControl(addVideoSpecifyPlaylistRangeInputEdit)
         ; Enables the required checkboxes.
         addVideoURLIsAPlaylistCheckbox.Value := 1
@@ -264,18 +278,8 @@ applicationTutorial() {
         "VD - Start Tutorial", "YN Iconi Owner" . videoListGUI.Hwnd)
     editConfigFile(false, "ASK_FOR_TUTORIAL")
     if (result_1 == "Yes") {
-        minimizeAllGUIs()
+        videoListGUI.Maximize()
         howToUseHelpGUITutorial.start()
-    }
-}
-
-minimizeAllGUIs() {
-    ; Minimizes all application windows to reduce diversion.
-    hwndArray := [videoListGUI.Hwnd, settingsGUI.Hwnd, helpGUI.Hwnd]
-    for (hwnd in hwndArray) {
-        if (WinExist("ahk_id " . hwnd)) {
-            WinMinimize()
-        }
     }
 }
 
@@ -352,11 +356,11 @@ class InteractiveTutorialListViewEntry {
         this.gui := Gui("AlwaysOnTop", this.title)
         this.gui.OnEvent("Close", (*) => this.exit())
         this.guiText := this.gui.Add("Text", "yp+10 w320 R10", "interactive_tutorial_text")
-        this.guiPreviousButton := this.gui.Add("Button", "yp+150 w100", "Previous")
+        this.guiPreviousButton := this.gui.Add("Button", "yp+150 w100", "<= Previous")
         this.guiPreviousButton.OnEvent("Click", (*) => this.previous())
         this.guiExitButton := this.gui.Add("Button", "xp+110 w100", "Exit")
         this.guiExitButton.OnEvent("Click", (*) => this.exit())
-        this.guiNextButton := this.gui.Add("Button", "xp+110 w100", "Next")
+        this.guiNextButton := this.gui.Add("Button", "xp+110 w100", "Next =>")
         this.guiNextButton.OnEvent("Click", (*) => this.next())
         this.guiStatusBar := this.gui.Add("StatusBar", , "interactive_tutorial_statusbar_text")
         this.guiStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE

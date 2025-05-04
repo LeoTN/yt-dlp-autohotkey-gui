@@ -30,6 +30,9 @@ onInit() {
     ; This folder will contain all other files.
     global applicationMainDirectory := A_ScriptDir . "\VideoDownloader"
 
+    ; Determines the location of the application's configuration file.
+    global configFileLocation := applicationMainDirectory . "\VideoDownloader.ini"
+
     global assetDirectory := applicationMainDirectory . "\assets"
 
     global ffmpegDirectory := assetDirectory . "\ffmpeg"
@@ -111,8 +114,7 @@ onInit() {
     */
 
     if (readConfigFile("DISPLAY_STARTUP_NOTIFICATION")) {
-        TrayTip("VideoDownloader launched.", "VideoDownloader - Status", "Iconi Mute")
-        SetTimer () => TrayTip(), -1500
+        displayTrayTip("VideoDownloader launched.", "VideoDownloader - Status")
     }
     ; Shows a small tutorial to guide the user.
     if (readConfigFile("ASK_FOR_TUTORIAL")) {

@@ -51,7 +51,7 @@ videoListGUI_onInit() {
 
 createVideoListGUI() {
     global
-    videoListGUI := Gui("+OwnDialogs", "VD - Video List")
+    videoListGUI := Gui("+MinSize +OwnDialogs +Resize", "VD - Video List")
     ; Explicitly set the background color to avoid an issue with the ColorButton library.
     videoListGUI.BackColor := "f0f0f0"
 
@@ -65,22 +65,23 @@ createVideoListGUI() {
     videoTitleText := videoListGUI.Add("Text", "xp+10 yp+20 w280 R1 -Wrap", "Video Title")
     videoUploaderText := videoListGUI.Add("Text", "yp+20 w280 R1 -Wrap", "Uploader")
     videoDurationText := videoListGUI.Add("Text", "yp+20 w280 R1 -Wrap", "Duration")
-    videoThumbnailImage := videoListGUI.Add("Picture", "w280 h157.5 yp+20 +AltSubmit", GUIBackgroundImageLocation)
+    ; The value of the variable "originalVideoThumbnailImageHeight" must be changed as well when changing the height.
+    videoThumbnailImage := videoListGUI.Add("Picture", "w280 h158 yp+20", GUIBackgroundImageLocation)
     ; Controls that change the download settings for the video.
-    videoDesiredFormatText := videoListGUI.Add("Text", "yp+172.5", "Desired Format")
+    videoDesiredFormatText := videoListGUI.Add("Text", "yp+173", "Desired Format")
     videoDesiredFormatDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
     videoDesiredSubtitleText := videoListGUI.Add("Text", "yp+30", "Desired Subtitle")
     videoDesiredSubtitleDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
     videoAdvancedDownloadSettingsButton := videoListGUI.Add("Button", "w280 yp+30", "Advanced Download Settings")
     ; Video list controls.
     videoListSearchBarText := videoListGUI.Add("Text", "xm+310 ym", "Search the Video List")
-    videoListSearchBarInputEdit := videoListGUI.Add("Edit", "yp+20 w300", "")
+    videoListSearchBarInputEdit := videoListGUI.Add("Edit", "yp+20 w300 -Multi", "")
     videoListSearchBarInputClearButton := videoListGUI.Add("Button", "xp+305 yp+1 w20 h20", "X")
     videoListSearchBarInputClearButton.SetColor("ced4da", "000000", -1, "808080")
-    videoListView := videoListGUI.Add("ListView", "xp-304 yp+28 w600 h340 +Grid", ["Title", "Uploader", "Duration"])
+    videoListView := videoListGUI.Add("ListView", "xp-304 yp+28 w599 h340 +Grid", ["Title", "Uploader", "Duration"])
     ; Controls that belong to the video list.
     manageVideoListGroupBox := videoListGUI.Add("GroupBox", "w600 xm ym+400 h185", "Manage Video List")
-    addVideoURLInputEdit := videoListGUI.Add("Edit", "xp+10 yp+20 w555 R1 -WantReturn")
+    addVideoURLInputEdit := videoListGUI.Add("Edit", "xp+10 yp+20 w555 R1 -WantReturn -Multi")
     addVideoURLInputClearButton := videoListGUI.Add("Button", "xp+560 yp+1 w20 h20", "X")
     addVideoURLInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     ; Add URL elements.
@@ -89,7 +90,7 @@ createVideoListGUI() {
     addVideoURLUsePlaylistRangeCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
         "Only add videos in a specific range")
     addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
-    addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled", "1")
+    addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled -Multi", "1")
     ; Remove video elements.
     removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200 +Disabled", "Remove Video(s) from List")
     removeVideoConfirmDeletionCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30",
@@ -99,7 +100,7 @@ createVideoListGUI() {
     ; Import and export elements.
     importVideoListButton := videoListGUI.Add("Button", "xp+200 yp-50 w75", "Import")
     exportVideoListButton := videoListGUI.Add("Button", "yp xp+85 w75 +Disabled", "Export")
-    exportOnlyValidURLsCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Export only valid URLs")
+    importAndExportOnlyValidURLsCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Only consider valid URLs")
     autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Controls that are relevant for downloading the videos in the video list.
     downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download")
@@ -158,6 +159,12 @@ createVideoListGUI() {
     It is caused by pressing F1 while it is the active window or any owned MsgBox with a help button.
     */
     OnMessage(0x0053, handleVideoListGUI_onEventHelp)
+    ; Makes the video list GUI sensible for drag and drop events.
+    videoListGUI.OnEvent("DropFiles", handleVideoListGUI_onEventDropFiles)
+    ; Calls this function when the GUI is resized.
+    videoListGUI.OnEvent("Size", handleVideoListGUI_onSize)
+    ; Calls this function when the GUI is closed.
+    videoListGUI.OnEvent("Close", handleVideoListGUI_onClose)
 
     /*
     ********************************************************************************************************************
@@ -201,11 +208,13 @@ createVideoListGUI() {
     importVideoListButton.ToolTip :=
         "Import a text file with video URLs. Each line must only contain one URL."
     exportVideoListButton.ToolTip :=
-        "Export the URLs of all (selected) videos into a file."
-    exportOnlyValidURLsCheckbox.ToolTip :=
+        "Export the URLs of all (selected) videos into a text file."
+    importAndExportOnlyValidURLsCheckbox.ToolTip :=
         "Only successfully extracted video URLs will be exported "
-    exportOnlyValidURLsCheckbox.ToolTip .=
+    importAndExportOnlyValidURLsCheckbox.ToolTip .=
         "when clicking the [" . exportVideoListButton.Text . "] button."
+    importAndExportOnlyValidURLsCheckbox.ToolTip .=
+        "`nThe same goes for the import function which only imports valid URLs in case this checkbox is enabled."
     autoExportVideoListCheckbox.ToolTip :=
         "Automatically export the downloaded video URLs into a file."
     ; Controls that are relevant for downloading the videos in the video list.
@@ -287,6 +296,63 @@ createVideoListGUI() {
     tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := ""
     tmpEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
     tmpEntry.removeEntryFromVideoListViewContentMap()
+
+    ; Focus the URL input edit.
+    addVideoURLInputEdit.Focus()
+
+    /*
+    ********************************************************************************************************************
+    This section links every GUI control to a GUIControlResizeLink object.
+    ********************************************************************************************************************
+    */
+
+    ; The GUI must be shown to calculate the original size.
+    videoListGUI.Show("AutoSize Hide")
+
+    GUIControlResizeLink(currentlySelectedVideoGroupBox, 2)
+
+    GUIControlResizeLink(videoTitleText, 3)
+    GUIControlResizeLink(videoUploaderText, 3)
+    GUIControlResizeLink(videoDurationText, 3)
+    GUIControlResizeLink(videoThumbnailImage, 3)
+
+    GUIControlResizeLink(videoDesiredFormatText, 4)
+    GUIControlResizeLink(videoDesiredFormatDDL, 4)
+    GUIControlResizeLink(videoDesiredSubtitleText, 4)
+    GUIControlResizeLink(videoDesiredSubtitleDDL, 4)
+    GUIControlResizeLink(videoAdvancedDownloadSettingsButton, 4)
+
+    GUIControlResizeLink(videoListSearchBarText, 5)
+    GUIControlResizeLink(videoListSearchBarInputEdit, 5)
+    GUIControlResizeLink(videoListSearchBarInputClearButton, 5)
+
+    GUIControlResizeLink(videoListView, 2)
+
+    GUIControlResizeLink(manageVideoListGroupBox, 1)
+    GUIControlResizeLink(addVideoURLInputEdit, 1)
+    GUIControlResizeLink(addVideoURLInputClearButton, 1)
+    GUIControlResizeLink(addVideoToListButton, 1)
+    GUIControlResizeLink(addVideoURLIsAPlaylistCheckbox, 1)
+    GUIControlResizeLink(addVideoURLUsePlaylistRangeCheckbox, 1)
+    GUIControlResizeLink(addVideoSpecifyPlaylistRangeText, 1)
+    GUIControlResizeLink(addVideoSpecifyPlaylistRangeInputEdit, 1)
+    GUIControlResizeLink(removeVideoFromListButton, 1)
+    GUIControlResizeLink(removeVideoConfirmDeletionCheckbox, 1)
+    GUIControlResizeLink(removeVideoConfirmOnlyWhenMultipleSelectedCheckbox, 1)
+    GUIControlResizeLink(importVideoListButton, 1)
+    GUIControlResizeLink(exportVideoListButton, 1)
+    GUIControlResizeLink(importAndExportOnlyValidURLsCheckbox, 1)
+    GUIControlResizeLink(autoExportVideoListCheckbox, 1)
+    GUIControlResizeLink(downloadVideoGroupBox, 1)
+    GUIControlResizeLink(downloadStartButton, 1)
+    GUIControlResizeLink(downloadCancelButton, 1)
+    GUIControlResizeLink(downloadRemoveVideosAfterDownloadCheckbox, 1)
+    GUIControlResizeLink(downloadTerminateAfterDownloadCheckbox, 1)
+    GUIControlResizeLink(downloadSelectDownloadDirectoryText, 1)
+    GUIControlResizeLink(downloadSelectDownloadDirectoryInputEdit, 1)
+    GUIControlResizeLink(downloadSelectDownloadDirectoryButton, 1)
+    GUIControlResizeLink(downloadProgressText, 1)
+    GUIControlResizeLink(downloadProgressBar, 1)
 }
 
 handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
@@ -366,7 +432,7 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
     ; Only relevant when downloading specific parts of a playlist.
     if (addVideoURLUsePlaylistRangeCheckbox.Value &&
         !checkIfStringIsValidPlaylistIndexRange(addVideoSpecifyPlaylistRangeInputEdit.Value)) {
-        MsgBox("The provided playlist range index is invalid!", "VD - Invalid Playlist Range Index",
+        MsgBox("The provided playlist range index is invalid.", "VD - Invalid Playlist Range Index",
             "O Icon! 16384 Owner" . videoListGUI.Hwnd)
         return
     }
@@ -452,7 +518,7 @@ handleVideoListGUI_removeVideoFromListButton_onClick(pButton, pInfo) {
     if (selectedVideoListViewElementsMap.Count == 1 &&
         removeVideoConfirmDeletionCheckbox.Value && !removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.Value) {
         result := MsgBox("Do you really want to delete this video?", "VD - Confirm Deletion",
-            "YN Icon? 262144 T15")
+            "YN Icon? Owner" . videoListGUI.Hwnd)
         if (result != "Yes") {
             return
         }
@@ -485,13 +551,14 @@ handleVideoListGUI_removeVideoConfirmDeletionCheckbox_onClick(pCheckbox, pInfo) 
 
 handleVideoListGUI_importVideoListButton_onClick(pButton, pInfo) {
     importFileDefaultDirectory := A_MyDocuments
-    importFileLocation := fileSelectPrompt("VD - Please select a file to import", importFileDefaultDirectory, "*.txt")
+    importFileLocation := fileSelectPrompt("VD - Please select a URL file to import", importFileDefaultDirectory,
+        "*.txt", videoListGUI)
     ; This usually happens, when the user cancels the selection.
     if (importFileLocation == "_result_no_file_selected") {
         return
     }
     ; Imports all URLs or only valid ones, depending on the value of the checkbox.
-    importVideoListViewElements(importFileLocation, exportOnlyValidURLsCheckbox.Value)
+    importVideoListViewElements(importFileLocation, importAndExportOnlyValidURLsCheckbox.Value)
 }
 
 handleVideoListGUI_exportVideoListButton_onClick(pButton, pInfo) {
@@ -506,12 +573,12 @@ handleVideoListGUI_exportVideoListButton_onClick(pButton, pInfo) {
     ; Only export the selected videos.
     if (selectedVideoListViewElementsMap.Count > 0) {
         ; Exports all URLs or only valid ones, depending on the value of the checkbox.
-        exportVideoListViewElements(selectedVideoListViewElementsMap, , exportOnlyValidURLsCheckbox.Value)
+        exportVideoListViewElements(selectedVideoListViewElementsMap, , importAndExportOnlyValidURLsCheckbox.Value)
     }
     ; Export all videos.
     else {
         ; Exports all URLs or only valid ones, depending on the value of the checkbox.
-        exportVideoListViewElements(videoListViewContentMap, , exportOnlyValidURLsCheckbox.Value)
+        exportVideoListViewElements(videoListViewContentMap, , importAndExportOnlyValidURLsCheckbox.Value)
     }
 }
 
@@ -541,6 +608,21 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     global videoListViewContentMap
     global currentYTDLPActionObject
 
+    ; Checks if there are videos in the video list.
+    if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
+        MsgBox("Please add at least one video to the list.", "VD - Canceled Download",
+            "O Iconi T3 Owner" . videoListGUI.Hwnd)
+        return
+    }
+
+    if (!checkInternetConnection()) {
+        result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?",
+            "VD - No Internet Connection", "YN Icon! Owner" . videoListGUI.Hwnd)
+        if (result != "Yes") {
+            return
+        }
+    }
+
     ; This ensures that there can only be one download process at the time.
     if (!currentYTDLPActionObject.booleanDownloadIsRunning) {
         currentYTDLPActionObject.booleanDownloadIsRunning := true
@@ -555,7 +637,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     }
     else {
         MsgBox("There is already another download in progress.", "VD - Other Download Running",
-            "O Iconi T1 Owner" . videoListGUI.Hwnd)
+            "O Iconi T3 Owner" . videoListGUI.Hwnd)
         return
     }
 
@@ -655,8 +737,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         ; Updates the latest download directory.
         currentYTDLPActionObject.latestDownloadDirectory := targetDownloadDirectory
         if (readConfigFile("DISPLAY_FINISHED_DOWNLOAD_NOTIFICATION")) {
-            TrayTip(statusText, "VideoDownloader - Status", "Iconi Mute")
-            SetTimer () => TrayTip(), -5000
+            displayTrayTip(statusText, "VideoDownloader - Status", , 5000)
         }
     }
     else if (currentYTDLPActionObject.alreadyDownloadedVideoAmount > 1) {
@@ -666,8 +747,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         ; Updates the latest download directory.
         currentYTDLPActionObject.latestDownloadDirectory := targetDownloadDirectory
         if (readConfigFile("DISPLAY_FINISHED_DOWNLOAD_NOTIFICATION")) {
-            TrayTip(statusText, "VideoDownloader - Status", "Iconi Mute")
-            SetTimer () => TrayTip(), -5000
+            displayTrayTip(statusText, "VideoDownloader - Status", , 5000)
         }
     }
     if (downloadTerminateAfterDownloadCheckbox.Value) {
@@ -750,7 +830,8 @@ handleVideoListGUI_downloadSelectDownloadDirectoryButton_onClick(pButton, pInfo)
         selectPath := applicationMainDirectory
     }
 
-    downloadDirectory := directorySelectPrompt("VD - Please select the download target folder", selectPath, true)
+    downloadDirectory := directorySelectPrompt("VD - Please select the download target folder", selectPath, true,
+        videoListGUI)
     if (downloadDirectory == "_result_no_directory_selected") {
         return
     }
@@ -766,6 +847,106 @@ handleVideoListGUI_onEventHelp(wParam, lParam, msg, hwnd) {
     else {
         menu_openHelpGUI()
     }
+}
+
+handleVideoListGUI_onEventDropFiles(pGUI, pGUIElement, pFileArray, pX, pY) {
+    textFileArray := Array()
+    for (file in pFileArray) {
+        ; This means the user dropped a text file into the GUI.
+        if (InStr(file, ".txt")) {
+            textFileArray.Push(file)
+        }
+    }
+    if (textFileArray.Length == 0) {
+        MsgBox("Please drop at least one text file with video URLs into the GUI.", "VD - Invalid File",
+            "O Iconi T3 Owner" . videoListGUI.Hwnd)
+        return
+    }
+    if (textFileArray.Length > 1) {
+        result := MsgBox("You dropped " . textFileArray.Length . " text files.`n`nDo you want to import all of them?",
+            "VD - Import Multiple Files", "YN Icon? Owner" . videoListGUI.Hwnd)
+        if (result != "Yes") {
+            return
+        }
+    }
+    ; Imports all URLs or only valid ones, depending on the value of the checkbox.
+    for (file in textFileArray) {
+        importVideoListViewElements(file, importAndExportOnlyValidURLsCheckbox.Value)
+    }
+}
+
+handleVideoListGUI_onSize(pGUI, pMinMax, pWidth, pHeight) {
+    ; Aborts if the GUI hasn't got any linked resize objects.
+    if (!pGUI.HasOwnProp("linkedResizeObjectMap")) {
+        return
+    }
+
+    static booleanDebounce := false
+    ; Makes sure that the resizeControls() function is not called multiple times in a very short time span.
+    if (booleanDebounce) {
+        SetTimer(resizeControls, 0)
+    }
+    ; Runs the code if this function has not been called for 100ms.
+    SetTimer(resizeControls, -100)
+    booleanDebounce := true
+
+    /*
+    This function must be static to allow the SetTimer() function to reset previous timers.
+    If the resizeControls() was initialized again with each "Size" event, the timer reset would not work.
+    */
+    static resizeControls() {
+        Critical(-1)
+        ; The calculation and move process have been seperated to help reducing visual errors and to increase performance.
+        for (control, linkedResizeObject in videoListGUI.linkedResizeObjectMap) {
+            linkedResizeObject.calculateNewPositionAndSize()
+        }
+        for (control, linkedResizeObject in videoListGUI.linkedResizeObjectMap) {
+            linkedResizeObject.resizeControl()
+        }
+        for (control, linkedResizeObject in videoListGUI.linkedResizeObjectMap) {
+            ; Reduces visual errors.
+            control.Redraw()
+        }
+        booleanDebounce := false
+    }
+}
+
+handleVideoListGUI_onClose(pGUI) {
+    global videoListViewContentMap
+    global currentYTDLPActionObject
+
+    if (!readConfigFile("EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")) {
+        return
+    }
+    ; This means there are no videos in the list view element.
+    if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
+        exitApplicationWithNotification()
+    }
+
+    ; Warning message when there is an active download running at the moment.
+    if (currentYTDLPActionObject.booleanDownloadIsRunning) {
+        result := MsgBox(
+            "There is an active download running right now.`n`nDo you want to close VideoDownloader anyway?",
+            "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
+    }
+    ; Warning message when there are still videos in the list view element.
+    else if (videoListViewContentMap.Count == 1) {
+        result := MsgBox(
+            "There is still one video in the video list.`n`nDo you want to close VideoDownloader anyway?",
+            "VD - Confirm Exit", "YN Icon? Owner" . videoListGUI.Hwnd)
+    }
+    else if (videoListViewContentMap.Count > 1) {
+        result := MsgBox(
+            "There are still " . videoListViewContentMap.Count . " videos in the video list."
+            "`n`nDo you want to close VideoDownloader anyway?", "VD - Confirm Exit",
+            "YN Icon? Owner" . videoListGUI.Hwnd)
+    }
+    ; This means the user wants to close the GUI anyway.
+    if (result == "Yes") {
+        exitApplicationWithNotification()
+    }
+    ; This stops the GUI from closing.
+    return true
 }
 
 /*
@@ -829,7 +1010,7 @@ importConfigFileValuesIntoVideoListGUI() {
     removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.Value := readConfigFile(
         "REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED")
     ; Import and export elements.
-    exportOnlyValidURLsCheckbox.Value := readConfigFile("EXPORT_ONLY_VALID_URLS")
+    importAndExportOnlyValidURLsCheckbox.Value := readConfigFile("IMPORT_AND_EXPORT_ONLY_VALID_URLS")
     autoExportVideoListCheckbox.Value := readConfigFile("AUTO_EXPORT_VIDEO_LIST")
     ; Controls that are relevant for downloading the videos in the video list.
     downloadRemoveVideosAfterDownloadCheckbox.Value := readConfigFile("REMOVE_VIDEOS_AFTER_DOWNLOAD")
@@ -1329,7 +1510,9 @@ class VideoListViewEntry {
     */
     removeEntryFromVideoListViewContentMap(pBooleanUpdateVideoListViewElement := true) {
         global videoListViewContentMap
-        videoListViewContentMap.Delete(this.identifierString)
+        if (videoListViewContentMap.Has(this.identifierString)) {
+            videoListViewContentMap.Delete(this.identifierString)
+        }
         if (pBooleanUpdateVideoListViewElement) {
             this.updateVideoListViewElement()
         }
@@ -1387,6 +1570,153 @@ class VideoListViewEntry {
         ; Sorts the videos in case a search prompt is present in the search field.
         if (videoListSearchBarInputEdit.Value != "") {
             handleVideoListGUI_videoListSearchBarInputEdit_onChange(videoListSearchBarInputEdit, "")
+        }
+    }
+}
+
+/*
+This object can be linked to a GUI control to resize it when the GUI is resized.
+@param pControl [Gui.Control] The control to be linked to the GUI.
+@param pScaleMode [int] The scale mode to be used which depends on the control type or group.
+    1: All controls in the manageVideoListGroupBox and downloadVideoGroupBox.
+    2: currentlySelectedVideoGroupBox and videoListView.
+    3: videoTitleText, videoUploaderText, videoDurationText and videoThumbnailImage.
+    4: videoDesiredFormatText, videoDesiredSubtitleText, videoDesiredFormatDDL,
+       videoDesiredSubtitleDDL and videoAdvancedDownloadSettingsButton.
+    5: videoListSearchBarText, videoListSearchBarInputEdit and videoListSearchBarInputClearButton.
+*/
+class GUIControlResizeLink {
+    __New(pControl, pScaleMode) {
+        this.control := pControl
+        this.scaleMode := pScaleMode
+        this.gui := this.control.gui
+
+        ; This map will contain all linked resize objects that are linked to controls belonging to the same GUI.
+        if (!this.gui.HasOwnProp("linkedResizeObjectMap")) {
+            this.gui.linkedResizeObjectMap := Map()
+        }
+        ; Checks if the control is not already in the map.
+        if (!this.gui.linkedResizeObjectMap.Has(this.control)) {
+            ; Adds the linked resize object to the GUI's linked resize object map.
+            this.gui.linkedResizeObjectMap.Set(this.control, this)
+        }
+
+        ; Save the original width and height of the control.
+        this.control.GetPos(&x, &y, &width, &height)
+        this.controlOriginalX := x
+        this.controlOriginalY := y
+        this.controlOriginalWidth := width
+        this.controlOriginalHeight := height
+        ; Save the original position and size of the GUI.
+        this.gui.GetClientPos(&x, &y, &width, &height)
+        this.guiOriginalX := x
+        this.guiOriginalY := y
+        this.guiOriginalWidth := width
+        this.guiOriginalHeight := height
+
+        this.calculateNewPositionAndSize()
+    }
+    ; Step 1 ist to calculate the new dimensions and position of the control.
+    calculateNewPositionAndSize() {
+        ; These values will be used to calculate the new position and size of the control.
+        this.gui.GetClientPos(, , &guiCurrentWidth, &guiCurrentHeight)
+        xRatio := guiCurrentWidth / this.guiOriginalWidth
+        this.newControlWidth := this.controlOriginalWidth * xRatio
+        /*
+        Each control or group of controls needs to be calculated differently.
+        The scale mode is used to determine how the control should be calculated.
+        */
+        switch (this.scaleMode) {
+            case 1:
+            {
+                ; All controls in the manageVideoListGroupBox and downloadVideoGroupBox.
+                yDifference := guiCurrentHeight - this.guiOriginalHeight
+                this.newX := this.controlOriginalX * xRatio
+                this.newY := this.controlOriginalY + yDifference
+            }
+            case 2:
+            {
+                ; currentlySelectedVideoGroupBox and videoListView.
+                yDifference := guiCurrentHeight - this.guiOriginalHeight
+                this.newX := this.controlOriginalX * xRatio
+                this.newControlHeight := this.controlOriginalHeight + yDifference
+            }
+            case 3:
+            {
+                ; videoTitleText, videoUploaderText, videoDurationText and videoThumbnailImage.
+                yRatio := guiCurrentHeight / this.guiOriginalHeight
+                this.newX := this.controlOriginalX * xRatio
+                this.newControlHeight := this.controlOriginalHeight * yRatio
+            }
+            case 4:
+            {
+                /*
+                videoDesiredFormatText, videoDesiredFormatDDL, videoDesiredSubtitleText,
+                videoDesiredSubtitleDDL and videoAdvancedDownloadSettingsButton.
+                */
+                yRatio := guiCurrentHeight / this.guiOriginalHeight
+                originalVideoThumbnailImageHeight := 158
+                currentVideoThumbnailImageHeight := originalVideoThumbnailImageHeight * yRatio
+                ; This variable will be used to position elements right below the video thumbnail image.
+                videoThumbnailImageHeightDifference :=
+                    currentVideoThumbnailImageHeight - originalVideoThumbnailImageHeight
+                this.newX := this.controlOriginalX * xRatio
+                this.newY := this.controlOriginalY + videoThumbnailImageHeightDifference
+            }
+            case 5:
+            {
+                ; videoListSearchBarText, videoListSearchBarInputEdit and videoListSearchBarInputClearButton.
+                this.newX := this.controlOriginalX * xRatio
+            }
+            default:
+            {
+                MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid scale mode received [" . this.scaleMode .
+                    "] for control [" . this.control.Text . "] with class [" . this.control.ClassNN . "].",
+                    "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            }
+        }
+    }
+    ; Step 2 is to move the control to the new position and to change its size.
+    resizeControl() {
+        /*
+        Each control or group of controls needs to be moved differently.
+        The scale mode is used to determine how the control should be moved.
+        */
+        switch (this.scaleMode) {
+            case 1:
+            {
+                ; All controls in the manageVideoListGroupBox and downloadVideoGroupBox.
+                this.control.Move(this.newX, this.newY, this.newControlWidth)
+            }
+            case 2:
+            {
+                ; currentlySelectedVideoGroupBox and videoListView.
+                this.control.Move(this.newX, , this.newControlWidth, this.newControlHeight)
+            }
+            case 3:
+            {
+                ; videoTitleText, videoUploaderText, videoDurationText and videoThumbnailImage.
+                this.control.Move(this.newX, , this.newControlWidth, this.newControlHeight)
+            }
+            case 4:
+            {
+                /*
+                videoDesiredFormatText, videoDesiredFormatDDL, videoDesiredSubtitleText,
+                videoDesiredSubtitleDDL and videoAdvancedDownloadSettingsButton.
+                */
+                this.control.Move(this.newX, this.newY, this.newControlWidth)
+            }
+            case 5:
+            {
+                ; videoListSearchBarText, videoListSearchBarInputEdit and videoListSearchBarInputClearButton.
+                this.control.Move(this.newX, , this.newControlWidth)
+            }
+            default:
+            {
+                MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid scale mode received [" . this.scaleMode .
+                    "] for control [" . this.control.Text . "] with class [" . this.control.ClassNN . "].",
+                    "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            }
         }
     }
 }

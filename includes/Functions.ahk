@@ -392,7 +392,7 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
     if (invalidURLArray.Length > 0 && !pBooleanSkipInvalidURLs) {
         ; Asks the user if they would like to import the invalid URLs (if there are any).
         if (invalidURLArray.Length == 1) {
-            msgText := "There is [1] invalid URL in the list."
+            msgText := "There is [1] invalid URL in the file [" . pImportFileLocation . "]."
             msgText .= "`n`nWould you like to import it anyway?"
             msgTitle := "VD - Invalid URL Found"
             msgHeadLine := "Import Invalid URL?"
@@ -401,7 +401,8 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
             msgButton3 := "Exclude Invalid URL"
         }
         else {
-            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the list."
+            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the file ["
+                . pImportFileLocation . "]."
             msgText .= "`n`nWould you like to import them anyway?"
             msgTitle := "VD - Invalid URLs Found"
             msgHeadLine := "Import Invalid URLs?"
@@ -447,16 +448,6 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
     if (pVideoListViewElementMap.Count == 0) {
         return
     }
-    ; We use the current time stamp to generate a unique name for the exported file.
-    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
-    if (!IsSet(pExportFileLocation)) {
-        exportFileDefaultLocation := A_MyDocuments . "\" . currentTime . "_VD_exported_urls.txt"
-        pExportFileLocation := fileSavePrompt("VD - Please select a save location", exportFileDefaultLocation, "*.txt")
-        ; This usually happens, when the user cancels the selection.
-        if (pExportFileLocation == "_result_no_file_save_location_selected") {
-            return
-        }
-    }
 
     validURLArray := Array()
     invalidURLArray := Array()
@@ -472,6 +463,19 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             continue
         }
         validURLArray.Push(videoListEntry.videoURL)
+    }
+
+    ; This happens when the user only selected invalid URLs but the option to ignore them is still enabled.
+    if (pBooleanSkipInvalidURLs && validURLArray.Length == 0) {
+        highlightedCheckbox := highlightControl(importAndExportOnlyValidURLsCheckbox)
+        MsgBox("You only selected invalid URLs to export.`n`nDisable the checkbox [" .
+            importAndExportOnlyValidURLsCheckbox.Text . "] to export invalid URLs.", "VD - Canceled URL Export",
+            "O Icon! Owner" . videoListGUI.Hwnd)
+        highlightedCheckbox.destroy()
+
+        statusBarText := "Canceled URL export - There are no valid URLs to export"
+        videoListGUIStatusBar.SetText(statusBarText)
+        return
     }
 
     if (invalidURLArray.Length > 0 && !pBooleanSkipInvalidURLs) {
@@ -496,10 +500,11 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
         }
         result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
             videoListGUI.Hwnd)
-        ; If the users wishes, the invalid URLs will be included in the export.
+        ; If the user wishes, the invalid URLs will be included in the export.
         if (result == msgButton1) {
             ; Adds the separation line into the array.
             validURLArray.Push("# ********************`n# Invalid URLs below.`n# ********************")
+            ; Includes the invalid URLs in the export.
             for (invalidURL in invalidURLArray) {
                 validURLArray.Push(invalidURL)
             }
@@ -516,6 +521,28 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             validURLArray.RemoveAt(A_Index)
         }
     }
+
+    ; Checks if there are any URLs to export. Sometimes there are only invalid URLs and the user decides to exclude them.
+    if (!isSet(exportFileContent)) {
+        MsgBox("There are no valid URLs to export.", "VD - Canceled URL Export",
+            "O Icon! T3 Owner" . videoListGUI.Hwnd)
+        statusBarText := "Canceled URL export - There are no valid URLs to export"
+        videoListGUIStatusBar.SetText(statusBarText)
+        return
+    }
+
+    ; We use the current time stamp to generate a unique name for the exported file.
+    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
+    if (!IsSet(pExportFileLocation)) {
+        exportFileDefaultLocation := A_MyDocuments . "\" . currentTime . "_VD_exported_urls.txt"
+        pExportFileLocation := fileSavePrompt("VD - Please select a save location for the URL file",
+            exportFileDefaultLocation, "*.txt", videoListGUI)
+        ; This usually happens, when the user cancels the selection.
+        if (pExportFileLocation == "_result_no_file_save_location_selected") {
+            return
+        }
+    }
+
     exportFileContent := RTrim(exportFileContent, "`n")
     exportFileContentFinal := "# ********************"
     exportFileContentFinal .= "`n# VideoDownloader URL Export - " . currentTime
@@ -606,67 +633,57 @@ getCorrectScriptVersionFromRegistry() {
     return regValue
 }
 
-/*
-Tries to find an existing process via a wildcard.
-NOTE: Currently only supports wildcards containing the beginning of the wanted process.
-@param pWildcard [String] Should be a wildcard process name for example "VideoDownloader.exe".
-*/
-findAlreadyRunningVDInstance(pWildcard) {
-    SplitPath(pWildcard, , , &outExtension, &outNameNoExt)
-    allRunningProcessesNameArray := []
-    allRunningProcessesPathArray := []
-    ; Filles the array with all existing process names.
-    for (Process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")) {
-        allRunningProcessesNameArray.InsertAt(A_Index, Process.Name)
-        allRunningProcessesPathArray.InsertAt(A_Index, Process.CommandLine)
-    }
-    ; Traveres through every object to compare it with the wildcard.
-    for (v in allRunningProcessesNameArray) {
-        ; For example if you are process called "VideoDownloader.development-build-6.exe" it
-        ; would be sufficient to search for "VideoDownloader.exe" as the [*]+ part allows an
-        ; undefined amount of characters to appear between the wildcard name and it's extension.
-        ; The condition below makes sure that it does not find the current instance of this application as a process.
-        if (RegExMatch(v, outNameNoExt . ".*." . outExtension) && v != A_ScriptName) {
-            processPath := StrReplace(allRunningProcessesPathArray.Get(A_Index), '"')
-            msgText := "Another instance of VideoDownloader is already running."
-            msgText .= "`n`n********************"
-            msgText .= "`nName: [ " . v . "]"
-            msgText .= "`nPath: [ " . processPath . "]"
-            msgText .= "`n********************"
-            msgText .= "`n`nRunning multiple instances can cause unpredictable issues."
-            msgText .= "`n`nContinue at your own risk."
-            msgTitle := "VD - Multiple Instances Found!"
-            msgHeadLine := "Multiple Instances Found!"
-            msgButton1 := "Continue"
-            msgButton2 := "Abort"
-            msgButton3 := "Terminate Other Instance"
-            result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+; Tries to find currently running instances of the application and warns the user about it.
+findAlreadyRunningVDInstance() {
+    ; Searches for the process name and excludes this instance.
+    query := 'SELECT * FROM Win32_Process WHERE Name = "VideoDownloader.exe"'
+    childProcesses := ComObjGet("winmgmts:").ExecQuery(query)
 
-            switch (result) {
-                case msgButton3:
+    for (childProcess in childProcesses) {
+        ; Skipts this instance of the application.
+        if (childProcess.ExecutablePath == A_ScriptFullPath) {
+            continue
+        }
+        askUserToTerminateOtherInstance(childProcess)
+    }
+    askUserToTerminateOtherInstance(pProcessObject) {
+        processName := pProcessObject.Name
+        processPath := pProcessObject.ExecutablePath
+        msgText := "Another instance of VideoDownloader is already running."
+        msgText .= "`n`n********************"
+        msgText .= "`nName: [" . processName . "]"
+        msgText .= "`nPath: [" . processPath . "]"
+        msgText .= "`n********************"
+        msgText .= "`n`nRunning multiple instances can cause unpredictable issues."
+        msgText .= "`n`nContinue at your own risk."
+        msgTitle := "VD - Multiple Instances Found!"
+        msgHeadLine := "Multiple Instances Found!"
+        msgButton1 := "Continue"
+        msgButton2 := "Abort"
+        msgButton3 := "Terminate Other Instance"
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+
+        switch (result) {
+            case msgButton3:
+            {
+                try
                 {
-                    try
-                    {
-                        ProcessClose(v)
-                    }
-                    catch as error {
-                        errorAdditionalMessage :=
-                            "The process might be elevated (which means it was launched with higher permissions)."
-                        displayErrorMessage(error, errorAdditionalMessage, true)
-                    }
+                    ProcessClose(pProcessObject.ProcessId)
                 }
-                case msgButton1:
-                {
-                    ; This option is not recommended because the application is not supposed to run with multiple instances active.
-                    return
+                catch as error {
+                    errorAdditionalMessage :=
+                        "The process might be elevated (which means it was launched with higher permissions)."
+                    displayErrorMessage(error, errorAdditionalMessage, true)
                 }
-                Default:
-                {
-                    MsgBox("VideoDownloader terminated.", "VD - Status", "O Iconi T1.5")
-                    exitApplicationWithNotification(true)
-                }
-                    ; Stops after the first match.
-                    break
+            }
+            case msgButton1:
+            {
+                ; This option is not recommended because the application is not supposed to run with multiple instances active.
+                return
+            }
+            default:
+            {
+                exitApplicationWithNotification(true)
             }
         }
     }
@@ -680,10 +697,10 @@ This function will close every child process with that corresponding parent's pr
 For safety and performance reasons, this will only go one layer deeper and stop after that.
 */
 terminateAllChildProcesses(pParentProcessPID, pChildProcessNameFilter?, pBooleanRecursive := false) {
-    ; Searches for the process nane and the matching parent process id.
-    query := "SELECT * FROM Win32_Process WHERE ParentProcessId = '" . pParentProcessPID . "' "
+    ; Searches for the process name and the matching parent process id.
+    query := 'SELECT * FROM Win32_Process WHERE ParentProcessId = "' . pParentProcessPID . '" '
     if (IsSet(pChildProcessNameFilter)) {
-        query .= "AND Name = '" . pChildProcessNameFilter . "'"
+        query .= 'AND Name = "' . pChildProcessNameFilter . '"'
     }
     childProcesses := ComObjGet("winmgmts:").ExecQuery(query)
 
@@ -735,6 +752,181 @@ backupOldVersionFiles(pBackupParentDirectory) {
     ; Waits 3 seconds before starting the backup process to ensure that the main application has exited already.
     Run('cmd.exe /c "timeout /t 3 /nobreak && robocopy ' . parameterString . '"', , "Hide")
     exitApplicationWithNotification()
+}
+
+; Gets the current position, size and maximized/minimized state of the video list GUI and saves it to the config file.
+saveCurrentVideoListGUIStateToConfigFile() {
+    if (!IsSet(videoListGUI) || !WinExist("ahk_id" . videoListGUI.Hwnd
+        || !readConfigFile("REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE"))) {
+        return
+    }
+
+    videoListGUI.GetPos(&x, &y)
+    ; We need to use GetClientPos() because the Show() function defines the client width and height.
+    videoListGUI.GetClientPos(, , &width, &height)
+    windowStateString := "x" . x . " y" . y . " w" . width . " h" . height
+    state := WinGetMinMax("ahk_id " . videoListGUI.Hwnd)
+    switch (state) {
+        case -1:
+        {
+            ; We need to generate a new string because minimized windows return invalid coordinates.
+            windowStateString := "w" . width . " h" . height . " Minimize"
+        }
+        case 1:
+        {
+            windowStateString .= " Maximize"
+        }
+    }
+    ; Saves the current video list GUI state to the config file.
+    editConfigFile(windowStateString, "REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE_VALUES")
+}
+
+; Shows the video list GUI with the saved position state data from the config file.
+showVideoListGUIWithSavedStateData() {
+    if (!readConfigFile("REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE")) {
+        videoListGUI.Show("AutoSize")
+        return
+    }
+
+    windowStateString := readConfigFile("REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE_VALUES")
+    ; Checks if the video list GUI is already in the correct position to avoid flickering.
+    videoListGUIHwndString := "ahk_id " . videoListGUI.Hwnd
+    if (WinExist(videoListGUIHwndString)) {
+        videoListGUI.GetPos(&x, &y)
+        ; We need to use GetClientPos() because the Show() function defines the client width and height as well.
+        videoListGUI.GetClientPos(, , &width, &height)
+        currentWindowStateString := "x" . x . " y" . y . " w" . width . " h" . height
+        state := WinGetMinMax("ahk_id " . videoListGUI.Hwnd)
+        switch (state) {
+            case -1:
+            {
+                ; We need to generate a new string because minimized windows return invalid coordinates.
+                currentWindowStateString := "w" . width . " h" . height . " Minimize"
+            }
+            case 1:
+            {
+                currentWindowStateString .= " Maximize"
+            }
+        }
+        ; The video list GUI is already in the correct position.
+        if (currentWindowStateString == windowStateString) {
+            return
+        }
+    }
+    try {
+        videoListGUI.Show(windowStateString)
+    }
+    catch {
+        videoListGUI.Show("AutoSize")
+        saveCurrentVideoListGUIStateToConfigFile()
+    }
+}
+
+/*
+Positions the given relative GUI in 1 out of 9 possible positions relative to the base GUI.
+@param pBaseGUI [Gui] The base GUI which will be used to position the relative GUI.
+@param pRelativeGUI [Gui] The relative GUI which will be positioned.
+@param pPosition [String] The position of the relative GUI. Possible values are:
+    "TopLeftCorner", "TopMiddleCenter", "TopRightCorner",
+    "MiddleLeftCorner", "MiddleCenter", "MiddleRightCorner",
+    "BottomLeftCorner", "BottomMiddleCenter", "BottomRightCorner"
+@param pAdditonalShowParameters [String] Additional show parameters for the relative GUI. For example, "AutoSize".
+*/
+showGUIRelativeToOtherGUI(pBaseGUI, pRelativeGUI, pPosition, pAdditonalShowParameters?) {
+    baseGUIHwndString := "ahk_id " . pBaseGUI.Hwnd
+    realtiveGUIHwndString := "ahk_id " . pRelativeGUI.Hwnd
+    ; Gather information about the base GUI which will be used to position the relative GUI.
+    if ((!WinExist(baseGUIHwndString)) || (WinGetMinMax(baseGUIHwndString) == -1)) {
+        ; Shows the GUI hidden which allows the x and y coordinates to have valid values.
+        pBaseGUI.Show("NoActivate")
+    }
+    /*
+    We can't use pBaseGUI.GetPos() here because it would output wrong coordinates
+    when the screen is scaled in the Windows display settings.
+    */
+    WinGetPos(&baseX, &baseY, &baseWidth, &baseHeight, baseGUIHwndString)
+    ; Get the information about the relative GUI.
+    if ((!WinExist(realtiveGUIHwndString)) || (WinGetMinMax(realtiveGUIHwndString) == -1)) {
+        ; Shows the GUI hidden which allows the x and y coordinates to have valid values.
+        pRelativeGUI.Show("NoActivate")
+    }
+    /*
+    We can't use pRelativeGUI.GetPos() here because it would output wrong coordinates
+    when the screen is scaled in the Windows display settings.
+    */
+    WinGetPos(&relativeX, &relativeY, &relativeWidth, &relativeHeight, realtiveGUIHwndString)
+
+    ; Keep a small distance to the edge of the base GUI.
+    baseMarginX := 20
+    if (WinGetMinMax("ahk_id " . pBaseGUI.Hwnd) == 1) {
+        ; The y margin must be 10 pixels larger to keep the same distance when the base GUI is maximized.
+        baseMarginYTop := 30
+        baseMarginYBottom := 20
+    }
+    else {
+        baseMarginYTop := 20
+        baseMarginYBottom := 20
+    }
+
+    switch (pPosition) {
+        case "TopLeftCorner":
+        {
+            newX := baseX + baseMarginX
+            newY := baseY + baseMarginYTop
+        }
+        case "TopMiddleCenter":
+        {
+            newX := baseX + (baseWidth - relativeWidth) / 2
+            newY := baseY + baseMarginYTop
+        }
+        case "TopRightCorner":
+        {
+            newX := baseX + baseWidth - relativeWidth - baseMarginX
+            newY := baseY + baseMarginYTop
+        }
+        case "MiddleLeftCorner":
+        {
+            newX := baseX + baseMarginX
+            newY := baseY + (baseHeight - relativeHeight) / 2
+        }
+        case "MiddleCenter":
+        {
+            newX := baseX + (baseWidth - relativeWidth) / 2
+            newY := baseY + (baseHeight - relativeHeight) / 2
+        }
+        case "MiddleRightCorner":
+        {
+            newX := baseX + baseWidth - relativeWidth - baseMarginX
+            newY := baseY + (baseHeight - relativeHeight) / 2
+        }
+        case "BottomLeftCorner":
+        {
+            newX := baseX + baseMarginX
+            newY := baseY + baseHeight - relativeHeight - baseMarginYBottom
+        }
+        case "BottomMiddleCenter":
+        {
+            newX := baseX + (baseWidth - relativeWidth) / 2
+            newY := baseY + baseHeight - relativeHeight - baseMarginYBottom
+        }
+        case "BottomRightCorner":
+        {
+            newX := baseX + baseWidth - relativeWidth - baseMarginX
+            newY := baseY + baseHeight - relativeHeight - baseMarginYBottom
+        }
+        default:
+        {
+            MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid position received [" . pPosition . "] for relative GUI [" .
+                pRelativeGUI.Title . "]", "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            return
+        }
+    }
+    if (IsSet(pAdditonalShowParameters)) {
+        ; Shows the relative GUI with the provided additional parameters.
+        pRelativeGUI.Show("x" . newX . " y" . newY . " " . pAdditonalShowParameters)
+        return
+    }
+    pRelativeGUI.Show("x" . newX . " y" . newY)
 }
 
 /*
@@ -833,19 +1025,35 @@ Prompts the user to select a directory.
 @param pRootDirectory [String] The root directory to start the selection from.
 @param pBooleanCheckForWritingRights [boolean] Checks if the user is able to write into the selected directory.
 If that is not the case, they will be prompted to select another directory.
+@param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the file save prompt to make it modal.
 @returns [String] The selected directory path.
 @returns (alt) [String] "_result_no_directory_selected" if the user cancels the selection.
 */
-directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRights) {
+directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRights, pOwnerGUI?) {
+    ; To make this specific file dialog modal, we need to explicitly set the +OwnDialogs option in this current thread.
+    if (IsSet(pOwnerGUI)) {
+        pOwnerGUI.Opt("+OwnDialogs")
+    }
+
     selectedDirectory := FileSelect("D3", pRootDirectory, pPromptTitle)
     ; This usually happens, when the user cancels the selection.
     if (selectedDirectory == "") {
         return "_result_no_directory_selected"
     }
     if (pBooleanCheckForWritingRights && !checkForWritingRights(selectedDirectory)) {
-        result := MsgBox("You do not have permission to write in this directory. Please choose a different one.",
-            "VD - Invalid Directory", "RC Icon! 262144")
+        if (IsSet(pOwnerGUI)) {
+            result := MsgBox("You do not have permission to write in this directory. Please choose a different one.",
+                "VD - Invalid Directory", "RC Icon! Owner" . pOwnerGUI.Hwnd)
+        }
+        else {
+            result := MsgBox("You do not have permission to write in this directory. Please choose a different one.",
+                "VD - Invalid Directory", "RC Icon! 262144")
+        }
+
         if (result == "Retry") {
+            if (isSet(pOwnerGUI)) {
+                return directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRights, pOwnerGUI)
+            }
             return directorySelectPrompt(pPromptTitle, pRootDirectory, pBooleanCheckForWritingRights)
         }
         return "_result_no_directory_selected"
@@ -858,10 +1066,16 @@ Prompts the user to select a file.
 @param pPromptTitle [String] The title of the prompt window.
 @param pRootDirectory [String] The root directory to start the selection from.
 @param pFilter [String] An optional filter for the explorer window. For example, "*.txt" would only show text files.
+@param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the file save prompt to make it modal.
 @returns [String] The selected file path.
 @returns (alt) [String] "_result_no_file_selected" if the user cancels the selection.
 */
-fileSelectPrompt(pPromptTitle, pRootDirectory, pFilter?) {
+fileSelectPrompt(pPromptTitle, pRootDirectory, pFilter?, pOwnerGUI?) {
+    ; To make this specific file dialog modal, we need to explicitly set the +OwnDialogs option in this current thread.
+    if (IsSet(pOwnerGUI)) {
+        pOwnerGUI.Opt("+OwnDialogs")
+    }
+
     if (IsSet(pFilter)) {
         selectedFileLocation := FileSelect("3", pRootDirectory, pPromptTitle, pFilter)
     }
@@ -880,12 +1094,27 @@ Prompts the user to select a file save location.
 @param pPromptTitle [String] The title of the prompt window.
 @param pRootDirectory [String] The root directory to start the selection from. Can include a file name as well.
 @param pFilter [String] An optional filter for the explorer window. For example, "*.txt" would only show text files.
+Due to internal limitations, it is recommended to only use one filter at a time.
+@param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the file save prompt to make it modal.
 @returns [String] The selected file save path.
 @returns (alt) [String] "_result_no_file_save_location_selected" if the user cancels the selection.
 */
-fileSavePrompt(pPromptTitle, pRootDirectory, pFilter?) {
+fileSavePrompt(pPromptTitle, pRootDirectory, pFilter?, pOwnerGUI?) {
+    ; To make this specific file dialog modal, we need to explicitly set the +OwnDialogs option in this current thread.
+    if (IsSet(pOwnerGUI)) {
+        pOwnerGUI.Opt("+OwnDialogs")
+    }
+
     if (IsSet(pFilter)) {
+        ; Caution: This currently only works with one filter at a time.
+        SplitPath(pFilter, , , &expectedFileExtension)
         selectedFileSaveLocation := FileSelect("S16", pRootDirectory, pPromptTitle, pFilter)
+        ; Checks if the selected file save location has the expected file extension.
+        SplitPath(selectedFileSaveLocation, , &outDir, &outExt, &outName)
+        if (selectedFileSaveLocation && (expectedFileExtension != outExt)) {
+            ; Adds the expected file extension to the selected file save location to make the path valid.
+            selectedFileSaveLocation := outDir . "\" . outName . "." . expectedFileExtension
+        }
     }
     else {
         selectedFileSaveLocation := FileSelect("S16", pRootDirectory, pPromptTitle)
@@ -925,13 +1154,7 @@ reloadApplicationPrompt() {
     ; Number in seconds.
     i := 4
 
-    ; Makes the video list GUI the owner of the window.
-    if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
-        reloadApplicationGUI := Gui("Owner" . videoListGUI.Hwnd, "VD - Reloading VideoDownloader")
-    }
-    else {
-        reloadApplicationGUI := Gui(, "VD - Reloading VideoDownloader")
-    }
+    reloadApplicationGUI := Gui(, "VD - Reloading VideoDownloader")
     textField := reloadApplicationGUI.Add("Text", "r3 w260 x20 y40", "VideoDownloader will be`n reloaded in " . i .
         " seconds.")
     textField.SetFont("s12")
@@ -939,9 +1162,17 @@ reloadApplicationPrompt() {
     progressBar := reloadApplicationGUI.Add("Progress", "w280 h20 x10 y100", 0)
     buttonOkay := reloadApplicationGUI.Add("Button", "Default w80 x60 y170", "Okay")
     buttonCancel := reloadApplicationGUI.Add("Button", "w80 x160 y170", "Cancel")
-    reloadApplicationGUI.Show("w300 h200")
 
-    buttonOkay.OnEvent("Click", (*) => Reload())
+    ; Makes the video list GUI the owner of the window.
+    if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
+        reloadApplicationGUI.Opt("Owner" . videoListGUI.Hwnd)
+        showGUIRelativeToOtherGUI(videoListGUI, reloadApplicationGUI, "MiddleCenter", "AutoSize")
+    }
+    else {
+        reloadApplicationGUI.Show("AutoSize")
+    }
+
+    buttonOkay.OnEvent("Click", (*) => saveCurrentVideoListGUIStateToConfigFile() Reload())
     buttonCancel.OnEvent("Click", (*) => reloadApplicationGUI.Destroy())
     reloadApplicationGUI.OnEvent("Escape", (*) => reloadApplicationGUI.Destroy())
 
@@ -967,10 +1198,9 @@ reloadApplicationPrompt() {
             i--
         }
         textField.Text := "VideoDownloader has been reloaded."
+        saveCurrentVideoListGUIStateToConfigFile()
         Sleep(100)
         Reload()
-        ExitApp()
-        ExitApp()
     }
 }
 
@@ -978,13 +1208,7 @@ terminateApplicationPrompt() {
     ; Number in seconds.
     i := 4
 
-    ; Makes the video list GUI the owner of the window.
-    if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
-        terminateApplicationGUI := Gui("Owner" . videoListGUI.Hwnd, "VD - Terminating VideoDownloader")
-    }
-    else {
-        terminateApplicationGUI := Gui(, "VD - Terminating VideoDownloader")
-    }
+    terminateApplicationGUI := Gui(, "VD - Terminating VideoDownloader")
     textField := terminateApplicationGUI.Add("Text", "r3 w260 x20 y40", "VideoDownloader will be`n terminated in " . i .
         " seconds.")
     textField.SetFont("s12")
@@ -992,9 +1216,17 @@ terminateApplicationPrompt() {
     progressBar := terminateApplicationGUI.Add("Progress", "w280 h20 x10 y100 cRed backgroundBlack", 0)
     buttonOkay := terminateApplicationGUI.Add("Button", "Default w80 x60 y170", "Okay")
     buttonCancel := terminateApplicationGUI.Add("Button", "w80 x160 y170", "Cancel")
-    terminateApplicationGUI.Show("w300 h200")
 
-    buttonOkay.OnEvent("Click", (*) => ExitApp())
+    ; Makes the video list GUI the owner of the window.
+    if (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd)) {
+        terminateApplicationGUI.Opt("Owner" . videoListGUI.Hwnd)
+        showGUIRelativeToOtherGUI(videoListGUI, terminateApplicationGUI, "MiddleCenter", "AutoSize")
+    }
+    else {
+        terminateApplicationGUI.Show("AutoSize")
+    }
+
+    buttonOkay.OnEvent("Click", (*) => saveCurrentVideoListGUIStateToConfigFile() exitApplicationWithNotification())
     buttonCancel.OnEvent("Click", (*) => terminateApplicationGUI.Destroy())
     terminateApplicationGUI.OnEvent("Escape", (*) => terminateApplicationGUI.Destroy())
 
@@ -1020,9 +1252,9 @@ terminateApplicationPrompt() {
             i--
         }
         textField.Text := "VideoDownloader has been terminated."
+        saveCurrentVideoListGUIStateToConfigFile()
         Sleep(100)
-        ExitApp()
-        ExitApp()
+        exitApplicationWithNotification()
     }
 }
 
@@ -1032,14 +1264,22 @@ Terminates the application and shows a tray tip message to inform the user.
 of the termination message. This can be useful if the language modules have not been loaded yet.
 */
 exitApplicationWithNotification(pBooleanUseFallbackMessage := false) {
+    global currentYTDLPActionObject
+
+    ; Terminates all running downloads.
+    if (IsSet(currentYTDLPActionObject) && (currentYTDLPActionObject.downloadProcessYTDLPPID)) {
+        ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
+        ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
+        terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
+    }
+    saveCurrentVideoListGUIStateToConfigFile()
+
     if (pBooleanUseFallbackMessage) {
-        TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
+        displayTrayTip("VideoDownloader terminated.", "VideoDownloader - Status")
     }
     else if (readConfigFile("DISPLAY_EXIT_NOTIFICATION")) {
-        TrayTip("VideoDownloader terminated.", "VideoDownloader - Status", "Iconi Mute")
+        displayTrayTip("VideoDownloader terminated.", "VideoDownloader - Status")
     }
-    ; Using ExitApp() twice ensures that the application will be terminated entirely.
-    ExitApp()
     ExitApp()
 }
 
@@ -1063,16 +1303,26 @@ setAutoStart(pBooleanAutoStartStatus) {
         ; Creates (or overwrites) the (existing) shortcut to start VideoDownloader with Windows.
         FileCreateShortcut(A_ScriptFullPath, autoStartShortcutFileLocation, A_ScriptDir, ,
             "Auto start shortcut for VideoDownloader.")
-        TrayTip("VideoDownloader added to startup folder.", "VideoDownloader - Status", "Iconi Mute")
-        SetTimer () => TrayTip(), -1500
+        displayTrayTip("VideoDownloader added to startup folder.", "VideoDownloader - Status")
     }
     ; Checks if the existing shortcut file was created by this instance of VideoDownloader and removes it.
     else if (!pBooleanAutoStartStatus && (A_ScriptFullPath == outShortcutTarget)) {
         ; Disables the automatic start with windows.
-        TrayTip("VideoDownloader removed from startup folder.", "VideoDownloader - Status", "Iconi Mute")
-        SetTimer () => TrayTip(), -1500
+        displayTrayTip("VideoDownloader removed from startup folder.", "VideoDownloader - Status")
         FileDelete(autoStartShortcutFileLocation)
     }
+}
+
+/*
+Displays a tray tip message for a given amount of time.
+@param pText [String] The text of the tray tip message.
+@param pTitle [String] The title of the tray tip message.
+@param pOptions [String] The options for the tray tip message. For example "Iconi Mute" or "Icon!".
+@param pTimeoutMilliseconds [int] The time in milliseconds that the tray tip message will be displayed.
+*/
+displayTrayTip(pText, pTitle, pOptions := "Iconi Mute", pTimeoutMilliseconds := 3000) {
+    TrayTip(pText, pTitle, pOptions)
+    SetTimer((*) => TrayTip(), -pTimeoutMilliseconds)
 }
 
 /*
@@ -1188,8 +1438,8 @@ checkForAvailableUpdates() {
     global psUpdateScriptLocation
     global applicationRegistryDirectory
 
-    ; Does not check for updates, if there is no Internet connection or the application isn't compiled.
-    if (!checkInternetConnection() || !A_IsCompiled) {
+    ; Does not check for updates, if the application isn't compiled.
+    if (!A_IsCompiled) {
         return "_result_no_update_available"
     }
     /*
@@ -1218,7 +1468,7 @@ checkForAvailableUpdates() {
             }
             return updateVersion
         }
-        Default:
+        default:
         {
             return "_result_no_update_available"
         }
@@ -1226,17 +1476,42 @@ checkForAvailableUpdates() {
 }
 
 /*
-Tries to ping google.com to determine the computer's Internet connection status.
+Tries to reach google.com to determine the computer's Internet connection status.
 @returns [boolean] True, if the computer is connected to the Internet. False otherwise.
 */
 checkInternetConnection() {
-    ; Checks if the user has an established Internet connection.
+    global configFileLocation
+
+    /*
+    This option should only be used for debugging purposes.
+    We use IniRead() here, because the config file might not be loaded yet.
+    */
+    overwriteValue := IniRead(configFileLocation, "DebugSettings", "OVERWRITE_CHECK_INTERNET_CONNECTION", -1)
+    if (overwriteValue == 1) {
+        MsgBox("[" . A_ThisFunc . "()] [INFO] Forced overwrite to value [1].",
+            "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! T3 262144")
+        return true
+    }
+    else if (overwriteValue == 0) {
+        MsgBox("[" . A_ThisFunc . "()] [INFO] Forced overwrite to value [0].",
+            "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! T3 262144")
+        return false
+    }
+
+    targetURL := "https://www.google.com"
+    try {
+        ; https://learn.microsoft.com/de-de/windows/win32/api/wininet/nf-wininet-internetcheckconnectionw
+        booleanIsConnected :=
+            DllCall("Wininet.dll\InternetCheckConnectionW", "Str", targetURL, "UInt", 1, "UInt", 0)
+        if (booleanIsConnected) {
+            return true
+        }
+    }
     try
     {
         httpRequest := ComObject("WinHttp.WinHttpRequest.5.1")
-        httpRequest.Open("GET", "http://www.google.com", false)
+        httpRequest.Open("GET", targetURL, false)
         httpRequest.Send()
-
         if (httpRequest.Status = 200) {
             return true
         }
@@ -1286,25 +1561,6 @@ checkIfStringIsInArray(pString, pArray) {
         }
     }
     return false
-}
-
-/*
-A simple method to convert an array into a string form.
-@param pArray [Array] Should be an array to convert.
-@returns [String] The array converted into a string form.
-*/
-arrayToString(pArray) {
-    string := "["
-
-    for (index, value in pArray) {
-        string .= value
-        if (index < pArray.Length) {
-            string .= ","
-        }
-    }
-
-    string .= "]"
-    return string
 }
 
 /*

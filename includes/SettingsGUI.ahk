@@ -40,7 +40,7 @@ createSettingsGUI() {
     settingsGUI.MarginY := -5
     ; The space is intentional as it increases the tab size.
     local tabNames := ["   General   ", "   Video List   ", "   Hotkeys   "]
-    settingsGUITabs := settingsGUI.Add("Tab3", "xm+5 ym+5 w626 h459", tabNames)
+    settingsGUITabs := settingsGUI.Add("Tab3", "xm+5 ym+5 w626 h499", tabNames)
 
     /*
     ********************************************************************************************************************
@@ -52,25 +52,29 @@ createSettingsGUI() {
     -------------------------------------------------
     */
     settingsGUITabs.UseTab(1)
-    ; Startup settings.
-    settingsGUIStartupSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h140", "Startup")
+    ; Application behavior settings.
+    settingsGUIStartupSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h180", "Behavior")
     settingsGUIEnableAutoStartCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20", "Start with Windows")
     settingsGUIShowVideoListGUIAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "Open the video list window at the start")
+    settingsGUIRememberWindowPositionAndSizeCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
+        "Remember the video list window position and size")
+    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
+        "Exit VideoDownloader when the video list window is closed")
     settingsGUICheckForUpdatesAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+30 Checked",
         "Check for updates at the start")
     settingsGUIUpdateToBetaVersionsCheckbox := settingsGUI.Add("Checkbox", "yp+20",
         "I want to receive beta versions")
     settingsGUIUpdateCheckForUpdatesButton := settingsGUI.Add("Button", "yp+20 w200", "Check for Updates now")
     ; Notification settings.
-    settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+185 w600 h80", "Notifications")
+    settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+225 w600 h80", "Notifications")
     settingsGUIDisplayStartupNotificationCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
         "Program launch")
     settingsGUIDisplayExitNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked", "Program exit")
     settingsGUIDisplayFinishedDownloadNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "Download finished")
     ; Directory settings.
-    settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+275 w600 h175", "Directories")
+    settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+315 w600 h175", "Directories")
     settingsGUIDirectoryDDL := settingsGUI.Add("DropDownList", "xp+10 yp+20 w580")
     settingsGUIDirectoryDescriptionEdit := settingsGUI.Add("Edit", "yp+30 w580 h40 -WantReturn +ReadOnly",
         "Please select a directory above.")
@@ -114,7 +118,7 @@ createSettingsGUI() {
     settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox := settingsGUI.Add("CheckBox", "yp+20 +Disabled",
         "Only multiple videos")
     ; Import and export elements.
-    settingsGUIExportOnlyValidURLsCheckbox := settingsGUI.Add("CheckBox", "yp+30", "Only consider valid URLs")
+    settingsGUIimportAndExportOnlyValidURLsCheckbox := settingsGUI.Add("CheckBox", "yp+30", "Only consider valid URLs")
     settingsGUIAutoExportVideoListCheckbox := settingsGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Default download settings.
     settingsGUIDefaultDownloadSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+385 w600 h60",
@@ -171,6 +175,9 @@ createSettingsGUI() {
     ; Ckeckboxes
     settingsGUIEnableAutoStartCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIShowVideoListGUIAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
+    settingsGUIRememberWindowPositionAndSizeCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
+    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.OnEvent("Click",
+        handleSettingsGUI_allCheckBox_onClick)
     settingsGUICheckForUpdatesAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIUpdateToBetaVersionsCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDisplayStartupNotificationCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
@@ -191,7 +198,7 @@ createSettingsGUI() {
     settingsGUIRemoveVideoConfirmDeletionCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox.OnEvent("Click",
         handleSettingsGUI_allCheckBox_onClick)
-    settingsGUIExportOnlyValidURLsCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
+    settingsGUIimportAndExportOnlyValidURLsCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIAutoExportVideoListCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDownloadRemoveVideosAfterDownloadCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDownloadTerminateAfterDownloadCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
@@ -222,8 +229,19 @@ createSettingsGUI() {
     GENERAL SETTINGS TAB
     -------------------------------------------------
     */
-    ; Startup settings.
-    settingsGUIShowVideoListGUIAtLaunchCheckbox.ToolTip := ""
+    ; Application behavior settings.
+    settingsGUIShowVideoListGUIAtLaunchCheckbox.ToolTip :=
+        "Opens the video list window when VideoDownloader is launched."
+    settingsGUIRememberWindowPositionAndSizeCheckbox.ToolTip :=
+        "The state of the video list window will be saved when exiting VideoDownloader."
+    settingsGUIRememberWindowPositionAndSizeCheckbox.ToolTip .=
+        "`nNext time, it will be opened in the same position, size and minimized or maximized."
+    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip :=
+        "Terminates VideoDownloader when the video list window is closed."
+    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip .=
+        "`nIf this option is disabled, the video list window can be closed, but VideoDownloader would still be running in the background."
+    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip .=
+        "`nIn this case, the tray icon will be shown in the taskbar and you may close the application via the tray menu or the built-in hotkey."
     settingsGUICheckForUpdatesAtLaunchCheckbox.ToolTip :=
         "Starts a PowerShell script to check for a later version when starting VideoDownloader."
     settingsGUIUpdateToBetaVersionsCheckbox.ToolTip :=
@@ -277,8 +295,10 @@ createSettingsGUI() {
     settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox.ToolTip :=
         "If enabled, will only prompt to confirm the removal of multiple videos at once."
     ; Import and export elements.
-    settingsGUIExportOnlyValidURLsCheckbox.ToolTip :=
+    settingsGUIimportAndExportOnlyValidURLsCheckbox.ToolTip :=
         "Only video URLs that have been successfully extracted will be exported."
+    settingsGUIimportAndExportOnlyValidURLsCheckbox.ToolTip .=
+        "`nThe same goes for the import function which only imports valid URLs in case this checkbox is enabled."
     settingsGUIAutoExportVideoListCheckbox.ToolTip :=
         "Automatically exports the downloaded video URLs into a file."
     ; Default download settings.
@@ -304,23 +324,27 @@ createSettingsGUI() {
 }
 
 handleSettingsGUI_settingsGUIUpdateCheckForUpdatesButton_onClick(pButton, pInfo) {
-    settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
     ; Does not check for updates, if there is no Internet connection or the application isn't compiled.
     if (!checkInternetConnection()) {
-        MsgBox("There seems to be no connection to the Internet.", "VD - Manual Update Check", "O Icon! 262144 T2")
+        result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?",
+            "VD - No Internet Connection", "YN Icon! Owner" . settingsGUI.Hwnd)
+        if (result != "Yes") {
+            return
+        }
     }
-    else if (!A_IsCompiled) {
+    if (!A_IsCompiled) {
         MsgBox("You cannot use this function with an uncompiled version.", "VD - Manual Update Check",
-            "O Icon! 262144 T2")
+            "O Icon! T2 Owner" . settingsGUI.Hwnd)
+        return
+    }
+    settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
+    availableUpdateVersion := checkForAvailableUpdates()
+    if (availableUpdateVersion == "_result_no_update_available") {
+        MsgBox("There are currently no updates available.", "VD - Manual Update Check",
+            "O Iconi T2 Owner" . settingsGUI.Hwnd)
     }
     else {
-        availableUpdateVersion := checkForAvailableUpdates()
-        if (availableUpdateVersion == "_result_no_update_available") {
-            MsgBox("There are currently no updates available.", "VD - Manual Update Check", "O Iconi 262144 T2")
-        }
-        else {
-            createUpdateGUI(availableUpdateVersion)
-        }
+        createUpdateGUI(availableUpdateVersion)
     }
     settingsGUIUpdateCheckForUpdatesButton.Opt("-Disabled")
 }
@@ -372,7 +396,7 @@ handleSettingsGUI_settingsGUISelectDirectoryButton_onClick(pButton, pInfo) {
     else {
         rootDirectory := A_ScriptDir
     }
-    selectedDirectory := directorySelectPrompt("VD - Please select a directory", rootDirectory, true)
+    selectedDirectory := directorySelectPrompt("VD - Please select a directory", rootDirectory, true, settingsGUI)
     if (selectedDirectory != "_result_no_directory_selected") {
         previousDirectory := settingsGUIDirectoryInputEdit.Value
         settingsGUIDirectoryInputEdit.Value := selectedDirectory
@@ -778,9 +802,13 @@ initializeCheckboxLinkedConfigFileEntryMap() {
     GENERAL SETTINGS TAB
     -------------------------------------------------
     */
-    ; Startup settings.
+    ; Application behavior settings.
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIEnableAutoStartCheckbox, "START_WITH_WINDOWS")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIShowVideoListGUIAtLaunchCheckbox, "SHOW_VIDEO_LIST_GUI_ON_LAUNCH")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIRememberWindowPositionAndSizeCheckbox,
+        "REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox,
+        "EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUICheckForUpdatesAtLaunchCheckbox, "CHECK_FOR_UPDATES_AT_LAUNCH")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIUpdateToBetaVersionsCheckbox, "UPDATE_TO_BETA_VERSIONS")
     ; Notification settings.
@@ -803,7 +831,8 @@ initializeCheckboxLinkedConfigFileEntryMap() {
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox,
         "REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED")
     ; Import and export elements.
-    checkboxLinkedConfigFileEntryMap.Set(settingsGUIExportOnlyValidURLsCheckbox, "EXPORT_ONLY_VALID_URLS")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIimportAndExportOnlyValidURLsCheckbox,
+        "IMPORT_AND_EXPORT_ONLY_VALID_URLS")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIAutoExportVideoListCheckbox, "AUTO_EXPORT_VIDEO_LIST")
     ; Default download settings.
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIDownloadRemoveVideosAfterDownloadCheckbox,
@@ -852,7 +881,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; Main hotkey (start download).
     entryName := "Start Download Hotkey"
-    entryDescription := "This hotkey will start the download process. "
+    entryDescription := "This hotkey starts the download process. "
     entryDescription .= "It has the same effect as pressing the "
     entryDescription .= "[" . downloadStartButton.Text . "] button in the video list window."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("START_DOWNLOAD_HKHotkeySettings")
@@ -864,7 +893,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; First hotkey (collect URL).
     entryName := "Collect URL Hotkey"
-    entryDescription := "This hotkey will collect the video URL from your browser search bar. "
+    entryDescription := "This hotkey collects the video URL from your browser search bar. "
     entryDescription .= "Your browser must be the active window for this to work."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("URL_COLLECT_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("URL_COLLECT_HK_ENABLEDHotkeySettings")
@@ -876,7 +905,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
     ; Second hotkey (collect URL from video thumbnail).
     entryName := "Collect URL from Thumbnail Hotkey"
     entryDescription :=
-        "This hotkey will collect the video URL while hovering over the video thumbnail (for example on YouTube). "
+        "This hotkey collects the video URL while hovering over the video thumbnail (for example on YouTube). "
     entryDescription .= "Your browser must be the active window for this to work. "
     entryDescription .= "The hotkey won't work most of the time because it is still experimental."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("THUMBNAIL_URL_COLLECT_HKHotkeySettings")
@@ -888,7 +917,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; Hotkey to open the video list GUI.
     entryName := "Open Video List GUI Hotkey"
-    entryDescription := "This hotkey will open the video list GUI."
+    entryDescription := "This hotkey opens the video list GUI."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("VIDEO_LIST_GUI_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("VIDEO_LIST_GUI_HK_ENABLEDHotkeySettings")
     hotkeyFunction := (*) => hotkey_openVideoListGUI()
@@ -898,7 +927,9 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; Hotkey to terminate the program.
     entryName := "Terminate Program Hotkey"
-    entryDescription := "This hotkey will terminate VideoDownloader."
+    entryDescription := "This hotkey terminates VideoDownloader without any prompts. "
+    entryDescription .=
+        "You will not be warned about an ongoing download process or any remaining videos in the video list."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("TERMINATE_PROGRAM_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("TERMINATE_PROGRAM_HK_ENABLEDHotkeySettings")
     hotkeyFunction := (*) => hotkey_terminateProgram()
@@ -908,7 +939,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
 
     ; Hotkey to reload the program.
     entryName := "Reload Program Hotkey"
-    entryDescription := "This hotkey will reload VideoDownloader."
+    entryDescription := "This hotkey reloads VideoDownloader."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("RELOAD_PROGRAM_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("RELOAD_PROGRAM_HK_ENABLEDHotkeySettings")
     hotkeyFunction := (*) => hotkey_reloadProgram()

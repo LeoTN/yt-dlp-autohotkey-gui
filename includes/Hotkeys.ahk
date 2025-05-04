@@ -45,7 +45,7 @@ hotkey_extractVideoURLFromSearchBar() {
     Sleep(150)
     Send("^{c}")
     if (!ClipWait(0.5)) {
-        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1")
+        MsgBox("No URL detected.", "VD - Missing URL", "O Iconi T1")
         return
     }
     clipboardContent := A_Clipboard
@@ -53,13 +53,13 @@ hotkey_extractVideoURLFromSearchBar() {
     Send("{Escape}")
     Send("{Escape}")
     if (!checkIfStringIsAValidURL(clipboardContent)) {
-        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1")
+        MsgBox("No URL detected.", "VD - Missing URL", "O Iconi T1")
         return
     }
     ; Extracts the video meta data and checks if it is already in the video list.
     resultArray := createVideoListViewEntry(clipboardContent)
     if (resultArray[1] == "_result_video_already_in_list") {
-        MsgBox(resultArray[2] . "`n`nis already in the video list.", "VD - Duplicate URL!", "O Iconi T2")
+        MsgBox(resultArray[2] . "`n`nis already in the video list.", "VD - Duplicate URL", "O Iconi T2")
         return
     }
 }
@@ -71,13 +71,13 @@ For example when the user hovers over a video thumbnail on YouTube.
 hotkey_extractVideoURLUnderMouseCursor() {
     url := getBrowserURLUnderMouseCursor()
     if (!checkIfStringIsAValidURL(url)) {
-        MsgBox("No URL detected.", "VD - Missing URL!", "O Iconi T1")
+        MsgBox("No URL detected.", "VD - Missing URL", "O Iconi T1")
         return
     }
     ; Extracts the video meta data and checks if it is already in the video list.
     resultArray := createVideoListViewEntry(url)
     if (resultArray[1] == "_result_video_already_in_list") {
-        MsgBox(resultArray[2] . "`n`nis already in the video list.", "VD - Duplicate URL!", "O Iconi T2")
+        MsgBox(resultArray[2] . "`n`nis already in the video list.", "VD - Duplicate URL", "O Iconi T2")
         return
     }
     /*
@@ -142,7 +142,7 @@ hotkey_openVideoListGUI() {
     {
         static flipflop := true
         if (!WinExist("ahk_id " . videoListGUI.Hwnd)) {
-            videoListGUI.Show("AutoSize")
+            showVideoListGUIWithSavedStateData()
             flipflop := false
         }
         else if (!flipflop && WinActive("ahk_id " . videoListGUI.Hwnd)) {
@@ -185,11 +185,15 @@ hotkey_debug_2() {
 }
 
 hotkey_debug_3() {
-    MsgBox("This debug hotkey is currently not used.", "VD - WIP", "O Iconi 262144 T1")
+    booleanIsConnected := checkInternetConnection()
+    MsgBox("[" . A_ThisFunc . "()] [INFO] Internet Connection Status: " . booleanIsConnected .
+        "`nDebug hotkey 3 executed.", "VideoDownloader - [" . A_ThisFunc . "()]", "Iconi 262144")
 }
 
 hotkey_debug_4() {
-    MsgBox("This debug hotkey is currently not used.", "VD - WIP", "O Iconi 262144 T1")
+    saveCurrentVideoListGUIStateToConfigFile()
+    MsgBox("[" . A_ThisFunc . "()] [INFO] Debug hotkey 4 executed.",
+        "VideoDownloader - [" . A_ThisFunc . "()]", "Iconi 262144 T1")
 }
 
 /*
@@ -239,7 +243,7 @@ menu_importConfigFile() {
     global applicationMainDirectory
 
     oldConfigFileLocation := fileSelectPrompt("VD - Please select a config file to import", applicationMainDirectory,
-        "*.ini")
+        "*.ini", videoListGUI)
     if (oldConfigFileLocation != "_result_no_file_selected") {
         importOldConfigFile(oldConfigFileLocation)
     }
@@ -251,7 +255,7 @@ menu_exportConfigFile() {
     currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     exportConfigFileDefaultLocation := A_MyDocuments . "\" . currentTime . "_VD_exported_config_file.ini"
     exportConfigFileLocation := fileSavePrompt("VD - Please select a save location for the config file",
-        exportConfigFileDefaultLocation, ".ini")
+        exportConfigFileDefaultLocation, ".ini", videoListGUI)
     if (exportConfigFileLocation != "_result_no_file_save_location_selected") {
         exportConfigFile(exportConfigFileLocation)
     }
@@ -273,7 +277,7 @@ menu_openLatestDownloadDirectory() {
         openDirectoryInExplorer(currentYTDLPActionObject.latestDownloadDirectory)
     }
     else {
-        MsgBox("Please download at least one file.", "VD - No Recent Download", "O Iconi T1")
+        MsgBox("Please download at least one file.", "VD - No Recent Download", "O Iconi T3 Owner" . videoListGUI.Hwnd)
     }
 }
 
@@ -305,7 +309,32 @@ menu_restartApplication() {
 
 ; Exit the program.
 menu_exitApplication() {
-    terminateApplicationPrompt()
+    ; Warning message when there is an active download running at the moment.
+    if (currentYTDLPActionObject.booleanDownloadIsRunning) {
+        result := MsgBox(
+            "There is an active download running right now.`n`nDo you want to close VideoDownloader anyway?",
+            "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
+    }
+    ; This means there are no videos in the list view element.
+    else if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
+        exitApplicationWithNotification()
+    }
+    ; Warning message when there are still videos in the list view element.
+    else if (videoListViewContentMap.Count == 1) {
+        result := MsgBox(
+            "There is still one video in the video list.`n`nDo you want to close VideoDownloader anyway?",
+            "VD - Confirm Exit", "YN Icon? Owner" . videoListGUI.Hwnd)
+    }
+    else if (videoListViewContentMap.Count > 1) {
+        result := MsgBox(
+            "There are still " . videoListViewContentMap.Count . " videos in the video list."
+            "`n`nDo you want to close VideoDownloader anyway?", "VD - Confirm Exit",
+            "YN Icon? Owner" . videoListGUI.Hwnd)
+    }
+    ; This means the user wants to close the application anyway.
+    if (result == "Yes") {
+        exitApplicationWithNotification()
+    }
 }
 
 ; Open GUI items.
@@ -322,12 +351,12 @@ menu_openSettingsGUI() {
     settingsGUITabs.Choose(selectTabNumber)
     ; Switches back to the original tab.
     settingsGUITabs.Choose(currentTabNumber)
-    settingsGUI.Show("AutoSize")
+    showGUIRelativeToOtherGUI(videoListGUI, settingsGUI, "MiddleCenter", "AutoSize")
 }
 
 ; Opens the help GUI.
 menu_openHelpGUI() {
-    helpGUI.Show("AutoSize")
+    showGUIRelativeToOtherGUI(videoListGUI, helpGUI, "MiddleCenter", "AutoSize")
 }
 
 /*

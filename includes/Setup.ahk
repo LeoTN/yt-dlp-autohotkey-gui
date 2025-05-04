@@ -7,7 +7,7 @@ CoordMode "Mouse", "Window"
 setup_onInit() {
 
     ; Checks the system for other already running instances of this application.
-    findAlreadyRunningVDInstance("VideoDownloader.exe")
+    findAlreadyRunningVDInstance()
     createRequiredFolders()
     checkIfMSISetupIsRequired()
     ; Putting this behind the setup checks prevents issues when files are missing.
@@ -119,6 +119,14 @@ checkIfMSISetupIsRequired() {
 
 ; Updates the GUI depending on the installation status of the dependencies.
 handleSetupGUI_startSetupButton_onClick() {
+    if (!checkInternetConnection()) {
+        result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?",
+            "VD - No Internet Connection", "YN Icon! Owner" . setupGUI.Hwnd)
+        if (result != "Yes") {
+            return
+        }
+    }
+
     startSetupButton.Opt("+Disabled")
     ; Installs the dependencies and updates the GUI accordingly.
     if (getFFmpegInstallionStatus()) {
@@ -139,6 +147,7 @@ handleSetupGUI_startSetupButton_onClick() {
     updateDependencyCheckboxes()
     setupGUIStatusBar.SetText("Setup completed")
     Sleep(2000)
+    ; The video list GUI is usually not present at this moment so we don't need to save it's state.
     Reload()
 }
 

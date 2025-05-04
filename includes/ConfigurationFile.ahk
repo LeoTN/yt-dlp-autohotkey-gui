@@ -5,10 +5,6 @@ SendMode "Input"
 CoordMode "Mouse", "Client"
 
 configurationFile_onInit() {
-    global applicationMainDirectory
-
-    ; Determines the location of the application's configuration file.
-    global configFileLocation := applicationMainDirectory . "\VideoDownloader.ini"
     ; Creates the base set of config file entry objects.
     initializeConfigEntryMap()
     ; Checks the integrity of the config file and repairs it if necessary.
@@ -29,11 +25,15 @@ initializeConfigEntryMap() {
     DebugSettings := "DebugSettings"
     ENABLE_DEBUG_HOTKEYS := false
     ENABLE_DEBUG_MODE := false
+    OVERWRITE_CHECK_INTERNET_CONNECTION := -1
     CONFIG_FILE_VD_VERSION := versionFullName
     ; [GeneralSettings]
     GeneralSettings := "GeneralSettings"
     START_WITH_WINDOWS := false
     SHOW_VIDEO_LIST_GUI_ON_LAUNCH := true
+    REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE := true
+    REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE_VALUES := "AutoSize"
+    EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED := true
     CHECK_FOR_UPDATES_AT_LAUNCH := true
     UPDATE_TO_BETA_VERSIONS := false
     ASK_FOR_TUTORIAL := true
@@ -70,7 +70,7 @@ initializeConfigEntryMap() {
     ADD_VIDEO_PLAYLIST_RANGE_INDEX_VALUE := 1
     REMOVE_VIDEO_CONFIRM_DELETION := false
     REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED := false
-    EXPORT_ONLY_VALID_URLS := true
+    IMPORT_AND_EXPORT_ONLY_VALID_URLS := true
     AUTO_EXPORT_VIDEO_LIST := true
     REMOVE_VIDEOS_AFTER_DOWNLOAD := true
     TERMINATE_AFTER_DOWNLOAD := false
@@ -79,11 +79,20 @@ initializeConfigEntryMap() {
     ConfigFileEntry(ENABLE_DEBUG_HOTKEYS, "ENABLE_DEBUG_HOTKEYS", DebugSettings, ENABLE_DEBUG_HOTKEYS, "boolean")
     ConfigFileEntry(ENABLE_DEBUG_MODE, "ENABLE_DEBUG_MODE", DebugSettings, ENABLE_DEBUG_MODE, "boolean")
     ConfigFileEntry(CONFIG_FILE_VD_VERSION, "CONFIG_FILE_VD_VERSION", DebugSettings, CONFIG_FILE_VD_VERSION, "string")
+    ConfigFileEntry(OVERWRITE_CHECK_INTERNET_CONNECTION, "OVERWRITE_CHECK_INTERNET_CONNECTION", DebugSettings,
+        OVERWRITE_CHECK_INTERNET_CONNECTION, "boolean")
     ; [GeneralSettings]
     ConfigFileEntry(START_WITH_WINDOWS, "START_WITH_WINDOWS", GeneralSettings,
         START_WITH_WINDOWS, "boolean")
     ConfigFileEntry(SHOW_VIDEO_LIST_GUI_ON_LAUNCH, "SHOW_VIDEO_LIST_GUI_ON_LAUNCH", GeneralSettings,
         SHOW_VIDEO_LIST_GUI_ON_LAUNCH, "boolean")
+    ConfigFileEntry(REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE, "REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE",
+        GeneralSettings, REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE, "boolean")
+    ConfigFileEntry(REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE_VALUES,
+        "REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE_VALUES", GeneralSettings,
+        REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE_VALUES, "string")
+    ConfigFileEntry(EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED, "EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED",
+        GeneralSettings, EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED, "boolean")
     ConfigFileEntry(CHECK_FOR_UPDATES_AT_LAUNCH, "CHECK_FOR_UPDATES_AT_LAUNCH", GeneralSettings,
         CHECK_FOR_UPDATES_AT_LAUNCH, "boolean")
     ConfigFileEntry(UPDATE_TO_BETA_VERSIONS, "UPDATE_TO_BETA_VERSIONS", GeneralSettings,
@@ -141,8 +150,8 @@ initializeConfigEntryMap() {
     ConfigFileEntry(REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED,
         "REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED", VideoListDefaultPreferences,
         REMOVE_VIDEO_CONFIRM_ONLY_WHEN_MULTIPLE_SELECTED, "boolean")
-    ConfigFileEntry(EXPORT_ONLY_VALID_URLS, "EXPORT_ONLY_VALID_URLS", VideoListDefaultPreferences,
-        EXPORT_ONLY_VALID_URLS, "boolean")
+    ConfigFileEntry(IMPORT_AND_EXPORT_ONLY_VALID_URLS, "IMPORT_AND_EXPORT_ONLY_VALID_URLS", VideoListDefaultPreferences,
+        IMPORT_AND_EXPORT_ONLY_VALID_URLS, "boolean")
     ConfigFileEntry(AUTO_EXPORT_VIDEO_LIST, "AUTO_EXPORT_VIDEO_LIST", VideoListDefaultPreferences,
         AUTO_EXPORT_VIDEO_LIST, "boolean")
     ConfigFileEntry(REMOVE_VIDEOS_AFTER_DOWNLOAD, "REMOVE_VIDEOS_AFTER_DOWNLOAD", VideoListDefaultPreferences,
