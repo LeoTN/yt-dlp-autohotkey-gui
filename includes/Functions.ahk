@@ -1438,8 +1438,8 @@ checkForAvailableUpdates() {
     global psUpdateScriptLocation
     global applicationRegistryDirectory
 
-    ; Does not check for updates, if there is no Internet connection or the application isn't compiled.
-    if (!checkInternetConnection() || !A_IsCompiled) {
+    ; Does not check for updates, if the application isn't compiled.
+    if (!A_IsCompiled) {
         return "_result_no_update_available"
     }
     /*
@@ -1468,7 +1468,7 @@ checkForAvailableUpdates() {
             }
             return updateVersion
         }
-        Default:
+        default:
         {
             return "_result_no_update_available"
         }

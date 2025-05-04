@@ -5,10 +5,11 @@ CoordMode "Mouse", "Window"
 
 updateGUI_onInit() {
     /*
-    The application won't check for updates if it is disabled in the config file
-    or the application has been launched for the very first time.
+    The application won't check for updates, if the option is disabled in the config file,
+    has been launched for the very first time, is not compiled or there is no Internet connection.
     */
-    if (!readConfigFile("CHECK_FOR_UPDATES_AT_LAUNCH") || booleanFirstTimeLaunch) {
+    if (!readConfigFile("CHECK_FOR_UPDATES_AT_LAUNCH") || booleanFirstTimeLaunch || !A_IsCompiled
+    || !checkInternetConnection()) {
         return
     }
     availableUpdateVersion := checkForAvailableUpdates()

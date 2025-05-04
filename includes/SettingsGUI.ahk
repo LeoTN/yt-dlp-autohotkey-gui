@@ -324,25 +324,27 @@ createSettingsGUI() {
 }
 
 handleSettingsGUI_settingsGUIUpdateCheckForUpdatesButton_onClick(pButton, pInfo) {
-    settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
     ; Does not check for updates, if there is no Internet connection or the application isn't compiled.
     if (!checkInternetConnection()) {
-        MsgBox("There seems to be no connection to the Internet.", "VD - Manual Update Check",
-            "O Icon! T2 Owner" . settingsGUI.Hwnd)
+        result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?",
+            "VD - No Internet Connection", "YN Icon! Owner" . settingsGUI.Hwnd)
+        if (result != "Yes") {
+            return
+        }
     }
-    else if (!A_IsCompiled) {
+    if (!A_IsCompiled) {
         MsgBox("You cannot use this function with an uncompiled version.", "VD - Manual Update Check",
             "O Icon! T2 Owner" . settingsGUI.Hwnd)
+        return
+    }
+    settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
+    availableUpdateVersion := checkForAvailableUpdates()
+    if (availableUpdateVersion == "_result_no_update_available") {
+        MsgBox("There are currently no updates available.", "VD - Manual Update Check",
+            "O Iconi T2 Owner" . settingsGUI.Hwnd)
     }
     else {
-        availableUpdateVersion := checkForAvailableUpdates()
-        if (availableUpdateVersion == "_result_no_update_available") {
-            MsgBox("There are currently no updates available.", "VD - Manual Update Check",
-                "O Icon! T2 Owner" . settingsGUI.Hwnd)
-        }
-        else {
-            createUpdateGUI(availableUpdateVersion)
-        }
+        createUpdateGUI(availableUpdateVersion)
     }
     settingsGUIUpdateCheckForUpdatesButton.Opt("-Disabled")
 }
