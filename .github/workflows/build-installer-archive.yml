@@ -85,6 +85,38 @@ jobs:
           name: ${{ env.FINAL_EXECUTABLE_NAME }}
           path: ${{ github.workspace }}
 
+      - name: Download yt-dlp Executable
+        run: |
+          $null = Write-Host "[INFO] Downloading yt-dlp executable..."
+          $downloadURL = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
+          $targetFileName = "yt-dlp.exe"
+          $targetDirectory = "${{ github.workspace }}\library\assets\yt-dlp"
+          $targetFileLocation = Join-Path -Path $targetDirectory -ChildPath $targetFileName
+          $null = New-Item -Type "Directory" -Path $targetDirectory -Force
+          $null = Invoke-WebRequest -Uri $downloadURL -OutFile $targetFileLocation
+
+      - name: Download and Extract FFmpeg Executables
+        run : |
+          $null = Write-Host "[INFO] Downloading FFmpeg executables..."
+          $downloadURL = "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+          $targetFileName = "ffmpeg-master-latest-win64-gpl.zip"
+          $targetDirectory = "${{ github.workspace }}\library\assets\ffmpeg"
+          $targetFileLocation = Join-Path -Path $targetDirectory -ChildPath $targetFileName
+          $null = New-Item -Type "Directory" -Path $targetDirectory -Force
+          $null = Invoke-WebRequest -Uri $downloadURL -OutFile $targetFileLocation
+
+          $null = Write-Host "[INFO] Extracting FFmpeg executables..."
+          $destinationPath = Join-Path -Path $targetDirectory -ChildPath "ffmpeg-files"
+          $null = Expand-Archive -Path $targetFileLocation -DestinationPath $destinationPath
+          # Extract the relevant executables from the archive.
+          $exeNames = @("ffmpeg.exe", "ffprobe.exe", "ffplay.exe")
+          foreach ($exeName in $exeNames) {
+            Get-ChildItem -Path $destinationPath -Recurse -Filter $exeName | ForEach-Object {
+            $destination = Join-Path -Path $targetDirectory -ChildPath $_.Name
+            $null = Move-Item -Path $_.FullName -Destination $destination -Force
+            }
+          }
+          
       - name: Define Final Installer Name
         run: |
           # The name only changes when the release is a beta release.
