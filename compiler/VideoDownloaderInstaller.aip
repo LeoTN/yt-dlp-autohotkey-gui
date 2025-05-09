@@ -34,17 +34,17 @@
     <ROW Property="WindowsTypeNTDisplay" MultiBuildValue="DefaultBuild:Windows 7 x86" ValueLocId="-"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiDirsComponent">
-    <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1" DirectoryOptions="3"/>
+    <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1" DirectoryOptions="2"/>
     <ROW Directory="DesktopFolder" Directory_Parent="TARGETDIR" DefaultDir="DESKTO~1|DesktopFolder" IsPseudoRoot="1"/>
-    <ROW Directory="NewFolder_Dir" Directory_Parent="APPDIR" DefaultDir="VIDEOD~1|VideoDownloader" DirectoryOptions="3"/>
+    <ROW Directory="NewFolder_Dir" Directory_Parent="APPDIR" DefaultDir="VIDEOD~1|VideoDownloader" DirectoryOptions="2"/>
     <ROW Directory="SHORTCUTDIR" Directory_Parent="TARGETDIR" DefaultDir="SHORTC~1|SHORTCUTDIR" IsPseudoRoot="1"/>
     <ROW Directory="SystemFolder" Directory_Parent="TARGETDIR" DefaultDir="SYSTEM~1|SystemFolder" IsPseudoRoot="1"/>
     <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
-    <ROW Directory="assets_Dir" Directory_Parent="NewFolder_Dir" DefaultDir="assets" DirectoryOptions="3"/>
-    <ROW Directory="ffmpeg_Dir" Directory_Parent="assets_Dir" DefaultDir="ffmpeg" DirectoryOptions="3"/>
+    <ROW Directory="assets_Dir" Directory_Parent="NewFolder_Dir" DefaultDir="assets" DirectoryOptions="2"/>
+    <ROW Directory="ffmpeg_Dir" Directory_Parent="assets_Dir" DefaultDir="ffmpeg"/>
     <ROW Directory="icons_Dir" Directory_Parent="assets_Dir" DefaultDir="icons" DirectoryOptions="3"/>
     <ROW Directory="scripts_Dir" Directory_Parent="assets_Dir" DefaultDir="scripts" DirectoryOptions="3"/>
-    <ROW Directory="ytdlp_Dir" Directory_Parent="assets_Dir" DefaultDir="yt-dlp" DirectoryOptions="3"/>
+    <ROW Directory="ytdlp_Dir" Directory_Parent="assets_Dir" DefaultDir="yt-dlp"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.SideBySideGuidComponent">
     <ROW Component="APPDIR" Value="{BA90ABB1-27B3-4AEB-825A-FC8BC0EA2474}"/>
@@ -77,10 +77,10 @@
     <ROW File="runYTDLPExecutableWithRedirectedStdout.ps1" Component_="checkForAvailableUpdates.ps1" FileName="RUNYTD~1.PS1|runYTDLPExecutableWithRedirectedStdout.ps1" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\library\assets\scripts\runYTDLPExecutableWithRedirectedStdout.ps1" SelfReg="false"/>
     <ROW File="video_list_gui_background.png" Component_="video_list_gui_background.png" FileName="VIDEO_~1.PNG|video_list_gui_background.png" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\library\assets\icons\video_list_gui_background.png" SelfReg="false"/>
     <ROW File="VideoDownloader.exe" Component_="VideoDownloader.exe" FileName="VIDEOD~1.EXE|VideoDownloader.exe" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\VideoDownloader.exe" SelfReg="false" DigSign="true"/>
-    <ROW File="ffmpeg.exe" Component_="ffmpeg.exe" FileName="ffmpeg.exe" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\library\assets\ffmpeg\ffmpeg.exe" SelfReg="false" DigSign="true"/>
-    <ROW File="ffplay.exe" Component_="ffplay.exe" FileName="ffplay.exe" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\library\assets\ffmpeg\ffplay.exe" SelfReg="false" DigSign="true"/>
-    <ROW File="ffprobe.exe" Component_="ffprobe.exe" FileName="ffprobe.exe" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\library\assets\ffmpeg\ffprobe.exe" SelfReg="false" DigSign="true"/>
-    <ROW File="ytdlp.exe" Component_="ytdlp.exe" FileName="yt-dlp.exe" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\library\assets\yt-dlp\yt-dlp.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="ffmpeg.exe" Component_="ffmpeg.exe" FileName="ffmpeg.exe" Attributes="0" SourcePath="..\library\assets\ffmpeg\ffmpeg.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="ffplay.exe" Component_="ffplay.exe" FileName="ffplay.exe" Attributes="0" SourcePath="..\library\assets\ffmpeg\ffplay.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="ffprobe.exe" Component_="ffprobe.exe" FileName="ffprobe.exe" Attributes="0" SourcePath="..\library\assets\ffmpeg\ffprobe.exe" SelfReg="false" DigSign="true"/>
+    <ROW File="ytdlp.exe" Component_="ytdlp.exe" FileName="yt-dlp.exe" Attributes="0" SourcePath="..\library\assets\yt-dlp\yt-dlp.exe" SelfReg="false" DigSign="true"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BootstrapperUISequenceComponent">
     <ROW Action="AI_BACKUP_AI_SETUPEXEPATH" Sequence="249"/>
