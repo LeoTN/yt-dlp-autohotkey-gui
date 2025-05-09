@@ -28,7 +28,12 @@ onInit()
 onInit() {
     global applicationRegistryDirectory := "HKCU\SOFTWARE\LeoTN\VideoDownloader"
     ; This folder will contain all other files.
-    global applicationMainDirectory := A_ScriptDir . "\VideoDownloader"
+    if (A_IsCompiled) {
+        global applicationMainDirectory := A_ScriptDir . "\VideoDownloader"
+    }
+    else {
+        global applicationMainDirectory := A_ScriptDir . "\library"
+    }
 
     ; Determines the location of the application's configuration file.
     global configFileLocation := applicationMainDirectory . "\VideoDownloader.ini"
