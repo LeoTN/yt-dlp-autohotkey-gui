@@ -31,22 +31,22 @@ createSetupGUI() {
     setupGUI.MarginY := 0
     ; Add a background image to the GUI.
     setupGUI.Add("Picture", "x0 y0 w320 h-1 +Center", GUIBackgroundImageLocation)
-    dependencyText := setupGUI.Add("Text", "xp+10 yp+5 wp-20 R2 +BackgroundTrans",
+    setupGUIDependencyText := setupGUI.Add("Text", "xp+10 yp+5 wp-20 R2 +BackgroundTrans",
         "Required Dependencies")
-    dependencyText.SetFont("s12 bold")
+    setupGUIDependencyText.SetFont("s12 bold")
 
-    ffmpegCheckbox := setupGUI.Add("CheckBox", "yp+25 wp R1.5 +Border", "FFmpeg")
-    ffmpegCheckbox.SetFont("bold")
+    setupGUIFFmpegCheckbox := setupGUI.Add("CheckBox", "yp+25 wp R1.5 +Border", "FFmpeg")
+    setupGUIFFmpegCheckbox.SetFont("bold")
 
-    YTDLPCheckbox := setupGUI.Add("CheckBox", "yp+20 wp R1.5 +Border", "yt-dlp")
-    YTDLPCheckbox.SetFont("bold")
+    setupGUIYTDLPCheckbox := setupGUI.Add("CheckBox", "yp+20 wp R1.5 +Border", "yt-dlp")
+    setupGUIYTDLPCheckbox.SetFont("bold")
     updateDependencyCheckboxes()
 
-    cancelSetupButton := setupGUI.Add("Button", "yp+120 w140 R2", "Cancel")
-    startSetupButton := setupGUI.Add("Button", "xp+160 w140 R2 +Default", "Download Dependencies")
-    useOwnExecutablesText := setupGUI.Add("Text", "xp-160 yp+45 w300 h30 +BackgroundTrans +Center",
+    setupGUICancelSetupButton := setupGUI.Add("Button", "yp+120 w140 R2", "Cancel")
+    setupGUIStartSetupButton := setupGUI.Add("Button", "xp+160 w140 R2 +Default", "Download Dependencies")
+    setupGUIUseOwnExecutablesText := setupGUI.Add("Text", "xp-160 yp+45 w300 h30 +BackgroundTrans +Center",
         "I want to use my own executables")
-    useOwnExecutablesText.SetFont("s10 underline cBlue")
+    setupGUIUseOwnExecutablesText.SetFont("s10 underline cBlue")
 
     setupProgressBar := setupGUI.Add("Progress", "xp-120 x0 yp+24 w320")
     setupGUIStatusBar := setupGUI.Add("StatusBar", "-Theme BackgroundSilver")
@@ -56,16 +56,16 @@ createSetupGUI() {
     ; When the window is closed without installing the required dependencies, the application must exit.
     setupGUI.OnEvent("Close", (*) => exitApplicationWithNotification(true))
     ; This does not allow the user to change the value of the checkbox.
-    ffmpegCheckbox.OnEvent("Click", (*) => ffmpegCheckbox.Value := !ffmpegCheckbox.Value)
+    setupGUIFFmpegCheckbox.OnEvent("Click", (*) => setupGUIFFmpegCheckbox.Value := !setupGUIFFmpegCheckbox.Value)
     ; This does not allow the user to change the value of the checkbox.
-    YTDLPCheckbox.OnEvent("Click", (*) => YTDLPCheckbox.Value := !YTDLPCheckbox.Value)
-    cancelSetupButton.OnEvent("Click", (*) => exitApplicationWithNotification(true))
-    startSetupButton.OnEvent("Click", handleSetupGUI_startSetupButton_onClick)
-    useOwnExecutablesText.OnEvent("Click", handleSetupGUI_useOwnExecutablesText_onClick)
+    setupGUIYTDLPCheckbox.OnEvent("Click", (*) => setupGUIYTDLPCheckbox.Value := !setupGUIYTDLPCheckbox.Value)
+    setupGUICancelSetupButton.OnEvent("Click", (*) => exitApplicationWithNotification(true))
+    setupGUIStartSetupButton.OnEvent("Click", handleSetupGUI_setupGUIStartSetupButton_onClick)
+    setupGUIUseOwnExecutablesText.OnEvent("Click", handleSetupGUI_setupGUIUseOwnExecutablesText_onClick)
 }
 
 ; Updates the GUI depending on the installation status of the dependencies.
-handleSetupGUI_startSetupButton_onClick(pButton, pInfo) {
+handleSetupGUI_setupGUIStartSetupButton_onClick(pButton, pInfo) {
     if (!checkInternetConnection()) {
         result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?",
             "VD - No Internet Connection", "YN Icon! Owner" . setupGUI.Hwnd)
@@ -99,12 +99,12 @@ handleSetupGUI_startSetupButton_onClick(pButton, pInfo) {
 }
 
 ; Allows the user to use their own yt-dlp and FFmpeg executables.
-handleSetupGUI_useOwnExecutablesText_onClick(pText, pInfo) {
+handleSetupGUI_setupGUIUseOwnExecutablesText_onClick(pText, pInfo) {
     global ffmpegDirectory
     global YTDLPDirectory
 
     msgText := "It is possible to use your own FFmpeg and yt-dlp executable files "
-    msgText .= "instead of the recommended ones."
+    msgText .= "instead of the recommended ones. Simply copy them into their respective directories."
     msgText .= "`n`nBe warned, this could potentially cause other issues!"
     msgText .= "`n`nRequired files in the FFmpeg directory"
     msgText .= "`n→ ffmpeg.exe`n→ ffplay.exe`n→ ffprobe.exe"
@@ -119,7 +119,7 @@ handleSetupGUI_useOwnExecutablesText_onClick(pText, pInfo) {
     ; Opens the FFmpeg directory.
     if (result == msgButton1) {
         openDirectoryInExplorer(ffmpegDirectory)
-        handleSetupGUI_useOwnExecutablesText_onClick(pText, pInfo)
+        handleSetupGUI_setupGUIUseOwnExecutablesText_onClick(pText, pInfo)
     }
     ; Reloads the application.
     if (result == msgButton2) {
@@ -128,28 +128,28 @@ handleSetupGUI_useOwnExecutablesText_onClick(pText, pInfo) {
     ; Opens the yt-dlp directory.
     if (result == msgButton3) {
         openDirectoryInExplorer(YTDLPDirectory)
-        handleSetupGUI_useOwnExecutablesText_onClick(pText, pInfo)
+        handleSetupGUI_setupGUIUseOwnExecutablesText_onClick(pText, pInfo)
     }
 }
 
 updateDependencyCheckboxes() {
-    ffmpegCheckbox.Value := getFFmpegInstallionStatus()
-    if (ffmpegCheckbox.Value) {
-        ffmpegCheckbox.Text := "FFmpeg executables found"
-        ffmpegCheckbox.Opt("BackgroundGreen")
+    setupGUIFFmpegCheckbox.Value := getFFmpegInstallionStatus()
+    if (setupGUIFFmpegCheckbox.Value) {
+        setupGUIFFmpegCheckbox.Text := "FFmpeg executables found"
+        setupGUIFFmpegCheckbox.Opt("BackgroundGreen")
     }
     else {
-        ffmpegCheckbox.Text := "FFmpeg executables not found"
-        ffmpegCheckbox.Opt("BackgroundRed")
+        setupGUIFFmpegCheckbox.Text := "FFmpeg executables not found"
+        setupGUIFFmpegCheckbox.Opt("BackgroundRed")
     }
-    YTDLPCheckbox.Value := getYTDLPInstallionStatus()
-    if (YTDLPCheckbox.Value) {
-        YTDLPCheckbox.Text := "yt-dlp executable found"
-        YTDLPCheckbox.Opt("BackgroundGreen")
+    setupGUIYTDLPCheckbox.Value := getYTDLPInstallionStatus()
+    if (setupGUIYTDLPCheckbox.Value) {
+        setupGUIYTDLPCheckbox.Text := "yt-dlp executable found"
+        setupGUIYTDLPCheckbox.Opt("BackgroundGreen")
     }
     else {
-        YTDLPCheckbox.Text := "yt-dlp executable not found"
-        YTDLPCheckbox.Opt("BackgroundRed")
+        setupGUIYTDLPCheckbox.Text := "yt-dlp executable not found"
+        setupGUIYTDLPCheckbox.Opt("BackgroundRed")
     }
 }
 
