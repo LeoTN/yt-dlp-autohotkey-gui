@@ -81,7 +81,7 @@ jobs:
         $scriptPathOut = "${{ github.workspace }}\$env:FINAL_EXECUTABLE_NAME"
 
         # Compile the application.
-        $null = Start-Process -FilePath "${{ github.workspace }}\ahk\Compiler\Ahk2Exe.exe" -ArgumentList "/in $scriptPathIn /out $scriptPathOut /base ""${{ github.workspace }}\ahk-v2\AutoHotkey64.exe""" -NoNewWindow -Wait
+        $null = Start-Process -FilePath "${{ github.workspace }}\ahk\Compiler\Ahk2Exe.exe" -ArgumentList "/in ""$scriptPathIn""" /out ""$scriptPathOut""" /base ""${{ github.workspace }}\ahk-v2\AutoHotkey64.exe""" /silent verbose" -Wait
         $null = Write-Host "[INFO] The executable will be saved to [$scriptPathOut]."
 
     - name: Upload Main Executable as Artifact
