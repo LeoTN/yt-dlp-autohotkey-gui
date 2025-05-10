@@ -45,6 +45,13 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
+    - name: Validate Release Version Input
+      run: |
+        if (-not ($env:RELEASE_VERSION -match '^\d+\.\d+\.\d+\.\d+$')) {
+          $null = Write-Host "[ERROR] Invalid release version [$env:RELEASE_VERSION] received! Exiting workflow..."
+          throw
+        }
+
     - name: Define Version Name File
       run: |
         if ($env:IS_PRE_RELEASE -eq "true") {
