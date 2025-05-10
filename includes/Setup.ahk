@@ -5,11 +5,10 @@ SendMode "Input"
 CoordMode "Mouse", "Window"
 
 setup_onInit() {
-
+    checkIfMSISetupIsRequired()
     ; Checks the system for other already running instances of this application.
     findAlreadyRunningVDInstance()
     createRequiredFolders()
-    checkIfMSISetupIsRequired()
     ; Putting this behind the setup checks prevents issues when files are missing.
     createSetupGUI()
     ; After installing the components, a reload is required.
@@ -172,6 +171,8 @@ createRequiredFolders() {
 
 ; Checks if all required files are present. In case a file is missing, the application will exit after informing the user.
 checkIfMSISetupIsRequired() {
+    global applicationMainDirectory
+
     requiredFiles := [
         psUpdateScriptLocation,
         psRunYTDLPExecutableLocation,
@@ -179,13 +180,28 @@ checkIfMSISetupIsRequired() {
         iconFileLocation
     ]
     for (i, requiredFile in requiredFiles) {
-        if (!FileExist(requiredFile)) {
-            MsgBox("The file [" . requiredFile .
-                "] is missing.`n`nPlease reinstall or repair the software using the .MSI installer.",
-                "VideoDownloader - Reinstallation required",
-                "Icon! 262144")
-            exitApplicationWithNotification(true)
+        if (FileExist(requiredFile)) {
+            continue
         }
+        ; This is most likely the case when the source code has been downloaded and the .AHK file has been compiled.
+        if (A_IsCompiled && DirExist(A_ScriptDir . "\library")) {
+            result := MsgBox(
+                "It looks like you downloaded the source code and compiled the [VideoDownloader.ahk] file."
+                "`n`nThe folder [library] needs to be renamed to [VideoDownloader]."
+                "`n`nWould you like to do that now?", "VideoDownloader - Rename Library Folder", "YN Icon! 262144")
+            if (result == "Yes") {
+                ; Renames the folder.
+                DirMove(A_ScriptDir . "\library", applicationMainDirectory, 2)
+                Reload()
+            }
+        }
+        else {
+            MsgBox("The file [" . requiredFile .
+                "] is missing.`n`nPlease reinstall or repair the software using the MSI installer.",
+                "VideoDownloader - Reinstallation Required",
+                "Icon! 262144")
+        }
+        exitApplicationWithNotification(true)
     }
 }
 

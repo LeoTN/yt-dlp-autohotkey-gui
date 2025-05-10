@@ -602,35 +602,41 @@ getSelectedVideoListViewElements() {
 }
 
 /*
-Reads the registry and extracts the current application version.
-If the version in the registry has a build version other than 0, it will append the word "-beta".
-@returns [String] The version from the registry or "v0.0.0.1" in case the registry value is invalid.
+Reads the version information from the application executable file (if compiled).
+@returns [String] The version from the executable or "v0.0.0.1" in case the application is not compiled.
 */
-getCorrectScriptVersionFromRegistry() {
-    global applicationRegistryDirectory
-
-    regValue := RegRead(applicationRegistryDirectory, "CURRENT_VERSION", "v0.0.0.1")
+getCorrectScriptVersion() {
+    if (!A_IsCompiled) {
+        fileVersion := "v0.0.0.1"
+    }
+    else {
+        try {
+            ; Extract the version from the executable file.
+            fileVersion := "v" . FileGetVersion(A_ScriptFullPath)
+        }
+        catch {
+            ; Used as a fallback.
+            fileVersion := "v0.0.0.2"
+        }
+    }
     ; Finds versions matching this format [v1.2.3.4]
-    if (RegExMatch(regValue, "^v\d+\.\d+\.\d+\.(\d+)$", &match)) {
+    if (RegExMatch(fileVersion, "^v\d+\.\d+\.\d+\.(\d+)$", &match)) {
         buildVersionNumber := match[1]
         ; A version number with a build version is only used for beta versions.
         if (buildVersionNumber != 0) {
-            regValue := regValue . "-beta"
-            ; Corrects the version number in the registry.
-            RegWrite(regValue, "REG_SZ", applicationRegistryDirectory, "CURRENT_VERSION")
-            return getCorrectScriptVersionFromRegistry()
+            fileVersion := fileVersion . "-beta"
         }
-        return regValue
+        return fileVersion
     }
     ; Finds versions matching this format [v1.2.3], [v1.2.3-beta], [1.2.3] or [1.2.3-beta].
-    else if (RegExMatch(regValue, "^v?\d+\.\d+\.\d+(\.\d+)?(-beta)?$", &match)) {
-        return regValue
+    else if (RegExMatch(fileVersion, "^v?\d+\.\d+\.\d+(\.\d+)?(-beta)?$")) {
+        return fileVersion
     }
     else {
-        ; In case the version in the registry is invalid.
-        regValue := "v0.0.0.1"
+        ; In case the version from the compiled file is invalid.
+        fileVersion := "v0.0.0.3"
     }
-    return regValue
+    return fileVersion
 }
 
 ; Tries to find currently running instances of the application and warns the user about it.
@@ -1445,6 +1451,7 @@ Checks all GitHub Repository tags to find new versions.
 checkForAvailableUpdates() {
     global psUpdateScriptLocation
     global applicationRegistryDirectory
+    global versionFullName
 
     ; Does not check for updates, if the application isn't compiled.
     if (!A_IsCompiled) {
@@ -1456,8 +1463,9 @@ checkForAvailableUpdates() {
     */
     psCompatibleScriptRegistryPath := StrReplace(applicationRegistryDirectory, "\", ":", , , 1)
     parameterString :=
-        '-pGitHubRepositoryLink "https://github.com/LeoTN/yt-dlp-autohotkey-gui"' .
-        ' -pRegistryDirectory "' . psCompatibleScriptRegistryPath . '"'
+        '-pGitHubRepositoryLink "https://github.com/LeoTN/yt-dlp-autohotkey-gui" '
+        . '-pRegistryDirectory "' . psCompatibleScriptRegistryPath . '" '
+        . '-pCurrentVersionTag "' . versionFullName . '"'
 
     if (readConfigFile("UPDATE_TO_BETA_VERSIONS")) {
         parameterString .= " -pSwitchConsiderBetaReleases"

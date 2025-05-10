@@ -6,6 +6,7 @@
 VideoDownloader.exe
 .vscode/
 VideoDownloader/
+compiler/version.txt
 compiler/*.zip
 compiler/*.autosave.aip
 compiler/*.back*.aip

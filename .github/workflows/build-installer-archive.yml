@@ -45,6 +45,18 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
+    - name: Define Version Name File
+      run: |
+        if ($env:IS_PRE_RELEASE -eq "true") {
+          $versionName = "v${{ inputs.version }}-beta"
+        }
+        else {
+          $versionName = "v${{ inputs.version }}-beta"
+        }
+        $null = Write-Host "[INFO] The version name is [$versionName]."
+        # This text file will be used by the AutoHotkey compiler to set the version of the executable file.
+        $null = Set-Content -Path "${{ github.workspace }}\compiler\version.txt" -Value $versionName -Force
+
     - name: Extract Autohotkey Compiler
       run: |
         # Set Variables
