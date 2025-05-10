@@ -411,7 +411,7 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
             msgButton3 := "Exclude Invalid URLs"
         }
         result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI.Hwnd)
+            videoListGUI)
         ; If the users wishes, the invalid URLs will be imported as well.
         if (result == msgButton1) {
             for (invalidURL in invalidURLArray) {
@@ -499,7 +499,7 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             msgButton3 := "Exclude Invalid URLs"
         }
         result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI.Hwnd)
+            videoListGUI)
         ; If the user wishes, the invalid URLs will be included in the export.
         if (result == msgButton1) {
             ; Adds the separation line into the array.
@@ -939,19 +939,20 @@ Displays a customizable message box with up to 3 buttons and a headline.
 @param pButton3Text [String] The text for the rightmost button. [Max. 50 characters]
 @param pMsgBoxTimeoutSeconds [int] Optional timeout in seconds. Closes the message box automatically after this duration.
 @param pBooleanAlwaysOnTop [boolean] If true, the message box will always stay on top of other windows.
-@param pOwnerWindowHwnd [int] An optional hwnd number of an existing window. This window will be the owner of the message box.
+@param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the custom message box to make it modal.
 @returns [String] The text of the button clicked by the user.
 @returns (alt) [String] "_result_gui_closed" if the GUI was closed.
 @returns (alt) [String] "_result_timeout" if the timeout was reached.
 */
 customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_ScriptName,
     pButton1Text?, pButton2Text := "Okay", pButton3Text?, pMsgBoxTimeoutSeconds?, pBooleanAlwaysOnTop := false,
-    pOwnerWindowHwnd?) {
+    pOwnerGUI?) {
     ; This value represents either the user choice or any other possible outcome like a timeout for example.
     returnValue := "_result_gui_closed"
     ; Create the GUI which will mimic the style of a message box.
-    if (IsSet(pOwnerWindowHwnd) && WinExist(pOwnerWindowHwnd)) {
-        customMsgBoxGUI := Gui("Owner" . pOwnerWindowHwnd, pMsgBoxTitle)
+    if (IsSet(pOwnerGUI) && WinExist(pOwnerGUI.Hwnd)) {
+        customMsgBoxGUI := Gui("Owner" . pOwnerGUI.Hwnd, pMsgBoxTitle)
+        pOwnerGUI.Opt("+Disabled")
     }
     else {
         customMsgBoxGUI := Gui(, pMsgBoxTitle)
@@ -984,6 +985,7 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     ; Status bar.
     customMsgBoxGUIStatusBar := customMsgBoxGUI.Add("StatusBar", , "Please choose an option")
     customMsgBoxGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
+    customMsgBoxGUI.OnEvent("Close", handleCustomMsgBoxGUI_customMsgBoxGUI_onClose)
     customMsgBoxGUI.Show("w490")
     ; OnEvent function for the buttons.
     handleCustomMsgBoxGUI_button_onClick(pButton, pInfo) {
@@ -991,6 +993,12 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
         returnValue := pButton.Text
         if (WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
             WinClose()
+        }
+    }
+    ; Makes sure that the owner GUI does not minimize.
+    handleCustomMsgBoxGUI_customMsgBoxGUI_onClose(pGUI) {
+        if (IsSet(pOwnerGUI)) {
+            pOwnerGUI.Opt("-Disabled")
         }
     }
     ; The application waits until the user made a choice or the timer runs out.

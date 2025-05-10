@@ -17,7 +17,7 @@ setup_onInit() {
     if (checkIfFFmpegOrYTDLPSetupIsRequired()) {
         booleanSetupReloadRequired := true
     }
-    ; The application won't continue until the required dependencies are installed or the GUI is closed.
+    ; The application won't continue until the required dependencies are present or the GUI is closed.
     while (booleanSetupReloadRequired) {
         setupGUI.Show("AutoSize")
         Sleep(2000)
@@ -43,9 +43,12 @@ createSetupGUI() {
     updateDependencyCheckboxes()
 
     cancelSetupButton := setupGUI.Add("Button", "yp+120 w140 R2", "Cancel")
-    startSetupButton := setupGUI.Add("Button", "xp+160 w140 R2 +Default", "Install Dependencies")
+    startSetupButton := setupGUI.Add("Button", "xp+160 w140 R2 +Default", "Download Dependencies")
+    useOwnExecutablesText := setupGUI.Add("Text", "xp-160 yp+45 w300 h30 +BackgroundTrans +Center",
+        "I want to use my own executables")
+    useOwnExecutablesText.SetFont("s10 underline cBlue")
 
-    setupProgressBar := setupGUI.Add("Progress", "xp-120 x0 yp+50 w320")
+    setupProgressBar := setupGUI.Add("Progress", "xp-120 x0 yp+24 w320")
     setupGUIStatusBar := setupGUI.Add("StatusBar", "-Theme BackgroundSilver")
     setupGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     setupGUIStatusBar.SetText("Please start the setup process")
@@ -57,26 +60,95 @@ createSetupGUI() {
     ; This does not allow the user to change the value of the checkbox.
     YTDLPCheckbox.OnEvent("Click", (*) => YTDLPCheckbox.Value := !YTDLPCheckbox.Value)
     cancelSetupButton.OnEvent("Click", (*) => exitApplicationWithNotification(true))
-    startSetupButton.OnEvent("Click", (*) => handleSetupGUI_startSetupButton_onClick())
+    startSetupButton.OnEvent("Click", handleSetupGUI_startSetupButton_onClick)
+    useOwnExecutablesText.OnEvent("Click", handleSetupGUI_useOwnExecutablesText_onClick)
+}
+
+; Updates the GUI depending on the installation status of the dependencies.
+handleSetupGUI_startSetupButton_onClick(pButton, pInfo) {
+    if (!checkInternetConnection()) {
+        result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?",
+            "VD - No Internet Connection", "YN Icon! Owner" . setupGUI.Hwnd)
+        if (result != "Yes") {
+            return
+        }
+    }
+
+    pButton.Opt("+Disabled")
+    ; Installs the dependencies and updates the GUI accordingly.
+    if (getFFmpegInstallionStatus()) {
+        setupGUIStatusBar.SetText("FFmpeg downloaded")
+        setupProgressBar.Value += 50
+    }
+    else {
+        installFFmpeg()
+    }
+    updateDependencyCheckboxes()
+    if (getYTDLPInstallionStatus()) {
+        setupGUIStatusBar.SetText("yt-dlp downloaded")
+        setupProgressBar.Value += 50
+    }
+    else {
+        installYTDLP()
+    }
+    updateDependencyCheckboxes()
+    setupGUIStatusBar.SetText("Setup completed")
+    Sleep(2000)
+    ; The video list GUI is usually not present at this moment so we don't need to save it's state.
+    Reload()
+}
+
+; Allows the user to use their own yt-dlp and FFmpeg executables.
+handleSetupGUI_useOwnExecutablesText_onClick(pText, pInfo) {
+    global ffmpegDirectory
+    global YTDLPDirectory
+
+    msgText := "It is possible to use your own FFmpeg and yt-dlp executable files "
+    msgText .= "instead of the recommended ones."
+    msgText .= "`n`nBe warned, this could potentially cause other issues!"
+    msgText .= "`n`nRequired files in the FFmpeg directory"
+    msgText .= "`n→ ffmpeg.exe`n→ ffplay.exe`n→ ffprobe.exe"
+    msgText .= "`n`nRequired files in the yt-dlp directory"
+    msgText .= "`n→ yt-dlp.exe"
+    msgTitle := "VD - Use Custom FFmpeg and yt-dlp Executables"
+    msgHeadLine := "Use Your Own FFmpeg and yt-dlp Executables"
+    msgButton1 := "FFmpeg Directory"
+    msgButton2 := "Refresh"
+    msgButton3 := "yt-dlp Directory"
+    result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true, setupGUI)
+    ; Opens the FFmpeg directory.
+    if (result == msgButton1) {
+        openDirectoryInExplorer(ffmpegDirectory)
+        handleSetupGUI_useOwnExecutablesText_onClick(pText, pInfo)
+    }
+    ; Reloads the application.
+    if (result == msgButton2) {
+        Reload()
+    }
+    ; Opens the yt-dlp directory.
+    if (result == msgButton3) {
+        openDirectoryInExplorer(YTDLPDirectory)
+        handleSetupGUI_useOwnExecutablesText_onClick(pText, pInfo)
+    }
 }
 
 updateDependencyCheckboxes() {
     ffmpegCheckbox.Value := getFFmpegInstallionStatus()
     if (ffmpegCheckbox.Value) {
-        ffmpegCheckbox.Text := "FFmpeg installed"
+        ffmpegCheckbox.Text := "FFmpeg executables found"
         ffmpegCheckbox.Opt("BackgroundGreen")
     }
     else {
-        ffmpegCheckbox.Text := "FFmpeg not installed"
+        ffmpegCheckbox.Text := "FFmpeg executables not found"
         ffmpegCheckbox.Opt("BackgroundRed")
     }
     YTDLPCheckbox.Value := getYTDLPInstallionStatus()
     if (YTDLPCheckbox.Value) {
-        YTDLPCheckbox.Text := "yt-dlp installed"
+        YTDLPCheckbox.Text := "yt-dlp executable found"
         YTDLPCheckbox.Opt("BackgroundGreen")
     }
     else {
-        YTDLPCheckbox.Text := "yt-dlp not installed"
+        YTDLPCheckbox.Text := "yt-dlp executable not found"
         YTDLPCheckbox.Opt("BackgroundRed")
     }
 }
@@ -115,40 +187,6 @@ checkIfMSISetupIsRequired() {
             exitApplicationWithNotification(true)
         }
     }
-}
-
-; Updates the GUI depending on the installation status of the dependencies.
-handleSetupGUI_startSetupButton_onClick() {
-    if (!checkInternetConnection()) {
-        result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?",
-            "VD - No Internet Connection", "YN Icon! Owner" . setupGUI.Hwnd)
-        if (result != "Yes") {
-            return
-        }
-    }
-
-    startSetupButton.Opt("+Disabled")
-    ; Installs the dependencies and updates the GUI accordingly.
-    if (getFFmpegInstallionStatus()) {
-        setupGUIStatusBar.SetText("FFmpeg installed")
-        setupProgressBar.Value += 50
-    }
-    else {
-        installFFmpeg()
-    }
-    updateDependencyCheckboxes()
-    if (getYTDLPInstallionStatus()) {
-        setupGUIStatusBar.SetText("yt-dlp installed")
-        setupProgressBar.Value += 50
-    }
-    else {
-        installYTDLP()
-    }
-    updateDependencyCheckboxes()
-    setupGUIStatusBar.SetText("Setup completed")
-    Sleep(2000)
-    ; The video list GUI is usually not present at this moment so we don't need to save it's state.
-    Reload()
 }
 
 ; Downloads the FFmpeg executables optimized for yt-dlp.
@@ -215,8 +253,8 @@ checkIfFFmpegOrYTDLPSetupIsRequired() {
 }
 
 /*
-Checks if the FFmpeg executables are installed.
-@returns [boolean] True if all FFmpeg executables are installed, false otherwise.
+Checks if the FFmpeg executables are present.
+@returns [boolean] True, if all FFmpeg executables are present. False otherwise.
 */
 getFFmpegInstallionStatus() {
     global ffmpegDirectory
@@ -231,8 +269,8 @@ getFFmpegInstallionStatus() {
 }
 
 /*
-Checks if yt-dlp is installed.
-@returns [boolean] True if yt-dlp is installed, false otherwise.
+Checks if the yt-dlp executable is present.
+@returns [boolean] True, if the yt-dlp executable is present. False otherwise.
 */
 getYTDLPInstallionStatus() {
     global YTDLPDirectory

@@ -790,11 +790,11 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
 
     ; Ignores the cancel complete download when there is only one video in total.
     if (currentYTDLPActionObject.remainingVideos == 1) {
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, , , true, videoListGUI.Hwnd)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, , , true, videoListGUI)
     }
     else {
         result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI.Hwnd)
+            videoListGUI)
     }
     if (result == msgButton1) {
         if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
