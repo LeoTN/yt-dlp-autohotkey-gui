@@ -4,7 +4,7 @@
 ;@Ahk2Exe-SetMainIcon library\assets\icons\1.ico
 ;@Ahk2Exe-SetName VideoDownloader
 ; Define the version information based on the content of the text file.
-;@Ahk2Exe-Obey U_productVersion, = FileExist("%A_ScriptDir%\compiler\currentVersion.txt") ? Trim(FileRead("%A_ScriptDir%\compiler\currentVersion.txt")) : "v0.0.0.1"
+;@Ahk2Exe-Obey U_productVersion, = FileExist("%A_ScriptDir%\compiler\currentVersion.txt") ? RegExReplace(FileRead("%A_ScriptDir%\compiler\currentVersion.txt")`, "[\r\n]") : "v0.0.0.1"
 ;@Ahk2Exe-SetProductVersion %U_productVersion%
 ;@Ahk2Exe-Obey U_fileVersion, U_fileVersion := RTrim(LTrim("%U_productVersion%"`, "v")`, "-beta")
 ;@Ahk2Exe-SetFileVersion %U_fileVersion%
