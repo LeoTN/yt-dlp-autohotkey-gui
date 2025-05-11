@@ -62,7 +62,7 @@ jobs:
         }
         $null = Write-Host "[INFO] The version name is [$versionName]."
         # This text file will be used by the AutoHotkey compiler to set the version of the executable file.
-        $null = Set-Content -Path "${{ github.workspace }}\compiler\version.txt" -Value $versionName -Force
+        $null = Set-Content -Path "${{ github.workspace }}\compiler\currentVersion.txt" -Value $versionName -Force
 
     - name: Compile Autohotkey Main Application
       run: |
@@ -78,7 +78,7 @@ jobs:
         # Compile the application.
         $null = Start-Process -FilePath $compilerFileLocation -ArgumentList "/silent verbose /in ""$scriptPathIn"" /out ""$scriptPathOut"" /base ""$baseFileLocation""" `
             -RedirectStandardOutput $stdoutLogFileLocation -RedirectStandardError $errorLogFileLocation -Wait
-            
+
         $null = Write-Host "AHK Compiler Stdout Log`n[`n$(Get-Content -Path $stdoutLogFileLocation | Out-String)]`n"
         $null = Write-Host "AHK Compiler Error Log`n[`n$(Get-Content -Path $errorLogFileLocation | Out-String)]`n"
         $null = Write-Host "[INFO] The executable will be saved to [$scriptPathOut]."
