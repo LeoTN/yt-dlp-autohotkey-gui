@@ -6,6 +6,9 @@ Param (
     # The program's registry path. The update information will be stored there.
     [Parameter(Mandatory = $true)]
     [String]$pRegistryDirectory,
+    # The tag name of the current version. For example, "v1.2.3.4-beta".
+    [Parameter(Mandatory = $true)]
+    [String]$pCurrentVersionTag,
     # If provided, will force the script to find the highest available update version, even if the current version is already the highest.
     [Parameter(Mandatory = $false)]
     [switch]$pSwitchForceUpdate,
@@ -33,15 +36,6 @@ function onInit() {
         exitScript -pExitCode 2
     }
 
-    # This registry key must exist. It stores the current version of the program which could receive an update.
-    $global:currentVersionKeyName = "CURRENT_VERSION"
-    Try {
-        $null = Get-ItemPropertyValue -Path $pRegistryDirectory -Name $global:currentVersionKeyName -ErrorAction "SilentlyContinue"
-    }
-    Catch {
-        $null = Write-Host "[onInit()] [ERROR] Missing registry key [$global:currentVersionKeyName] at [$pRegistryDirectory]. This key cannot be created." -ForegroundColor "Red"
-        exitScript -pExitCode 3
-    }
     # This registry key stores the last update date of the current version. It isn't bad, when it has no value.
     $global:currentVersionLastUpdateKeyName = "CURRENT_VERSION_LAST_UPDATED"
     Try {
@@ -62,7 +56,7 @@ function onInit() {
     }
 
     # These variables store information about the update.
-    $global:currentVersion = Get-ItemPropertyValue -Path $pRegistryDirectory -Name $global:currentVersionKeyName
+    $global:currentVersion = $pCurrentVersionTag
     $global:currentVersionLastUpdateDate = Get-ItemPropertyValue -Path $pRegistryDirectory -Name $global:currentVersionLastUpdateKeyName
     
     # Exit code list at the end of this file.
@@ -383,8 +377,7 @@ Exit Code List
 Bad exit codes
 Range: 1-99
 1: Corrupted current version registry key or current version last update date key.
-2: Provided registry path where the registry keys (CURRENT_VERSION, CURRENT_VERSION_LAST_UPDATED, AVAILABLE_UPDATE) should be, is invalid or does not exist.
-3: Missing "CURRENT_VERSION" registry key.
+2: Provided registry path where the registry keys (CURRENT_VERSION_LAST_UPDATED and AVAILABLE_UPDATE) should be, is invalid or does not exist.
 
 Normal exit codes
 Range: 100-199

@@ -411,7 +411,7 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
             msgButton3 := "Exclude Invalid URLs"
         }
         result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI.Hwnd)
+            videoListGUI)
         ; If the users wishes, the invalid URLs will be imported as well.
         if (result == msgButton1) {
             for (invalidURL in invalidURLArray) {
@@ -499,7 +499,7 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             msgButton3 := "Exclude Invalid URLs"
         }
         result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI.Hwnd)
+            videoListGUI)
         ; If the user wishes, the invalid URLs will be included in the export.
         if (result == msgButton1) {
             ; Adds the separation line into the array.
@@ -602,35 +602,41 @@ getSelectedVideoListViewElements() {
 }
 
 /*
-Reads the registry and extracts the current application version.
-If the version in the registry has a build version other than 0, it will append the word "-beta".
-@returns [String] The version from the registry or "v0.0.0.1" in case the registry value is invalid.
+Reads the version information from the application executable file (if compiled).
+@returns [String] The version from the executable or "v0.0.0.1" in case the application is not compiled.
 */
-getCorrectScriptVersionFromRegistry() {
-    global applicationRegistryDirectory
-
-    regValue := RegRead(applicationRegistryDirectory, "CURRENT_VERSION", "v0.0.0.1")
+getCorrectScriptVersion() {
+    if (!A_IsCompiled) {
+        fileVersion := "v0.0.0.1"
+    }
+    else {
+        try {
+            ; Extract the version from the executable file.
+            fileVersion := "v" . FileGetVersion(A_ScriptFullPath)
+        }
+        catch {
+            ; Used as a fallback.
+            fileVersion := "v0.0.0.2"
+        }
+    }
     ; Finds versions matching this format [v1.2.3.4]
-    if (RegExMatch(regValue, "^v\d+\.\d+\.\d+\.(\d+)$", &match)) {
+    if (RegExMatch(fileVersion, "^v\d+\.\d+\.\d+\.(\d+)$", &match)) {
         buildVersionNumber := match[1]
         ; A version number with a build version is only used for beta versions.
         if (buildVersionNumber != 0) {
-            regValue := regValue . "-beta"
-            ; Corrects the version number in the registry.
-            RegWrite(regValue, "REG_SZ", applicationRegistryDirectory, "CURRENT_VERSION")
-            return getCorrectScriptVersionFromRegistry()
+            fileVersion := fileVersion . "-beta"
         }
-        return regValue
+        return fileVersion
     }
     ; Finds versions matching this format [v1.2.3], [v1.2.3-beta], [1.2.3] or [1.2.3-beta].
-    else if (RegExMatch(regValue, "^v?\d+\.\d+\.\d+(\.\d+)?(-beta)?$", &match)) {
-        return regValue
+    else if (RegExMatch(fileVersion, "^v?\d+\.\d+\.\d+(\.\d+)?(-beta)?$")) {
+        return fileVersion
     }
     else {
-        ; In case the version in the registry is invalid.
-        regValue := "v0.0.0.1"
+        ; In case the version from the compiled file is invalid.
+        fileVersion := "v0.0.0.3"
     }
-    return regValue
+    return fileVersion
 }
 
 ; Tries to find currently running instances of the application and warns the user about it.
@@ -939,19 +945,20 @@ Displays a customizable message box with up to 3 buttons and a headline.
 @param pButton3Text [String] The text for the rightmost button. [Max. 50 characters]
 @param pMsgBoxTimeoutSeconds [int] Optional timeout in seconds. Closes the message box automatically after this duration.
 @param pBooleanAlwaysOnTop [boolean] If true, the message box will always stay on top of other windows.
-@param pOwnerWindowHwnd [int] An optional hwnd number of an existing window. This window will be the owner of the message box.
+@param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the custom message box to make it modal.
 @returns [String] The text of the button clicked by the user.
 @returns (alt) [String] "_result_gui_closed" if the GUI was closed.
 @returns (alt) [String] "_result_timeout" if the timeout was reached.
 */
 customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_ScriptName,
     pButton1Text?, pButton2Text := "Okay", pButton3Text?, pMsgBoxTimeoutSeconds?, pBooleanAlwaysOnTop := false,
-    pOwnerWindowHwnd?) {
+    pOwnerGUI?) {
     ; This value represents either the user choice or any other possible outcome like a timeout for example.
     returnValue := "_result_gui_closed"
     ; Create the GUI which will mimic the style of a message box.
-    if (IsSet(pOwnerWindowHwnd) && WinExist(pOwnerWindowHwnd)) {
-        customMsgBoxGUI := Gui("Owner" . pOwnerWindowHwnd, pMsgBoxTitle)
+    if (IsSet(pOwnerGUI) && WinExist(pOwnerGUI.Hwnd)) {
+        customMsgBoxGUI := Gui("Owner" . pOwnerGUI.Hwnd, pMsgBoxTitle)
+        pOwnerGUI.Opt("+Disabled")
     }
     else {
         customMsgBoxGUI := Gui(, pMsgBoxTitle)
@@ -984,6 +991,7 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     ; Status bar.
     customMsgBoxGUIStatusBar := customMsgBoxGUI.Add("StatusBar", , "Please choose an option")
     customMsgBoxGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
+    customMsgBoxGUI.OnEvent("Close", handleCustomMsgBoxGUI_customMsgBoxGUI_onClose)
     customMsgBoxGUI.Show("w490")
     ; OnEvent function for the buttons.
     handleCustomMsgBoxGUI_button_onClick(pButton, pInfo) {
@@ -991,6 +999,12 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
         returnValue := pButton.Text
         if (WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
             WinClose()
+        }
+    }
+    ; Makes sure that the owner GUI does not minimize.
+    handleCustomMsgBoxGUI_customMsgBoxGUI_onClose(pGUI) {
+        if (IsSet(pOwnerGUI)) {
+            pOwnerGUI.Opt("-Disabled")
         }
     }
     ; The application waits until the user made a choice or the timer runs out.
@@ -1437,6 +1451,7 @@ Checks all GitHub Repository tags to find new versions.
 checkForAvailableUpdates() {
     global psUpdateScriptLocation
     global applicationRegistryDirectory
+    global versionFullName
 
     ; Does not check for updates, if the application isn't compiled.
     if (!A_IsCompiled) {
@@ -1448,8 +1463,9 @@ checkForAvailableUpdates() {
     */
     psCompatibleScriptRegistryPath := StrReplace(applicationRegistryDirectory, "\", ":", , , 1)
     parameterString :=
-        '-pGitHubRepositoryLink "https://github.com/LeoTN/yt-dlp-autohotkey-gui"' .
-        ' -pRegistryDirectory "' . psCompatibleScriptRegistryPath . '"'
+        '-pGitHubRepositoryLink "https://github.com/LeoTN/yt-dlp-autohotkey-gui" '
+        . '-pRegistryDirectory "' . psCompatibleScriptRegistryPath . '" '
+        . '-pCurrentVersionTag "' . versionFullName . '"'
 
     if (readConfigFile("UPDATE_TO_BETA_VERSIONS")) {
         parameterString .= " -pSwitchConsiderBetaReleases"

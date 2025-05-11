@@ -45,24 +45,42 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Extract Autohotkey Compiler
+    - name: Validate Release Version Input
       run: |
-        # Set Variables
-        $ahkFolder = "${{ github.workspace }}\ahk"
-        $ahkV2Folder = "${{ github.workspace }}\ahk-v2"
+        if (-not ($env:RELEASE_VERSION -match '^\d+\.\d+\.\d+\.\d+$')) {
+          $null = Write-Host "[ERROR] Invalid release version [$env:RELEASE_VERSION] received! Exiting workflow..."
+          throw
+        }
 
-        # Extract the files.
-        $null = Expand-Archive -Path "${{ github.workspace }}\compiler\ahk.zip" -DestinationPath $ahkFolder
-        $null = Expand-Archive -Path "${{ github.workspace }}\compiler\ahk-v2.zip" -DestinationPath $ahkV2Folder
+    - name: Define Version Name File
+      run: |
+        if ($env:IS_PRE_RELEASE -eq "true") {
+          $versionName = "v${{ inputs.version }}-beta"
+        }
+        else {
+          $versionName = "v${{ inputs.version }}-beta"
+        }
+        $null = Write-Host "[INFO] The version name is [$versionName]."
+        # This text file will be used by the AutoHotkey compiler to set the version of the executable file.
+        $null = Set-Content -Path "${{ github.workspace }}\compiler\currentVersion.txt" -Value $versionName -Force
 
     - name: Compile Autohotkey Main Application
       run: |
         # Set the paths to execute more easily.
         $scriptPathIn = "${{ github.workspace }}\VideoDownloader.ahk"
         $scriptPathOut = "${{ github.workspace }}\$env:FINAL_EXECUTABLE_NAME"
+        $compilerFileLocation = "${{ github.workspace }}\compiler\Ahk2Exe.exe"
+        $baseFileLocation = "${{ github.workspace }}\compiler\AutoHotkey64.exe"
+
+        $stdoutLogFileLocation = Join-Path -Path $env:TEMP -ChildPath "ahk_compiler_stdout.log"
+        $errorLogFileLocation = Join-Path -Path $env:TEMP -ChildPath "ahk_compiler_error.log"
 
         # Compile the application.
-        $null = Start-Process -FilePath ".\ahk\Compiler\Ahk2Exe.exe" -ArgumentList "/in $scriptPathIn /out $scriptPathOut /base "".\ahk-v2\AutoHotkey64.exe"" /silent verbose" -Wait
+        $null = Start-Process -FilePath $compilerFileLocation -ArgumentList "/silent verbose /in ""$scriptPathIn"" /out ""$scriptPathOut"" /base ""$baseFileLocation""" `
+            -RedirectStandardOutput $stdoutLogFileLocation -RedirectStandardError $errorLogFileLocation -Wait
+
+        $null = Write-Host "AHK Compiler Stdout Log`n[`n$(Get-Content -Path $stdoutLogFileLocation | Out-String)]`n"
+        $null = Write-Host "AHK Compiler Error Log`n[`n$(Get-Content -Path $errorLogFileLocation | Out-String)]`n"
         $null = Write-Host "[INFO] The executable will be saved to [$scriptPathOut]."
 
     - name: Upload Main Executable as Artifact

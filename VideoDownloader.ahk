@@ -1,7 +1,13 @@
 ;@Ahk2Exe-SetCompanyName Made by LeoTN
-;@Ahk2Exe-SetCopyright Licence available on my GitHub project (https://github.com/LeoTN/yt-dlp-autohotkey-gui)
+;@Ahk2Exe-SetCopyright https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENSE
 ;@Ahk2Exe-SetDescription VideoDownloader
 ;@Ahk2Exe-SetMainIcon library\assets\icons\1.ico
+;@Ahk2Exe-SetName VideoDownloader
+; Define the version information based on the content of the text file.
+;@Ahk2Exe-Obey U_productVersion, = FileExist("%A_ScriptDir%\compiler\currentVersion.txt") ? RegExReplace(FileRead("%A_ScriptDir%\compiler\currentVersion.txt")`, "[\r\n]") : "v0.0.0.1"
+;@Ahk2Exe-SetProductVersion %U_productVersion%
+;@Ahk2Exe-Obey U_fileVersion, U_fileVersion := RTrim(LTrim("%U_productVersion%"`, "v")`, "-beta")
+;@Ahk2Exe-SetFileVersion %U_fileVersion%
 
 #MaxThreadsPerHotkey 2
 #Warn Unreachable, Off
@@ -57,7 +63,7 @@ onInit() {
     ; When this value is true, certain functions will behave differently and do not show unnecessary prompts.
     global booleanFirstTimeLaunch := RegRead(applicationRegistryDirectory, "booleanFirstTimeLaunch", false)
     ; The version of this application. For example "v1.2.3.4".
-    global versionFullName := getCorrectScriptVersionFromRegistry()
+    global versionFullName := getCorrectScriptVersion()
 
     ; Determine the available download formats and subtitle options.
     global desiredDownloadFormatArray := [
@@ -70,24 +76,20 @@ onInit() {
         "Do not download subtitles", "Embed all available subtitles"
     ]
 
-    try
-    {
+    if (FileExist(iconFileLocation)) {
         TraySetIcon(iconFileLocation, 1, true)
-        ; Clears the existing tray menu elements.
-        A_TrayMenu.Delete()
-        ; Adds a tray menu point to open the video list GUI.
-        A_TrayMenu.Add("Video List", (*) => hotkey_openVideoListGUI())
-        A_TrayMenu.Add("Settings", (*) => menu_openSettingsGUI())
-        A_TrayMenu.Add()
-        A_TrayMenu.Add("Restart", (*) => menu_restartApplication())
-        A_TrayMenu.Add("Exit", (*) => menu_exitApplication())
-        A_TrayMenu.Add("About", (*) => menu_openHelpGUI())
-        ; When clicking on the tray icon twice, this will make sure, that the video list GUI is shown to the user.
-        A_TrayMenu.Default := "Video List"
     }
-    catch as error {
-        displayErrorMessage(error, "This is not a fatal error.", , 10000)
-    }
+    ; Clears the existing tray menu elements.
+    A_TrayMenu.Delete()
+    ; Adds a tray menu point to open the video list GUI.
+    A_TrayMenu.Add("Video List", (*) => hotkey_openVideoListGUI())
+    A_TrayMenu.Add("Settings", (*) => menu_openSettingsGUI())
+    A_TrayMenu.Add()
+    A_TrayMenu.Add("Restart", (*) => menu_restartApplication())
+    A_TrayMenu.Add("Exit", (*) => menu_exitApplication())
+    A_TrayMenu.Add("About", (*) => menu_openHelpGUI())
+    ; When clicking on the tray icon twice, this will make sure, that the video list GUI is shown to the user.
+    A_TrayMenu.Default := "Video List"
 
     /*
     INCLUDED COMPONENTS INIT FUNCTIONS
