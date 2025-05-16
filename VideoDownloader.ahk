@@ -47,7 +47,6 @@ onInit() {
     global assetDirectory := applicationMainDirectory . "\assets"
 
     global ffmpegDirectory := assetDirectory . "\ffmpeg"
-    global ffmpegFileLocation := ffmpegDirectory . "\ffmpeg.exe"
 
     global iconDirectory := assetDirectory . "\icons"
     global iconFileLocation := iconDirectory . "\video_downloader_icons.dll"
@@ -57,8 +56,8 @@ onInit() {
     global psUpdateScriptLocation := psScriptDirectory . "\checkForAvailableUpdates.ps1"
     global psRunYTDLPExecutableLocation := psScriptDirectory . "\runYTDLPExecutableWithRedirectedStdout.ps1"
 
-    global YTDLPDirectory := assetDirectory . "\yt-dlp"
-    global YTDLPFileLocation := YTDLPDirectory . "\yt-dlp.exe"
+    global ytdlpDirectory := assetDirectory . "\yt-dlp"
+    global YTDLPFileLocation := ytdlpDirectory . "\yt-dlp.exe"
 
     ; When this value is true, certain functions will behave differently and do not show unnecessary prompts.
     global booleanFirstTimeLaunch := RegRead(applicationRegistryDirectory, "booleanFirstTimeLaunch", false)
@@ -96,12 +95,12 @@ onInit() {
     -------------------------------------------------
     */
 
+    ; Registers important events for all GUIs and toast notifications.
+    functions_onInit()
     ; Basically checks if all required files and folders are present.
     setup_onInit()
     ; Checks and loads the config file.
     configurationFile_onInit()
-    ; Currently has no purpose.
-    functions_onInit()
     ; Initializes the hotkeys.
     hotkeys_onInit()
     ; Creates the help GUI.

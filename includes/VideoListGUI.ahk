@@ -271,6 +271,11 @@ createVideoListGUI() {
     applicationActionsMenu.SetIcon("Restart Application", iconFileLocation, 8) ; ICON_DLL_USED_HERE
     applicationActionsMenu.Add("Exit Application", (*) => menu_exitApplication())
     applicationActionsMenu.SetIcon("Exit Application", iconFileLocation, 15) ; ICON_DLL_USED_HERE
+    applicationActionsMenu.Add()
+    applicationActionsMenu.Add("Manage Dependencies", (*) => menu_openSetupGUI())
+    applicationActionsMenu.SetIcon("Manage Dependencies", iconFileLocation, 21) ; ICON_DLL_USED_HERE
+    applicationActionsMenu.Add("Update Dependencies", (*) => menu_updateDependencies())
+    applicationActionsMenu.SetIcon("Update Dependencies", iconFileLocation, 20) ; ICON_DLL_USED_HERE
 
     allMenus := MenuBar()
     allMenus.Add("&File", fileSelectionMenu)
@@ -554,11 +559,11 @@ handleVideoListGUI_importVideoListButton_onClick(pButton, pInfo) {
     importFileLocation := fileSelectPrompt("VD - Please select a URL file to import", importFileDefaultDirectory,
         "*.txt", videoListGUI)
     ; This usually happens, when the user cancels the selection.
-    if (importFileLocation == "_result_no_file_selected") {
+    if (!importFileLocation.Has(1)) {
         return
     }
     ; Imports all URLs or only valid ones, depending on the value of the checkbox.
-    importVideoListViewElements(importFileLocation, importAndExportOnlyValidURLsCheckbox.Value)
+    importVideoListViewElements(importFileLocation[1], importAndExportOnlyValidURLsCheckbox.Value)
 }
 
 handleVideoListGUI_exportVideoListButton_onClick(pButton, pInfo) {

@@ -1081,26 +1081,35 @@ Prompts the user to select a file.
 @param pRootDirectory [String] The root directory to start the selection from.
 @param pFilter [String] An optional filter for the explorer window. For example, "*.txt" would only show text files.
 @param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the file save prompt to make it modal.
-@returns [String] The selected file path.
-@returns (alt) [String] "_result_no_file_selected" if the user cancels the selection.
+@param pBooleanMultiSelect [boolean] If set to true, the user can select multiple files.
+@returns [Array] The array of selected file paths. If no files are selected, the array will be empty.
 */
-fileSelectPrompt(pPromptTitle, pRootDirectory, pFilter?, pOwnerGUI?) {
+fileSelectPrompt(pPromptTitle, pRootDirectory, pFilter?, pOwnerGUI?, pBooleanMultiSelect := false) {
     ; To make this specific file dialog modal, we need to explicitly set the +OwnDialogs option in this current thread.
     if (IsSet(pOwnerGUI)) {
         pOwnerGUI.Opt("+OwnDialogs")
     }
 
-    if (IsSet(pFilter)) {
-        selectedFileLocation := FileSelect("3", pRootDirectory, pPromptTitle, pFilter)
+    if (pBooleanMultiSelect) {
+        selectArguments := "M3"
     }
     else {
-        selectedFileLocation := FileSelect("3", pRootDirectory, pPromptTitle)
+        selectArguments := "3"
     }
-    ; This usually happens, when the user cancels the selection.
-    if (selectedFileLocation == "") {
-        return "_result_no_file_selected"
+    if (IsSet(pFilter)) {
+        selectedFileLocations := FileSelect(selectArguments, pRootDirectory, pPromptTitle, pFilter)
     }
-    return selectedFileLocation
+    else {
+        selectedFileLocations := FileSelect(selectArguments, pRootDirectory, pPromptTitle)
+    }
+    if (pBooleanMultiSelect) {
+        return selectedFileLocations
+    }
+    if (selectedFileLocations) {
+        ; The string will be returned as an array.
+        return Array(selectedFileLocations)
+    }
+    return Array()
 }
 
 /*
@@ -1568,11 +1577,14 @@ checkIfStringIsValidPlaylistIndexRange(pString) {
 Checks if a given string is in a given array.
 @param pString [String] The string to check.
 @param pArray [Array] The array to check.
-@returns [boolean] True if the string is in the array, false otherwise.
+@returns [boolean] True if the string is in the array. False otherwise.
 */
-checkIfStringIsInArray(pString, pArray) {
+checkIfStringIsInArray(pString, pArray, pBooleanCaseSensitive := true) {
     for (index, value in pArray) {
-        if (pString == value) {
+        if (pBooleanCaseSensitive && (pString == value)) {
+            return true
+        }
+        else if (pString = value) {
             return true
         }
     }

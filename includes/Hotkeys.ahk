@@ -244,8 +244,8 @@ menu_importConfigFile() {
 
     oldConfigFileLocation := fileSelectPrompt("VD - Please select a config file to import", applicationMainDirectory,
         "*.ini", videoListGUI)
-    if (oldConfigFileLocation != "_result_no_file_selected") {
-        importOldConfigFile(oldConfigFileLocation)
+    if (oldConfigFileLocation.Has(1)) {
+        importOldConfigFile(oldConfigFileLocation[1])
     }
 }
 
@@ -335,6 +335,30 @@ menu_exitApplication() {
     if (result == "Yes") {
         exitApplicationWithNotification()
     }
+}
+
+menu_openSetupGUI() {
+    updateDependencyCheckboxes()
+    updateSetupButton()
+    if (!WinExist("ahk_id " . setupGUI.Hwnd)) {
+        setupGUIStartAndCompleteSetupButton.Opt("-Disabled")
+        setupGUIStatusBar.SetText("You may change the used executables now")
+    }
+    showGUIRelativeToOtherGUI(videoListGUI, setupGUI, "MiddleCenter", "AutoSize")
+}
+
+menu_updateDependencies() {
+    result := MsgBox("All existing dependencies will be overwritten with the latest version.`n`nContinue?",
+        "VD - Update Dependencies", "YN Iconi Owner" . videoListGUI.Hwnd)
+    if (result != "Yes") {
+        return
+    }
+    showGUIRelativeToOtherGUI(videoListGUI, setupGUI, "MiddleCenter", "AutoSize")
+    deleteAllDependencyFiles()
+    updateDependencyCheckboxes()
+    updateSetupButton()
+    setupGUISetupProgressBar.Value := 0
+    handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_1(setupGUIStartAndCompleteSetupButton, "")
 }
 
 ; Open GUI items.
