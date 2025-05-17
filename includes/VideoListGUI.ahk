@@ -1163,11 +1163,26 @@ extractVideoMetaData(pVideoURL) {
         "[   🎞️      ]", "[  🎞️       ]", "[ 🎞️        ]"
     ]
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting video data...", spinnerCharArray)
-    processPID := executeYTDLPCommand(ytdlpCommand)
+
+    if (readConfigFile("ENABLE_DEBUG_MODE")) {
+        ; We use the current time stamp to generate a unique name for the log file.
+        ytdlpLogFileName := currentTime . "_yt_dlp_video_extraction_log.log"
+        ytdlpLogFileLocation := tempWorkingDirectory . "\" . ytdlpLogFileName
+        ; Defines the yt-dlp error log file name.
+        ytdlpErrorLogFileName := currentTime . "_yt_dlp_video_extraction_error_log.log"
+        ytdlpErrorLogFileLocation := tempWorkingDirectory . "\" . ytdlpErrorLogFileName
+    }
+    else {
+        ytdlpLogFileLocation := A_Temp . "\yt-dlp.log"
+        ytdlpErrorLogFileLocation := A_Temp . "\yt-dlp_errors.log"
+    }
+    ; Execute the yt-dlp command.
+    processPID := executeYTDLPCommand(ytdlpCommand, ytdlpLogFileLocation, ytdlpErrorLogFileLocation)
     ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
     if (processPID != "_result_error_while_starting_ytdlp_executable") {
         ProcessWaitClose(processPID)
     }
+
     ; Extract the metadata from the file into the object.
     for (property, value in videoMetaDataObject.OwnProps()) {
         videoMetaDataObject.%property% := IniRead(metaDataFileLocation, "VideoMetaData", property, "Not found")
@@ -1195,6 +1210,26 @@ extractVideoMetaData(pVideoURL) {
     ; We add this property after the loops because it will not be written by yt-dlp.
     videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := thumbnailFileLocation
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished video information extraction")
+
+    if (readConfigFile("ENABLE_DEBUG_MODE")) {
+        ; Moves the log files into the VideoDownloader temp directory in case the debug mode is enabled.
+        additionalFileContent := "This log file was moved into the VideoDownloader temp directory because the "
+        additionalFileContent .= "config file entry [ENABLE_DEBUG_MODE] has been enabled.`n`n"
+        if (FileExist(ytdlpLogFileLocation)) {
+            originalLogFileContent := FileRead(ytdlpLogFileLocation)
+            ; Deletes the file because FileAppend() would cause duplicate content.
+            FileDelete(ytdlpLogFileLocation)
+            FileAppend(additionalFileContent . originalLogFileContent,
+                tempWorkingDirectory . "\" . ytdlpLogFileName)
+        }
+        if (FileExist(ytdlpErrorLogFileLocation)) {
+            originalErrorLogFileContent := FileRead(ytdlpErrorLogFileLocation)
+            ; Deletes the file because FileAppend() would cause duplicate content.
+            FileDelete(ytdlpErrorLogFileLocation)
+            FileAppend(additionalFileContent . originalErrorLogFileContent,
+                tempWorkingDirectory . "\" . ytdlpErrorLogFileName)
+        }
+    }
     return videoMetaDataObject
 }
 
@@ -1270,12 +1305,26 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         "[   💾      ]", "[  💾       ]", "[ 💾        ]"
     ]
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting playlist data...", spinnerCharArray)
+
+    if (readConfigFile("ENABLE_DEBUG_MODE")) {
+        ; We use the current time stamp to generate a unique name for the log file.
+        ytdlpLogFileName := currentTime . "_yt_dlp_playlist_extraction_log.log"
+        ytdlpLogFileLocation := tempWorkingDirectoryPlaylist . "\" . ytdlpLogFileName
+        ; Defines the yt-dlp error log file name.
+        ytdlpErrorLogFileName := currentTime . "_yt_dlp_playlist_extraction_error_log.log"
+        ytdlpErrorLogFileLocation := tempWorkingDirectoryPlaylist . "\" . ytdlpErrorLogFileName
+    }
+    else {
+        ytdlpLogFileLocation := A_Temp . "\yt-dlp.log"
+        ytdlpErrorLogFileLocation := A_Temp . "\yt-dlp_errors.log"
+    }
     ; Run yt-dlp and create a .INI and a thumbnail file for each video in the playlist.
-    processPID := executeYTDLPCommand(ytdlpCommand)
+    processPID := executeYTDLPCommand(ytdlpCommand, ytdlpLogFileLocation, ytdlpErrorLogFileLocation)
     ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
     if (processPID != "_result_error_while_starting_ytdlp_executable") {
         ProcessWaitClose(processPID)
     }
+
     videoMetaDataObjectArray := []
     ; Parse all .INI files in the temp directory and extract the metadata.
     iniFileSearchString := tempWorkingDirectoryPlaylist . "\" . currentTime . "_*.ini"
@@ -1311,6 +1360,26 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         videoMetaDataObjectArray.Push(videoMetaDataObject)
     }
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished playlist information extraction")
+
+    if (readConfigFile("ENABLE_DEBUG_MODE")) {
+        ; Moves the log files into the VideoDownloader temp directory in case the debug mode is enabled.
+        additionalFileContent := "This log file was moved into the VideoDownloader temp directory because the "
+        additionalFileContent .= "config file entry [ENABLE_DEBUG_MODE] has been enabled.`n`n"
+        if (FileExist(ytdlpLogFileLocation)) {
+            originalLogFileContent := FileRead(ytdlpLogFileLocation)
+            ; Deletes the file because FileAppend() would cause duplicate content.
+            FileDelete(ytdlpLogFileLocation)
+            FileAppend(additionalFileContent . originalLogFileContent,
+                tempWorkingDirectoryPlaylist . "\" . ytdlpLogFileName)
+        }
+        if (FileExist(ytdlpErrorLogFileLocation)) {
+            originalErrorLogFileContent := FileRead(ytdlpErrorLogFileLocation)
+            ; Deletes the file because FileAppend() would cause duplicate content.
+            FileDelete(ytdlpErrorLogFileLocation)
+            FileAppend(additionalFileContent . originalErrorLogFileContent,
+                tempWorkingDirectoryPlaylist . "\" . ytdlpErrorLogFileName)
+        }
+    }
     return videoMetaDataObjectArray
 }
 
@@ -1364,16 +1433,16 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     pVideoListViewEntry.generateDownloadCommandPart()
     ytdlpCommand .= pVideoListViewEntry.downloadCommandPart
 
-    ; We use the current time stamp to generate a unique name for log file.
+    ; We use the current time stamp to generate a unique name for the log file.
     currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     ; Defines the yt-dlp download log file name.
-    ytdlpDownloadLogFileName := currentTime . "_yt_dlp_download_log.log"
-    ytdlpDownloadLogFileLocation := tempWorkingDirectory . "\" . ytdlpDownloadLogFileName
+    ytdlpLogFileName := currentTime . "_yt_dlp_download_log.log"
+    ytdlpLogFileLocation := tempWorkingDirectory . "\" . ytdlpLogFileName
     ; Defines the yt-dlp error log file name.
-    ytdlpErrorLogFileName := currentTime . "_yt_dlp_error_log.log"
+    ytdlpErrorLogFileName := currentTime . "_yt_dlp_download_error_log.log"
     ytdlpErrorLogFileLocation := tempWorkingDirectory . "\" . ytdlpErrorLogFileName
     ; Execute the yt-dlp command and monitor the download progress.
-    processPID := executeYTDLPCommand(ytdlpCommand, ytdlpDownloadLogFileLocation, ytdlpErrorLogFileLocation)
+    processPID := executeYTDLPCommand(ytdlpCommand, ytdlpLogFileLocation, ytdlpErrorLogFileLocation)
 
     ; Fill the currentYTDLPActionObject with data which can be used to cancel the download.
     currentYTDLPActionObject.downloadProcessYTDLPPID := processPID
@@ -1383,7 +1452,7 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     statusBarText := "[" . videoTitle . "] - Starting download process..."
     handleVideoListGUI_videoListGUIStatusBar_startAnimation(statusBarText)
     ; This function monitor the download progress and update the video list GUI accordingly.
-    monitorVideoDownloadProgress(processPID, ytdlpDownloadLogFileLocation, videoTitle)
+    monitorVideoDownloadProgress(processPID, ytdlpLogFileLocation, videoTitle)
 
     ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
     if (processPID != "_result_error_while_starting_ytdlp_executable") {
@@ -1398,6 +1467,23 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation(statusBarText)
     ; This delay allows the user to read the status message for a short period of time before downloading the next video.
     Sleep(200)
+
+    if (!readConfigFile("ENABLE_DEBUG_MODE")) {
+        return
+    }
+    ; Moves the log files into the download directory in case the debug mode is enabled.
+    additionalFileContent := "This log file was moved into the download directory because the "
+    additionalFileContent .= "config file entry [ENABLE_DEBUG_MODE] has been enabled.`n`n"
+    if (FileExist(ytdlpLogFileLocation)) {
+        originalLogFileContent := FileRead(ytdlpLogFileLocation)
+        FileAppend(additionalFileContent . originalLogFileContent,
+            pDownloadTargetDirectory . "\" . ytdlpLogFileName)
+    }
+    if (FileExist(ytdlpErrorLogFileLocation)) {
+        originalErrorLogFileContent := FileRead(ytdlpErrorLogFileLocation)
+        FileAppend(additionalFileContent . originalErrorLogFileContent,
+            pDownloadTargetDirectory . "\" . ytdlpErrorLogFileName)
+    }
 }
 
 /*
