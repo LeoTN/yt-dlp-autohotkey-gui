@@ -639,6 +639,68 @@ getCorrectScriptVersion() {
     return fileVersion
 }
 
+/*
+Extracts a comma seperated string and creates an array. Empty and duplicate entries will be ignored.
+@param pConfigFileEntry [String] The config file entry to read from.
+@returns [Array] An array containing the entries from the config file. The array can be empty.
+*/
+getCsvArrayFromConfigFile(pConfigFileEntry) {
+    ; The string is stored in the config file as a comma separated list.
+    configArray := StrSplit(readConfigFile(pConfigFileEntry), ",", " `t")
+    returnArray := Array()
+    ; Removes empty and duplicate entries from the array.
+    for (entry in configArray) {
+        if (entry == "" || checkIfStringIsInArray(entry, returnArray)) {
+            continue
+        }
+        returnArray.Push(entry)
+    }
+    return returnArray
+}
+
+/*
+Writes a given array to the config file as a comma separated string.
+@param pConfigFileEntry [String] The config file entry to write to.
+@param pArray [Array] The array to write to the config file.
+*/
+writeCsvArrayToConfigFile(pConfigFileEntry, pArray) {
+    arrayString := ""
+    ; Converts the array into a string and writes it to the config file.
+    for (entry in pArray) {
+        arrayString .= entry . ","
+    }
+    arrayString :=
+        RTrim(arrayString, ",")
+    editConfigFile(arrayString, pConfigFileEntry)
+}
+
+/*
+Parses a string containing language data and returns a Map with language names as keys and language codes as values.
+@param pRawString [String] The raw string containing the language data.
+@returns [Map] A map where the keys are language names and the values are language codes.
+*/
+parseYTDLPSubtitleString(pRawString) {
+    languageCodeMap := Map()
+    parts := StrSplit(pRawString, "%=%")
+
+    for (i, part in parts) {
+        if (i = 1) {
+            ; Skip the table header.
+            continue
+        }
+        part := Trim(part)
+        if (RegExMatch(part, "^\s*(\S+)\s+([^\d,]+?)\s+(?:vtt|ttml|srv3|srv2|srv1|json3)", &match)) {
+            languageCode := Trim(match[1])
+            languageName := Trim(match[2])
+            ; This avoids empty language names.
+            if (languageName) {
+                languageCodeMap[languageName] := languageCode
+            }
+        }
+    }
+    return languageCodeMap
+}
+
 ; Tries to find currently running instances of the application and warns the user about it.
 findAlreadyRunningVDInstance() {
     ; Searches for the process name and excludes this instance.
@@ -992,7 +1054,13 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     customMsgBoxGUIStatusBar := customMsgBoxGUI.Add("StatusBar", , "Please choose an option")
     customMsgBoxGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     customMsgBoxGUI.OnEvent("Close", handleCustomMsgBoxGUI_customMsgBoxGUI_onClose)
-    customMsgBoxGUI.Show("w490")
+
+    if (IsSet(pOwnerGUI)) {
+        showGUIRelativeToOtherGUI(pOwnerGUI, customMsgBoxGUI, "MiddleCenter", "w490")
+    }
+    else {
+        customMsgBoxGUI.Show("w490")
+    }
     ; OnEvent function for the buttons.
     handleCustomMsgBoxGUI_button_onClick(pButton, pInfo) {
         ; The text of the pressed button will be returned.
