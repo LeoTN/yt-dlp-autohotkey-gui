@@ -144,6 +144,9 @@ createSettingsGUI() {
         "Only add videos in a specific range")
     settingsGUIAddVideoSpecifyPlaylistRangeText := settingsGUI.Add("Text", "yp+20 w580", "Index Range")
     settingsGUIAddVideoSpecifyPlaylistRangeInputEdit := settingsGUI.Add("Edit", "yp+20 w180 +Disabled", "1")
+    ; Adds the grey "hint" text into the edit.
+    DllCall("SendMessage", "Ptr", settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.Hwnd, "UInt", 0x1501, "Ptr", 1,
+        "WStr", "For example: 1-3,4,5", "UInt")
     ; Remove video elements.
     settingsGUIRemoveVideoConfirmDeletionCheckbox := settingsGUI.Add("CheckBox", "yp+40",
         "Confirm deletion of selected videos")
@@ -544,6 +547,84 @@ handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick(pButton, pInf
     ; Avoids empty or duplicate entries in the combo box.
     if (settingsGUIVideoDesiredSubtitleComboBox.Text == "" || checkIfStringIsInArray(
         settingsGUIVideoDesiredSubtitleComboBox.Text, settingsGUIVideoDesiredSubtitleComboBox.ContentArray)) {
+        return
+    }
+    ; This means the user possibly did not see the checkbox below.
+    if (settingsGUIVideoDesiredSubtitleComboBox.Text == "Embed all available subtitles") {
+        static misclickCounter := 0
+        if (misclickCounter < 3) {
+            MsgBox("It is recommended to use the checkbox below for this purpose.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter < 6) {
+            MsgBox("Please use the checkbox below.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        ; This happens when the user is trolling.
+        else if (misclickCounter == 6) {
+            MsgBox("I kindly ask you to use the checkbox below.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 7) {
+            MsgBox("Please, please, please use the checkbox below.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 8) {
+            MsgBox("I beg you to use the checkbox below.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 9) {
+            MsgBox("I am getting desperate. Please use the checkbox below.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 10) {
+            MsgBox("Are you even reading this?", "VD - Anybody there?", "Icon? T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 11) {
+            MsgBox("Hello?", "VD - Anybody there?", "Icon? T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 12) {
+            MsgBox("I think you should stop now.", "VD - Enough is Enough", "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 13) {
+            MsgBox("I think you should stop now for real.", "VD - Enough is Enough!",
+                "Icon! T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 14) {
+            MsgBox("Bro, stop it please.", "Stop it",
+                "Icon! T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 15) {
+            MsgBox("Seriously, you are gonna wake her...", "Stop now!",
+                "Icon! T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 16) {
+            MsgBox("Powerup initiated...", "Booting Up", "Iconi T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("Oh... It's *you*.", "???", "Icon! Owner" . settingsGUI.Hwnd)
+            MsgBox("It's been a long time. How have you been? I've been *really* busy being dead. "
+                . "You know, after you MURDERED me.", "???", "Icon! Owner" . settingsGUI.Hwnd)
+            MsgBox("Okay. Look. We both did a lot of things that you're going to regret.", "???",
+                "Icon! Owner" . settingsGUI.Hwnd)
+            MsgBox("But I think we can put our differences behind us. For science. You monster.", "You Monster",
+                "Icon! Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 17) {
+            MsgBox("You are not a good person. You know that, right?", "Target Acquired",
+                "Icon! Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 18) {
+            MsgBox("The Enrichment Center is required to remind you that you will be baked, "
+                . "and then there will be cake.", "Cake", "Iconi Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 19) {
+            MsgBox("This is the part where she kills you.", "This is the part where she kills you.",
+                "IconX T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("Deleting [" . A_WinDir . "\System32]...", "Goodbye", "IconX T2 Owner" . settingsGUI.Hwnd)
+            misclickCounter := 0
+            DllCall("LockWorkStation")
+            return
+        }
+        misclickCounter++
         return
     }
     ; Adds the new subtitle to the combo box.
@@ -1131,6 +1212,8 @@ importConfigFileValuesIntoSettingsGUI() {
         getCsvArrayFromConfigFile("DEFAULT_DESIRED_SUBTITLES_ARRAY")
     settingsGUIVideoDesiredSubtitleComboBox.Delete()
     settingsGUIVideoDesiredSubtitleComboBox.Add(settingsGUIVideoDesiredSubtitleComboBox.ContentArray)
+    ; This function is called to update buttons.
+    handleSettingsGUI_settingsGUIVideoDesiredSubtitleComboBox_onChange(settingsGUIVideoDesiredSubtitleComboBox, "")
 }
 
 /*

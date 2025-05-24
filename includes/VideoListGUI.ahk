@@ -71,17 +71,23 @@ createVideoListGUI() {
     videoDesiredFormatText := videoListGUI.Add("Text", "yp+173", "Desired Format")
     videoDesiredFormatDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
     videoDesiredSubtitleText := videoListGUI.Add("Text", "yp+30", "Desired Subtitle(s)")
-    videoDesiredSubtitleListBox := videoListGUI.Add("ListBox", "w280 yp+20 R1 Choose1 +Multi", ["None"])
+    videoDesiredSubtitleListBox := videoListGUI.Add("ListBox", "w280 yp+20 R1 +Multi", ["None"])
     videoAdvancedDownloadSettingsButton := videoListGUI.Add("Button", "w280 yp+30", "Advanced Download Settings")
     ; Video list controls.
-    videoListSearchBarText := videoListGUI.Add("Text", "xm+310 ym", "Search the Video List")
+    videoListSearchBarText := videoListGUI.Add("Text", "xm+310 ym", "Video List")
     videoListSearchBarInputEdit := videoListGUI.Add("Edit", "yp+20 w300 -Multi", "")
+    ; Adds the grey "hint" text into the edit.
+    DllCall("SendMessage", "Ptr", videoListSearchBarInputEdit.Hwnd, "UInt", 0x1501, "Ptr", 1, "WStr",
+        "Search for a title, uploader, duration or URL", "UInt")
     videoListSearchBarInputClearButton := videoListGUI.Add("Button", "xp+305 yp+1 w20 h20", "X")
     videoListSearchBarInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     videoListView := videoListGUI.Add("ListView", "xp-304 yp+28 w599 h340 +Grid", ["Title", "Uploader", "Duration"])
     ; Controls that belong to the video list.
     manageVideoListGroupBox := videoListGUI.Add("GroupBox", "w600 xm ym+400 h185", "Manage Video List")
     addVideoURLInputEdit := videoListGUI.Add("Edit", "xp+10 yp+20 w555 R1 -WantReturn -Multi")
+    ; Adds the grey "hint" text into the edit.
+    DllCall("SendMessage", "Ptr", addVideoURLInputEdit.Hwnd, "UInt", 0x1501, "Ptr", 1, "WStr",
+        "Enter a video or playlist URL", "UInt")
     addVideoURLInputClearButton := videoListGUI.Add("Button", "xp+560 yp+1 w20 h20", "X")
     addVideoURLInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     ; Add URL elements.
@@ -91,6 +97,9 @@ createVideoListGUI() {
         "Only add videos in a specific range")
     addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
     addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled -Multi", "1")
+    ; Adds the grey "hint" text into the edit.
+    DllCall("SendMessage", "Ptr", addVideoSpecifyPlaylistRangeInputEdit.Hwnd, "UInt", 0x1501, "Ptr", 1, "WStr",
+        "For example: 1-3,4,5", "UInt")
     ; Remove video elements.
     removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200 +Disabled", "Remove Video(s) from List")
     removeVideoConfirmDeletionCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30",
@@ -379,7 +388,7 @@ handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
 
     currentlySelectedVideoListViewEntry.desiredFormatArrayCurrentlySelectedIndex := videoDesiredFormatDDL.Value
     subtitleSupportingVideoFormatsArray :=
-        ["Automatically choose best video format", "mp4", "webm", "mkv", "mov"]
+        ["None", "Automatically choose best video format", "mp4", "webm", "mkv", "mov"]
     ; Enables the subtitle list box if the currently selected format supports subtitles.
     if (checkIfStringIsInArray(videoDesiredFormatDDL.Text, subtitleSupportingVideoFormatsArray)) {
         videoDesiredSubtitleListBox.Opt("-Disabled")
@@ -462,10 +471,14 @@ handleVideoListGUI_videoListSearchBarInputClearButton_onClick(pButton, pInfo) {
     videoListSearchBarInputEdit.Value := ""
     ; Trigger the onChange function manually, as changing the value above does not trigger the change event.
     handleVideoListGUI_videoListSearchBarInputEdit_onChange(videoListSearchBarInputEdit, pInfo)
+    ; Focus the search bar input edit.
+    videoListSearchBarInputEdit.Focus()
 }
 
 handleVideoListGUI_addVideoURLInputClearButton_onClick(pButton, pInfo) {
     addVideoURLInputEdit.Value := ""
+    ; Focus the URL input edit.
+    addVideoURLInputEdit.Focus()
 }
 
 handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {

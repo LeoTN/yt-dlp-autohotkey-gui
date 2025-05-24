@@ -78,6 +78,7 @@ onInit() {
     if (FileExist(iconFileLocation)) {
         TraySetIcon(iconFileLocation, 1, true)
     }
+    A_IconTip := "VideoDownloader by LeoTN"
     ; Clears the existing tray menu elements.
     A_TrayMenu.Delete()
     ; Adds a tray menu point to open the video list GUI.

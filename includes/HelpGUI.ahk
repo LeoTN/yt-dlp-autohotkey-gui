@@ -16,8 +16,11 @@ createHelpGUI() {
     This section creates all the GUI control elements and event handlers.
     ********************************************************************************************************************
     */
-    helpGUISearchBarText := helpGUI.Add("Text", , "Search the Help List")
-    helpGUISearchBarEdit := helpGUI.Add("Edit", "w150 -WantReturn")
+    helpGUISearchBarText := helpGUI.Add("Text", , "Help List")
+    helpGUISearchBarEdit := helpGUI.Add("Edit", "w160 -WantReturn")
+    ; Adds the grey "hint" text into the edit.
+    DllCall("SendMessage", "Ptr", helpGUISearchBarEdit.Hwnd, "UInt", 0x1501, "Ptr", 1, "WStr",
+        "Search for a topic, type or title")
     helpGUISearchBarEdit.OnEvent("Change", handleHelpGUI_helpGUISearchBarEdit_onChange)
     helpGUISearchBarEdit.OnEvent("Focus", handleHelpGUI_helpGUISearchBaredit_onFocus)
 
