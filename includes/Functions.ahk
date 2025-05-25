@@ -30,7 +30,7 @@ handleAllGUI_toolTips(wParam, lParam, msg, hwnd) {
         if (currentControlElement) {
             if (!currentControlElement.HasProp("ToolTip")) {
                 ; There is no tooltip for this control element.
-                return
+                return false
             }
             toolTipText := currentControlElement.ToolTip
             ; Displays the tooltip after the user hovers for 1.5 seconds over a control element.
@@ -56,7 +56,8 @@ handleAllApplication_toastNotifications_onClick(wParam, lParam, msg, hwnd) {
 
     ; Ignore messages from other applications and all events that are not a left click.
     if (hwnd != A_ScriptHwnd || lParam != 1029) {
-        return
+        ; Tells Windows to not process this message further.
+        return false
     }
     /*
     This technically works for every toast notification from VideoDownloader,

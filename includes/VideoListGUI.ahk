@@ -143,6 +143,11 @@ createVideoListGUI() {
     videoListSearchBarInputEdit.OnEvent("Change", handleVideoListGUI_videoListSearchBarInputEdit_onChange)
     videoListSearchBarInputClearButton.OnEvent("Click", handleVideoListGUI_videoListSearchBarInputClearButton_onClick)
     ; Add URL elements.
+    /*
+    Makes the addVideoURLInputEdit sensible for the double-click event.
+    This will be used to copy the current content of the clipboard into the input edit.
+    */
+    OnMessage(0x203, handleVideoListGUI_addVideoURLInputEdit_onDoubleClick)
     addVideoURLInputClearButton.OnEvent("Click", handleVideoListGUI_addVideoURLInputClearButton_onClick)
     addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_onClick)
     addVideoURLIsAPlaylistCheckbox.OnEvent("Click", handleVideoListGUI_addVideoURLIsAPlaylistCheckbox_onClick)
@@ -200,6 +205,7 @@ createVideoListGUI() {
     videoListSearchBarInputClearButton.ToolTip := ""
     ; Controls that belong to the video list.
     addVideoURLInputEdit.ToolTip := "Enter a video URL here and press [Enter] or the [" . addVideoToListButton.Text "] button."
+    addVideoURLInputEdit.ToolTip .= "`nDouble-click this field to paste the current clipboard content."
     addVideoURLInputClearButton.ToolTip := ""
     ; Add URL elements.
     addVideoToListButton.ToolTip := ""
@@ -434,20 +440,26 @@ handleVideoListGUI_videoListSearchBarInputEdit_onChange(pEdit, pInfo) {
     resultArray := searchInVideoListView(searchString)
     for (resultEntry in resultArray) {
         addVideoListViewEntryToListView(resultEntry)
+        ; Removes the no results entry.
+        if (IsSet(noEntriesVideoListEntry) && IsObject(noEntriesVideoListEntry) &&
+        videoListViewContentMap.Has(noEntriesVideoListEntry.identifierString)) {
+            noEntriesVideoListEntry.removeEntryFromVideoListViewContentMap()
+        }
     }
     else {
-        ; This entry is displayed when no results are found.
-        tmpVideoMetaDataObject := VideoMetaData()
-        tmpVideoMetaDataObject.VIDEO_TITLE := "*****"
-        tmpVideoMetaDataObject.VIDEO_URL := "_internal_entry_no_results_found"
-        tmpVideoMetaDataObject.VIDEO_UPLOADER := "No results found."
-        tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "*****"
-        tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
-
-        ; Create the entry using the temporary video meta data object.
-        static noEntriesVideoListEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
-        noEntriesVideoListEntry.desiredFormatArray := ["None"]
-        noEntriesVideoListEntry.desiredSubtitleArray := ["None"]
+        if (!isSet(noEntriesVideoListEntry)) {
+            ; This entry is displayed when no results are found.
+            tmpVideoMetaDataObject := VideoMetaData()
+            tmpVideoMetaDataObject.VIDEO_TITLE := "*****"
+            tmpVideoMetaDataObject.VIDEO_URL := "_internal_entry_no_results_found"
+            tmpVideoMetaDataObject.VIDEO_UPLOADER := "No results found."
+            tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "*****"
+            tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
+            ; Create the entry using the temporary video meta data object.
+            static noEntriesVideoListEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
+            noEntriesVideoListEntry.desiredFormatArray := ["None"]
+            noEntriesVideoListEntry.desiredSubtitleArray := ["None"]
+        }
         ; Manually update the video list view element to avoid showing all entries in the videoListViewContentMap.
         addVideoListViewEntryToListView(noEntriesVideoListEntry)
         updateCurrentlySelectedVideo(noEntriesVideoListEntry)
@@ -460,6 +472,18 @@ handleVideoListGUI_videoListSearchBarInputClearButton_onClick(pButton, pInfo) {
     handleVideoListGUI_videoListSearchBarInputEdit_onChange(videoListSearchBarInputEdit, pInfo)
     ; Focus the search bar input edit.
     videoListSearchBarInputEdit.Focus()
+}
+
+; This is the double-click event handler for the addVideoURLInputEdit.
+handleVideoListGUI_addVideoURLInputEdit_onDoubleClick(wParam, lParam, msg, hwnd) {
+    if (hwnd != addVideoURLInputEdit.Hwnd) {
+        ; Tells Windows to process this message further.
+        return true
+    }
+    addVideoURLInputEdit.Value := A_Clipboard
+    handleVideoListGUI_addVideoToListButton_onClick(addVideoToListButton, "")
+    ; Tells Windows to not process this message further.
+    return false
 }
 
 handleVideoListGUI_addVideoURLInputClearButton_onClick(pButton, pInfo) {
@@ -896,6 +920,8 @@ handleVideoListGUI_onEventHelp(wParam, lParam, msg, hwnd) {
     else {
         menu_openHelpGUI()
     }
+    ; Tells Windows to not process this message further.
+    return false
 }
 
 handleVideoListGUI_onEventDropFiles(pGUI, pGUIElement, pFileArray, pX, pY) {
@@ -971,6 +997,15 @@ handleVideoListGUI_onClose(pGUI) {
     if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
         exitApplicationWithNotification()
     }
+    /*
+    The no results entry is automatically added to the videoListViewContentMap once the user types something
+    into the video list search bar which does not yield any results.
+    We substract this entry from the amount of videos in the list if the user closes the video list GUI at this moment.
+    */
+    videoAmount := videoListViewContentMap.Count
+    if (videoAmount > 1 && videoListViewContentMap.Has("*****No results found.*****")) {
+        videoAmount--
+    }
 
     ; Warning message when there is an active download running at the moment.
     if (currentYTDLPActionObject.booleanDownloadIsRunning) {
@@ -979,14 +1014,14 @@ handleVideoListGUI_onClose(pGUI) {
             "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
     }
     ; Warning message when there are still videos in the list view element.
-    else if (videoListViewContentMap.Count == 1) {
+    else if (videoAmount == 1) {
         result := MsgBox(
             "There is still one video in the video list.`n`nDo you want to close VideoDownloader anyway?",
             "VD - Confirm Exit", "YN Icon? Owner" . videoListGUI.Hwnd)
     }
-    else if (videoListViewContentMap.Count > 1) {
+    else if (videoAmount > 1) {
         result := MsgBox(
-            "There are still " . videoListViewContentMap.Count . " videos in the video list."
+            "There are still " . videoAmount . " videos in the video list."
             "`n`nDo you want to close VideoDownloader anyway?", "VD - Confirm Exit",
             "YN Icon? Owner" . videoListGUI.Hwnd)
     }
