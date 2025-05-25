@@ -306,16 +306,7 @@ createVideoListGUI() {
     videoListGUI.MenuBar := allMenus
 
     ; Add a temporary video list view element. When removing it, there will be the no entries entry.
-    tmpVideoMetaDataObject := Object()
-    tmpVideoMetaDataObject.VIDEO_TITLE := ""
-    tmpVideoMetaDataObject.VIDEO_ID := ""
-    tmpVideoMetaDataObject.VIDEO_URL := ""
-    tmpVideoMetaDataObject.VIDEO_UPLOADER := ""
-    tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
-    tmpVideoMetaDataObject.VIDEO_DURATION_STRING := ""
-    tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := ""
-    tmpVideoMetaDataObject.VIDEO_SUBTITLES := Map()
-    tmpVideoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS := Map()
+    tmpVideoMetaDataObject := VideoMetaData()
     tmpEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
     tmpEntry.removeEntryFromVideoListViewContentMap()
 
@@ -446,16 +437,12 @@ handleVideoListGUI_videoListSearchBarInputEdit_onChange(pEdit, pInfo) {
     }
     else {
         ; This entry is displayed when no results are found.
-        tmpVideoMetaDataObject := Object()
+        tmpVideoMetaDataObject := VideoMetaData()
         tmpVideoMetaDataObject.VIDEO_TITLE := "*****"
-        tmpVideoMetaDataObject.VIDEO_ID := ""
         tmpVideoMetaDataObject.VIDEO_URL := "_internal_entry_no_results_found"
         tmpVideoMetaDataObject.VIDEO_UPLOADER := "No results found."
-        tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
         tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "*****"
         tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
-        tmpVideoMetaDataObject.VIDEO_SUBTITLES := Map()
-        tmpVideoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS := Map()
 
         ; Create the entry using the temporary video meta data object.
         static noEntriesVideoListEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
@@ -512,16 +499,12 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
         }
         ; This happens when the playlist could not be found.
         if (playlistVideoMetaDataObjectArray.Length == 0) {
-            tmpVideoMetaDataObject := Object()
+            tmpVideoMetaDataObject := VideoMetaData()
             tmpVideoMetaDataObject.VIDEO_TITLE := "playlist_not_found: " . videoURL
-            tmpVideoMetaDataObject.VIDEO_ID := ""
             tmpVideoMetaDataObject.VIDEO_URL := "playlist_not_found: " . videoURL
             tmpVideoMetaDataObject.VIDEO_UPLOADER := "Not found"
-            tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
             tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "Not found"
             tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
-            tmpVideoMetaDataObject.VIDEO_SUBTITLES := Map()
-            tmpVideoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS := Map()
             newVideoEntry := VideoListViewEntry(tmpVideoMetaDataObject)
         }
         else {
@@ -1119,6 +1102,11 @@ searchInVideoListView(pSearchString) {
             ; Add the entry to the result array.
             resultArrayCollection.Push(videoListEntry)
         }
+        ; Search in the original video URL.
+        else if (InStr(videoListEntry.videoURLOriginal, pSearchString)) {
+            ; Add the entry to the result array.
+            resultArrayCollection.Push(videoListEntry)
+        }
     }
     return resultArrayCollection
 }
@@ -1177,15 +1165,16 @@ updateCurrentlySelectedVideo(pVideoListViewEntry) {
 /*
 Extracts the metadata of a SINGLE video from a given URL using yt-dlp.
 @param pVideoURL [String] The URL of the video.
-@returns [videoMetaDataObject] This object has the following properties:
-videoMetaDataObject.VIDEO_TITLE (The title of the video)
-videoMetaDataObject.VIDEO_URL (The URL of the video)
-videoMetaDataObject.VIDEO_UPLOADER (The uploader of the video)
-videoMetaDataObject.VIDEO_UPLOADER_URL (The URL of the uploader)
-videoMetaDataObject.VIDEO_DURATION_STRING (The duration of the video in this format [HH:mm:ss])
-videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
-videoMetaDataObject.VIDEO_SUBTITLES (A map where keys are language names and values are language codes)
-videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and values are language codes)
+@returns [VideoMetaData] This object has the following properties:
+VideoMetaData.VIDEO_TITLE (The title of the video)
+VideoMetaData.VIDEO_URL (The URL of the video)
+VideoMetaData.VIDEO_URL_ORIGINAL (The URL used by yt-dlp to find the video)
+VideoMetaData.VIDEO_UPLOADER (The uploader of the video)
+VideoMetaData.VIDEO_UPLOADER_URL (The URL of the uploader)
+VideoMetaData.VIDEO_DURATION_STRING (The duration of the video in this format [HH:mm:ss])
+VideoMetaData.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
+VideoMetaData.VIDEO_SUBTITLES (A map where keys are language names and values are language codes)
+VideoMetaData.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and values are language codes)
 */
 extractVideoMetaData(pVideoURL) {
     global GUIBackgroundImageLocation
@@ -1201,28 +1190,14 @@ extractVideoMetaData(pVideoURL) {
     ; The video thumbnail will be stored and it's location saved in the object.
     thumbnailFileLocation := tempWorkingDirectory . "\" . currentTime . ".%(ext)s"
 
-    ; This object stores the video metadata which yt-dlp should extract.
-    videoMetaDataObject := Object()
-    videoMetaDataObject.VIDEO_TITLE := "%(title)s"
-    videoMetaDataObject.VIDEO_ID := "%(id)s"
-    videoMetaDataObject.VIDEO_URL := "%(webpage_url)s"
-    videoMetaDataObject.VIDEO_UPLOADER := "%(uploader)s"
-    videoMetaDataObject.VIDEO_UPLOADER_URL := "%(uploader_url)s"
-    videoMetaDataObject.VIDEO_DURATION_STRING := "%(duration_string)s"
-    videoMetaDataObject.VIDEO_SUBTITLES := "%(subtitles_table)q"
-    videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS := "%(automatic_captions_table)q"
-    ; Build the meta data string for yt-dlp.
-    relevantMetaDataString := "[VideoMetaData]`n"
-    for (property, value in videoMetaDataObject.OwnProps()) {
-        relevantMetaDataString .= property . "=" . value . "`n"
-    }
-    relevantMetaDataString := RTrim(relevantMetaDataString, "`n")
+    ; This object stores the video metadata extracted by yt-dlp.
+    videoMetaDataObject := VideoMetaData(true)
     ; Build the actual yt-dlp command.
     ytdlpCommand := '--skip-download --no-playlist --convert-thumbnails "jpg/png" '
     ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
     ytdlpCommand .= '--paths "home:' . tempWorkingDirectory . '" '
-    ytdlpCommand .= '--print-to-file "' . relevantMetaDataString . '" "' . metaDataFileLocation . '" '
-    ytdlpCommand .= '--ffmpeg-location "' . ffmpegDirectory . '" '
+    ytdlpCommand .= '--print-to-file "' . videoMetaDataObject.relevantMetaDataString . '" '
+    ytdlpCommand .= '"' . metaDataFileLocation . '" --ffmpeg-location "' . ffmpegDirectory . '" '
     ytdlpCommand .= '"' . pVideoURL . '"'
     ; Start the status bar loading animation.
     spinnerCharArray := [
@@ -1253,7 +1228,7 @@ extractVideoMetaData(pVideoURL) {
     }
 
     ; Extract the metadata from the file into the object.
-    for (property, value in videoMetaDataObject.OwnProps()) {
+    for (property, value in videoMetaDataObject.relevantMetaDataProperties) {
         videoMetaDataObject.%property% := IniRead(metaDataFileLocation, "VideoMetaData", property, "Not found")
     }
     /*
@@ -1265,6 +1240,8 @@ extractVideoMetaData(pVideoURL) {
         videoMetaDataObject.VIDEO_TITLE := "video_not_found: " . pVideoURL
         videoMetaDataObject.VIDEO_URL := "video_not_found: " . pVideoURL
     }
+    ; Save the original URL which was used by yt-dlp to find the video.
+    videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoURL
     ; We have to find out the extension of the thumbnail file because we don't know it in advance.
     loop files (tempWorkingDirectory . "\" . currentTime ".*") {
         if (A_LoopFileExt != "ini") {
@@ -1312,8 +1289,8 @@ extractVideoMetaData(pVideoURL) {
 }
 
 /*
-Extracts the metadata of a SINGLE video from a given URL using yt-dlp.
-@param pVideoPlaylistURL [String] The URL of the video.
+Extracts the metadata of one more videos from a given (playlist) URL using yt-dlp.
+@param pVideoPlaylistURL [String] The URL of the video or playlist.
 @param pPlayListRangeIndex [String] Used to only extract specific videos from the playlist.
 From the yt-dlp documentation:
     Comma separated playlist_index of the items
@@ -1325,17 +1302,18 @@ From the yt-dlp documentation:
     order. E.g. "--playlist-items 1:3,7,-5::2" used on a
     playlist of size 15 will download the items
     at index 1,2,3,7,11,13,15.
-@returns [Array] an array containing a [videoMetaDataObject] for each video in the playlist (or the provided range index).
+@returns [Array] An array containing a [VideoMetaData] object for each video in the playlist (or the provided range index).
 
-[videoMetaDataObject] This object has the following properties:
-videoMetaDataObject.VIDEO_TITLE (The title of the video)
-videoMetaDataObject.VIDEO_URL (The URL of the video)
-videoMetaDataObject.VIDEO_UPLOADER (The uploader of the video)
-videoMetaDataObject.VIDEO_UPLOADER_URL (The URL of the uploader)
-videoMetaDataObject.VIDEO_DURATION_STRING (The duration of the video in this format [HH:mm:ss])
-videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
-videoMetaDataObject.VIDEO_SUBTITLES (A map where keys are language names and values are language codes)
-videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and values are language codes)
+[VideoMetaData] This object has the following properties:
+VideoMetaData.VIDEO_TITLE (The title of the video)
+VideoMetaData.VIDEO_URL (The URL of the video)
+VideoMetaData.VIDEO_URL_ORIGINAL (The (playlist) URL used by yt-dlp to find the video)
+VideoMetaData.VIDEO_UPLOADER (The uploader of the video)
+VideoMetaData.VIDEO_UPLOADER_URL (The URL of the uploader)
+VideoMetaData.VIDEO_DURATION_STRING (The duration of the video in this format [HH:mm:ss])
+VideoMetaData.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
+VideoMetaData.VIDEO_SUBTITLES (A map where keys are language names and values are language codes)
+VideoMetaData.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and values are language codes)
 */
 extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     global GUIBackgroundImageLocation
@@ -1352,28 +1330,15 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     if (!DirExist(tempWorkingDirectoryPlaylist)) {
         DirCreate(tempWorkingDirectoryPlaylist)
     }
-    ; This object stores the video metadata which yt-dlp should extract.
-    videoMetaDataObject := Object()
-    videoMetaDataObject.VIDEO_TITLE := "%(title)s"
-    videoMetaDataObject.VIDEO_ID := "%(id)s"
-    videoMetaDataObject.VIDEO_URL := "%(webpage_url)s"
-    videoMetaDataObject.VIDEO_UPLOADER := "%(uploader)s"
-    videoMetaDataObject.VIDEO_UPLOADER_URL := "%(uploader_url)s"
-    videoMetaDataObject.VIDEO_DURATION_STRING := "%(duration_string)s"
-    videoMetaDataObject.VIDEO_SUBTITLES := "%(subtitles_table)q"
-    videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS := "%(automatic_captions_table)q"
-    ; Build the meta data string for yt-dlp.
-    relevantMetaDataString := "[VideoMetaData]`n"
-    for (property, value in videoMetaDataObject.OwnProps()) {
-        relevantMetaDataString .= property . "=" . value . "`n"
-    }
-    relevantMetaDataString := RTrim(relevantMetaDataString, "`n")
+
+    ; This object stores the video metadata extracted by yt-dlp.
+    videoMetaDataObject := VideoMetaData(true)
     ; Build the actual yt-dlp command.
     ytdlpCommand := '--skip-download --yes-playlist --convert-thumbnails "jpg/png" '
     ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
     ytdlpCommand .= '--paths "home:' . tempWorkingDirectoryPlaylist . '" '
-    ytdlpCommand .= '--print-to-file "' . relevantMetaDataString . '" "' . metaDataFileLocation . '" '
-    ytdlpCommand .= '--ffmpeg-location "' . ffmpegDirectory . '" '
+    ytdlpCommand .= '--print-to-file "' . videoMetaDataObject.relevantMetaDataString . '" '
+    ytdlpCommand .= '"' . metaDataFileLocation . '" --ffmpeg-location "' . ffmpegDirectory . '" '
     ; If the user wants to download only a specific range of the playlist.
     if (pPlayListRangeIndex != "-1") {
         ytdlpCommand .= '--playlist-items "' . pPlayListRangeIndex . '" '
@@ -1411,17 +1376,9 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     ; Parse all .INI files in the temp directory and extract the metadata.
     iniFileSearchString := tempWorkingDirectoryPlaylist . "\" . currentTime . "_*.ini"
     loop files (iniFileSearchString) {
-        videoMetaDataObject := Object()
-        videoMetaDataObject.VIDEO_TITLE := ""
-        videoMetaDataObject.VIDEO_ID := ""
-        videoMetaDataObject.VIDEO_URL := ""
-        videoMetaDataObject.VIDEO_UPLOADER := ""
-        videoMetaDataObject.VIDEO_UPLOADER_URL := ""
-        videoMetaDataObject.VIDEO_DURATION_STRING := ""
-        videoMetaDataObject.VIDEO_SUBTITLES := ""
-        videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS := ""
+        videoMetaDataObject := VideoMetaData(true)
         ; Extract the meta data from the .INI file.
-        for (property, value in videoMetaDataObject.OwnProps()) {
+        for (property, value in videoMetaDataObject.relevantMetaDataProperties) {
             videoMetaDataObject.%property% := IniRead(A_LoopFileFullPath, "VideoMetaData", property,
                 "Not found")
         }
@@ -1435,6 +1392,8 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
                 break
             }
         }
+        ; Save the original (playlist) URL which was used by yt-dlp to find the video.
+        videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoPlaylistURL
         ; In case the file does not exist, we use a default thumbnail.
         if (!FileExist(thumbnailFileLocation)) {
             thumbnailFileLocation := GUIBackgroundImageLocation
@@ -1610,6 +1569,7 @@ class VideoListViewEntry {
         this.videoUploader := metaData.VIDEO_UPLOADER
         this.videoDurationString := metaData.VIDEO_DURATION_STRING
         this.videoURL := metaData.VIDEO_URL
+        this.videoURLOriginal := metaData.VIDEO_URL_ORIGINAL
         this.videoUploaderURL := metaData.VIDEO_UPLOADER_URL
         this.videoThumbailFileLocation := metaData.VIDEO_THUMBNAIL_FILE_LOCATION
         this.videoSubtitleMap := metaData.VIDEO_SUBTITLES
@@ -1768,16 +1728,12 @@ class VideoListViewEntry {
         global videoListViewContentMap
         if (videoListViewContentMap.Count == 0) {
             ; This entry is displayed when no videos are added yet.
-            tmpVideoMetaDataObject := Object()
+            tmpVideoMetaDataObject := VideoMetaData()
             tmpVideoMetaDataObject.VIDEO_TITLE := "*****"
-            tmpVideoMetaDataObject.VIDEO_ID := ""
             tmpVideoMetaDataObject.VIDEO_URL := "_internal_entry_no_videos_added_yet"
             tmpVideoMetaDataObject.VIDEO_UPLOADER := "No videos added yet."
-            tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
             tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "*****"
             tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
-            tmpVideoMetaDataObject.VIDEO_SUBTITLES := Map()
-            tmpVideoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS := Map()
             ; Create the entry using the temporary video meta data object.
             noEntriesVideoListEntry := VideoListViewEntry(tmpVideoMetaDataObject)
             noEntriesVideoListEntry.desiredFormatArray := ["None"]
@@ -1818,6 +1774,58 @@ class VideoListViewEntry {
         if (videoListSearchBarInputEdit.Value != "") {
             handleVideoListGUI_videoListSearchBarInputEdit_onChange(videoListSearchBarInputEdit, "")
         }
+    }
+}
+
+/*
+This object is usually created by the extractVideoMetaData() function.
+@param pBooleanExtractionStrings [boolean] If set to true, certain properties will be set to the yt-dlp extraction strings.
+This allows yt-dlp to fill in the values when extracting the metadata.
+*/
+class VideoMetaData {
+    __New(pBooleanExtractionStrings := false) {
+        if (pBooleanExtractionStrings) {
+            this.VIDEO_TITLE := "%(title)s"
+            this.VIDEO_ID := "%(id)s"
+            this.VIDEO_URL := "%(webpage_url)s"
+            this.VIDEO_UPLOADER := "%(uploader)s"
+            this.VIDEO_UPLOADER_URL := "%(uploader_url)s"
+            this.VIDEO_DURATION_STRING := "%(duration_string)s"
+            this.VIDEO_SUBTITLES := "%(subtitles_table)q"
+            this.VIDEO_AUTOMATIC_CAPTIONS := "%(automatic_captions_table)q"
+            /*
+            This map contains all properties that are relevant for the metadata extraction by yt-dlp.
+            It can be traversed in a similar way to this.OwnProps().
+            */
+            this.relevantMetaDataProperties := Map(
+                "VIDEO_TITLE", this.VIDEO_TITLE,
+                "VIDEO_ID", this.VIDEO_ID,
+                "VIDEO_URL", this.VIDEO_URL,
+                "VIDEO_UPLOADER", this.VIDEO_UPLOADER,
+                "VIDEO_UPLOADER_URL", this.VIDEO_UPLOADER_URL,
+                "VIDEO_DURATION_STRING", this.VIDEO_DURATION_STRING,
+                "VIDEO_SUBTITLES", this.VIDEO_SUBTITLES,
+                "VIDEO_AUTOMATIC_CAPTIONS", this.VIDEO_AUTOMATIC_CAPTIONS
+            )
+            ; This string will be given to yt-dlp to extract the relevant metadata.
+            this.relevantMetaDataString := "[VideoMetaData]"
+            for (property, value in this.relevantMetaDataProperties) {
+                this.relevantMetaDataString .= "`n" . property . "=" . value
+            }
+        }
+        else {
+            this.VIDEO_TITLE := ""
+            this.VIDEO_ID := ""
+            this.VIDEO_URL := ""
+            this.VIDEO_UPLOADER := ""
+            this.VIDEO_UPLOADER_URL := ""
+            this.VIDEO_DURATION_STRING := ""
+            this.VIDEO_SUBTITLES := Map()
+            this.VIDEO_AUTOMATIC_CAPTIONS := Map()
+            this.relevantMetaDataString := ""
+        }
+        this.VIDEO_URL_ORIGINAL := ""
+        this.VIDEO_THUMBNAIL_FILE_LOCATION := ""
     }
 }
 
