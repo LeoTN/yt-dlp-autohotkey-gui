@@ -478,7 +478,7 @@ handleVideoListGUI_videoListSearchBarInputClearButton_onClick(pButton, pInfo) {
 handleVideoListGUI_addVideoURLInputEdit_onDoubleClick(wParam, lParam, msg, hwnd) {
     if (hwnd != addVideoURLInputEdit.Hwnd) {
         ; Tells Windows to process this message further.
-        return true
+        return
     }
     addVideoURLInputEdit.Value := A_Clipboard
     handleVideoListGUI_addVideoToListButton_onClick(addVideoToListButton, "")
