@@ -140,7 +140,7 @@ hotkey_extractVideoURLUnderMouseCursor() {
 hotkey_openVideoListGUI() {
     try
     {
-        static flipflop := true
+        static flipflop := false
         if (!WinExist("ahk_id " . videoListGUI.Hwnd)) {
             videoListGUI.Show()
             flipflop := false

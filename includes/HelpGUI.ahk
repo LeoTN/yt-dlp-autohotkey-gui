@@ -154,7 +154,7 @@ addInteractiveTutorialListViewEntryToListView(pInteractiveTutorialListViewEntry)
 
 /*
 Highlights a control with a colored border.
-@param pControlElement [controlElement] Should be a control element (like a button or a checkbox) created within an AutoHotkey GUI.
+@param pControlElement [Gui.Control] Should be a control element (like a button or a checkbox) created within an AutoHotkey GUI.
 @param pColor [String] Determines the color of the border.
 @param pLineeThickness [int] Defines how thin the border is (in pixels).
 @param pLineTransparicy [int] Should be a value between 0 and 255. 0 makes the border invisible and 255 makes it entirely visible.

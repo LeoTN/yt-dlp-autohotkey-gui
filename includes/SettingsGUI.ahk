@@ -121,7 +121,7 @@ createSettingsGUI() {
     */
     settingsGUITabs.UseTab(2)
     ; Default video settings.
-    settingsGUIDefaultVideoSettings := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h135",
+    settingsGUIDefaultVideoSettings := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h155",
         "Default Video Preferences")
     settingsGUIVideoDesiredFormatText := settingsGUI.Add("Text", "xp+10 yp+20 w580", "Desired Format")
     settingsGUIVideoDesiredFormatDDL := settingsGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
@@ -136,8 +136,10 @@ createSettingsGUI() {
     settingsGUIVideoDesiredSubtitleRemoveButton := settingsGUI.Add("Button", "xp+55 w50 h20", "Remove")
     settingsGUIEmbedAllSubtitlesCheckbox := settingsGUI.Add("CheckBox", "xp-345 yp+26",
         "Embed all available subtitles")
+    settingsGUIConfirmChangingMultipleVideosCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
+        "Confirm changes to multiple videos")
     ; Default manage video list settings.
-    settingsGUIDefaultManageVideoListSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+180 w600 h210",
+    settingsGUIDefaultManageVideoListSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+200 w600 h210",
         "Default Manage Video List Preferences")
     settingsGUIAddVideoURLIsAPlaylistCheckbox := settingsGUI.Add("CheckBox", "xp+10 yp+20",
         "Add videos from a playlist")
@@ -157,7 +159,7 @@ createSettingsGUI() {
     settingsGUIimportAndExportOnlyValidURLsCheckbox := settingsGUI.Add("CheckBox", "yp+30", "Only consider valid URLs")
     settingsGUIAutoExportVideoListCheckbox := settingsGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Default download settings.
-    settingsGUIDefaultDownloadSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+400 w600 h60",
+    settingsGUIDefaultDownloadSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+420 w600 h60",
         "Default Download Preferences")
     settingsGUIDownloadRemoveVideosAfterDownloadCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
         "Automatically remove downloaded videos")
@@ -235,6 +237,7 @@ createSettingsGUI() {
         handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange)
     ; Checkboxes
     settingsGUIEmbedAllSubtitlesCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
+    settingsGUIConfirmChangingMultipleVideosCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIAddVideoURLIsAPlaylistCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIAddVideoURLUsePlaylistRangeCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIRemoveVideoConfirmDeletionCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
@@ -328,6 +331,8 @@ createSettingsGUI() {
         "If enabled, all available subtitles will be embedded into the video file by default."
     settingsGUIEmbedAllSubtitlesCheckbox.ToolTip .=
         '`nThis does not include subtitles embraced with square brackets "[]" (automatic captions).'
+    settingsGUIConfirmChangingMultipleVideosCheckbox.ToolTip :=
+        "If enabled, you will be prompted to confirm changes to multiple selected videos at once."
     ; Default manage video list settings.
     settingsGUIAddVideoURLIsAPlaylistCheckbox.ToolTip :=
         "If a URL contains a reference or is itself a link to a playlist,"
@@ -1038,6 +1043,8 @@ initializeCheckboxLinkedConfigFileEntryMap() {
     */
     ; Default manage video list settings.
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIEmbedAllSubtitlesCheckbox, "DEFAULT_DESIRED_SUBTITLES_EMBED_ALL")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIConfirmChangingMultipleVideosCheckbox,
+        "CONFIRM_CHANGING_MULTIPLE_VIDEOS")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIAddVideoURLIsAPlaylistCheckbox, "ADD_VIDEO_URL_IS_A_PLAYLIST")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIAddVideoURLUsePlaylistRangeCheckbox,
         "ADD_VIDEO_URL_USE_PLAYLIST_RANGE")

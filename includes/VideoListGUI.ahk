@@ -45,7 +45,7 @@ videoListGUI_onInit() {
     createVideoListGUI()
     importConfigFileValuesIntoVideoListGUI()
     if (readConfigFile("SHOW_VIDEO_LIST_GUI_ON_LAUNCH")) {
-        hotkey_openVideoListGUI()
+        showVideoListGUIWithSavedStateData()
     }
 }
 
@@ -197,7 +197,7 @@ createVideoListGUI() {
     videoDesiredSubtitleListBox.ToolTip .=
         'entries embraced with square brackets "[]" (automatic captions) must be selected manually.'
     videoDesiredSubtitleListBox.ToolTip .=
-        "`nYou should only select a maximum amount of 20 subtitles to ensure a successful download."
+        "`nA maximum of 20 subtitles per video should not be exceeded to ensure a successful download."
     videoAdvancedDownloadSettingsButton.ToolTip := ""
     ; Video list controls.
     videoListSearchBarInputEdit.ToolTip :=
@@ -374,7 +374,7 @@ createVideoListGUI() {
     GUIControlResizeLink(downloadProgressBar, 1)
 }
 
-handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
+handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(pGUIControl, pInfo) {
     global currentlySelectedVideoListViewEntry
 
     ; There is an error if no list box entry is selected.
@@ -382,24 +382,20 @@ handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
         selectedSubtitlesArray := Array()
         selectedSubtitlesArray := videoDesiredSubtitleListBox.Text.Clone()
     }
+    selectedVideoFormatIndex := videoDesiredFormatDDL.Value
 
-    currentlySelectedVideoListViewEntry.desiredFormatArrayCurrentlySelectedIndex := videoDesiredFormatDDL.Value
+    currentlySelectedVideoListViewEntry.desiredFormatArrayCurrentlySelectedIndex := selectedVideoFormatIndex
     subtitleSupportingVideoFormatsArray :=
         ["None", "Automatically choose best video format", "mp4", "webm", "mkv", "mov"]
     ; Enables the subtitle list box if the currently selected format supports subtitles.
     if (checkIfStringIsInArray(videoDesiredFormatDDL.Text, subtitleSupportingVideoFormatsArray)) {
         videoDesiredSubtitleListBox.Opt("-Disabled")
-        ; Sets the object's desired subtitle(s).
-        currentlySelectedVideoListViewEntry.desiredSubtitleArrayCurrentlySelectedEntries := selectedSubtitlesArray
     }
     else {
         videoDesiredSubtitleListBox.Opt("+Disabled")
-        ; Removes the selected subtitles from the object.
-        currentlySelectedVideoListViewEntry.desiredSubtitleArrayCurrentlySelectedEntries :=
-            Array("Do not download subtitles")
-        ; It doesn't matter what is currently selected because the list box is disabled.
-        return
+        selectedSubtitlesArray := Array("Do not download subtitles")
     }
+    currentlySelectedVideoListViewEntry.desiredSubtitleArrayCurrentlySelectedEntries := selectedSubtitlesArray
 
     ; Checks if the no subtitle option is selected.
     if (checkIfStringIsInArray("Do not download subtitles", selectedSubtitlesArray)) {
@@ -412,6 +408,42 @@ handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
         ; Unselects all subtitles.
         videoDesiredSubtitleListBox.Choose(0)
         videoDesiredSubtitleListBox.Choose("Embed all available subtitles")
+    }
+
+    /*
+    The dialog box should only appear when actual changes are made to either the video format or the subtitle elements.
+    However, this function is called to update the currently selected video as well which is why we need this check.
+    */
+    if (pGUIControl != videoDesiredFormatDDL && pGUIControl != videoDesiredSubtitleListBox) {
+        return
+    }
+    selectedVideosMap := getSelectedVideoListViewElements()
+    ; This means there is only one video selected.
+    if (selectedVideosMap.Count <= 1) {
+        return
+    }
+    ; The confirmation prompt can be disabled in the config file.
+    if (readConfigFile("CONFIRM_CHANGING_MULTIPLE_VIDEOS")) {
+        ; Asks if the changes should be applied to all selected videos.
+        result := MsgBox("Apply changes to " . selectedVideosMap.Count . " selected videos?",
+            "VD - Apply to all Videos",
+            "Icon? YN Owner" . videoListGUI.Hwnd)
+        if (result != "Yes") {
+            return
+        }
+    }
+    ; Apply the changes made to this video to all selected entries.
+    for (key, selectedVideo in selectedVideosMap) {
+        /*
+        Only the actual changes will be applied to the other selected videos.
+        Changing the format for example should not overwrite the subtitles.
+        */
+        if (pGUIControl == videoDesiredFormatDDL) {
+            selectedVideo.desiredFormatArrayCurrentlySelectedIndex := selectedVideoFormatIndex
+        }
+        if (pGUIControl == videoDesiredSubtitleListBox) {
+            selectedVideo.desiredSubtitleArrayCurrentlySelectedEntries := selectedSubtitlesArray
+        }
     }
 }
 
@@ -682,7 +714,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
 
     ; Checks if there are videos in the video list.
     if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
-        MsgBox("Please add at least one video to the list.", "VD - Canceled Download",
+        MsgBox("Please add at least one video to the list.", "VD - No Videos Added",
             "O Iconi T3 Owner" . videoListGUI.Hwnd)
         return
     }
@@ -792,7 +824,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     if (autoExportVideoListCheckbox.Value && actuallyDownloadedVideoListViewElements.Count > 0) {
         exportFileName := currentTime . "_VD_auto_exported_urls.txt"
         exportFileLocation := currentDownloadDirectory . "\" . exportFileName
-        ; There shouldn't be any invalid URLs. Really :D But if there are any, the will be ignored.
+        ; There shouldn't be any invalid URLs. Really :D But if there are any, they will be ignored.
         exportVideoListViewElements(actuallyDownloadedVideoListViewElements, exportFileLocation, true)
     }
 
@@ -990,6 +1022,10 @@ handleVideoListGUI_onClose(pGUI) {
     global videoListViewContentMap
     global currentYTDLPActionObject
 
+    ; Saves the current position and state of the video list GUI when the user holds SHIFT while closing the GUI.
+    if (GetKeyState("Shift", "P")) {
+        saveCurrentVideoListGUIStateToConfigFile()
+    }
     if (!readConfigFile("EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")) {
         return
     }
@@ -1174,6 +1210,9 @@ updateCurrentlySelectedVideo(pVideoListViewEntry) {
     videoUploaderText.Text := pVideoListViewEntry.videoUploader
     videoDurationText.Text := pVideoListViewEntry.videoDurationString
     videoThumbnailImage.Value := pVideoListViewEntry.videoThumbailFileLocation
+    ; Increases performance by temporarily suppressing the redraw of the elements.
+    videoDesiredFormatDDL.Opt("-Redraw")
+    videoDesiredSubtitleListBox.Opt("-Redraw")
     ; Delete the old content of the drop down lists.
     videoDesiredFormatDDL.Delete()
     videoDesiredSubtitleListBox.Delete()
@@ -1193,8 +1232,10 @@ updateCurrentlySelectedVideo(pVideoListViewEntry) {
         videoDesiredFormatDDL.Value := 1
         videoDesiredSubtitleListBox.Value := 1
     }
+    videoDesiredFormatDDL.Opt("+Redraw")
+    videoDesiredSubtitleListBox.Opt("+Redraw")
     ; Run this function to enable or disable the subtitle list box element accordingly.
-    handleVideoListGUI_allCurrentlySelectedVideoElements_onChange()
+    handleVideoListGUI_allCurrentlySelectedVideoElements_onChange("", "")
 }
 
 /*
@@ -1799,10 +1840,11 @@ class VideoListViewEntry {
                 ; Select the video. Otherwise the currently selected video would stay at the no entries entry.
                 updateCurrentlySelectedVideo(this)
             }
-
-            ; Enables the download start button.
-            downloadStartButton.Opt("-Disabled")
-            downloadStartButton.SetColor("28a745", "000000", -1, "808080")
+            ; Enables the download start button only when there is no other download running.
+            if (!currentYTDLPActionObject.booleanDownloadIsRunning) {
+                downloadStartButton.Opt("-Disabled")
+                downloadStartButton.SetColor("28a745", "000000", -1, "808080")
+            }
             ; Enables the video export button.
             exportVideoListButton.Opt("-Disabled")
             ; Enables the remove video button.
