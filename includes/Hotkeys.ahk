@@ -142,7 +142,7 @@ hotkey_openVideoListGUI() {
     {
         static flipflop := true
         if (!WinExist("ahk_id " . videoListGUI.Hwnd)) {
-            showVideoListGUIWithSavedStateData()
+            videoListGUI.Show()
             flipflop := false
         }
         else if (!flipflop && WinActive("ahk_id " . videoListGUI.Hwnd)) {
@@ -376,12 +376,6 @@ menu_openSettingsGUI() {
     ; Switches back to the original tab.
     settingsGUITabs.Choose(currentTabNumber)
     showGUIRelativeToOtherGUI(videoListGUI, settingsGUI, "MiddleCenter", "AutoSize")
-    WinWaitActive("ahk_id " . settingsGUI.Hwnd)
-    ; Retrieves the handle of the settingsGUIVideoDesiredSubtitleComboBox's edit element.
-    if (!settingsGUIVideoDesiredSubtitleComboBox.EditHwnd) {
-        settingsGUIVideoDesiredSubtitleComboBox.EditHwnd := DllCall("GetWindow", "Ptr",
-            settingsGUIVideoDesiredSubtitleComboBox.Hwnd, "Int", 5, "UPtr")
-    }
 }
 
 ; Opens the help GUI.

@@ -83,12 +83,18 @@ onInit() {
     A_TrayMenu.Delete()
     ; Adds a tray menu point to open the video list GUI.
     A_TrayMenu.Add("Video List", (*) => hotkey_openVideoListGUI())
+    A_TrayMenu.SetIcon("Video List", iconFileLocation, 22) ; ICON_DLL_USED_HERE
     A_TrayMenu.Add("Settings", (*) => menu_openSettingsGUI())
+    A_TrayMenu.SetIcon("Settings", iconFileLocation, 6) ; ICON_DLL_USED_HERE
     A_TrayMenu.Add()
     A_TrayMenu.Add("Restart", (*) => menu_restartApplication())
+    A_TrayMenu.SetIcon("Restart", iconFileLocation, 8) ; ICON_DLL_USED_HERE
     A_TrayMenu.Add("Exit", (*) => menu_exitApplication())
+    A_TrayMenu.SetIcon("Exit", iconFileLocation, 15) ; ICON_DLL_USED_HERE
+    A_TrayMenu.Add()
     A_TrayMenu.Add("About", (*) => menu_openHelpGUI())
-    ; When clicking on the tray icon twice, this will make sure, that the video list GUI is shown to the user.
+    A_TrayMenu.SetIcon("About", iconFileLocation, 14) ; ICON_DLL_USED_HERE
+    ; Shows the video list GUI when the tray icon is clicked twice.
     A_TrayMenu.Default := "Video List"
 
     /*

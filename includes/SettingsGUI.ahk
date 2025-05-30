@@ -127,8 +127,9 @@ createSettingsGUI() {
     settingsGUIVideoDesiredFormatDDL := settingsGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
     settingsGUIVideoDesiredSubtitleText := settingsGUI.Add("Text", "yp+30", "Desired Subtitle(s)")
     settingsGUIVideoDesiredSubtitleComboBox := settingsGUI.Add("ComboBox", "w280 yp+20")
-    ; The hwnd will be retrieved once the settings GUI is shown.
-    settingsGUIVideoDesiredSubtitleComboBox.EditHwnd := 0
+    ; Retrieves the handle of the settingsGUIVideoDesiredSubtitleComboBox's edit element.
+    settingsGUIVideoDesiredSubtitleComboBox.EditHwnd := DllCall("GetWindow", "Ptr",
+        settingsGUIVideoDesiredSubtitleComboBox.Hwnd, "Int", 5, "UPtr")
     ; This array contains all entries from the combo box.
     settingsGUIVideoDesiredSubtitleComboBox.ContentArray := Array()
     settingsGUIVideoDesiredSubtitleAddButton := settingsGUI.Add("Button", "xp+290 yp-1 w50 h20", "Add")
@@ -322,9 +323,11 @@ createSettingsGUI() {
     settingsGUIVideoDesiredSubtitleComboBox.ToolTip :=
         "Add subtitles you would like to select by default. Use the exact name of the subtitle language."
     settingsGUIVideoDesiredSubtitleComboBox.ToolTip .=
-        '`nFor example, "English" would not select "English [AC]". You would need to add "English [AC]" as well.'
+        '`nFor example, "English" would not select "[English]". You would need to add "[English]" as well.'
     settingsGUIEmbedAllSubtitlesCheckbox.ToolTip :=
         "If enabled, all available subtitles will be embedded into the video file by default."
+    settingsGUIEmbedAllSubtitlesCheckbox.ToolTip .=
+        '`nThis does not include subtitles embraced with square brackets "[]" (automatic captions).'
     ; Default manage video list settings.
     settingsGUIAddVideoURLIsAPlaylistCheckbox.ToolTip :=
         "If a URL contains a reference or is itself a link to a playlist,"

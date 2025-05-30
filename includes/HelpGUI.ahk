@@ -45,7 +45,7 @@ createHelpGUI() {
         bugReportLink . '">Bug Report</a>'
     helpGUIFeatureAndBugSubmitLink := helpGUI.Add("Link", "yp+20", featureAndBugSubmitString)
 
-    helpGUIStatusBar := helpGUI.Add("StatusBar", , "Double click an entry to access it's content.")
+    helpGUIStatusBar := helpGUI.Add("StatusBar", , "Double-click an entry to access it's content")
     helpGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     ; This is used for the easter egg.
     helpGUIStatusBar.OnEvent("Click", handleHelpGUI_helpGUIStatusBar_onClick)

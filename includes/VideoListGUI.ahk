@@ -191,13 +191,13 @@ createVideoListGUI() {
     videoDesiredFormatDDL.ToolTip .=
         "`nOtherwise a conversion with FFmpeg might be required which can take some time."
     videoDesiredSubtitleListBox.ToolTip :=
-        "Select on or more subtitles to embed into the video file. Not all video formats support embedded subtitles."
+        "Select on or more subtitles to be embedded into the (supported) video file."
     videoDesiredSubtitleListBox.ToolTip .=
-        '`nEntries marked with "[AC]" are automatic captions and might not be as accurate as actual subtitles.'
+        '`nEmbedding all available subtitles does only include actual subtitles. In other words, '
     videoDesiredSubtitleListBox.ToolTip .=
-        "`nPlease note that embedding subtitles does not always work "
+        'entries embraced with square brackets "[]" (automatic captions) must be selected manually.'
     videoDesiredSubtitleListBox.ToolTip .=
-        "and that automatically generated captions cannot always be downloaded."
+        "`nYou should only select a maximum amount of 20 subtitles to ensure a successful download."
     videoAdvancedDownloadSettingsButton.ToolTip := ""
     ; Video list controls.
     videoListSearchBarInputEdit.ToolTip :=
@@ -205,7 +205,7 @@ createVideoListGUI() {
     videoListSearchBarInputClearButton.ToolTip := ""
     ; Controls that belong to the video list.
     addVideoURLInputEdit.ToolTip := "Enter a video URL here and press [Enter] or the [" . addVideoToListButton.Text "] button."
-    addVideoURLInputEdit.ToolTip .= "`nDouble-click this field to paste the current clipboard content."
+    addVideoURLInputEdit.ToolTip .= "`nDouble-click this input field to paste the current clipboard content."
     addVideoURLInputClearButton.ToolTip := ""
     ; Add URL elements.
     addVideoToListButton.ToolTip := ""
@@ -493,7 +493,7 @@ handleVideoListGUI_addVideoURLInputClearButton_onClick(pButton, pInfo) {
 }
 
 handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
-    videoURL := addVideoURLInputEdit.Value
+    videoURL := Trim(addVideoURLInputEdit.Value)
     ; Avoids the invalid URL MsgBox when the edit is empty.
     if (videoURL == "") {
         return
@@ -1621,8 +1621,8 @@ class VideoListViewEntry {
         for (languageName, languageCode in metaData.VIDEO_AUTOMATIC_CAPTIONS) {
             ; Avoids duplicate languages.
             if (!reverseVideoSubtitleMap.Has(languageCode)) {
-                ; Automatically generated subtitles are marked with "[AC]".
-                this.videoSubtitleMap.Set(languageName . " [AC]", languageCode)
+                ; Automatically generated subtitles are embraced with square brackets "[]".
+                this.videoSubtitleMap.Set("[" . languageName . "]", languageCode)
             }
         }
 
@@ -1693,11 +1693,16 @@ class VideoListViewEntry {
             this.downloadCommandPart .= '"' . this.videoURL . '" '
             return
         }
-        ; Embeds the subtitles if the user selected this option.
+
+        /*
+        Embeds all available subtitles. This does not include any automatically generated captions
+        as this would cause too many requests which result in an error.
+        */
         if (checkIfStringIsInArray("Embed all available subtitles",
             this.desiredSubtitleArrayCurrentlySelectedEntries)) {
             ; We don't want the live chat.
-            this.downloadCommandPart .= '--sub-langs "all,-live_chat" --embed-subs '
+            this.downloadCommandPart .= '--sub-langs "all,-live_chat" '
+            this.downloadCommandPart .= "--embed-subs --write-subs "
         }
         else {
             for (subtitleLanguage in this.desiredSubtitleArrayCurrentlySelectedEntries) {
@@ -1709,9 +1714,12 @@ class VideoListViewEntry {
             if (IsSet(subLangsString)) {
                 subLangsString := RTrim(subLangsString, ",")
                 ; The "--write-auto-subs" makes sure that automatically generated subtitles can be embedded too.
-                this.downloadCommandPart .= '--sub-langs "' . subLangsString . '" --embed-subs --write-auto-subs '
+                this.downloadCommandPart .= '--sub-langs "' . subLangsString . '" '
+                this.downloadCommandPart .= "--embed-subs --write-subs --write-auto-subs "
             }
         }
+        ; Avoids moving the subtitle files to the download directory.
+        this.downloadCommandPart .= "--compat-options no-keep-subs "
         this.downloadCommandPart .= '"' . this.videoURL . '" '
     }
     /*

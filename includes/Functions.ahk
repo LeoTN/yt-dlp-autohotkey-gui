@@ -26,7 +26,20 @@ handleAllGUI_toolTips(wParam, lParam, msg, hwnd) {
         ; Closes all existing tooltips.
         toolTipText := ""
         ToolTip()
-        currentControlElement := GuiCtrlFromHwnd(hwnd)
+        /*
+        This is an exception for the settingsGUIVideoDesiredSubtitleComboBox's edit element.
+        It makes sure that the tooltip is displayed when the user hovers over the edit as well.
+        */
+        if (IsSet(settingsGUIVideoDesiredSubtitleComboBox)
+        && settingsGUIVideoDesiredSubtitleComboBox.HasOwnProp("EditHwnd")
+        && hwnd == settingsGUIVideoDesiredSubtitleComboBox.EditHwnd) {
+            currentControlElement := Object()
+            currentControlElement.Hwnd := settingsGUIVideoDesiredSubtitleComboBox.EditHwnd
+            currentControlElement.ToolTip := settingsGUIVideoDesiredSubtitleComboBox.ToolTip
+        }
+        else {
+            currentControlElement := GuiCtrlFromHwnd(hwnd)
+        }
         if (currentControlElement) {
             if (!currentControlElement.HasProp("ToolTip")) {
                 ; There is no tooltip for this control element.

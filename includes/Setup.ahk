@@ -168,7 +168,7 @@ handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_2(pButton, pInfo) {
     if (checkIfFFmpegOrYTDLPSetupIsRequired()) {
         updateDependencyCheckboxes()
         updateSetupButton()
-        setupGUIStatusBar.SetText("Could not complete setup. Not required all files are present.")
+        setupGUIStatusBar.SetText("Could not complete setup. Not required all files are present")
         return
     }
     setupGUIStatusBar.SetText("Setup completed")
