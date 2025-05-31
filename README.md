@@ -16,29 +16,29 @@
 
 ## 🚀 Getting Started
 
-> 1. Download the latest installer **[here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest)**.
-> 2. Open the video you want to download in your browser. For example, this video: [https://www.youtube.com/watch?v=xvFZjo5PgG0](https://www.youtube.com/watch?v=xvFZjo5PgG0).
-> 3. Press **SHIFT + CTRL + ALT + S** to save the URL.
+> 1. Download and install the latest installer **[here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest)**.
+> 2. Open the [video](https://www.youtube.com/watch?v=xvFZjo5PgG0) you want to download in your browser.
+> 3. Press ***SHIFT + CTRL + ALT + S*** to save the URL.
 > 4. Alternatively, you can copy the URL and enter it into the video list manually.
-> 5. Press **SHIFT + CTRL + ALT + D** to start the download.
+> 5. Press ***SHIFT + CTRL + ALT + D*** to start the download.
 
 ## Additional Information
 
-| Feature                |          Description                                                                                                       |
-|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| ⌨️ **Hotkey Control**          | Convenient **hotkey control** for all **core functions**                                                                               |
-| 💡 **Help Window**             | Provides additional **information** and **interactive tutorials**                                                                      |
-| ⚙️ **Settings Window**         | Configure your default (download) preferences                                                                                  |
-| 🎬 **Video List Window**       | Easily manage and download videos                                                                                              |
-| 🌐 **Direct URL Capture**    | Capture a **video URL** while the video is **open** in your **browser**                                                                    |
-| 🖱️ **Indirect URL Capture**      | Capture a **video URL** by **hovering** over the **video thumbnail** (e.g. on YouTube) and pressing **SHIFT + CTRL + ALT + F** |
+| Feature                     | Description                                                                                                                      |
+|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| ⌨️ **Hotkey Control**       | Convenient **hotkey control** for all **core functions**                                                                         |
+| 💡 **Help Window**          | Provides additional **information** and **interactive tutorials**                                                                |
+| ⚙️ **Settings Window**      | Configure your default (download) preferences                                                                                    |
+| 🎬 **Video List Window**    | Easily manage and download videos                                                                                                |
+| 🌐 **Direct URL Capture**   | Capture a **video URL** while the video is **open** in your **browser**                                                          |
+| 🖱️ **Indirect URL Capture** | Capture a **video URL** by **hovering** over the **video thumbnail** (e.g. on YouTube) and pressing ***SHIFT + CTRL + ALT + F*** |
 
 ### Known Issues
 
-* The hotkey to **indirectly capture video URLs** is still **experimental** and won't work every time.
+* The hotkey to indirectly capture video URLs is still **experimental** and won't work every time.
 * Embedding **video subtitles** might not work every time.
 * Sometimes yt-dlp's requests will be **blocked by YouTube**. This causes some videos to appear as **not found** in the video list.
-  * If this is the case, I recommend trying to add the video again.
+  * If this is the case, I recommend waiting a little before trying again.
 
 ## Credits & License
 
