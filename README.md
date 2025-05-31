@@ -8,45 +8,37 @@
         <a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENSE" style="text-decoration: none;"><img src="https://img.shields.io/github/license/LeoTN/yt-dlp-autohotkey-gui?style=for-the-badge&logo=Google%20Docs&logoColor=blue&label=License&color=blue"></a>
 </p>
 
-**A video downloader with a graphical user interface and hotkeys.**
+**Add videos** to the list, **select** your **download preferences** and **start downloading**. No yt-dlp command knowledge required.
 
-Add videos to the list, select your download preferences and start downloading. No yt-dlp command knowledge required. 
-
-<div>
-  <div style="display: inline-block; text-align: center; margin-right: 10px;">
-    <img src="library/assets/icons/video_list_gui_readme.png" alt="Main GUI" style="width: 100%;">
-    <br>
-    This is the main window <i>aka</i> the Video List
-  </div>
+<div style="display: inline-block; text-align: center; margin-right: 10px;">
+  <img src="library/assets/icons/video_list_gui_readme.png" alt="Main GUI" style="width: 100%;">
 </div>
 
-## Installation
+## 🚀 Getting Started
 
-> 1. Download the latest installer [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest).
-> 2. Follow the on-screen instructions.
-> 3. Start downloading.
+> 1. Download the latest installer **[here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest)**.
+> 2. Open the video you want to download in your browser. For example, this video: [https://www.youtube.com/watch?v=xvFZjo5PgG0](https://www.youtube.com/watch?v=xvFZjo5PgG0).
+> 3. Press **SHIFT + CTRL + ALT + S** to save the URL.
+> 4. Alternatively, you can copy the URL and enter it into the video list manually.
+> 5. Press **SHIFT + CTRL + ALT + D** to start the download.
 
-## Tutorial
+## Additional Information
 
-> 1. Open the video you want to download in your browser. For example, this video: [https://www.youtube.com/watch?v=xvFZjo5PgG0](https://www.youtube.com/watch?v=xvFZjo5PgG0).
-> 2. Press **SHIFT + CTRL + ALT + S** to save the URL.
-> 3. Alternatively, you can copy the URL and enter it into the video list manually.
-> 4. Press **SHIFT + CTRL + ALT + D** to start the download.
+| Feature                |          Description                                                                                                       |
+|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| ⌨️ **Hotkey Control**          | Convenient **hotkey control** for all **core functions**                                                                               |
+| 💡 **Help Window**             | Provides additional **information** and **interactive tutorials**                                                                      |
+| ⚙️ **Settings Window**         | Configure your default (download) preferences                                                                                  |
+| 🎬 **Video List Window**       | Easily manage and download videos                                                                                              |
+| 🌐 **Direct URL Capture**    | Capture a **video URL** while the video is **open** in your **browser**                                                                    |
+| 🖱️ **Indirect URL Capture**      | Capture a **video URL** by **hovering** over the **video thumbnail** (e.g. on YouTube) and pressing **SHIFT + CTRL + ALT + F** |
 
-## Features
+### Known Issues
 
-* **Convenient hotkey control** for all core functions.
-* *Help Window* → contains additional information and interactive tutorials.
-* *Settings Window* → change and configure your (download) preferences.
-* *Video List Window* → easily manage and download videos.
-* **Directly capture** video URLs by hovering over the video thumbnail (e.g. on the YouTube homepage) with the mouse cursor. Press **SHIFT + CTRL + ALT + F** to do so.
-
-## Notes
-
-* The hotkey to **directly capture video URLs** is still **experimental** and won't work every time.
+* The hotkey to **indirectly capture video URLs** is still **experimental** and won't work every time.
+* Embedding **video subtitles** might not work every time.
 * Sometimes yt-dlp's requests will be **blocked by YouTube**. This causes some videos to appear as **not found** in the video list.
   * If this is the case, I recommend trying to add the video again.
-  * In rare cases, all requests are blocked. In this case, you can only wait a certain amount of time before trying again.
 
 ## Credits & License
 
