@@ -47,7 +47,6 @@ onInit() {
     global assetDirectory := applicationMainDirectory . "\assets"
 
     global ffmpegDirectory := assetDirectory . "\ffmpeg"
-    global ffmpegFileLocation := ffmpegDirectory . "\ffmpeg.exe"
 
     global iconDirectory := assetDirectory . "\icons"
     global iconFileLocation := iconDirectory . "\video_downloader_icons.dll"
@@ -57,8 +56,8 @@ onInit() {
     global psUpdateScriptLocation := psScriptDirectory . "\checkForAvailableUpdates.ps1"
     global psRunYTDLPExecutableLocation := psScriptDirectory . "\runYTDLPExecutableWithRedirectedStdout.ps1"
 
-    global YTDLPDirectory := assetDirectory . "\yt-dlp"
-    global YTDLPFileLocation := YTDLPDirectory . "\yt-dlp.exe"
+    global ytdlpDirectory := assetDirectory . "\yt-dlp"
+    global YTDLPFileLocation := ytdlpDirectory . "\yt-dlp.exe"
 
     ; When this value is true, certain functions will behave differently and do not show unnecessary prompts.
     global booleanFirstTimeLaunch := RegRead(applicationRegistryDirectory, "booleanFirstTimeLaunch", false)
@@ -79,16 +78,23 @@ onInit() {
     if (FileExist(iconFileLocation)) {
         TraySetIcon(iconFileLocation, 1, true)
     }
+    A_IconTip := "VideoDownloader by LeoTN"
     ; Clears the existing tray menu elements.
     A_TrayMenu.Delete()
     ; Adds a tray menu point to open the video list GUI.
     A_TrayMenu.Add("Video List", (*) => hotkey_openVideoListGUI())
+    A_TrayMenu.SetIcon("Video List", iconFileLocation, 22) ; ICON_DLL_USED_HERE
     A_TrayMenu.Add("Settings", (*) => menu_openSettingsGUI())
+    A_TrayMenu.SetIcon("Settings", iconFileLocation, 6) ; ICON_DLL_USED_HERE
     A_TrayMenu.Add()
     A_TrayMenu.Add("Restart", (*) => menu_restartApplication())
+    A_TrayMenu.SetIcon("Restart", iconFileLocation, 8) ; ICON_DLL_USED_HERE
     A_TrayMenu.Add("Exit", (*) => menu_exitApplication())
+    A_TrayMenu.SetIcon("Exit", iconFileLocation, 15) ; ICON_DLL_USED_HERE
+    A_TrayMenu.Add()
     A_TrayMenu.Add("About", (*) => menu_openHelpGUI())
-    ; When clicking on the tray icon twice, this will make sure, that the video list GUI is shown to the user.
+    A_TrayMenu.SetIcon("About", iconFileLocation, 14) ; ICON_DLL_USED_HERE
+    ; Shows the video list GUI when the tray icon is clicked twice.
     A_TrayMenu.Default := "Video List"
 
     /*
@@ -96,12 +102,12 @@ onInit() {
     -------------------------------------------------
     */
 
+    ; Registers important events for all GUIs and toast notifications.
+    functions_onInit()
     ; Basically checks if all required files and folders are present.
     setup_onInit()
     ; Checks and loads the config file.
     configurationFile_onInit()
-    ; Currently has no purpose.
-    functions_onInit()
     ; Initializes the hotkeys.
     hotkeys_onInit()
     ; Creates the help GUI.

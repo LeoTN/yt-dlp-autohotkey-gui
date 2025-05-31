@@ -5,66 +5,132 @@ SendMode "Input"
 CoordMode "Mouse", "Window"
 
 setup_onInit() {
+    createRequiredFolders()
     checkIfMSISetupIsRequired()
     ; Checks the system for other already running instances of this application.
     findAlreadyRunningVDInstance()
-    createRequiredFolders()
     ; Putting this behind the setup checks prevents issues when files are missing.
     createSetupGUI()
-    ; After installing the components, a reload is required.
-    booleanSetupReloadRequired := false
-    if (checkIfFFmpegOrYTDLPSetupIsRequired()) {
-        booleanSetupReloadRequired := true
+    if (!checkIfFFmpegOrYTDLPSetupIsRequired()) {
+        return
     }
-    ; The application won't continue until the required dependencies are present or the GUI is closed.
-    while (booleanSetupReloadRequired) {
-        setupGUI.Show("AutoSize")
-        Sleep(2000)
-    }
+    ; The application won't continue until the required dependencies are present.
+    setupGUI.Show("AutoSize")
+    setupGUI.Flash()
+    WinWaitClose("ahk_id " . setupGUI.Hwnd)
+    ; The video list GUI is usually not present at this moment so we don't need to save it's state.
+    Reload()
 }
 
 createSetupGUI() {
     global
-    setupGUI := Gui("+AlwaysOnTop", "VideoDownloader - Dependency Setup")
+    setupGUI := Gui("+AlwaysOnTop +OwnDialogs", "VideoDownloader - Dependency Setup")
     setupGUI.MarginX := 0
     setupGUI.MarginY := 0
     ; Add a background image to the GUI.
     setupGUI.Add("Picture", "x0 y0 w320 h-1 +Center", GUIBackgroundImageLocation)
-    setupGUIDependencyText := setupGUI.Add("Text", "xp+10 yp+5 wp-20 R2 +BackgroundTrans",
-        "Required Dependencies")
+    setupGUIDependencyText := setupGUI.Add("Text", "xp+10 yp+5 w300 R2 +BackgroundTrans",
+        "Required Executable Dependencies")
     setupGUIDependencyText.SetFont("s12 bold")
 
-    setupGUIFFmpegCheckbox := setupGUI.Add("CheckBox", "yp+25 wp R1.5 +Border", "FFmpeg")
+    setupGUIYTDLPCheckbox := setupGUI.Add("CheckBox", "yp+25 w150 R1.5 +Border", "yt-dlp")
+    setupGUIYTDLPCheckbox.SetFont("bold")
+
+    setupGUIFFmpegCheckbox := setupGUI.Add("CheckBox", "xp+150 w150 R1.5 +Border", "FFmpeg")
     setupGUIFFmpegCheckbox.SetFont("bold")
 
-    setupGUIYTDLPCheckbox := setupGUI.Add("CheckBox", "yp+20 wp R1.5 +Border", "yt-dlp")
-    setupGUIYTDLPCheckbox.SetFont("bold")
-    updateDependencyCheckboxes()
+    setupGUIFFplayCheckbox := setupGUI.Add("CheckBox", "xp-150 yp+20 w150 R1.5 +Border", "FFplay")
+    setupGUIFFplayCheckbox.SetFont("bold")
 
-    setupGUICancelSetupButton := setupGUI.Add("Button", "yp+120 w140 R2", "Cancel")
-    setupGUIStartSetupButton := setupGUI.Add("Button", "xp+160 w140 R2 +Default", "Download Dependencies")
+    setupGUIFFprobeCheckbox := setupGUI.Add("CheckBox", "xp+150 w150 R1.5 +Border", "FFprobe")
+    setupGUIFFprobeCheckbox.SetFont("bold")
+
+    setupGUIDeleteAllDependenciesButton := setupGUI.Add("Button", "xp-150 yp+120 w140 R2", "Delete Dependencies")
+    setupGUIStartAndCompleteSetupButton := setupGUI.Add("Button", "xp+160 w140 R2 +Default", "Download Dependencies")
     setupGUIUseOwnExecutablesText := setupGUI.Add("Text", "xp-160 yp+45 w300 h30 +BackgroundTrans +Center",
         "I want to use my own executables")
     setupGUIUseOwnExecutablesText.SetFont("s10 underline cBlue")
 
-    setupProgressBar := setupGUI.Add("Progress", "xp-120 x0 yp+24 w320")
+    setupGUISetupProgressBar := setupGUI.Add("Progress", "xp-120 x0 yp+24 w320")
     setupGUIStatusBar := setupGUI.Add("StatusBar", "-Theme BackgroundSilver")
     setupGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     setupGUIStatusBar.SetText("Please start the setup process")
 
     ; When the window is closed without installing the required dependencies, the application must exit.
-    setupGUI.OnEvent("Close", (*) => exitApplicationWithNotification(true))
-    ; This does not allow the user to change the value of the checkbox.
-    setupGUIFFmpegCheckbox.OnEvent("Click", (*) => setupGUIFFmpegCheckbox.Value := !setupGUIFFmpegCheckbox.Value)
+    setupGUI.OnEvent("Close", handleSetupGUI_setupGUI_onClose)
     ; This does not allow the user to change the value of the checkbox.
     setupGUIYTDLPCheckbox.OnEvent("Click", (*) => setupGUIYTDLPCheckbox.Value := !setupGUIYTDLPCheckbox.Value)
-    setupGUICancelSetupButton.OnEvent("Click", (*) => exitApplicationWithNotification(true))
-    setupGUIStartSetupButton.OnEvent("Click", handleSetupGUI_setupGUIStartSetupButton_onClick)
+    setupGUIFFmpegCheckbox.OnEvent("Click", (*) => setupGUIFFmpegCheckbox.Value := !setupGUIFFmpegCheckbox.Value)
+    setupGUIFFplayCheckbox.OnEvent("Click", (*) => setupGUIFFplayCheckbox.Value := !setupGUIFFplayCheckbox.Value)
+    setupGUIFFprobeCheckbox.OnEvent("Click", (*) => setupGUIFFprobeCheckbox.Value := !setupGUIFFprobeCheckbox.Value)
+    ; This allows the user to use their own executables.
+    setupGUIYTDLPCheckbox.OnEvent("DoubleClick", handleSetupGUI_setupGUIYTDLPCheckbox_onDoubleClick)
+    setupGUIFFmpegCheckbox.OnEvent("DoubleClick", handleSetupGUI_setupGUIFFmpegCheckboxes_onDoubleClick)
+    setupGUIFFplayCheckbox.OnEvent("DoubleClick", handleSetupGUI_setupGUIFFmpegCheckboxes_onDoubleClick)
+    setupGUIFFprobeCheckbox.OnEvent("DoubleClick", handleSetupGUI_setupGUIFFmpegCheckboxes_onDoubleClick)
+    ; Download or delete the dependencies.
+    setupGUIDeleteAllDependenciesButton.OnEvent("Click", handleSetupGUI_setupGUIDeleteAllDependenciesButton_onClick)
     setupGUIUseOwnExecutablesText.OnEvent("Click", handleSetupGUI_setupGUIUseOwnExecutablesText_onClick)
+    updateDependencyCheckboxes()
+    updateSetupButton()
 }
 
-; Updates the GUI depending on the installation status of the dependencies.
-handleSetupGUI_setupGUIStartSetupButton_onClick(pButton, pInfo) {
+handleSetupGUI_setupGUI_onClose(pGUI) {
+    if (checkIfFFmpegOrYTDLPSetupIsRequired()) {
+        exitApplicationWithNotification(true)
+    }
+}
+
+handleSetupGUI_setupGUIYTDLPCheckbox_onDoubleClick(pCheckbox, pInfo) {
+    global ytdlpDirectory
+
+    filter := "yt-dlp (yt-dlp.exe)"
+    fileArray := fileSelectPrompt("VD - Please select the yt-dlp executable file",
+        ytdlpDirectory, filter, setupGUI)
+    if (fileArray.Length == 0) {
+        return
+    }
+
+    SplitPath(fileArray[1], &outName, &outDir)
+    if (outName != "yt-dlp.exe" || ytdlpDirectory == outDir) {
+        return
+    }
+    FileCopy(fileArray[1], ytdlpDirectory, true)
+    updateDependencyCheckboxes()
+    updateSetupButton()
+}
+
+handleSetupGUI_setupGUIFFmpegCheckboxes_onDoubleClick(pCheckbox, pInfo) {
+    global ffmpegDirectory
+
+    filter := "FFmpeg (ffmpeg.exe; ffplay.exe; ffprobe.exe)"
+    fileArray := fileSelectPrompt("VD - Please select the FFmpeg executable file(s)",
+        ffmpegDirectory, filter, setupGUI, true)
+    if (fileArray.Length == 0) {
+        return
+    }
+
+    relevantFiles := ["ffmpeg.exe", "ffplay.exe", "ffprobe.exe"]
+    for (file in fileArray) {
+        SplitPath(file, &outName, &outDir)
+        ; Checks if the selected file is a FFmpeg file or the source and destination are the same.
+        if ((!checkIfStringIsInArray(outName, relevantFiles, false)) || ffmpegDirectory == outDir) {
+            continue
+        }
+        FileCopy(file, ffmpegDirectory, true)
+    }
+    updateDependencyCheckboxes()
+    updateSetupButton()
+}
+
+/*
+Installs all required dependencies and updates the GUI accordingly.
+Existing files will not be overwritten.
+*/
+handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_1(pButton, pInfo) {
+    global ytdlpDirectory
+    global ffmpegDirectory
+
     if (!checkInternetConnection()) {
         result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?",
             "VD - No Internet Connection", "YN Icon! Owner" . setupGUI.Hwnd)
@@ -75,9 +141,9 @@ handleSetupGUI_setupGUIStartSetupButton_onClick(pButton, pInfo) {
 
     pButton.Opt("+Disabled")
     ; Installs the dependencies and updates the GUI accordingly.
-    if (getFFmpegInstallionStatus()) {
+    if (getFFmpegInstallionStatus() && getFFplayInstallionStatus() && getFFprobeInstallionStatus()) {
         setupGUIStatusBar.SetText("FFmpeg downloaded")
-        setupProgressBar.Value += 50
+        setupGUISetupProgressBar.Value += 50
     }
     else {
         installFFmpeg()
@@ -85,7 +151,7 @@ handleSetupGUI_setupGUIStartSetupButton_onClick(pButton, pInfo) {
     updateDependencyCheckboxes()
     if (getYTDLPInstallionStatus()) {
         setupGUIStatusBar.SetText("yt-dlp downloaded")
-        setupProgressBar.Value += 50
+        setupGUISetupProgressBar.Value += 50
     }
     else {
         installYTDLP()
@@ -93,62 +159,142 @@ handleSetupGUI_setupGUIStartSetupButton_onClick(pButton, pInfo) {
     updateDependencyCheckboxes()
     setupGUIStatusBar.SetText("Setup completed")
     Sleep(2000)
-    ; The video list GUI is usually not present at this moment so we don't need to save it's state.
-    Reload()
+    WinClose("ahk_id " . setupGUI.Hwnd)
+}
+
+; Finishes the setup.
+handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_2(pButton, pInfo) {
+    ; Checks if all files are present.
+    if (checkIfFFmpegOrYTDLPSetupIsRequired()) {
+        updateDependencyCheckboxes()
+        updateSetupButton()
+        setupGUIStatusBar.SetText("Could not complete setup. Not required all files are present")
+        return
+    }
+    setupGUIStatusBar.SetText("Setup completed")
+    WinClose("ahk_id " . setupGUI.Hwnd)
+}
+
+handleSetupGUI_setupGUIDeleteAllDependenciesButton_onClick(pButton, pInfo) {
+    result := MsgBox("All existing dependencies will be deleted.`n`nContinue?",
+        "VD - Delete All Dependencies", "Icon! YN Owner" . setupGUI.Hwnd)
+    if (result != "Yes") {
+        return
+    }
+    ; Deletes all dependency files.
+    deleteAllDependencyFiles()
+    updateDependencyCheckboxes()
+    updateSetupButton()
 }
 
 ; Allows the user to use their own yt-dlp and FFmpeg executables.
 handleSetupGUI_setupGUIUseOwnExecutablesText_onClick(pText, pInfo) {
+    global ytdlpDirectory
     global ffmpegDirectory
-    global YTDLPDirectory
 
     msgText := "It is possible to use your own FFmpeg and yt-dlp executable files "
-    msgText .= "instead of the recommended ones. Simply copy them into their respective directories."
+    msgText .= "instead of the recommended ones. Double-click any of the 4 boxes "
+    msgText .= "to select your custom executables. They will be copied into a VideoDownloader sub folder."
     msgText .= "`n`nBe warned, this could potentially cause other issues!"
     msgText .= "`n`nRequired files in the FFmpeg directory"
     msgText .= "`n→ ffmpeg.exe`n→ ffplay.exe`n→ ffprobe.exe"
     msgText .= "`n`nRequired files in the yt-dlp directory"
     msgText .= "`n→ yt-dlp.exe"
     msgTitle := "VD - Use Custom FFmpeg and yt-dlp Executables"
-    msgHeadLine := "Use Your Own FFmpeg and yt-dlp Executables"
-    msgButton1 := "FFmpeg Directory"
-    msgButton2 := "Refresh"
-    msgButton3 := "yt-dlp Directory"
-    result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true, setupGUI)
-    ; Opens the FFmpeg directory.
-    if (result == msgButton1) {
-        openDirectoryInExplorer(ffmpegDirectory)
-        handleSetupGUI_setupGUIUseOwnExecutablesText_onClick(pText, pInfo)
+    MsgBox(msgText, msgTitle, "Icon! 262144")
+}
+
+deleteAllDependencyFiles() {
+    global ffmpegDirectory
+    global YTDLPFileLocation
+
+    ; Delete all existing FFmpeg files.
+    relevantFiles := ["ffmpeg.exe", "ffplay.exe", "ffprobe.exe"]
+    for (relevantFile in relevantFiles) {
+        relevantFilePath := ffmpegDirectory . "\" . relevantFile
+        if (FileExist(relevantFilePath)) {
+            FileDelete(relevantFilePath)
+        }
     }
-    ; Reloads the application.
-    if (result == msgButton2) {
-        Reload()
+    ; Delete the yt-dlp file.
+    if (FileExist(YTDLPFileLocation)) {
+        FileDelete(YTDLPFileLocation)
     }
-    ; Opens the yt-dlp directory.
-    if (result == msgButton3) {
-        openDirectoryInExplorer(YTDLPDirectory)
-        handleSetupGUI_setupGUIUseOwnExecutablesText_onClick(pText, pInfo)
+}
+
+; Changes the setup start button text and action depending on the setup state.
+updateSetupButton() {
+    if (checkIfFFmpegOrYTDLPSetupIsRequired()) {
+        setupGUIStartAndCompleteSetupButton.Text := "Download Dependencies"
+        setupGUIStartAndCompleteSetupButton.ToolTip :=
+            "Existing files will not be overwritten."
+        ; Disable the old event function.
+        setupGUIStartAndCompleteSetupButton.OnEvent("Click",
+            handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_2, 0)
+        ; Enable the new event function.
+        setupGUIStartAndCompleteSetupButton.OnEvent("Click",
+            handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_1, 1)
+    }
+    else {
+        setupGUIStartAndCompleteSetupButton.Text := "Complete Setup"
+        setupGUIStartAndCompleteSetupButton.ToolTip := "Finish the setup process."
+        ; Disable the old event function.
+        setupGUIStartAndCompleteSetupButton.OnEvent("Click",
+            handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_1, 0)
+        ; Enable the new event function.
+        setupGUIStartAndCompleteSetupButton.OnEvent("Click",
+            handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_2, 1)
     }
 }
 
 updateDependencyCheckboxes() {
-    setupGUIFFmpegCheckbox.Value := getFFmpegInstallionStatus()
-    if (setupGUIFFmpegCheckbox.Value) {
-        setupGUIFFmpegCheckbox.Text := "FFmpeg executables found"
-        setupGUIFFmpegCheckbox.Opt("BackgroundGreen")
-    }
-    else {
-        setupGUIFFmpegCheckbox.Text := "FFmpeg executables not found"
-        setupGUIFFmpegCheckbox.Opt("BackgroundRed")
-    }
     setupGUIYTDLPCheckbox.Value := getYTDLPInstallionStatus()
     if (setupGUIYTDLPCheckbox.Value) {
-        setupGUIYTDLPCheckbox.Text := "yt-dlp executable found"
+        setupGUIYTDLPCheckbox.Text := "yt-dlp found"
         setupGUIYTDLPCheckbox.Opt("BackgroundGreen")
     }
     else {
-        setupGUIYTDLPCheckbox.Text := "yt-dlp executable not found"
+        setupGUIYTDLPCheckbox.Text := "yt-dlp not found"
         setupGUIYTDLPCheckbox.Opt("BackgroundRed")
+    }
+
+    setupGUIFFmpegCheckbox.Value := getFFmpegInstallionStatus()
+    if (setupGUIFFmpegCheckbox.Value) {
+        setupGUIFFmpegCheckbox.Text := "FFmpeg found"
+        setupGUIFFmpegCheckbox.Opt("BackgroundGreen")
+    }
+    else {
+        setupGUIFFmpegCheckbox.Text := "FFmpeg not found"
+        setupGUIFFmpegCheckbox.Opt("BackgroundRed")
+    }
+
+    setupGUIFFplayCheckbox.Value := getFFplayInstallionStatus()
+    if (setupGUIFFplayCheckbox.Value) {
+        setupGUIFFplayCheckbox.Text := "FFplay found"
+        setupGUIFFplayCheckbox.Opt("BackgroundGreen")
+    }
+    else {
+        setupGUIFFplayCheckbox.Text := "FFplay not found"
+        setupGUIFFplayCheckbox.Opt("BackgroundRed")
+    }
+
+    setupGUIFFprobeCheckbox.Value := getFFprobeInstallionStatus()
+    if (setupGUIFFprobeCheckbox.Value) {
+        setupGUIFFprobeCheckbox.Text := "FFprobe found"
+        setupGUIFFprobeCheckbox.Opt("BackgroundGreen")
+    }
+    else {
+        setupGUIFFprobeCheckbox.Text := "FFprobe not found"
+        setupGUIFFprobeCheckbox.Opt("BackgroundRed")
+    }
+
+    ; Disables the button to delete all dependencies when there is no executable present at all.
+    if (!setupGUIYTDLPCheckbox.Value && !setupGUIFFmpegCheckbox.Value && !setupGUIFFplayCheckbox.Value
+        && !setupGUIFFprobeCheckbox.Value) {
+        setupGUIDeleteAllDependenciesButton.Opt("+Disabled")
+    }
+    else {
+        setupGUIDeleteAllDependenciesButton.Opt("-Disabled")
     }
 }
 
@@ -159,7 +305,7 @@ createRequiredFolders() {
         assetDirectory,
         ffmpegDirectory,
         iconDirectory,
-        YTDLPDirectory,
+        ytdlpDirectory,
         psScriptDirectory
     ]
     for (i, requiredFolder in requiredFolders) {
@@ -207,6 +353,8 @@ checkIfMSISetupIsRequired() {
 
 ; Downloads the FFmpeg executables optimized for yt-dlp.
 installFFmpeg() {
+    global ffmpegDirectory
+
     ; Define the file name and the file location.
     downloadedFileName := "ffmpeg-master-latest-win64-gpl.zip"
     downloadedFileLocation := ffmpegDirectory . "\" . downloadedFileName
@@ -218,43 +366,55 @@ installFFmpeg() {
     ffmpegDownloadLink :=
         "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
     ; Update the GUI.
-    setupGUIStatusBar.SetText("Downloading FFmpeg files...")
-    setupProgressBar.Value += 20
+    setupGUIStatusBar.SetText("Downloading FFmpeg archive...")
+    setupGUISetupProgressBar.Value += 20
     Download(ffmpegDownloadLink, downloadedFileLocation)
     ; Update the GUI.
-    setupGUIStatusBar.SetText("Extracting FFmpeg files...")
-    setupProgressBar.Value += 15
+    setupGUIStatusBar.SetText("Extracting FFmpeg archive...")
+    setupGUISetupProgressBar.Value += 15
     RunWait('powershell.exe -Command "Expand-Archive -Path """' . downloadedFileLocation .
         '""" -DestinationPath """' .
         ffmpegDirectory . '""" -Force"', , "Hide")
     ; Update the GUI.
     setupGUIStatusBar.SetText("Moving FFmpeg files...")
-    setupProgressBar.Value += 10
-    ; Moves all .EXE files from the extracted folder to the FFmpeg directory.
-    FileMove(ffmpegExecutablesDirectory . "\*.exe", ffmpegDirectory, 1)
+    setupGUISetupProgressBar.Value += 10
+
+    ; Moves all .EXE files from the extracted folder to the FFmpeg directory. Existing files will not be overwritten.
+    relevantFiles := ["ffmpeg.exe", "ffplay.exe", "ffprobe.exe"]
+    for (relevantFile in relevantFiles) {
+        relevantFileSourcePath := ffmpegExecutablesDirectory . "\" . relevantFile
+        relevantFileDestinationPath := ffmpegDirectory . "\" . relevantFile
+        ; Do not overwrite existing files.
+        if (!FileExist(relevantFileDestinationPath)) {
+            FileMove(relevantFileSourcePath, relevantFileDestinationPath)
+        }
+    }
     ; Update the GUI.
     setupGUIStatusBar.SetText("Clean up...")
-    setupProgressBar.Value += 5
+    setupGUISetupProgressBar.Value += 5
     ; Delete the downloaded .ZIP file and the extracted folder.
     FileDelete(downloadedFileLocation)
-    DirDelete(ffmpegDirectory . "\" . downloadedFileNameWithoutExtension, 1)
+    DirDelete(ffmpegDirectory . "\" . downloadedFileNameWithoutExtension, true)
 }
 
 ; Downloads the yt-dlp.exe from GitHub.
 installYTDLP() {
-    global YTDLPDirectory
+    global ytdlpDirectory
 
     ; Define the file name and the file location.
     downloadedFileName := "yt-dlp.exe"
-    downloadedFileLocation := YTDLPDirectory . "\" . downloadedFileName
+    downloadedFileLocation := ytdlpDirectory . "\" . downloadedFileName
 
     YTDLPDownloadLink := "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
     ; Update the GUI.
     setupGUIStatusBar.SetText("Downloading yt-dlp...")
-    setupProgressBar.Value += 25
-    Download(YTDLPDownloadLink, downloadedFileLocation)
+    setupGUISetupProgressBar.Value += 25
+    ; The existing file will not be overwritten.
+    if (!FileExist(downloadedFileLocation)) {
+        Download(YTDLPDownloadLink, downloadedFileLocation)
+    }
     ; Update the GUI.
-    setupProgressBar.Value += 25
+    setupGUISetupProgressBar.Value += 25
 }
 
 /*
@@ -262,24 +422,48 @@ Checks if the FFmpeg and yt-dlp executables are present.
 @returns [boolean] True, if the files are not present. False otherwise.
 */
 checkIfFFmpegOrYTDLPSetupIsRequired() {
-    if (!getFFmpegInstallionStatus() || !getYTDLPInstallionStatus()) {
+    if (!getYTDLPInstallionStatus() || !getFFmpegInstallionStatus() || !getFFplayInstallionStatus()
+    || !getFFprobeInstallionStatus()) {
         return true
     }
     return false
 }
 
 /*
-Checks if the FFmpeg executables are present.
-@returns [boolean] True, if all FFmpeg executables are present. False otherwise.
+Checks if the FFmpeg executable is present.
+@returns [boolean] True, if the FFmpeg executable is present. False otherwise.
 */
 getFFmpegInstallionStatus() {
     global ffmpegDirectory
 
-    relevantFiles := ["ffmpeg.exe", "ffplay.exe", "ffprobe.exe"]
-    for (i, file in relevantFiles) {
-        if (!FileExist(ffmpegDirectory . "\" . file)) {
-            return false
-        }
+    if (!FileExist(ffmpegDirectory . "\ffmpeg.exe")) {
+        return false
+    }
+    return true
+}
+
+/*
+Checks if the FFplay executable is present.
+@returns [boolean] True, if the FFplay executable is present. False otherwise.
+*/
+getFFplayInstallionStatus() {
+    global ffmpegDirectory
+
+    if (!FileExist(ffmpegDirectory . "\ffplay.exe")) {
+        return false
+    }
+    return true
+}
+
+/*
+Checks if the FFprobe executable is present.
+@returns [boolean] True, if the FFprobe executable is present. False otherwise.
+*/
+getFFprobeInstallionStatus() {
+    global ffmpegDirectory
+
+    if (!FileExist(ffmpegDirectory . "\ffprobe.exe")) {
+        return false
     }
     return true
 }
@@ -289,9 +473,9 @@ Checks if the yt-dlp executable is present.
 @returns [boolean] True, if the yt-dlp executable is present. False otherwise.
 */
 getYTDLPInstallionStatus() {
-    global YTDLPDirectory
+    global ytdlpDirectory
 
-    if (!FileExist(YTDLPDirectory . "\yt-dlp.exe")) {
+    if (!FileExist(ytdlpDirectory . "\yt-dlp.exe")) {
         return false
     }
     return true

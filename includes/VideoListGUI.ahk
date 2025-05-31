@@ -4,6 +4,19 @@ SendMode "Input"
 CoordMode "Mouse", "Window"
 
 /*
+Allows the ENTER key to function the same way as the add video to list button.
+This makes adding a video URL more convenient as the user can simply press enter while focused on the URL input field.
+Only works while the URL input field or the playlist range input field is focused.
+*/
+#HotIf (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd) && WinActive("ahk_id " . videoListGUI.Hwnd)
+((ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoURLInputEdit.Hwnd ||
+ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoSpecifyPlaylistRangeInputEdit.Hwnd)))
+Enter:: {
+    handleVideoListGUI_addVideoToListButton_onClick("", "")
+}
+#HotIf
+
+/*
 Allows the DELETE key to have the same function as clicking the remove video from list button.
 This is done to allow the user to delete videos from the list by pressing the DELETE key.
 It only works while the video list GUI is the active window.
@@ -11,19 +24,6 @@ It only works while the video list GUI is the active window.
 #HotIf (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd) && WinActive("ahk_id " . videoListGUI.Hwnd))
 Delete:: {
     handleVideoListGUI_removeVideoFromListButton_onClick("", "")
-}
-#HotIf
-
-/*
-Allows the ENTER key to function the same way as the add video to list button.
-This makes adding a video URL more convenient as the user can simply press enter while focused on the URL input field.
-Only works while the URL input field or the playlist range input field is focused.
-*/
-#HotIf (IsSet(videoListGUI) && WinExist("ahk_id " . videoListGUI.Hwnd) &&
-((ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoURLInputEdit.Hwnd ||
-ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoSpecifyPlaylistRangeInputEdit.Hwnd)))
-Enter:: {
-    handleVideoListGUI_addVideoToListButton_onClick("", "")
 }
 #HotIf
 
@@ -45,7 +45,7 @@ videoListGUI_onInit() {
     createVideoListGUI()
     importConfigFileValuesIntoVideoListGUI()
     if (readConfigFile("SHOW_VIDEO_LIST_GUI_ON_LAUNCH")) {
-        hotkey_openVideoListGUI()
+        showVideoListGUIWithSavedStateData()
     }
 }
 
@@ -70,18 +70,24 @@ createVideoListGUI() {
     ; Controls that change the download settings for the video.
     videoDesiredFormatText := videoListGUI.Add("Text", "yp+173", "Desired Format")
     videoDesiredFormatDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
-    videoDesiredSubtitleText := videoListGUI.Add("Text", "yp+30", "Desired Subtitle")
-    videoDesiredSubtitleDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
+    videoDesiredSubtitleText := videoListGUI.Add("Text", "yp+30", "Desired Subtitle(s)")
+    videoDesiredSubtitleListBox := videoListGUI.Add("ListBox", "w280 yp+20 R1 +Multi", ["None"])
     videoAdvancedDownloadSettingsButton := videoListGUI.Add("Button", "w280 yp+30", "Advanced Download Settings")
     ; Video list controls.
-    videoListSearchBarText := videoListGUI.Add("Text", "xm+310 ym", "Search the Video List")
+    videoListSearchBarText := videoListGUI.Add("Text", "xm+310 ym", "Video List")
     videoListSearchBarInputEdit := videoListGUI.Add("Edit", "yp+20 w300 -Multi", "")
+    ; Adds the grey "hint" text into the edit.
+    DllCall("SendMessage", "Ptr", videoListSearchBarInputEdit.Hwnd, "UInt", 0x1501, "Ptr", 1, "WStr",
+        "Search for a title, uploader, duration or URL", "UInt")
     videoListSearchBarInputClearButton := videoListGUI.Add("Button", "xp+305 yp+1 w20 h20", "X")
     videoListSearchBarInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     videoListView := videoListGUI.Add("ListView", "xp-304 yp+28 w599 h340 +Grid", ["Title", "Uploader", "Duration"])
     ; Controls that belong to the video list.
     manageVideoListGroupBox := videoListGUI.Add("GroupBox", "w600 xm ym+400 h185", "Manage Video List")
     addVideoURLInputEdit := videoListGUI.Add("Edit", "xp+10 yp+20 w555 R1 -WantReturn -Multi")
+    ; Adds the grey "hint" text into the edit.
+    DllCall("SendMessage", "Ptr", addVideoURLInputEdit.Hwnd, "UInt", 0x1501, "Ptr", 1, "WStr",
+        "Enter a video or playlist URL", "UInt")
     addVideoURLInputClearButton := videoListGUI.Add("Button", "xp+560 yp+1 w20 h20", "X")
     addVideoURLInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     ; Add URL elements.
@@ -91,6 +97,9 @@ createVideoListGUI() {
         "Only add videos in a specific range")
     addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
     addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled -Multi", "1")
+    ; Adds the grey "hint" text into the edit.
+    DllCall("SendMessage", "Ptr", addVideoSpecifyPlaylistRangeInputEdit.Hwnd, "UInt", 0x1501, "Ptr", 1, "WStr",
+        "For example: 1-3,4,5", "UInt")
     ; Remove video elements.
     removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200 +Disabled", "Remove Video(s) from List")
     removeVideoConfirmDeletionCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30",
@@ -127,13 +136,18 @@ createVideoListGUI() {
 
     ; Adds the event handlers for the video list GUI.
     videoDesiredFormatDDL.OnEvent("Change", handleVideoListGUI_allCurrentlySelectedVideoElements_onChange)
-    videoDesiredSubtitleDDL.OnEvent("Change", handleVideoListGUI_allCurrentlySelectedVideoElements_onChange)
+    videoDesiredSubtitleListBox.OnEvent("Change", handleVideoListGUI_allCurrentlySelectedVideoElements_onChange)
     videoAdvancedDownloadSettingsButton.OnEvent("Click",
         handleVideoListGUI_videoAdvancedDownloadSettingsButton_onClick)
     ; Video list controls.
     videoListSearchBarInputEdit.OnEvent("Change", handleVideoListGUI_videoListSearchBarInputEdit_onChange)
     videoListSearchBarInputClearButton.OnEvent("Click", handleVideoListGUI_videoListSearchBarInputClearButton_onClick)
     ; Add URL elements.
+    /*
+    Makes the addVideoURLInputEdit sensible for the double-click event.
+    This will be used to copy the current content of the clipboard into the input edit.
+    */
+    OnMessage(0x203, handleVideoListGUI_addVideoURLInputEdit_onDoubleClick)
     addVideoURLInputClearButton.OnEvent("Click", handleVideoListGUI_addVideoURLInputClearButton_onClick)
     addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_onClick)
     addVideoURLIsAPlaylistCheckbox.OnEvent("Click", handleVideoListGUI_addVideoURLIsAPlaylistCheckbox_onClick)
@@ -176,8 +190,14 @@ createVideoListGUI() {
         "Select a preferred download format. If available, the selected format will be downloaded directly."
     videoDesiredFormatDDL.ToolTip .=
         "`nOtherwise a conversion with FFmpeg might be required which can take some time."
-    videoDesiredSubtitleDDL.ToolTip :=
-        "More available subtitle options might be added in the future."
+    videoDesiredSubtitleListBox.ToolTip :=
+        "Select on or more subtitles to be embedded into the (supported) video file."
+    videoDesiredSubtitleListBox.ToolTip .=
+        '`nEmbedding all available subtitles does only include actual subtitles. In other words, '
+    videoDesiredSubtitleListBox.ToolTip .=
+        'entries embraced with square brackets "[]" (automatic captions) must be selected manually.'
+    videoDesiredSubtitleListBox.ToolTip .=
+        "`nA maximum of 20 subtitles per video should not be exceeded to ensure a successful download."
     videoAdvancedDownloadSettingsButton.ToolTip := ""
     ; Video list controls.
     videoListSearchBarInputEdit.ToolTip :=
@@ -185,6 +205,7 @@ createVideoListGUI() {
     videoListSearchBarInputClearButton.ToolTip := ""
     ; Controls that belong to the video list.
     addVideoURLInputEdit.ToolTip := "Enter a video URL here and press [Enter] or the [" . addVideoToListButton.Text "] button."
+    addVideoURLInputEdit.ToolTip .= "`nDouble-click this input field to paste the current clipboard content."
     addVideoURLInputClearButton.ToolTip := ""
     ; Add URL elements.
     addVideoToListButton.ToolTip := ""
@@ -271,6 +292,11 @@ createVideoListGUI() {
     applicationActionsMenu.SetIcon("Restart Application", iconFileLocation, 8) ; ICON_DLL_USED_HERE
     applicationActionsMenu.Add("Exit Application", (*) => menu_exitApplication())
     applicationActionsMenu.SetIcon("Exit Application", iconFileLocation, 15) ; ICON_DLL_USED_HERE
+    applicationActionsMenu.Add()
+    applicationActionsMenu.Add("Manage Dependencies", (*) => menu_openSetupGUI())
+    applicationActionsMenu.SetIcon("Manage Dependencies", iconFileLocation, 21) ; ICON_DLL_USED_HERE
+    applicationActionsMenu.Add("Update Dependencies", (*) => menu_updateDependencies())
+    applicationActionsMenu.SetIcon("Update Dependencies", iconFileLocation, 20) ; ICON_DLL_USED_HERE
 
     allMenus := MenuBar()
     allMenus.Add("&File", fileSelectionMenu)
@@ -286,14 +312,7 @@ createVideoListGUI() {
     videoListGUI.MenuBar := allMenus
 
     ; Add a temporary video list view element. When removing it, there will be the no entries entry.
-    tmpVideoMetaDataObject := Object()
-    tmpVideoMetaDataObject.VIDEO_TITLE := ""
-    tmpVideoMetaDataObject.VIDEO_ID := ""
-    tmpVideoMetaDataObject.VIDEO_URL := ""
-    tmpVideoMetaDataObject.VIDEO_UPLOADER := ""
-    tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
-    tmpVideoMetaDataObject.VIDEO_DURATION_STRING := ""
-    tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := ""
+    tmpVideoMetaDataObject := VideoMetaData()
     tmpEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
     tmpEntry.removeEntryFromVideoListViewContentMap()
 
@@ -319,8 +338,8 @@ createVideoListGUI() {
     GUIControlResizeLink(videoDesiredFormatText, 4)
     GUIControlResizeLink(videoDesiredFormatDDL, 4)
     GUIControlResizeLink(videoDesiredSubtitleText, 4)
-    GUIControlResizeLink(videoDesiredSubtitleDDL, 4)
-    GUIControlResizeLink(videoAdvancedDownloadSettingsButton, 4)
+    GUIControlResizeLink(videoDesiredSubtitleListBox, 6)
+    GUIControlResizeLink(videoAdvancedDownloadSettingsButton, 1)
 
     GUIControlResizeLink(videoListSearchBarText, 5)
     GUIControlResizeLink(videoListSearchBarInputEdit, 5)
@@ -355,11 +374,77 @@ createVideoListGUI() {
     GUIControlResizeLink(downloadProgressBar, 1)
 }
 
-handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(*) {
+handleVideoListGUI_allCurrentlySelectedVideoElements_onChange(pGUIControl, pInfo) {
     global currentlySelectedVideoListViewEntry
-    ; Sets the objects desired format and subtitle array currently selected index to the selected index of the drop down list.
-    currentlySelectedVideoListViewEntry.desiredFormatArrayCurrentlySelectedIndex := videoDesiredFormatDDL.Value
-    currentlySelectedVideoListViewEntry.desiredSubtitleArrayCurrentlySelectedIndex := videoDesiredSubtitleDDL.Value
+
+    ; There is an error if no list box entry is selected.
+    try {
+        selectedSubtitlesArray := Array()
+        selectedSubtitlesArray := videoDesiredSubtitleListBox.Text.Clone()
+    }
+    selectedVideoFormatIndex := videoDesiredFormatDDL.Value
+
+    currentlySelectedVideoListViewEntry.desiredFormatArrayCurrentlySelectedIndex := selectedVideoFormatIndex
+    subtitleSupportingVideoFormatsArray :=
+        ["None", "Automatically choose best video format", "mp4", "webm", "mkv", "mov"]
+    ; Enables the subtitle list box if the currently selected format supports subtitles.
+    if (checkIfStringIsInArray(videoDesiredFormatDDL.Text, subtitleSupportingVideoFormatsArray)) {
+        videoDesiredSubtitleListBox.Opt("-Disabled")
+    }
+    else {
+        videoDesiredSubtitleListBox.Opt("+Disabled")
+        selectedSubtitlesArray := Array("Do not download subtitles")
+    }
+    currentlySelectedVideoListViewEntry.desiredSubtitleArrayCurrentlySelectedEntries := selectedSubtitlesArray
+
+    ; Checks if the no subtitle option is selected.
+    if (checkIfStringIsInArray("Do not download subtitles", selectedSubtitlesArray)) {
+        ; Unselects all subtitles.
+        videoDesiredSubtitleListBox.Choose(0)
+        videoDesiredSubtitleListBox.Choose("Do not download subtitles")
+    }
+    ; Checks if the all subtitles option is selected.
+    else if (checkIfStringIsInArray("Embed all available subtitles", selectedSubtitlesArray)) {
+        ; Unselects all subtitles.
+        videoDesiredSubtitleListBox.Choose(0)
+        videoDesiredSubtitleListBox.Choose("Embed all available subtitles")
+    }
+
+    /*
+    The dialog box should only appear when actual changes are made to either the video format or the subtitle elements.
+    However, this function is called to update the currently selected video as well which is why we need this check.
+    */
+    if (pGUIControl != videoDesiredFormatDDL && pGUIControl != videoDesiredSubtitleListBox) {
+        return
+    }
+    selectedVideosMap := getSelectedVideoListViewElements()
+    ; This means there is only one video selected.
+    if (selectedVideosMap.Count <= 1) {
+        return
+    }
+    ; The confirmation prompt can be disabled in the config file.
+    if (readConfigFile("CONFIRM_CHANGING_MULTIPLE_VIDEOS")) {
+        ; Asks if the changes should be applied to all selected videos.
+        result := MsgBox("Apply changes to " . selectedVideosMap.Count . " selected videos?",
+            "VD - Apply to all Videos",
+            "Icon? YN Owner" . videoListGUI.Hwnd)
+        if (result != "Yes") {
+            return
+        }
+    }
+    ; Apply the changes made to this video to all selected entries.
+    for (key, selectedVideo in selectedVideosMap) {
+        /*
+        Only the actual changes will be applied to the other selected videos.
+        Changing the format for example should not overwrite the subtitles.
+        */
+        if (pGUIControl == videoDesiredFormatDDL) {
+            selectedVideo.desiredFormatArrayCurrentlySelectedIndex := selectedVideoFormatIndex
+        }
+        if (pGUIControl == videoDesiredSubtitleListBox) {
+            selectedVideo.desiredSubtitleArrayCurrentlySelectedEntries := selectedSubtitlesArray
+        }
+    }
 }
 
 handleVideoListGUI_videoAdvancedDownloadSettingsButton_onClick(pButton, pInfo) {
@@ -387,21 +472,26 @@ handleVideoListGUI_videoListSearchBarInputEdit_onChange(pEdit, pInfo) {
     resultArray := searchInVideoListView(searchString)
     for (resultEntry in resultArray) {
         addVideoListViewEntryToListView(resultEntry)
+        ; Removes the no results entry.
+        if (IsSet(noEntriesVideoListEntry) && IsObject(noEntriesVideoListEntry) &&
+        videoListViewContentMap.Has(noEntriesVideoListEntry.identifierString)) {
+            noEntriesVideoListEntry.removeEntryFromVideoListViewContentMap()
+        }
     }
     else {
-        ; This entry is displayed when no results are found.
-        tmpVideoMetaDataObject := Object()
-        tmpVideoMetaDataObject.VIDEO_TITLE := "*****"
-        tmpVideoMetaDataObject.VIDEO_ID := ""
-        tmpVideoMetaDataObject.VIDEO_URL := "_internal_entry_no_results_found"
-        tmpVideoMetaDataObject.VIDEO_UPLOADER := "No results found."
-        tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
-        tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "*****"
-        tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
-        ; Create the entry using the temporary video meta data object.
-        static noEntriesVideoListEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
-        noEntriesVideoListEntry.desiredFormatArray := ["None"]
-        noEntriesVideoListEntry.desiredSubtitleArray := ["None"]
+        if (!isSet(noEntriesVideoListEntry)) {
+            ; This entry is displayed when no results are found.
+            tmpVideoMetaDataObject := VideoMetaData()
+            tmpVideoMetaDataObject.VIDEO_TITLE := "*****"
+            tmpVideoMetaDataObject.VIDEO_URL := "_internal_entry_no_results_found"
+            tmpVideoMetaDataObject.VIDEO_UPLOADER := "No results found."
+            tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "*****"
+            tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
+            ; Create the entry using the temporary video meta data object.
+            static noEntriesVideoListEntry := VideoListViewEntry(tmpVideoMetaDataObject, false)
+            noEntriesVideoListEntry.desiredFormatArray := ["None"]
+            noEntriesVideoListEntry.desiredSubtitleArray := ["None"]
+        }
         ; Manually update the video list view element to avoid showing all entries in the videoListViewContentMap.
         addVideoListViewEntryToListView(noEntriesVideoListEntry)
         updateCurrentlySelectedVideo(noEntriesVideoListEntry)
@@ -412,14 +502,30 @@ handleVideoListGUI_videoListSearchBarInputClearButton_onClick(pButton, pInfo) {
     videoListSearchBarInputEdit.Value := ""
     ; Trigger the onChange function manually, as changing the value above does not trigger the change event.
     handleVideoListGUI_videoListSearchBarInputEdit_onChange(videoListSearchBarInputEdit, pInfo)
+    ; Focus the search bar input edit.
+    videoListSearchBarInputEdit.Focus()
+}
+
+; This is the double-click event handler for the addVideoURLInputEdit.
+handleVideoListGUI_addVideoURLInputEdit_onDoubleClick(wParam, lParam, msg, hwnd) {
+    if (hwnd != addVideoURLInputEdit.Hwnd) {
+        ; Tells Windows to process this message further.
+        return
+    }
+    addVideoURLInputEdit.Value := A_Clipboard
+    handleVideoListGUI_addVideoToListButton_onClick(addVideoToListButton, "")
+    ; Tells Windows to not process this message further.
+    return false
 }
 
 handleVideoListGUI_addVideoURLInputClearButton_onClick(pButton, pInfo) {
     addVideoURLInputEdit.Value := ""
+    ; Focus the URL input edit.
+    addVideoURLInputEdit.Focus()
 }
 
 handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
-    videoURL := addVideoURLInputEdit.Value
+    videoURL := Trim(addVideoURLInputEdit.Value)
     ; Avoids the invalid URL MsgBox when the edit is empty.
     if (videoURL == "") {
         return
@@ -449,15 +555,15 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
         }
         ; This happens when the playlist could not be found.
         if (playlistVideoMetaDataObjectArray.Length == 0) {
-            tmpVideoMetaDataObject := Object()
+            tmpVideoMetaDataObject := VideoMetaData()
             tmpVideoMetaDataObject.VIDEO_TITLE := "playlist_not_found: " . videoURL
-            tmpVideoMetaDataObject.VIDEO_ID := ""
             tmpVideoMetaDataObject.VIDEO_URL := "playlist_not_found: " . videoURL
             tmpVideoMetaDataObject.VIDEO_UPLOADER := "Not found"
-            tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
             tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "Not found"
             tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
             newVideoEntry := VideoListViewEntry(tmpVideoMetaDataObject)
+            ; Flashes the video list GUI to indicate that the playlist could not be found.
+            videoListGUI.Flash(true)
         }
         else {
             ; Creates a new video list view entry object for each video.
@@ -554,11 +660,11 @@ handleVideoListGUI_importVideoListButton_onClick(pButton, pInfo) {
     importFileLocation := fileSelectPrompt("VD - Please select a URL file to import", importFileDefaultDirectory,
         "*.txt", videoListGUI)
     ; This usually happens, when the user cancels the selection.
-    if (importFileLocation == "_result_no_file_selected") {
+    if (!importFileLocation.Has(1)) {
         return
     }
     ; Imports all URLs or only valid ones, depending on the value of the checkbox.
-    importVideoListViewElements(importFileLocation, importAndExportOnlyValidURLsCheckbox.Value)
+    importVideoListViewElements(importFileLocation[1], importAndExportOnlyValidURLsCheckbox.Value)
 }
 
 handleVideoListGUI_exportVideoListButton_onClick(pButton, pInfo) {
@@ -610,7 +716,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
 
     ; Checks if there are videos in the video list.
     if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
-        MsgBox("Please add at least one video to the list.", "VD - Canceled Download",
+        MsgBox("Please add at least one video to the list.", "VD - No Videos Added",
             "O Iconi T3 Owner" . videoListGUI.Hwnd)
         return
     }
@@ -716,11 +822,14 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         currentYTDLPActionObject.alreadyDownloadedVideoAmount++
     }
 
+    ; Completes the taskbar progress bar.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 2, 100, 100)
+
     ; Automatically exports all downloaded video URLs.
     if (autoExportVideoListCheckbox.Value && actuallyDownloadedVideoListViewElements.Count > 0) {
         exportFileName := currentTime . "_VD_auto_exported_urls.txt"
         exportFileLocation := currentDownloadDirectory . "\" . exportFileName
-        ; There shouldn't be any invalid URLs. Really :D But if there are any, the will be ignored.
+        ; There shouldn't be any invalid URLs. Really :D But if there are any, they will be ignored.
         exportVideoListViewElements(actuallyDownloadedVideoListViewElements, exportFileLocation, true)
     }
 
@@ -750,10 +859,11 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
             displayTrayTip(statusText, "VideoDownloader - Status", , 5000)
         }
     }
-    if (downloadTerminateAfterDownloadCheckbox.Value) {
-        exitApplicationWithNotification()
-    }
     currentYTDLPActionObject.booleanDownloadIsRunning := false
+    if (downloadTerminateAfterDownloadCheckbox.Value) {
+        ; We call this method to check if there are still videos in the video list.
+        handleVideoListGUI_onClose(videoListGUI)
+    }
 
     ; The download start button will only be activated when there are still videos left in the list.
     if (!videoListViewContentMap.Has("*****No videos added yet.*****")) {
@@ -797,20 +907,26 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
             videoListGUI)
     }
     if (result == msgButton1) {
-        if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
-            ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
-            ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
-            terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
-            currentYTDLPActionObject.booleanCancelOneVideoDownload := true
+        if (!ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
+            return
         }
+        ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
+        ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
+        terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
+        ; Changes the taskbar progress bar to indicate that a download was canceled.
+        setProgressOnTaskbarApplication(videoListGUI.Hwnd, 8)
+        currentYTDLPActionObject.booleanCancelOneVideoDownload := true
     }
     else if (result == msgButton3) {
-        if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
-            ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
-            ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
-            terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
-            currentYTDLPActionObject.booleanCancelCompleteDownload := true
+        if (!ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
+            return
         }
+        ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
+        ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
+        terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
+        ; Changes the taskbar progress bar to indicate that a download was canceled.
+        setProgressOnTaskbarApplication(videoListGUI.Hwnd, 8)
+        currentYTDLPActionObject.booleanCancelCompleteDownload := true
     }
 }
 
@@ -847,6 +963,8 @@ handleVideoListGUI_onEventHelp(wParam, lParam, msg, hwnd) {
     else {
         menu_openHelpGUI()
     }
+    ; Tells Windows to not process this message further.
+    return false
 }
 
 handleVideoListGUI_onEventDropFiles(pGUI, pGUIElement, pFileArray, pX, pY) {
@@ -915,12 +1033,25 @@ handleVideoListGUI_onClose(pGUI) {
     global videoListViewContentMap
     global currentYTDLPActionObject
 
+    ; Saves the current position and state of the video list GUI when the user holds SHIFT while closing the GUI.
+    if (GetKeyState("Shift", "P")) {
+        saveCurrentVideoListGUIStateToConfigFile()
+    }
     if (!readConfigFile("EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")) {
         return
     }
     ; This means there are no videos in the list view element.
     if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
         exitApplicationWithNotification()
+    }
+    /*
+    The no results entry is automatically added to the videoListViewContentMap once the user types something
+    into the video list search bar which does not yield any results.
+    We substract this entry from the amount of videos in the list if the user closes the video list GUI at this moment.
+    */
+    videoAmount := videoListViewContentMap.Count
+    if (videoAmount > 1 && videoListViewContentMap.Has("*****No results found.*****")) {
+        videoAmount--
     }
 
     ; Warning message when there is an active download running at the moment.
@@ -930,14 +1061,14 @@ handleVideoListGUI_onClose(pGUI) {
             "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
     }
     ; Warning message when there are still videos in the list view element.
-    else if (videoListViewContentMap.Count == 1) {
+    else if (videoAmount == 1) {
         result := MsgBox(
             "There is still one video in the video list.`n`nDo you want to close VideoDownloader anyway?",
             "VD - Confirm Exit", "YN Icon? Owner" . videoListGUI.Hwnd)
     }
-    else if (videoListViewContentMap.Count > 1) {
+    else if (videoAmount > 1) {
         result := MsgBox(
-            "There are still " . videoListViewContentMap.Count . " videos in the video list."
+            "There are still " . videoAmount . " videos in the video list."
             "`n`nDo you want to close VideoDownloader anyway?", "VD - Confirm Exit",
             "YN Icon? Owner" . videoListGUI.Hwnd)
     }
@@ -1053,6 +1184,11 @@ searchInVideoListView(pSearchString) {
             ; Add the entry to the result array.
             resultArrayCollection.Push(videoListEntry)
         }
+        ; Search in the original video URL.
+        else if (InStr(videoListEntry.videoURLOriginal, pSearchString)) {
+            ; Add the entry to the result array.
+            resultArrayCollection.Push(videoListEntry)
+        }
     }
     return resultArrayCollection
 }
@@ -1085,35 +1221,47 @@ updateCurrentlySelectedVideo(pVideoListViewEntry) {
     videoUploaderText.Text := pVideoListViewEntry.videoUploader
     videoDurationText.Text := pVideoListViewEntry.videoDurationString
     videoThumbnailImage.Value := pVideoListViewEntry.videoThumbailFileLocation
+    ; Increases performance by temporarily suppressing the redraw of the elements.
+    videoDesiredFormatDDL.Opt("-Redraw")
+    videoDesiredSubtitleListBox.Opt("-Redraw")
     ; Delete the old content of the drop down lists.
     videoDesiredFormatDDL.Delete()
-    videoDesiredSubtitleDDL.Delete()
+    videoDesiredSubtitleListBox.Delete()
     ; Add the new content to the drop down lists.
     videoDesiredFormatDDL.Add(pVideoListViewEntry.desiredFormatArray)
-    videoDesiredSubtitleDDL.Add(pVideoListViewEntry.desiredSubtitleArray)
+    videoDesiredSubtitleListBox.Add(pVideoListViewEntry.desiredSubtitleArray)
     ; Select the currently selected format and subtitle.
     try {
         ; This operation will fail when the index is higher than the amount of elements in the DDL.
         videoDesiredFormatDDL.Value := pVideoListViewEntry.desiredFormatArrayCurrentlySelectedIndex
-        videoDesiredSubtitleDDL.Value := pVideoListViewEntry.desiredSubtitleArrayCurrentlySelectedIndex
+        for (entry in pVideoListViewEntry.desiredSubtitleArrayCurrentlySelectedEntries) {
+            videoDesiredSubtitleListBox.Choose(entry)
+        }
     }
     catch {
         ; Selects the very first entry.
         videoDesiredFormatDDL.Value := 1
-        videoDesiredSubtitleDDL.Value := 1
+        videoDesiredSubtitleListBox.Value := 1
     }
+    videoDesiredFormatDDL.Opt("+Redraw")
+    videoDesiredSubtitleListBox.Opt("+Redraw")
+    ; Run this function to enable or disable the subtitle list box element accordingly.
+    handleVideoListGUI_allCurrentlySelectedVideoElements_onChange("", "")
 }
 
 /*
 Extracts the metadata of a SINGLE video from a given URL using yt-dlp.
 @param pVideoURL [String] The URL of the video.
-@returns [videoMetaDataObject] This object has the following properties:
-videoMetaDataObject.VIDEO_TITLE (The title of the video)
-videoMetaDataObject.VIDEO_URL (The URL of the video)
-videoMetaDataObject.VIDEO_UPLOADER (The uploader of the video)
-videoMetaDataObject.VIDEO_UPLOADER_URL (The URL of the uploader)
-videoMetaDataObject.VIDEO_DURATION_STRING (The duration of the video in this format [HH:mm:ss])
-videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
+@returns [VideoMetaData] This object has the following properties:
+VideoMetaData.VIDEO_TITLE (The title of the video)
+VideoMetaData.VIDEO_URL (The URL of the video)
+VideoMetaData.VIDEO_URL_ORIGINAL (The URL used by yt-dlp to find the video)
+VideoMetaData.VIDEO_UPLOADER (The uploader of the video)
+VideoMetaData.VIDEO_UPLOADER_URL (The URL of the uploader)
+VideoMetaData.VIDEO_DURATION_STRING (The duration of the video in this format [HH:mm:ss])
+VideoMetaData.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
+VideoMetaData.VIDEO_SUBTITLES (A map where keys are language names and values are language codes)
+VideoMetaData.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and values are language codes)
 */
 extractVideoMetaData(pVideoURL) {
     global GUIBackgroundImageLocation
@@ -1129,26 +1277,14 @@ extractVideoMetaData(pVideoURL) {
     ; The video thumbnail will be stored and it's location saved in the object.
     thumbnailFileLocation := tempWorkingDirectory . "\" . currentTime . ".%(ext)s"
 
-    ; This object stores the video metadata which yt-dlp should extract.
-    videoMetaDataObject := Object()
-    videoMetaDataObject.VIDEO_TITLE := "%(title)s"
-    videoMetaDataObject.VIDEO_ID := "%(id)s"
-    videoMetaDataObject.VIDEO_URL := "%(webpage_url)s"
-    videoMetaDataObject.VIDEO_UPLOADER := "%(uploader)s"
-    videoMetaDataObject.VIDEO_UPLOADER_URL := "%(uploader_url)s"
-    videoMetaDataObject.VIDEO_DURATION_STRING := "%(duration_string)s"
-    ; Build the meta data string for yt-dlp.
-    relevantMetaDataString := "[VideoMetaData]`n"
-    for (property, value in videoMetaDataObject.OwnProps()) {
-        relevantMetaDataString .= property . "=" . value . "`n"
-    }
-    relevantMetaDataString := RTrim(relevantMetaDataString, "`n")
+    ; This object stores the video metadata extracted by yt-dlp.
+    videoMetaDataObject := VideoMetaData(true)
     ; Build the actual yt-dlp command.
     ytdlpCommand := '--skip-download --no-playlist --convert-thumbnails "jpg/png" '
     ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
     ytdlpCommand .= '--paths "home:' . tempWorkingDirectory . '" '
-    ytdlpCommand .= '--print-to-file "' . relevantMetaDataString . '" "' . metaDataFileLocation . '" '
-    ytdlpCommand .= '--ffmpeg-location "' . ffmpegDirectory . '" '
+    ytdlpCommand .= '--print-to-file "' . videoMetaDataObject.relevantMetaDataString . '" '
+    ytdlpCommand .= '"' . metaDataFileLocation . '" --ffmpeg-location "' . ffmpegDirectory . '" '
     ytdlpCommand .= '"' . pVideoURL . '"'
     ; Start the status bar loading animation.
     spinnerCharArray := [
@@ -1158,13 +1294,30 @@ extractVideoMetaData(pVideoURL) {
         "[   🎞️      ]", "[  🎞️       ]", "[ 🎞️        ]"
     ]
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting video data...", spinnerCharArray)
-    processPID := executeYTDLPCommand(ytdlpCommand)
+    ; Starts a loading animation in the taskbar.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 1)
+
+    if (readConfigFile("ENABLE_DEBUG_MODE")) {
+        ; We use the current time stamp to generate a unique name for the log file.
+        ytdlpLogFileName := currentTime . "_yt_dlp_video_extraction_log.log"
+        ytdlpLogFileLocation := tempWorkingDirectory . "\" . ytdlpLogFileName
+        ; Defines the yt-dlp error log file name.
+        ytdlpErrorLogFileName := currentTime . "_yt_dlp_video_extraction_error_log.log"
+        ytdlpErrorLogFileLocation := tempWorkingDirectory . "\" . ytdlpErrorLogFileName
+    }
+    else {
+        ytdlpLogFileLocation := A_Temp . "\yt-dlp.log"
+        ytdlpErrorLogFileLocation := A_Temp . "\yt-dlp_errors.log"
+    }
+    ; Execute the yt-dlp command.
+    processPID := executeYTDLPCommand(ytdlpCommand, ytdlpLogFileLocation, ytdlpErrorLogFileLocation)
     ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
     if (processPID != "_result_error_while_starting_ytdlp_executable") {
         ProcessWaitClose(processPID)
     }
+
     ; Extract the metadata from the file into the object.
-    for (property, value in videoMetaDataObject.OwnProps()) {
+    for (property, value in videoMetaDataObject.relevantMetaDataProperties) {
         videoMetaDataObject.%property% := IniRead(metaDataFileLocation, "VideoMetaData", property, "Not found")
     }
     /*
@@ -1175,7 +1328,11 @@ extractVideoMetaData(pVideoURL) {
     if (!FileExist(metaDataFileLocation)) {
         videoMetaDataObject.VIDEO_TITLE := "video_not_found: " . pVideoURL
         videoMetaDataObject.VIDEO_URL := "video_not_found: " . pVideoURL
+        ; Flashes the video list GUI to indicate that the video could not be found.
+        videoListGUI.Flash(true)
     }
+    ; Save the original URL which was used by yt-dlp to find the video.
+    videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoURL
     ; We have to find out the extension of the thumbnail file because we don't know it in advance.
     loop files (tempWorkingDirectory . "\" . currentTime ".*") {
         if (A_LoopFileExt != "ini") {
@@ -1189,13 +1346,44 @@ extractVideoMetaData(pVideoURL) {
     }
     ; We add this property after the loops because it will not be written by yt-dlp.
     videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := thumbnailFileLocation
+    /*
+    Extract the available subtitles from the yt-dlp string.
+    The returned map should contain the language as the key and the corresponding language code as the value.
+    */
+    videoMetaDataObject.VIDEO_SUBTITLES :=
+        parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_SUBTITLES)
+    videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS :=
+        parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished video information extraction")
+    ; Stops the taskbar loading animation.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
+
+    if (readConfigFile("ENABLE_DEBUG_MODE")) {
+        ; Moves the log files into the VideoDownloader temp directory in case the debug mode is enabled.
+        additionalFileContent := "This log file was moved into the VideoDownloader temp directory because the "
+        additionalFileContent .= "config file entry [ENABLE_DEBUG_MODE] has been enabled."
+        additionalFileContent .= "`n`nUsed command:`n[`n" . ytdlpCommand . "`n]`n`n"
+        if (FileExist(ytdlpLogFileLocation)) {
+            originalLogFileContent := FileRead(ytdlpLogFileLocation)
+            ; Deletes the file because FileAppend() would cause duplicate content.
+            FileDelete(ytdlpLogFileLocation)
+            FileAppend(additionalFileContent . originalLogFileContent,
+                tempWorkingDirectory . "\" . ytdlpLogFileName)
+        }
+        if (FileExist(ytdlpErrorLogFileLocation)) {
+            originalErrorLogFileContent := FileRead(ytdlpErrorLogFileLocation)
+            ; Deletes the file because FileAppend() would cause duplicate content.
+            FileDelete(ytdlpErrorLogFileLocation)
+            FileAppend(additionalFileContent . originalErrorLogFileContent,
+                tempWorkingDirectory . "\" . ytdlpErrorLogFileName)
+        }
+    }
     return videoMetaDataObject
 }
 
 /*
-Extracts the metadata of a SINGLE video from a given URL using yt-dlp.
-@param pVideoPlaylistURL [String] The URL of the video.
+Extracts the metadata of one more videos from a given (playlist) URL using yt-dlp.
+@param pVideoPlaylistURL [String] The URL of the video or playlist.
 @param pPlayListRangeIndex [String] Used to only extract specific videos from the playlist.
 From the yt-dlp documentation:
     Comma separated playlist_index of the items
@@ -1207,15 +1395,18 @@ From the yt-dlp documentation:
     order. E.g. "--playlist-items 1:3,7,-5::2" used on a
     playlist of size 15 will download the items
     at index 1,2,3,7,11,13,15.
-@returns [Array] an array containing a [videoMetaDataObject] for each video in the playlist (or the provided range index).
+@returns [Array] An array containing a [VideoMetaData] object for each video in the playlist (or the provided range index).
 
-[videoMetaDataObject] This object has the following properties:
-videoMetaDataObject.VIDEO_TITLE (The title of the video)
-videoMetaDataObject.VIDEO_URL (The URL of the video)
-videoMetaDataObject.VIDEO_UPLOADER (The uploader of the video)
-videoMetaDataObject.VIDEO_UPLOADER_URL (The URL of the uploader)
-videoMetaDataObject.VIDEO_DURATION_STRING (The duration of the video in this format [HH:mm:ss])
-videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
+[VideoMetaData] This object has the following properties:
+VideoMetaData.VIDEO_TITLE (The title of the video)
+VideoMetaData.VIDEO_URL (The URL of the video)
+VideoMetaData.VIDEO_URL_ORIGINAL (The (playlist) URL used by yt-dlp to find the video)
+VideoMetaData.VIDEO_UPLOADER (The uploader of the video)
+VideoMetaData.VIDEO_UPLOADER_URL (The URL of the uploader)
+VideoMetaData.VIDEO_DURATION_STRING (The duration of the video in this format [HH:mm:ss])
+VideoMetaData.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
+VideoMetaData.VIDEO_SUBTITLES (A map where keys are language names and values are language codes)
+VideoMetaData.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and values are language codes)
 */
 extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     global GUIBackgroundImageLocation
@@ -1232,26 +1423,15 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     if (!DirExist(tempWorkingDirectoryPlaylist)) {
         DirCreate(tempWorkingDirectoryPlaylist)
     }
-    ; This object stores the video metadata which yt-dlp should extract.
-    videoMetaDataObject := Object()
-    videoMetaDataObject.VIDEO_TITLE := "%(title)s"
-    videoMetaDataObject.VIDEO_ID := "%(id)s"
-    videoMetaDataObject.VIDEO_URL := "%(webpage_url)s"
-    videoMetaDataObject.VIDEO_UPLOADER := "%(uploader)s"
-    videoMetaDataObject.VIDEO_UPLOADER_URL := "%(uploader_url)s"
-    videoMetaDataObject.VIDEO_DURATION_STRING := "%(duration_string)s"
-    ; Build the meta data string for yt-dlp.
-    relevantMetaDataString := "[VideoMetaData]`n"
-    for (property, value in videoMetaDataObject.OwnProps()) {
-        relevantMetaDataString .= property . "=" . value . "`n"
-    }
-    relevantMetaDataString := RTrim(relevantMetaDataString, "`n")
+
+    ; This object stores the video metadata extracted by yt-dlp.
+    videoMetaDataObject := VideoMetaData(true)
     ; Build the actual yt-dlp command.
     ytdlpCommand := '--skip-download --yes-playlist --convert-thumbnails "jpg/png" '
     ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
     ytdlpCommand .= '--paths "home:' . tempWorkingDirectoryPlaylist . '" '
-    ytdlpCommand .= '--print-to-file "' . relevantMetaDataString . '" "' . metaDataFileLocation . '" '
-    ytdlpCommand .= '--ffmpeg-location "' . ffmpegDirectory . '" '
+    ytdlpCommand .= '--print-to-file "' . videoMetaDataObject.relevantMetaDataString . '" '
+    ytdlpCommand .= '"' . metaDataFileLocation . '" --ffmpeg-location "' . ffmpegDirectory . '" '
     ; If the user wants to download only a specific range of the playlist.
     if (pPlayListRangeIndex != "-1") {
         ytdlpCommand .= '--playlist-items "' . pPlayListRangeIndex . '" '
@@ -1265,25 +1445,35 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         "[   💾      ]", "[  💾       ]", "[ 💾        ]"
     ]
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting playlist data...", spinnerCharArray)
+    ; Starts a loading animation in the taskbar.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 1)
+
+    if (readConfigFile("ENABLE_DEBUG_MODE")) {
+        ; We use the current time stamp to generate a unique name for the log file.
+        ytdlpLogFileName := currentTime . "_yt_dlp_playlist_extraction_log.log"
+        ytdlpLogFileLocation := tempWorkingDirectoryPlaylist . "\" . ytdlpLogFileName
+        ; Defines the yt-dlp error log file name.
+        ytdlpErrorLogFileName := currentTime . "_yt_dlp_playlist_extraction_error_log.log"
+        ytdlpErrorLogFileLocation := tempWorkingDirectoryPlaylist . "\" . ytdlpErrorLogFileName
+    }
+    else {
+        ytdlpLogFileLocation := A_Temp . "\yt-dlp.log"
+        ytdlpErrorLogFileLocation := A_Temp . "\yt-dlp_errors.log"
+    }
     ; Run yt-dlp and create a .INI and a thumbnail file for each video in the playlist.
-    processPID := executeYTDLPCommand(ytdlpCommand)
+    processPID := executeYTDLPCommand(ytdlpCommand, ytdlpLogFileLocation, ytdlpErrorLogFileLocation)
     ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
     if (processPID != "_result_error_while_starting_ytdlp_executable") {
         ProcessWaitClose(processPID)
     }
+
     videoMetaDataObjectArray := []
     ; Parse all .INI files in the temp directory and extract the metadata.
     iniFileSearchString := tempWorkingDirectoryPlaylist . "\" . currentTime . "_*.ini"
     loop files (iniFileSearchString) {
-        videoMetaDataObject := Object()
-        videoMetaDataObject.VIDEO_TITLE := ""
-        videoMetaDataObject.VIDEO_ID := ""
-        videoMetaDataObject.VIDEO_URL := ""
-        videoMetaDataObject.VIDEO_UPLOADER := ""
-        videoMetaDataObject.VIDEO_UPLOADER_URL := ""
-        videoMetaDataObject.VIDEO_DURATION_STRING := ""
+        videoMetaDataObject := VideoMetaData(true)
         ; Extract the meta data from the .INI file.
-        for (property, value in videoMetaDataObject.OwnProps()) {
+        for (property, value in videoMetaDataObject.relevantMetaDataProperties) {
             videoMetaDataObject.%property% := IniRead(A_LoopFileFullPath, "VideoMetaData", property,
                 "Not found")
         }
@@ -1297,6 +1487,8 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
                 break
             }
         }
+        ; Save the original (playlist) URL which was used by yt-dlp to find the video.
+        videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoPlaylistURL
         ; In case the file does not exist, we use a default thumbnail.
         if (!FileExist(thumbnailFileLocation)) {
             thumbnailFileLocation := GUIBackgroundImageLocation
@@ -1304,8 +1496,39 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         ; We add this property after the loops because it will not be written by yt-dlp.
         videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := thumbnailFileLocation
         videoMetaDataObjectArray.Push(videoMetaDataObject)
+        /*
+        Extract the available subtitles from the yt-dlp string.
+        The returned map should contain the language as the key and the corresponding language code as the value.
+        */
+        videoMetaDataObject.VIDEO_SUBTITLES :=
+            parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_SUBTITLES)
+        videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS :=
+            parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
     }
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished playlist information extraction")
+    ; Stops the taskbar loading animation.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
+
+    if (readConfigFile("ENABLE_DEBUG_MODE")) {
+        ; Moves the log files into the VideoDownloader temp directory in case the debug mode is enabled.
+        additionalFileContent := "This log file was moved into the VideoDownloader temp directory because the "
+        additionalFileContent .= "config file entry [ENABLE_DEBUG_MODE] has been enabled."
+        additionalFileContent .= "`n`nUsed command:`n[`n" . ytdlpCommand . "`n]`n`n"
+        if (FileExist(ytdlpLogFileLocation)) {
+            originalLogFileContent := FileRead(ytdlpLogFileLocation)
+            ; Deletes the file because FileAppend() would cause duplicate content.
+            FileDelete(ytdlpLogFileLocation)
+            FileAppend(additionalFileContent . originalLogFileContent,
+                tempWorkingDirectoryPlaylist . "\" . ytdlpLogFileName)
+        }
+        if (FileExist(ytdlpErrorLogFileLocation)) {
+            originalErrorLogFileContent := FileRead(ytdlpErrorLogFileLocation)
+            ; Deletes the file because FileAppend() would cause duplicate content.
+            FileDelete(ytdlpErrorLogFileLocation)
+            FileAppend(additionalFileContent . originalErrorLogFileContent,
+                tempWorkingDirectoryPlaylist . "\" . ytdlpErrorLogFileName)
+        }
+    }
     return videoMetaDataObjectArray
 }
 
@@ -1359,16 +1582,16 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     pVideoListViewEntry.generateDownloadCommandPart()
     ytdlpCommand .= pVideoListViewEntry.downloadCommandPart
 
-    ; We use the current time stamp to generate a unique name for log file.
+    ; We use the current time stamp to generate a unique name for the log file.
     currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     ; Defines the yt-dlp download log file name.
-    ytdlpDownloadLogFileName := currentTime . "_yt_dlp_download_log.log"
-    ytdlpDownloadLogFileLocation := tempWorkingDirectory . "\" . ytdlpDownloadLogFileName
+    ytdlpLogFileName := currentTime . "_yt_dlp_download_log.log"
+    ytdlpLogFileLocation := tempWorkingDirectory . "\" . ytdlpLogFileName
     ; Defines the yt-dlp error log file name.
-    ytdlpErrorLogFileName := currentTime . "_yt_dlp_error_log.log"
+    ytdlpErrorLogFileName := currentTime . "_yt_dlp_download_error_log.log"
     ytdlpErrorLogFileLocation := tempWorkingDirectory . "\" . ytdlpErrorLogFileName
     ; Execute the yt-dlp command and monitor the download progress.
-    processPID := executeYTDLPCommand(ytdlpCommand, ytdlpDownloadLogFileLocation, ytdlpErrorLogFileLocation)
+    processPID := executeYTDLPCommand(ytdlpCommand, ytdlpLogFileLocation, ytdlpErrorLogFileLocation)
 
     ; Fill the currentYTDLPActionObject with data which can be used to cancel the download.
     currentYTDLPActionObject.downloadProcessYTDLPPID := processPID
@@ -1378,7 +1601,7 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     statusBarText := "[" . videoTitle . "] - Starting download process..."
     handleVideoListGUI_videoListGUIStatusBar_startAnimation(statusBarText)
     ; This function monitor the download progress and update the video list GUI accordingly.
-    monitorVideoDownloadProgress(processPID, ytdlpDownloadLogFileLocation, videoTitle)
+    monitorVideoDownloadProgress(processPID, ytdlpLogFileLocation, videoTitle)
 
     ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
     if (processPID != "_result_error_while_starting_ytdlp_executable") {
@@ -1393,6 +1616,24 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation(statusBarText)
     ; This delay allows the user to read the status message for a short period of time before downloading the next video.
     Sleep(200)
+
+    if (!readConfigFile("ENABLE_DEBUG_MODE")) {
+        return
+    }
+    ; Moves the log files into the download directory in case the debug mode is enabled.
+    additionalFileContent := "This log file was moved into the download directory because the "
+    additionalFileContent .= "config file entry [ENABLE_DEBUG_MODE] has been enabled."
+    additionalFileContent .= "`n`nUsed command:`n[`n" . ytdlpCommand . "`n]`n`n"
+    if (FileExist(ytdlpLogFileLocation)) {
+        originalLogFileContent := FileRead(ytdlpLogFileLocation)
+        FileAppend(additionalFileContent . originalLogFileContent,
+            pDownloadTargetDirectory . "\" . ytdlpLogFileName)
+    }
+    if (FileExist(ytdlpErrorLogFileLocation)) {
+        originalErrorLogFileContent := FileRead(ytdlpErrorLogFileLocation)
+        FileAppend(additionalFileContent . originalErrorLogFileContent,
+            pDownloadTargetDirectory . "\" . ytdlpErrorLogFileName)
+    }
 }
 
 /*
@@ -1425,15 +1666,59 @@ class VideoListViewEntry {
         this.videoUploader := metaData.VIDEO_UPLOADER
         this.videoDurationString := metaData.VIDEO_DURATION_STRING
         this.videoURL := metaData.VIDEO_URL
+        this.videoURLOriginal := metaData.VIDEO_URL_ORIGINAL
         this.videoUploaderURL := metaData.VIDEO_UPLOADER_URL
         this.videoThumbailFileLocation := metaData.VIDEO_THUMBNAIL_FILE_LOCATION
+        this.videoSubtitleMap := metaData.VIDEO_SUBTITLES
+        /*
+        This map contains the keys of the videoSubtitleMap as it's values and vice versa because
+        we want to search for language codes in the next step and it would be more inefficient to traverse the
+        complete videoSubtitleMap for each language code.
+        */
+        reverseVideoSubtitleMap := Map()
+        for (languageName, languageCode in this.videoSubtitleMap) {
+            reverseVideoSubtitleMap.Set(languageCode, languageName)
+        }
+        ; Adds the automatically generated subtitles to the subtitle map.
+        for (languageName, languageCode in metaData.VIDEO_AUTOMATIC_CAPTIONS) {
+            ; Avoids duplicate languages.
+            if (!reverseVideoSubtitleMap.Has(languageCode)) {
+                ; Automatically generated subtitles are embraced with square brackets "[]".
+                this.videoSubtitleMap.Set("[" . languageName . "]", languageCode)
+            }
+        }
+
         ; The following attributes will be used when downloading the video.
         this.desiredFormatArray := desiredDownloadFormatArray.Clone()
         ; This option changes when the user selects a different format in the video list GUI.
         this.desiredFormatArrayCurrentlySelectedIndex := readConfigFile("DEFAULT_DESIRED_DOWNLOAD_FORMAT_ARRAY_INDEX")
+
+        ; Loads the subtitle preferences from the config file.
+        subtitlePreferenceArray := getCsvArrayFromConfigFile("DEFAULT_DESIRED_SUBTITLES_ARRAY")
+        ; Contains all available subtitle languages for this video.
         this.desiredSubtitleArray := desiredSubtitleArray.Clone()
-        ; This option changes when the user selects a different format in the video list GUI.
-        this.desiredSubtitleArrayCurrentlySelectedIndex := readConfigFile("DEFAULT_DESIRED_SUBTITLE_ARRAY_INDEX")
+        ; Stores all subtitle languages that the user wants to select by default which are available for this video.
+        availablePreferenceSubtitleArray := Array()
+        ; Adds all available subtitle languages.
+        for (subtitleLanguage, value in this.videoSubtitleMap) {
+            this.desiredSubtitleArray.Push(subtitleLanguage)
+            ; Adds the preferred subtitle language to the availablePreferenceSubtitleArray.
+            if (checkIfStringIsInArray(subtitleLanguage, subtitlePreferenceArray)) {
+                availablePreferenceSubtitleArray.Push(subtitleLanguage)
+            }
+        }
+        if (readConfigFile("DEFAULT_DESIRED_SUBTITLES_EMBED_ALL")) {
+            this.desiredSubtitleArrayCurrentlySelectedEntries := Array("Embed all available subtitles")
+        }
+        else {
+            if (availablePreferenceSubtitleArray.Length > 0) {
+                this.desiredSubtitleArrayCurrentlySelectedEntries := availablePreferenceSubtitleArray
+            }
+            else {
+                this.desiredSubtitleArrayCurrentlySelectedEntries := Array("Do not download subtitles")
+            }
+        }
+
         ; This is the part of the download command that is specific to this video.
         this.downloadCommandPart := ""
         ; Creates the download command for the first time.
@@ -1448,8 +1733,7 @@ class VideoListViewEntry {
         this.downloadCommandPart := ''
         desiredFormat := this.desiredFormatArray[this.desiredFormatArrayCurrentlySelectedIndex]
         videoFormatArray := ["Automatically choose best video format", "mp4", "webm", "avi", "flv", "mkv", "mov"]
-        audioFormatArray := ["Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "opus",
-            "vorbis"]
+        audioFormatArray := ["Automatically choose best audio format", "mp3", "wav", "m4a", "flac", "opus", "vorbis"]
 
         ; In case the user selected a video format.
         if (checkIfStringIsInArray(desiredFormat, videoFormatArray)) {
@@ -1466,12 +1750,38 @@ class VideoListViewEntry {
                 this.downloadCommandPart .= '--audio-format "' . desiredFormat . '" '
             }
         }
-        ; Embeds the subtitles if the user selected this option.
-        desiredSubtitleFormat := this.desiredSubtitleArray[this.desiredSubtitleArrayCurrentlySelectedIndex]
-        if (desiredSubtitleFormat == "Embed all available subtitles") {
-            this.downloadCommandPart .= '--sub-langs "all" '
-            this.downloadCommandPart .= "--embed-subs "
+
+        if (checkIfStringIsInArray("Do not download subtitles", this.desiredSubtitleArrayCurrentlySelectedEntries)) {
+            this.downloadCommandPart .= '"' . this.videoURL . '" '
+            return
         }
+
+        /*
+        Embeds all available subtitles. This does not include any automatically generated captions
+        as this would cause too many requests which result in an error.
+        */
+        if (checkIfStringIsInArray("Embed all available subtitles",
+            this.desiredSubtitleArrayCurrentlySelectedEntries)) {
+            ; We don't want the live chat.
+            this.downloadCommandPart .= '--sub-langs "all,-live_chat" '
+            this.downloadCommandPart .= "--embed-subs --write-subs "
+        }
+        else {
+            for (subtitleLanguage in this.desiredSubtitleArrayCurrentlySelectedEntries) {
+                ; Extracts the language code from the map.
+                if (this.videoSubtitleMap.Has(subtitleLanguage)) {
+                    subLangsString .= this.videoSubtitleMap.Get(subtitleLanguage) . ","
+                }
+            }
+            if (IsSet(subLangsString)) {
+                subLangsString := RTrim(subLangsString, ",")
+                ; The "--write-auto-subs" makes sure that automatically generated subtitles can be embedded too.
+                this.downloadCommandPart .= '--sub-langs "' . subLangsString . '" '
+                this.downloadCommandPart .= "--embed-subs --write-subs --write-auto-subs "
+            }
+        }
+        ; Avoids moving the subtitle files to the download directory.
+        this.downloadCommandPart .= "--compat-options no-keep-subs "
         this.downloadCommandPart .= '"' . this.videoURL . '" '
     }
     /*
@@ -1523,12 +1833,10 @@ class VideoListViewEntry {
         global videoListViewContentMap
         if (videoListViewContentMap.Count == 0) {
             ; This entry is displayed when no videos are added yet.
-            tmpVideoMetaDataObject := Object()
+            tmpVideoMetaDataObject := VideoMetaData()
             tmpVideoMetaDataObject.VIDEO_TITLE := "*****"
-            tmpVideoMetaDataObject.VIDEO_ID := ""
             tmpVideoMetaDataObject.VIDEO_URL := "_internal_entry_no_videos_added_yet"
             tmpVideoMetaDataObject.VIDEO_UPLOADER := "No videos added yet."
-            tmpVideoMetaDataObject.VIDEO_UPLOADER_URL := ""
             tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "*****"
             tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
             ; Create the entry using the temporary video meta data object.
@@ -1553,10 +1861,11 @@ class VideoListViewEntry {
                 ; Select the video. Otherwise the currently selected video would stay at the no entries entry.
                 updateCurrentlySelectedVideo(this)
             }
-
-            ; Enables the download start button.
-            downloadStartButton.Opt("-Disabled")
-            downloadStartButton.SetColor("28a745", "000000", -1, "808080")
+            ; Enables the download start button only when there is no other download running.
+            if (!currentYTDLPActionObject.booleanDownloadIsRunning) {
+                downloadStartButton.Opt("-Disabled")
+                downloadStartButton.SetColor("28a745", "000000", -1, "808080")
+            }
             ; Enables the video export button.
             exportVideoListButton.Opt("-Disabled")
             ; Enables the remove video button.
@@ -1575,14 +1884,66 @@ class VideoListViewEntry {
 }
 
 /*
+This object is usually created by the extractVideoMetaData() function.
+@param pBooleanExtractionStrings [boolean] If set to true, certain properties will be set to the yt-dlp extraction strings.
+This allows yt-dlp to fill in the values when extracting the metadata.
+*/
+class VideoMetaData {
+    __New(pBooleanExtractionStrings := false) {
+        if (pBooleanExtractionStrings) {
+            this.VIDEO_TITLE := "%(title)s"
+            this.VIDEO_ID := "%(id)s"
+            this.VIDEO_URL := "%(webpage_url)s"
+            this.VIDEO_UPLOADER := "%(uploader)s"
+            this.VIDEO_UPLOADER_URL := "%(uploader_url)s"
+            this.VIDEO_DURATION_STRING := "%(duration_string)s"
+            this.VIDEO_SUBTITLES := "%(subtitles_table)q"
+            this.VIDEO_AUTOMATIC_CAPTIONS := "%(automatic_captions_table)q"
+            /*
+            This map contains all properties that are relevant for the metadata extraction by yt-dlp.
+            It can be traversed in a similar way to this.OwnProps().
+            */
+            this.relevantMetaDataProperties := Map(
+                "VIDEO_TITLE", this.VIDEO_TITLE,
+                "VIDEO_ID", this.VIDEO_ID,
+                "VIDEO_URL", this.VIDEO_URL,
+                "VIDEO_UPLOADER", this.VIDEO_UPLOADER,
+                "VIDEO_UPLOADER_URL", this.VIDEO_UPLOADER_URL,
+                "VIDEO_DURATION_STRING", this.VIDEO_DURATION_STRING,
+                "VIDEO_SUBTITLES", this.VIDEO_SUBTITLES,
+                "VIDEO_AUTOMATIC_CAPTIONS", this.VIDEO_AUTOMATIC_CAPTIONS
+            )
+            ; This string will be given to yt-dlp to extract the relevant metadata.
+            this.relevantMetaDataString := "[VideoMetaData]"
+            for (property, value in this.relevantMetaDataProperties) {
+                this.relevantMetaDataString .= "`n" . property . "=" . value
+            }
+        }
+        else {
+            this.VIDEO_TITLE := ""
+            this.VIDEO_ID := ""
+            this.VIDEO_URL := ""
+            this.VIDEO_UPLOADER := ""
+            this.VIDEO_UPLOADER_URL := ""
+            this.VIDEO_DURATION_STRING := ""
+            this.VIDEO_SUBTITLES := Map()
+            this.VIDEO_AUTOMATIC_CAPTIONS := Map()
+            this.relevantMetaDataString := ""
+        }
+        this.VIDEO_URL_ORIGINAL := ""
+        this.VIDEO_THUMBNAIL_FILE_LOCATION := ""
+    }
+}
+
+/*
 This object can be linked to a GUI control to resize it when the GUI is resized.
 @param pControl [Gui.Control] The control to be linked to the GUI.
 @param pScaleMode [int] The scale mode to be used which depends on the control type or group.
     1: All controls in the manageVideoListGroupBox and downloadVideoGroupBox.
     2: currentlySelectedVideoGroupBox and videoListView.
     3: videoTitleText, videoUploaderText, videoDurationText and videoThumbnailImage.
-    4: videoDesiredFormatText, videoDesiredSubtitleText, videoDesiredFormatDDL,
-       videoDesiredSubtitleDDL and videoAdvancedDownloadSettingsButton.
+    4: videoDesiredFormatText, videoDesiredSubtitleText,
+       videoDesiredFormatDDL and videoAdvancedDownloadSettingsButton.
     5: videoListSearchBarText, videoListSearchBarInputEdit and videoListSearchBarInputClearButton.
 */
 class GUIControlResizeLink {
@@ -1651,8 +2012,8 @@ class GUIControlResizeLink {
             case 4:
             {
                 /*
-                videoDesiredFormatText, videoDesiredFormatDDL, videoDesiredSubtitleText,
-                videoDesiredSubtitleDDL and videoAdvancedDownloadSettingsButton.
+                videoDesiredFormatText, videoDesiredFormatDDL, videoDesiredSubtitleText
+                and videoAdvancedDownloadSettingsButton.
                 */
                 yRatio := guiCurrentHeight / this.guiOriginalHeight
                 originalVideoThumbnailImageHeight := 158
@@ -1667,6 +2028,20 @@ class GUIControlResizeLink {
             {
                 ; videoListSearchBarText, videoListSearchBarInputEdit and videoListSearchBarInputClearButton.
                 this.newX := this.controlOriginalX * xRatio
+            }
+            case 6:
+            {
+                ; videoAdvancedDownloadSettingsButton.
+                yRatio := guiCurrentHeight / this.guiOriginalHeight
+                yDifference := guiCurrentHeight - this.guiOriginalHeight
+                originalVideoThumbnailImageHeight := 158
+                currentVideoThumbnailImageHeight := originalVideoThumbnailImageHeight * yRatio
+                ; This variable will be used to position elements right below the video thumbnail image.
+                videoThumbnailImageHeightDifference :=
+                    currentVideoThumbnailImageHeight - originalVideoThumbnailImageHeight
+                this.newX := this.controlOriginalX * xRatio
+                this.newY := this.controlOriginalY + videoThumbnailImageHeightDifference
+                this.newControlHeight := this.controlOriginalHeight + yDifference - videoThumbnailImageHeightDifference
             }
             default:
             {
@@ -1701,8 +2076,8 @@ class GUIControlResizeLink {
             case 4:
             {
                 /*
-                videoDesiredFormatText, videoDesiredFormatDDL, videoDesiredSubtitleText,
-                videoDesiredSubtitleDDL and videoAdvancedDownloadSettingsButton.
+                videoDesiredFormatText, videoDesiredFormatDDL, videoDesiredSubtitleText
+                and videoAdvancedDownloadSettingsButton.
                 */
                 this.control.Move(this.newX, this.newY, this.newControlWidth)
             }
@@ -1710,6 +2085,11 @@ class GUIControlResizeLink {
             {
                 ; videoListSearchBarText, videoListSearchBarInputEdit and videoListSearchBarInputClearButton.
                 this.control.Move(this.newX, , this.newControlWidth)
+            }
+            case 6:
+            {
+                ; videoAdvancedDownloadSettingsButton.
+                this.control.Move(this.newX, this.newY, this.newControlWidth, this.newControlHeight)
             }
             default:
             {

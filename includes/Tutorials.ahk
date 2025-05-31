@@ -223,10 +223,12 @@ tutorial_howToUsePlaylistRangeIndex() {
         hideAllHighlightedElements()
         saveCurrentVideoListGUIStateToConfigFile()
         showVideoListGUIWithSavedStateData()
+        showGUIRelativeToOtherGUI(videoListGUI, howToUsePlaylistRangeIndexTutorial.gui, "MiddleCenter")
     }
     showVideoListGUIAndHighlightPlaylistRangeIndexInputEditAndEnterInvalidIndex() {
         hideAllHighlightedElements()
         videoListGUI.Show()
+        showGUIRelativeToOtherGUI(videoListGUI, howToUsePlaylistRangeIndexTutorial.gui, "MiddleCenter")
         currentlyHighlightedControlObject := highlightControl(addVideoSpecifyPlaylistRangeInputEdit)
         ; Enables the required checkboxes.
         addVideoURLIsAPlaylistCheckbox.Value := 1
@@ -246,6 +248,7 @@ tutorial_howToUsePlaylistRangeIndex() {
     showVideoListGUIAndHighlightPlaylistRangeIndexInputEditAndEnterValidIndex() {
         hideAllHighlightedElements()
         videoListGUI.Show()
+        showGUIRelativeToOtherGUI(videoListGUI, howToUsePlaylistRangeIndexTutorial.gui, "MiddleCenter")
         currentlyHighlightedControlObject := highlightControl(addVideoSpecifyPlaylistRangeInputEdit)
         ; Enables the required checkboxes.
         addVideoURLIsAPlaylistCheckbox.Value := 1
@@ -281,32 +284,6 @@ applicationTutorial() {
         videoListGUI.Maximize()
         howToUseHelpGUITutorial.start()
     }
-}
-
-/*
-Calculates the position for the interactive tutorial window to appear.
-The position will be selected relatively to the right of a given window.
-@param pWindowHWND [int] The hwnd of the window to show the other GUI relatively to.
-@var coordinateX [int] The x coordinate for the window.
-@var coordinateY [int] The y coordinate for the window.
-*/
-calculateInteractiveTutorialGUICoordinates(pWindowHWND, &coordinateX, &coordinateY) {
-    coordinateX := 0
-    coordinateY := 0
-    if (!WinExist("ahk_id " . pWindowHWND)) {
-        MsgBox("[" . A_ThisFunc . "()] [WARNING] Could not find window with HWND: [" . pWindowHWND . "].",
-            "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
-        return
-    }
-    ; This is done to make WinGetPos() work reliably.
-    WinActivate("ahk_id " . pWindowHWND)
-    ; We receive the coordinates from the top left corner of the given window.
-    WinGetPos(&topLeftCornerX, &topLeftCornerY, &width, , "ahk_id " . pWindowHWND)
-    windowTopRightCornerX := topLeftCornerX + width
-    windowTopRightCornerY := topLeftCornerY
-    ; We add an ofset for the x coordinate.
-    coordinateX := windowTopRightCornerX + 50
-    coordinateY := windowTopRightCornerY
 }
 
 /*

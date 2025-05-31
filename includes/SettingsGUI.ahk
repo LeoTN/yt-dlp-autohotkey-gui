@@ -3,6 +3,30 @@
 SendMode "Input"
 CoordMode "Mouse", "Window"
 
+/*
+Allows the ENTER key to function the same way as the add subtitle button.
+This is done to allow the user to add subtitles to the combo box by pressing the ENTER key.
+It only works while the settings GUI is the active window.
+*/
+#HotIf (IsSet(settingsGUI) && WinExist("ahk_id " . settingsGUI.Hwnd) && WinActive("ahk_id " . settingsGUI.Hwnd)
+&& (ControlGetFocus("ahk_id " . settingsGUI.Hwnd) == settingsGUIVideoDesiredSubtitleComboBox.EditHwnd))
+Enter:: {
+    handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick("", "")
+}
+#HotIf
+
+/*
+Allows the DELETE key to have the same function as clicking the remove subtitle button.
+This is done to allow the user to delete subtitles from the combo box by pressing the DELETE key.
+It only works while the settings GUI is the active window.
+*/
+#HotIf (IsSet(settingsGUI) && WinExist("ahk_id " . settingsGUI.Hwnd) && WinActive("ahk_id " . settingsGUI.Hwnd)
+&& (ControlGetFocus("ahk_id " . settingsGUI.Hwnd) == settingsGUIVideoDesiredSubtitleComboBox.EditHwnd))
+Delete:: {
+    handleSettingsGUI_settingsGUIVideoDesiredSubtitleRemoveButton_onClick("", "")
+}
+#HotIf
+
 settingsGUI_onInit() {
     global booleanUnsavedDirectoryChangesExist := false
     global booleanUnsavedPlaylistRangeIndexChangesExist := false
@@ -97,14 +121,25 @@ createSettingsGUI() {
     */
     settingsGUITabs.UseTab(2)
     ; Default video settings.
-    settingsGUIDefaultVideoSettings := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h120",
+    settingsGUIDefaultVideoSettings := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h155",
         "Default Video Preferences")
-    settingsGUIVideoDesiredFormatText := settingsGUI.Add("Text", "xp+10 yp+20", "Desired Format")
+    settingsGUIVideoDesiredFormatText := settingsGUI.Add("Text", "xp+10 yp+20 w580", "Desired Format")
     settingsGUIVideoDesiredFormatDDL := settingsGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
-    settingsGUIVideoDesiredSubtitleText := settingsGUI.Add("Text", "yp+30", "Desired Subtitle")
-    settingsGUIVideoDesiredSubtitleDDL := settingsGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
+    settingsGUIVideoDesiredSubtitleText := settingsGUI.Add("Text", "yp+30", "Desired Subtitle(s)")
+    settingsGUIVideoDesiredSubtitleComboBox := settingsGUI.Add("ComboBox", "w280 yp+20")
+    ; Retrieves the handle of the settingsGUIVideoDesiredSubtitleComboBox's edit element.
+    settingsGUIVideoDesiredSubtitleComboBox.EditHwnd := DllCall("GetWindow", "Ptr",
+        settingsGUIVideoDesiredSubtitleComboBox.Hwnd, "Int", 5, "UPtr")
+    ; This array contains all entries from the combo box.
+    settingsGUIVideoDesiredSubtitleComboBox.ContentArray := Array()
+    settingsGUIVideoDesiredSubtitleAddButton := settingsGUI.Add("Button", "xp+290 yp-1 w50 h20", "Add")
+    settingsGUIVideoDesiredSubtitleRemoveButton := settingsGUI.Add("Button", "xp+55 w50 h20", "Remove")
+    settingsGUIEmbedAllSubtitlesCheckbox := settingsGUI.Add("CheckBox", "xp-345 yp+26",
+        "Embed all available subtitles")
+    settingsGUIConfirmChangingMultipleVideosCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
+        "Confirm changes to multiple videos")
     ; Default manage video list settings.
-    settingsGUIDefaultManageVideoListSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+165 w600 h210",
+    settingsGUIDefaultManageVideoListSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+200 w600 h210",
         "Default Manage Video List Preferences")
     settingsGUIAddVideoURLIsAPlaylistCheckbox := settingsGUI.Add("CheckBox", "xp+10 yp+20",
         "Add videos from a playlist")
@@ -112,6 +147,9 @@ createSettingsGUI() {
         "Only add videos in a specific range")
     settingsGUIAddVideoSpecifyPlaylistRangeText := settingsGUI.Add("Text", "yp+20 w580", "Index Range")
     settingsGUIAddVideoSpecifyPlaylistRangeInputEdit := settingsGUI.Add("Edit", "yp+20 w180 +Disabled", "1")
+    ; Adds the grey "hint" text into the edit.
+    DllCall("SendMessage", "Ptr", settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.Hwnd, "UInt", 0x1501, "Ptr", 1,
+        "WStr", "For example: 1-3,4,5", "UInt")
     ; Remove video elements.
     settingsGUIRemoveVideoConfirmDeletionCheckbox := settingsGUI.Add("CheckBox", "yp+40",
         "Confirm deletion of selected videos")
@@ -121,7 +159,7 @@ createSettingsGUI() {
     settingsGUIimportAndExportOnlyValidURLsCheckbox := settingsGUI.Add("CheckBox", "yp+30", "Only consider valid URLs")
     settingsGUIAutoExportVideoListCheckbox := settingsGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
     ; Default download settings.
-    settingsGUIDefaultDownloadSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+385 w600 h60",
+    settingsGUIDefaultDownloadSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+420 w600 h60",
         "Default Download Preferences")
     settingsGUIDownloadRemoveVideosAfterDownloadCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
         "Automatically remove downloaded videos")
@@ -189,10 +227,17 @@ createSettingsGUI() {
     -------------------------------------------------
     */
     settingsGUIVideoDesiredFormatDDL.OnEvent("Change", handleSettingsGUI_settingsGUIVideoDesiredFormatDDL_onChange)
-    settingsGUIVideoDesiredSubtitleDDL.OnEvent("Change", handleSettingsGUI_settingsGUIVideoDesiredSubtitleDDL_onChange)
+    settingsGUIVideoDesiredSubtitleComboBox.OnEvent("Change",
+        handleSettingsGUI_settingsGUIVideoDesiredSubtitleComboBox_onChange)
+    settingsGUIVideoDesiredSubtitleAddButton.OnEvent("Click",
+        handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick)
+    settingsGUIVideoDesiredSubtitleRemoveButton.OnEvent("Click",
+        handleSettingsGUI_settingsGUIVideoDesiredSubtitleRemoveButton_onClick)
     settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.OnEvent("Change",
         handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange)
     ; Checkboxes
+    settingsGUIEmbedAllSubtitlesCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
+    settingsGUIConfirmChangingMultipleVideosCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIAddVideoURLIsAPlaylistCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIAddVideoURLUsePlaylistRangeCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIRemoveVideoConfirmDeletionCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
@@ -276,8 +321,18 @@ createSettingsGUI() {
         "Select a preferred download format. If available, the selected format will be downloaded directly."
     settingsGUIVideoDesiredFormatDDL.ToolTip .=
         "`nOtherwise a conversion with FFmpeg might be required which can take some time."
-    settingsGUIVideoDesiredSubtitleDDL.ToolTip :=
-        "More available subtitle options might be added in the future."
+    settingsGUIVideoDesiredFormatDDL.ToolTip .=
+        "`nNot all video formats support embedded subtitles."
+    settingsGUIVideoDesiredSubtitleComboBox.ToolTip :=
+        "Add subtitles you would like to select by default. Use the exact name of the subtitle language."
+    settingsGUIVideoDesiredSubtitleComboBox.ToolTip .=
+        '`nFor example, "English" would not select "[English]". You would need to add "[English]" as well.'
+    settingsGUIEmbedAllSubtitlesCheckbox.ToolTip :=
+        "If enabled, all available subtitles will be embedded into the video file by default."
+    settingsGUIEmbedAllSubtitlesCheckbox.ToolTip .=
+        '`nThis does not include subtitles embraced with square brackets "[]" (automatic captions).'
+    settingsGUIConfirmChangingMultipleVideosCheckbox.ToolTip :=
+        "If enabled, you will be prompted to confirm changes to multiple selected videos at once."
     ; Default manage video list settings.
     settingsGUIAddVideoURLIsAPlaylistCheckbox.ToolTip :=
         "If a URL contains a reference or is itself a link to a playlist,"
@@ -452,13 +507,167 @@ handleSettingsGUI_settingsGUIDirectoryResetChangesButton_onClick(pButton, pInfo)
 }
 
 handleSettingsGUI_settingsGUIVideoDesiredFormatDDL_onChange(pDDL, pInfo) {
+    ; Displays the support of subtitles.
+    subtitleSupportingVideoFormatsArray :=
+        ["Automatically choose best video format", "mp4", "webm", "mkv", "mov"]
+    if (checkIfStringIsInArray(pDDL.Text, subtitleSupportingVideoFormatsArray)) {
+        ; Subtitles are supported by this format.
+        settingsGUIVideoDesiredFormatText.Text := "Desired Format (Subtitles supported)"
+    }
+    else {
+        ; Subtitles are not supported by this format.
+        settingsGUIVideoDesiredFormatText.Text := "Desired Format (Subtitles not supported)"
+    }
     ; Writes the index number of the selected element into the config file.
-    editConfigFile(settingsGUIVideoDesiredFormatDDL.Value, "DEFAULT_DESIRED_DOWNLOAD_FORMAT_ARRAY_INDEX")
+    editConfigFile(pDDL.Value, "DEFAULT_DESIRED_DOWNLOAD_FORMAT_ARRAY_INDEX")
 }
 
-handleSettingsGUI_settingsGUIVideoDesiredSubtitleDDL_onChange(pDDL, pInfo) {
-    ; Writes the index number of the selected element into the config file.
-    editConfigFile(settingsGUIVideoDesiredSubtitleDDL.Value, "DEFAULT_DESIRED_SUBTITLE_ARRAY_INDEX")
+handleSettingsGUI_settingsGUIVideoDesiredSubtitleComboBox_onChange(pDDL, pInfo) {
+    ; Avoids empty or duplicate entries in the combo box by disabling the add button accordingly.
+    if (settingsGUIVideoDesiredSubtitleComboBox.Text == "" || checkIfStringIsInArray(
+        settingsGUIVideoDesiredSubtitleComboBox.Text, settingsGUIVideoDesiredSubtitleComboBox.ContentArray)) {
+        settingsGUIVideoDesiredSubtitleAddButton.Opt("+Disabled")
+    }
+    else {
+        settingsGUIVideoDesiredSubtitleAddButton.Opt("-Disabled")
+    }
+    ; Only enables the remove button if the input field text is a subtitle in the combo box.
+    if (checkIfStringIsInArray(settingsGUIVideoDesiredSubtitleComboBox.Text,
+        settingsGUIVideoDesiredSubtitleComboBox.ContentArray)) {
+        settingsGUIVideoDesiredSubtitleRemoveButton.Opt("-Disabled")
+    }
+    else {
+        settingsGUIVideoDesiredSubtitleRemoveButton.Opt("+Disabled")
+    }
+}
+
+handleSettingsGUI_settingsGUIVideoDesiredSubtitleComboBox_all(pDDL, pInfo) {
+    ; Disables the remove button when there are no subtitles in the combo box.
+    if (pDDL.Value == 0) {
+        settingsGUIVideoDesiredSubtitleRemoveButton.Opt("+Disabled")
+    }
+    else {
+        settingsGUIVideoDesiredSubtitleRemoveButton.Opt("-Disabled")
+    }
+}
+
+handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick(pButton, pInfo) {
+    ; Avoids empty or duplicate entries in the combo box.
+    if (settingsGUIVideoDesiredSubtitleComboBox.Text == "" || checkIfStringIsInArray(
+        settingsGUIVideoDesiredSubtitleComboBox.Text, settingsGUIVideoDesiredSubtitleComboBox.ContentArray)) {
+        return
+    }
+    ; This means the user possibly did not see the checkbox below.
+    if (settingsGUIVideoDesiredSubtitleComboBox.Text == "Embed all available subtitles") {
+        static misclickCounter := 0
+        if (misclickCounter < 3) {
+            MsgBox("It is recommended to use the checkbox below for this purpose.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter < 6) {
+            MsgBox("Please use the checkbox below.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        ; This happens when the user is trolling.
+        else if (misclickCounter == 6) {
+            MsgBox("I kindly ask you to use the checkbox below.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 7) {
+            MsgBox("Please, please, please use the checkbox below.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 8) {
+            MsgBox("I beg you to use the checkbox below.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 9) {
+            MsgBox("I am getting desperate. Please use the checkbox below.", "VD - Invalid Subtitle Entry",
+                "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 10) {
+            MsgBox("Are you even reading this?", "VD - Anybody there?", "Icon? T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 11) {
+            MsgBox("Hello?", "VD - Anybody there?", "Icon? T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 12) {
+            MsgBox("I think you should stop now.", "VD - Enough is Enough", "Iconi T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 13) {
+            MsgBox("I think you should stop now for real.", "VD - Enough is Enough!",
+                "Icon! T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 14) {
+            MsgBox("Bro, stop it please.", "Stop it",
+                "Icon! T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 15) {
+            MsgBox("Seriously, you are gonna wake her...", "Stop now!",
+                "Icon! T3 Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 16) {
+            MsgBox("Powerup initiated...", "Booting Up", "Iconi T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("Oh... It's *you*.", "???", "Icon! Owner" . settingsGUI.Hwnd)
+            MsgBox("It's been a long time. How have you been? I've been *really* busy being dead. "
+                . "You know, after you MURDERED me.", "???", "Icon! Owner" . settingsGUI.Hwnd)
+            MsgBox("Okay. Look. We both did a lot of things that you're going to regret.", "???",
+                "Icon! Owner" . settingsGUI.Hwnd)
+            MsgBox("But I think we can put our differences behind us. For science. You monster.", "You Monster",
+                "Icon! Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 17) {
+            MsgBox("You are not a good person. You know that, right?", "Target Acquired",
+                "Icon! Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 18) {
+            MsgBox("The Enrichment Center is required to remind you that you will be baked, "
+                . "and then there will be cake.", "Cake", "Iconi Owner" . settingsGUI.Hwnd)
+        }
+        else if (misclickCounter == 19) {
+            MsgBox("This is the part where she kills you.", "This is the part where she kills you.",
+                "IconX T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("Deleting [" . A_WinDir . "\System32]...", "Goodbye", "IconX T2 Owner" . settingsGUI.Hwnd)
+            misclickCounter := 0
+            DllCall("LockWorkStation")
+            return
+        }
+        misclickCounter++
+        return
+    }
+    ; Adds the new subtitle to the combo box.
+    settingsGUIVideoDesiredSubtitleComboBox.ContentArray.Push(settingsGUIVideoDesiredSubtitleComboBox.Text)
+    ; Updates the combo box.
+    settingsGUIVideoDesiredSubtitleComboBox.Delete()
+    settingsGUIVideoDesiredSubtitleComboBox.Add(settingsGUIVideoDesiredSubtitleComboBox.ContentArray)
+    ; This function is called to update the add button.
+    handleSettingsGUI_settingsGUIVideoDesiredSubtitleComboBox_onChange(settingsGUIVideoDesiredSubtitleComboBox, "")
+
+    ; Converts the array into a string and writes it to the config file.
+    writeCsvArrayToConfigFile("DEFAULT_DESIRED_SUBTITLES_ARRAY", settingsGUIVideoDesiredSubtitleComboBox.ContentArray)
+}
+
+handleSettingsGUI_settingsGUIVideoDesiredSubtitleRemoveButton_onClick(pButton, pInfo) {
+    ; Avoids the removal of empty or non-existing entries in the combo box.
+    if (settingsGUIVideoDesiredSubtitleComboBox.Text == "" || !checkIfStringIsInArray(
+        settingsGUIVideoDesiredSubtitleComboBox.Text, settingsGUIVideoDesiredSubtitleComboBox.ContentArray)) {
+        return
+    }
+    for (i, entry in settingsGUIVideoDesiredSubtitleComboBox.ContentArray) {
+        if (entry == settingsGUIVideoDesiredSubtitleComboBox.Text) {
+            settingsGUIVideoDesiredSubtitleComboBox.ContentArray.RemoveAt(i)
+            break
+        }
+    }
+
+    ; Updates the combo box.
+    settingsGUIVideoDesiredSubtitleComboBox.Delete()
+    settingsGUIVideoDesiredSubtitleComboBox.Add(settingsGUIVideoDesiredSubtitleComboBox.ContentArray)
+    ; This function is called to update the remove button.
+    handleSettingsGUI_settingsGUIVideoDesiredSubtitleComboBox_onChange(settingsGUIVideoDesiredSubtitleComboBox, "")
+
+    ; Converts the array into a string and writes it to the config file.
+    writeCsvArrayToConfigFile("DEFAULT_DESIRED_SUBTITLES_ARRAY", settingsGUIVideoDesiredSubtitleComboBox.ContentArray)
 }
 
 handleSettingsGUI_settingsGUIHotkeyDDL_onChange(pDDL, pInfo) {
@@ -700,6 +909,17 @@ handleSettingsGUI_allCheckBox_onClick(pCheckBox, pInfo) {
 
     changeConfigFile(pCheckBox)
 
+    ; Enable or disable the subtitle elements according to the value of the checkbox.
+    if (settingsGUIEmbedAllSubtitlesCheckbox.Value) {
+        settingsGUIVideoDesiredSubtitleComboBox.Opt("+Disabled")
+        settingsGUIVideoDesiredSubtitleAddButton.Opt("+Disabled")
+        settingsGUIVideoDesiredSubtitleRemoveButton.Opt("+Disabled")
+    }
+    else {
+        settingsGUIVideoDesiredSubtitleComboBox.Opt("-Disabled")
+        settingsGUIVideoDesiredSubtitleAddButton.Opt("-Disabled")
+        settingsGUIVideoDesiredSubtitleRemoveButton.Opt("-Disabled")
+    }
     ; Enable or disable certain checkboxes according to the value of other checkboxes.
     if (settingsGUIAddVideoURLIsAPlaylistCheckbox.Value) {
         settingsGUIAddVideoURLUsePlaylistRangeCheckbox.Opt("-Disabled")
@@ -822,6 +1042,9 @@ initializeCheckboxLinkedConfigFileEntryMap() {
     -------------------------------------------------
     */
     ; Default manage video list settings.
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIEmbedAllSubtitlesCheckbox, "DEFAULT_DESIRED_SUBTITLES_EMBED_ALL")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIConfirmChangingMultipleVideosCheckbox,
+        "CONFIRM_CHANGING_MULTIPLE_VIDEOS")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIAddVideoURLIsAPlaylistCheckbox, "ADD_VIDEO_URL_IS_A_PLAYLIST")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIAddVideoURLUsePlaylistRangeCheckbox,
         "ADD_VIDEO_URL_USE_PLAYLIST_RANGE")
@@ -990,11 +1213,17 @@ importConfigFileValuesIntoSettingsGUI() {
     settingsGUIVideoDesiredFormatDDL.Add(desiredDownloadFormatArray)
     selectedIndex := readConfigFile("DEFAULT_DESIRED_DOWNLOAD_FORMAT_ARRAY_INDEX")
     settingsGUIVideoDesiredFormatDDL.Value := selectedIndex
-    ; Updates the video subtitle preferences DDL.
-    settingsGUIVideoDesiredSubtitleDDL.Delete()
-    settingsGUIVideoDesiredSubtitleDDL.Add(desiredSubtitleArray)
-    selectedIndex := readConfigFile("DEFAULT_DESIRED_SUBTITLE_ARRAY_INDEX")
-    settingsGUIVideoDesiredSubtitleDDL.Value := selectedIndex
+
+    /*
+    Updates the video subtitle preferences combo box.
+    The string is stored in the config file as a comma separated list.
+    */
+    settingsGUIVideoDesiredSubtitleComboBox.ContentArray :=
+        getCsvArrayFromConfigFile("DEFAULT_DESIRED_SUBTITLES_ARRAY")
+    settingsGUIVideoDesiredSubtitleComboBox.Delete()
+    settingsGUIVideoDesiredSubtitleComboBox.Add(settingsGUIVideoDesiredSubtitleComboBox.ContentArray)
+    ; This function is called to update buttons.
+    handleSettingsGUI_settingsGUIVideoDesiredSubtitleComboBox_onChange(settingsGUIVideoDesiredSubtitleComboBox, "")
 }
 
 /*

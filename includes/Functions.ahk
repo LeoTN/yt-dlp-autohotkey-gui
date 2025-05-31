@@ -26,7 +26,20 @@ handleAllGUI_toolTips(wParam, lParam, msg, hwnd) {
         ; Closes all existing tooltips.
         toolTipText := ""
         ToolTip()
-        currentControlElement := GuiCtrlFromHwnd(hwnd)
+        /*
+        This is an exception for the settingsGUIVideoDesiredSubtitleComboBox's edit element.
+        It makes sure that the tooltip is displayed when the user hovers over the edit as well.
+        */
+        if (IsSet(settingsGUIVideoDesiredSubtitleComboBox)
+        && settingsGUIVideoDesiredSubtitleComboBox.HasOwnProp("EditHwnd")
+        && hwnd == settingsGUIVideoDesiredSubtitleComboBox.EditHwnd) {
+            currentControlElement := Object()
+            currentControlElement.Hwnd := settingsGUIVideoDesiredSubtitleComboBox.EditHwnd
+            currentControlElement.ToolTip := settingsGUIVideoDesiredSubtitleComboBox.ToolTip
+        }
+        else {
+            currentControlElement := GuiCtrlFromHwnd(hwnd)
+        }
         if (currentControlElement) {
             if (!currentControlElement.HasProp("ToolTip")) {
                 ; There is no tooltip for this control element.
@@ -56,6 +69,7 @@ handleAllApplication_toastNotifications_onClick(wParam, lParam, msg, hwnd) {
 
     ; Ignore messages from other applications and all events that are not a left click.
     if (hwnd != A_ScriptHwnd || lParam != 1029) {
+        ; Tells Windows to process this message further.
         return
     }
     /*
@@ -168,6 +182,11 @@ monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCurrently
         else {
             parseYTDLPLogFile()
             downloadProgressBar.Value := calculateDownloadProgressBarValue()
+            currentTotalDownloadProgress := calculateTaskbarProgressBarValue(downloadProgressBar.Value)
+            totalDownloadProgressMax := currentYTDLPActionObject.completeVideoAmount * 100
+            ; Updates the taskbar progress bar with the current total download progress.
+            setProgressOnTaskbarApplication(videoListGUI.Hwnd, 2, currentTotalDownloadProgress,
+                totalDownloadProgressMax)
         }
     }
     ; This function parses the yt-dlp log file and extracts the relevant information to track the download process.
@@ -341,6 +360,45 @@ monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCurrently
         totalDownloadProgressBarValue += 0.6 * videoDownloadProgress
         totalDownloadProgressBarValue += 0.1 * audioDownloadProgress
         return Round(totalDownloadProgressBarValue, 2)
+    }
+    /*
+    Calculates the overall progress of all videos that are currently being downloaded.
+    @returns [int] The overall progress percentage. The range depends on the total amount of videos to download.
+    For example, if there are 10 videos, the range would be 0-1000.
+    */
+    calculateTaskbarProgressBarValue(pCurrentVideoProgressPercentage) {
+        ; Calculates how many vidoes have been downloaded or skipped in total.
+        alreadyReachedPercentage :=
+            (currentYTDLPActionObject.completeVideoAmount - currentYTDLPActionObject.remainingVideos) * 100
+        currentPercentage := alreadyReachedPercentage + pCurrentVideoProgressPercentage
+        return currentPercentage
+    }
+}
+
+/*
+Shows a progress animation for the specified window in the taskbar.
+@param pWindowHwnd [int] The handle of the window to show the progress animation for.
+@param pState [int] The state of the progress animation. Possible values are:
+    - TBPF_NOPROGRESS (0): No progress.
+    - TBPF_INDETERMINATE (1): Indeterminate progress.
+    - TBPF_NORMAL (2): Normal progress.
+    - TBPF_ERROR (4): Error progress.
+    - TBPF_PAUSED (8): Paused progress.
+@param pAlreadyCompletedPercentage [int] (optional) The percentage of progress that has already been completed.
+@param pTotalPercentage [int] (optional) The total percentage of progress. Default is 100.
+Original code sourced from https://www.autohotkey.com/boards/viewtopic.php?p=568827&sid=b4da45941d62ee0d21025ec23c22a067#p568827.
+*/
+setProgressOnTaskbarApplication(pWindowHwnd, pState := 0, pAlreadyCompletedPercentage?, pTotalPercentage := 100) {
+    static CLSID_TaskbarList := '{56FDF344-FD6D-11d0-958A-006097C9A090}'
+    static IID_ITaskbarList3 := '{EA1AFB91-9E28-4B86-90E9-9E9F8A5EEFAF}'
+    static ITaskbarList3 := ComObject(CLSID_TaskbarList, IID_ITaskbarList3)
+
+    ; Start the progress animation.
+    ComCall(SetProgressState := 10, ITaskbarList3, 'Ptr', pWindowHwnd, 'UInt', pState)
+    ; Starts the progress animation with an already completed amount of progress.
+    if (IsSet(pAlreadyCompletedPercentage)) {
+        ComCall(SetProgressValue := 9, ITaskbarList3, 'Ptr', pWindowHwnd, 'Int64', pAlreadyCompletedPercentage, 'Int64',
+            pTotalPercentage)
     }
 }
 
@@ -637,6 +695,68 @@ getCorrectScriptVersion() {
         fileVersion := "v0.0.0.3"
     }
     return fileVersion
+}
+
+/*
+Extracts a comma seperated string and creates an array. Empty and duplicate entries will be ignored.
+@param pConfigFileEntry [String] The config file entry to read from.
+@returns [Array] An array containing the entries from the config file. The array can be empty.
+*/
+getCsvArrayFromConfigFile(pConfigFileEntry) {
+    ; The string is stored in the config file as a comma separated list.
+    configArray := StrSplit(readConfigFile(pConfigFileEntry), ",", " `t")
+    returnArray := Array()
+    ; Removes empty and duplicate entries from the array.
+    for (entry in configArray) {
+        if (entry == "" || checkIfStringIsInArray(entry, returnArray)) {
+            continue
+        }
+        returnArray.Push(entry)
+    }
+    return returnArray
+}
+
+/*
+Writes a given array to the config file as a comma separated string.
+@param pConfigFileEntry [String] The config file entry to write to.
+@param pArray [Array] The array to write to the config file.
+*/
+writeCsvArrayToConfigFile(pConfigFileEntry, pArray) {
+    arrayString := ""
+    ; Converts the array into a string and writes it to the config file.
+    for (entry in pArray) {
+        arrayString .= entry . ","
+    }
+    arrayString :=
+        RTrim(arrayString, ",")
+    editConfigFile(arrayString, pConfigFileEntry)
+}
+
+/*
+Parses a string containing language data and returns a Map with language names as keys and language codes as values.
+@param pRawString [String] The raw string containing the language data.
+@returns [Map] A map where the keys are language names and the values are language codes.
+*/
+parseYTDLPSubtitleString(pRawString) {
+    languageCodeMap := Map()
+    parts := StrSplit(pRawString, "%=%")
+
+    for (i, part in parts) {
+        if (i = 1) {
+            ; Skip the table header.
+            continue
+        }
+        part := Trim(part)
+        if (RegExMatch(part, "^\s*(\S+)\s+([^\d,]+?)\s+(?:vtt|ttml|srv3|srv2|srv1|json3)", &match)) {
+            languageCode := Trim(match[1])
+            languageName := Trim(match[2])
+            ; This avoids empty language names.
+            if (languageName) {
+                languageCodeMap[languageName] := languageCode
+            }
+        }
+    }
+    return languageCodeMap
 }
 
 ; Tries to find currently running instances of the application and warns the user about it.
@@ -992,7 +1112,13 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     customMsgBoxGUIStatusBar := customMsgBoxGUI.Add("StatusBar", , "Please choose an option")
     customMsgBoxGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     customMsgBoxGUI.OnEvent("Close", handleCustomMsgBoxGUI_customMsgBoxGUI_onClose)
-    customMsgBoxGUI.Show("w490")
+
+    if (IsSet(pOwnerGUI)) {
+        showGUIRelativeToOtherGUI(pOwnerGUI, customMsgBoxGUI, "MiddleCenter", "w490")
+    }
+    else {
+        customMsgBoxGUI.Show("w490")
+    }
     ; OnEvent function for the buttons.
     handleCustomMsgBoxGUI_button_onClick(pButton, pInfo) {
         ; The text of the pressed button will be returned.
@@ -1081,26 +1207,35 @@ Prompts the user to select a file.
 @param pRootDirectory [String] The root directory to start the selection from.
 @param pFilter [String] An optional filter for the explorer window. For example, "*.txt" would only show text files.
 @param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the file save prompt to make it modal.
-@returns [String] The selected file path.
-@returns (alt) [String] "_result_no_file_selected" if the user cancels the selection.
+@param pBooleanMultiSelect [boolean] If set to true, the user can select multiple files.
+@returns [Array] The array of selected file paths. If no files are selected, the array will be empty.
 */
-fileSelectPrompt(pPromptTitle, pRootDirectory, pFilter?, pOwnerGUI?) {
+fileSelectPrompt(pPromptTitle, pRootDirectory, pFilter?, pOwnerGUI?, pBooleanMultiSelect := false) {
     ; To make this specific file dialog modal, we need to explicitly set the +OwnDialogs option in this current thread.
     if (IsSet(pOwnerGUI)) {
         pOwnerGUI.Opt("+OwnDialogs")
     }
 
-    if (IsSet(pFilter)) {
-        selectedFileLocation := FileSelect("3", pRootDirectory, pPromptTitle, pFilter)
+    if (pBooleanMultiSelect) {
+        selectArguments := "M3"
     }
     else {
-        selectedFileLocation := FileSelect("3", pRootDirectory, pPromptTitle)
+        selectArguments := "3"
     }
-    ; This usually happens, when the user cancels the selection.
-    if (selectedFileLocation == "") {
-        return "_result_no_file_selected"
+    if (IsSet(pFilter)) {
+        selectedFileLocations := FileSelect(selectArguments, pRootDirectory, pPromptTitle, pFilter)
     }
-    return selectedFileLocation
+    else {
+        selectedFileLocations := FileSelect(selectArguments, pRootDirectory, pPromptTitle)
+    }
+    if (pBooleanMultiSelect) {
+        return selectedFileLocations
+    }
+    if (selectedFileLocations) {
+        ; The string will be returned as an array.
+        return Array(selectedFileLocations)
+    }
+    return Array()
 }
 
 /*
@@ -1568,11 +1703,14 @@ checkIfStringIsValidPlaylistIndexRange(pString) {
 Checks if a given string is in a given array.
 @param pString [String] The string to check.
 @param pArray [Array] The array to check.
-@returns [boolean] True if the string is in the array, false otherwise.
+@returns [boolean] True if the string is in the array. False otherwise.
 */
-checkIfStringIsInArray(pString, pArray) {
+checkIfStringIsInArray(pString, pArray, pBooleanCaseSensitive := true) {
     for (index, value in pArray) {
-        if (pString == value) {
+        if (pBooleanCaseSensitive && (pString == value)) {
+            return true
+        }
+        else if (pString = value) {
             return true
         }
     }
