@@ -562,6 +562,8 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
             tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "Not found"
             tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
             newVideoEntry := VideoListViewEntry(tmpVideoMetaDataObject)
+            ; Flashes the video list GUI to indicate that the playlist could not be found.
+            videoListGUI.Flash(true)
         }
         else {
             ; Creates a new video list view entry object for each video.
@@ -820,6 +822,9 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         currentYTDLPActionObject.alreadyDownloadedVideoAmount++
     }
 
+    ; Completes the taskbar progress bar.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 2, 100, 100)
+
     ; Automatically exports all downloaded video URLs.
     if (autoExportVideoListCheckbox.Value && actuallyDownloadedVideoListViewElements.Count > 0) {
         exportFileName := currentTime . "_VD_auto_exported_urls.txt"
@@ -902,20 +907,26 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
             videoListGUI)
     }
     if (result == msgButton1) {
-        if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
-            ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
-            ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
-            terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
-            currentYTDLPActionObject.booleanCancelOneVideoDownload := true
+        if (!ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
+            return
         }
+        ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
+        ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
+        terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
+        ; Changes the taskbar progress bar to indicate that a download was canceled.
+        setProgressOnTaskbarApplication(videoListGUI.Hwnd, 8)
+        currentYTDLPActionObject.booleanCancelOneVideoDownload := true
     }
     else if (result == msgButton3) {
-        if (ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
-            ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
-            ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
-            terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
-            currentYTDLPActionObject.booleanCancelCompleteDownload := true
+        if (!ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
+            return
         }
+        ProcessClose(currentYTDLPActionObject.downloadProcessYTDLPPID)
+        ; We use recursive mode here to possibly end all sub processes (e.g. ffmpeg) of the yt-dlp sub process.
+        terminateAllChildProcesses(currentYTDLPActionObject.downloadProcessYTDLPPID, "yt-dlp.exe", true)
+        ; Changes the taskbar progress bar to indicate that a download was canceled.
+        setProgressOnTaskbarApplication(videoListGUI.Hwnd, 8)
+        currentYTDLPActionObject.booleanCancelCompleteDownload := true
     }
 }
 
@@ -1283,6 +1294,8 @@ extractVideoMetaData(pVideoURL) {
         "[   🎞️      ]", "[  🎞️       ]", "[ 🎞️        ]"
     ]
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting video data...", spinnerCharArray)
+    ; Starts a loading animation in the taskbar.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 1)
 
     if (readConfigFile("ENABLE_DEBUG_MODE")) {
         ; We use the current time stamp to generate a unique name for the log file.
@@ -1315,6 +1328,8 @@ extractVideoMetaData(pVideoURL) {
     if (!FileExist(metaDataFileLocation)) {
         videoMetaDataObject.VIDEO_TITLE := "video_not_found: " . pVideoURL
         videoMetaDataObject.VIDEO_URL := "video_not_found: " . pVideoURL
+        ; Flashes the video list GUI to indicate that the video could not be found.
+        videoListGUI.Flash(true)
     }
     ; Save the original URL which was used by yt-dlp to find the video.
     videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoURL
@@ -1340,6 +1355,8 @@ extractVideoMetaData(pVideoURL) {
     videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS :=
         parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished video information extraction")
+    ; Stops the taskbar loading animation.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
 
     if (readConfigFile("ENABLE_DEBUG_MODE")) {
         ; Moves the log files into the VideoDownloader temp directory in case the debug mode is enabled.
@@ -1428,6 +1445,8 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         "[   💾      ]", "[  💾       ]", "[ 💾        ]"
     ]
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting playlist data...", spinnerCharArray)
+    ; Starts a loading animation in the taskbar.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 1)
 
     if (readConfigFile("ENABLE_DEBUG_MODE")) {
         ; We use the current time stamp to generate a unique name for the log file.
@@ -1487,6 +1506,8 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
             parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
     }
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished playlist information extraction")
+    ; Stops the taskbar loading animation.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
 
     if (readConfigFile("ENABLE_DEBUG_MODE")) {
         ; Moves the log files into the VideoDownloader temp directory in case the debug mode is enabled.

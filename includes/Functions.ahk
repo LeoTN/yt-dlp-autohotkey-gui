@@ -182,6 +182,11 @@ monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCurrently
         else {
             parseYTDLPLogFile()
             downloadProgressBar.Value := calculateDownloadProgressBarValue()
+            currentTotalDownloadProgress := calculateTaskbarProgressBarValue(downloadProgressBar.Value)
+            totalDownloadProgressMax := currentYTDLPActionObject.completeVideoAmount * 100
+            ; Updates the taskbar progress bar with the current total download progress.
+            setProgressOnTaskbarApplication(videoListGUI.Hwnd, 2, currentTotalDownloadProgress,
+                totalDownloadProgressMax)
         }
     }
     ; This function parses the yt-dlp log file and extracts the relevant information to track the download process.
@@ -355,6 +360,45 @@ monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCurrently
         totalDownloadProgressBarValue += 0.6 * videoDownloadProgress
         totalDownloadProgressBarValue += 0.1 * audioDownloadProgress
         return Round(totalDownloadProgressBarValue, 2)
+    }
+    /*
+    Calculates the overall progress of all videos that are currently being downloaded.
+    @returns [int] The overall progress percentage. The range depends on the total amount of videos to download.
+    For example, if there are 10 videos, the range would be 0-1000.
+    */
+    calculateTaskbarProgressBarValue(pCurrentVideoProgressPercentage) {
+        ; Calculates how many vidoes have been downloaded or skipped in total.
+        alreadyReachedPercentage :=
+            (currentYTDLPActionObject.completeVideoAmount - currentYTDLPActionObject.remainingVideos) * 100
+        currentPercentage := alreadyReachedPercentage + pCurrentVideoProgressPercentage
+        return currentPercentage
+    }
+}
+
+/*
+Shows a progress animation for the specified window in the taskbar.
+@param pWindowHwnd [int] The handle of the window to show the progress animation for.
+@param pState [int] The state of the progress animation. Possible values are:
+    - TBPF_NOPROGRESS (0): No progress.
+    - TBPF_INDETERMINATE (1): Indeterminate progress.
+    - TBPF_NORMAL (2): Normal progress.
+    - TBPF_ERROR (4): Error progress.
+    - TBPF_PAUSED (8): Paused progress.
+@param pAlreadyCompletedPercentage [int] (optional) The percentage of progress that has already been completed.
+@param pTotalPercentage [int] (optional) The total percentage of progress. Default is 100.
+Original code sourced from https://www.autohotkey.com/boards/viewtopic.php?p=568827&sid=b4da45941d62ee0d21025ec23c22a067#p568827.
+*/
+setProgressOnTaskbarApplication(pWindowHwnd, pState := 0, pAlreadyCompletedPercentage?, pTotalPercentage := 100) {
+    static CLSID_TaskbarList := '{56FDF344-FD6D-11d0-958A-006097C9A090}'
+    static IID_ITaskbarList3 := '{EA1AFB91-9E28-4B86-90E9-9E9F8A5EEFAF}'
+    static ITaskbarList3 := ComObject(CLSID_TaskbarList, IID_ITaskbarList3)
+
+    ; Start the progress animation.
+    ComCall(SetProgressState := 10, ITaskbarList3, 'Ptr', pWindowHwnd, 'UInt', pState)
+    ; Starts the progress animation with an already completed amount of progress.
+    if (IsSet(pAlreadyCompletedPercentage)) {
+        ComCall(SetProgressValue := 9, ITaskbarList3, 'Ptr', pWindowHwnd, 'Int64', pAlreadyCompletedPercentage, 'Int64',
+            pTotalPercentage)
     }
 }
 
