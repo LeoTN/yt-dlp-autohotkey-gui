@@ -18,47 +18,25 @@
 
 1. Download and install the latest installer **[here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest)**.
 2. Open the [video](https://www.youtube.com/watch?v=xvFZjo5PgG0) you want to download in your browser.
-3. Press ***SHIFT + CTRL + ALT + S*** to save the URL.
+3. Press <code><strong><em>SHIFT + CTRL + ALT + S</em></strong></code> to save the URL.
 4. Alternatively, you can copy the URL and enter it into the video list manually.
-5. Press ***SHIFT + CTRL + ALT + D*** to start the download.
+5. Press <code><strong><em>SHIFT + CTRL + ALT + D</em></strong></code> to start the download.
 
 > [!Tip]
 > You may download the [source code](https://github.com/LeoTN/yt-dlp-autohotkey-gui/archive/refs/heads/main.zip) and **run** or **compile** the file "*VideoDownloader.ahk*" yourself.
 
 ## Additional Information
 
-<table>
-  <thead>
-    <tr>
-      <th style="min-width: 200px;">Feature</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>⌨️ <strong>Hotkeys</strong></td>
-      <td>Convenient <strong>hotkey control</strong> for all <strong>core functions</strong></td>
-    </tr>
-     <tr>
-      <td>🎬 <strong>Video List</strong></td>
-      <td>Easily manage and download videos</td>
-    </tr>
-    <tr>
-      <td>💡 <strong>Help Window</strong></td>
-      <td>Provides additional <strong>information</strong> and <strong>interactive tutorials</strong></td>
-    </tr>
-    <tr>
-      <td>🌐 <strong>Direct URL Capture</strong></td>
-      <td>Capture a <strong>video URL</strong> while the video is <strong>open</strong> in your <strong>browser</strong></td>
-    </tr>
-    <tr>
-      <td>🖱️ <strong>Indirect URL Capture</strong></td>
-      <td>Capture a <strong>video URL</strong> by <strong>hovering</strong> over the <strong>video thumbnail</strong> (e.g. on YouTube) and pressing <em><strong>SHIFT + CTRL + ALT + F</strong></em></td>
-    </tr>
-  </tbody>
-</table>
+| Feature                     | Description                                                                                                                      |
+|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| ⌨️ **Hotkeys**              | Convenient **hotkey control** for all **core functions**                                                                         |
+| 🎬 **Video List**           | Easily manage and download videos                                                                                                |
+| 💡 **Help Window**          | Provides additional **information** and **interactive tutorials**                                                                |
+| 🌐 **Direct URL Capture**   | Capture a **video URL** while the video is **open** in your **browser**                                                          |
+| 🖱️ **Indirect URL Capture** | Capture a **video URL** by **hovering** over the **video thumbnail** (e.g. on YouTube) and pressing <code><strong><em>SHIFT + CTRL + ALT + F</em></strong></code> |
 
-### Known Issues
+<details>
+<summary><strong>Known Issues</strong></summary>
 
 * The hotkey to indirectly capture video URLs is still **experimental** and won't work every time.
 * Embedding **video subtitles** might not work sometimes.
@@ -67,6 +45,8 @@
 
 > [!Note]
 > The ability to [use cookies](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp) will be available in future versions which can mitigate this issue.
+
+</details>
 
 ## Credits & License
 
