@@ -16,15 +16,11 @@
 
 ## 🚀 Getting Started
 
-<div style="border-left: 4px solid #97ca00; padding: 16px; border-radius: 6px;">
-<ol>
-  <li>Download and install the latest installer <strong><a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest">here</a></strong>.</li>
-  <li>Open the <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0">video</a> you want to download in your browser.</li>
-  <li>Press <strong><code>SHIFT + CTRL + ALT + S</code></strong> to save the URL.</li>
-  <li>Alternatively, you can copy the URL and enter it into the video list manually.</li>
-  <li>Press <strong><code>SHIFT + CTRL + ALT + D</code></strong> to start the download.</li>
-</ol>
-</div>
+1. Download and install the latest installer **[here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest)**.
+2. Open the [video](https://www.youtube.com/watch?v=xvFZjo5PgG0) you want to download in your browser.
+3. Press ***SHIFT + CTRL + ALT + S*** to save the URL.
+4. Alternatively, you can copy the URL and enter it into the video list manually.
+5. Press ***SHIFT + CTRL + ALT + D*** to start the download.
 
 <br>
 
@@ -36,26 +32,22 @@
 <table>
   <thead>
     <tr>
-      <th>Feature</th>
+      <th style="min-width: 160px;">Feature</th>
       <th>Description</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>⌨️ <strong>Hotkey Control</strong></td>
+      <td>⌨️ <strong>Hotkeys</strong></td>
       <td>Convenient <strong>hotkey control</strong> for all <strong>core functions</strong></td>
+    </tr>
+     <tr>
+      <td>🎬 <strong>Video List</strong></td>
+      <td>Easily manage and download videos</td>
     </tr>
     <tr>
       <td>💡 <strong>Help Window</strong></td>
       <td>Provides additional <strong>information</strong> and <strong>interactive tutorials</strong></td>
-    </tr>
-    <tr>
-      <td>⚙️ <strong>Settings Window</strong></td>
-      <td>Configure your default (download) preferences</td>
-    </tr>
-    <tr>
-      <td>🎬 <strong>Video List Window</strong></td>
-      <td>Easily manage and download videos</td>
     </tr>
     <tr>
       <td>🌐 <strong>Direct URL Capture</strong></td>
@@ -76,7 +68,10 @@
   * If this is the case, I recommend waiting a little before trying again.
 
 > [!Important]
-> If your YouTube requests are blocked frequently, you should wait a moment to avoid a temporary IP block
+> If your YouTube requests are blocked frequently, you should wait a moment to avoid a temporary IP block.
+
+> [!Note]
+> The ability to [use cookies](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp) will be available in future versions which can mitigate this issue.
 
 ## Credits & License
 
