@@ -16,29 +16,67 @@
 
 ## 🚀 Getting Started
 
-> 1. Download and install the latest installer **[here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest)**.
-> 2. Open the [video](https://www.youtube.com/watch?v=xvFZjo5PgG0) you want to download in your browser.
-> 3. Press ***SHIFT + CTRL + ALT + S*** to save the URL.
-> 4. Alternatively, you can copy the URL and enter it into the video list manually.
-> 5. Press ***SHIFT + CTRL + ALT + D*** to start the download.
+<div style="border-left: 4px solid #97ca00; padding: 16px; border-radius: 6px;">
+<ol>
+  <li>Download and install the latest installer <strong><a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest">here</a></strong>.</li>
+  <li>Open the <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0">video</a> you want to download in your browser.</li>
+  <li>Press <strong><code>SHIFT + CTRL + ALT + S</code></strong> to save the URL.</li>
+  <li>Alternatively, you can copy the URL and enter it into the video list manually.</li>
+  <li>Press <strong><code>SHIFT + CTRL + ALT + D</code></strong> to start the download.</li>
+</ol>
+</div>
+
+<br>
+
+> [!Tip]
+> You may download the [source code](https://github.com/LeoTN/yt-dlp-autohotkey-gui/archive/refs/heads/main.zip) and **run** or **compile** the file "*VideoDownloader.ahk*" yourself.
 
 ## Additional Information
 
-| Feature                     | Description                                                                                                                      |
-|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| ⌨️ **Hotkey Control**       | Convenient **hotkey control** for all **core functions**                                                                         |
-| 💡 **Help Window**          | Provides additional **information** and **interactive tutorials**                                                                |
-| ⚙️ **Settings Window**      | Configure your default (download) preferences                                                                                    |
-| 🎬 **Video List Window**    | Easily manage and download videos                                                                                                |
-| 🌐 **Direct URL Capture**   | Capture a **video URL** while the video is **open** in your **browser**                                                          |
-| 🖱️ **Indirect URL Capture** | Capture a **video URL** by **hovering** over the **video thumbnail** (e.g. on YouTube) and pressing ***SHIFT + CTRL + ALT + F*** |
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>⌨️ <strong>Hotkey Control</strong></td>
+      <td>Convenient <strong>hotkey control</strong> for all <strong>core functions</strong></td>
+    </tr>
+    <tr>
+      <td>💡 <strong>Help Window</strong></td>
+      <td>Provides additional <strong>information</strong> and <strong>interactive tutorials</strong></td>
+    </tr>
+    <tr>
+      <td>⚙️ <strong>Settings Window</strong></td>
+      <td>Configure your default (download) preferences</td>
+    </tr>
+    <tr>
+      <td>🎬 <strong>Video List Window</strong></td>
+      <td>Easily manage and download videos</td>
+    </tr>
+    <tr>
+      <td>🌐 <strong>Direct URL Capture</strong></td>
+      <td>Capture a <strong>video URL</strong> while the video is <strong>open</strong> in your <strong>browser</strong></td>
+    </tr>
+    <tr>
+      <td>🖱️ <strong>Indirect URL Capture</strong></td>
+      <td>Capture a <strong>video URL</strong> by <strong>hovering</strong> over the <strong>video thumbnail</strong> (e.g. on YouTube) and pressing <em><strong>SHIFT + CTRL + ALT + F</strong></em></td>
+    </tr>
+  </tbody>
+</table>
 
 ### Known Issues
 
 * The hotkey to indirectly capture video URLs is still **experimental** and won't work every time.
-* Embedding **video subtitles** might not work every time.
+* Embedding **video subtitles** might not work sometimes.
 * Sometimes yt-dlp's requests will be **blocked by YouTube**. This causes some videos to appear as **not found** in the video list.
   * If this is the case, I recommend waiting a little before trying again.
+
+> [!Important]
+> If your YouTube requests are blocked frequently, you should wait a moment to avoid a temporary IP block
 
 ## Credits & License
 
