@@ -8,7 +8,7 @@
         <a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENSE" style="text-decoration: none;"><img src="https://img.shields.io/github/license/LeoTN/yt-dlp-autohotkey-gui?style=for-the-badge&logo=Google%20Docs&logoColor=blue&label=License&color=blue"></a>
 </p>
 
-**Add videos** to the list, **select** your **download preferences** and **start downloading**. No yt-dlp command knowledge required.
+**Add videos** to the list, **select** your **download preferences** and **start downloading**.
 
 <div style="display: inline-block; text-align: center; margin-right: 10px;">
   <img src="library/assets/icons/video_list_gui_readme.png" alt="Main GUI" style="width: 100%;">
@@ -22,8 +22,6 @@
 4. Alternatively, you can copy the URL and enter it into the video list manually.
 5. Press ***SHIFT + CTRL + ALT + D*** to start the download.
 
-<br>
-
 > [!Tip]
 > You may download the [source code](https://github.com/LeoTN/yt-dlp-autohotkey-gui/archive/refs/heads/main.zip) and **run** or **compile** the file "*VideoDownloader.ahk*" yourself.
 
@@ -32,7 +30,7 @@
 <table>
   <thead>
     <tr>
-      <th style="min-width: 160px;">Feature</th>
+      <th style="min-width: 200px;">Feature</th>
       <th>Description</th>
     </tr>
   </thead>
@@ -66,9 +64,6 @@
 * Embedding **video subtitles** might not work sometimes.
 * Sometimes yt-dlp's requests will be **blocked by YouTube**. This causes some videos to appear as **not found** in the video list.
   * If this is the case, I recommend waiting a little before trying again.
-
-> [!Important]
-> If your YouTube requests are blocked frequently, you should wait a moment to avoid a temporary IP block.
 
 > [!Note]
 > The ability to [use cookies](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp) will be available in future versions which can mitigate this issue.
