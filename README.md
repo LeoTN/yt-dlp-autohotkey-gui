@@ -22,7 +22,7 @@
 4. Alternatively, you can copy the URL and enter it into the video list manually.
 5. Press <code><strong><em>SHIFT + CTRL + ALT + D</em></strong></code> to start the download.
 
-> [!Tip]
+> [!TIP]
 > You may download the [source code](https://github.com/LeoTN/yt-dlp-autohotkey-gui/archive/refs/heads/main.zip) and **run** or **compile** the file "*VideoDownloader.ahk*" yourself.
 
 ## Additional Information
@@ -43,9 +43,6 @@
 * Sometimes yt-dlp's requests will be **blocked by YouTube**. This causes some videos to appear as **not found** in the video list.
   * If this is the case, I recommend waiting a little before trying again.
 
-> [!Note]
-> The ability to [use cookies](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp) will be available in future versions which can mitigate this issue.
-
 </details>
 
 ## Credits & License
@@ -55,6 +52,7 @@
 * **Acc library** (<https://github.com/Descolada/Acc-v2>) → important functions regarding direct URL capture
 * **ColorButton library** (<https://github.com/nperovic/ColorButton.ahk>) → colored button functionality
 
-I appreciate your **constructive** and **honest** feedback. Feel free to create an **issue** or **feature** request.
+> [!IMPORTANT]
+> I appreciate your **constructive** and **honest** feedback. Feel free to create an **issue** or **feature** request.
 
 *This repository is licensed under the [MIT License](https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENSE).*
