@@ -75,6 +75,9 @@ onInit() {
         "Do not download subtitles", "Embed all available subtitles"
     ]
 
+    ; Basically checks if all required files and folders are present.
+    setup_onInit()
+
     if (FileExist(iconFileLocation)) {
         TraySetIcon(iconFileLocation, 1, true)
     }
@@ -104,8 +107,6 @@ onInit() {
 
     ; Registers important events for all GUIs and toast notifications.
     functions_onInit()
-    ; Basically checks if all required files and folders are present.
-    setup_onInit()
     ; Checks and loads the config file.
     configurationFile_onInit()
     ; Initializes the hotkeys.
