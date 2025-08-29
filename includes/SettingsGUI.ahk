@@ -13,6 +13,9 @@ It only works while the settings GUI is the active window.
 Enter:: {
     handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick("", "")
 }
+NumpadEnter:: {
+    handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick("", "")
+}
 #HotIf
 
 /*
@@ -142,9 +145,9 @@ createSettingsGUI() {
     settingsGUIDefaultManageVideoListSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+200 w600 h210",
         "Default Manage Video List Preferences")
     settingsGUIAddVideoURLIsAPlaylistCheckbox := settingsGUI.Add("CheckBox", "xp+10 yp+20",
-        "Add videos from a playlist")
+        "URL refers to a playlist")
     settingsGUIAddVideoURLUsePlaylistRangeCheckbox := settingsGUI.Add("CheckBox", "yp+20 +Disabled",
-        "Only add videos in a specific range")
+        "Use paylist range filter")
     settingsGUIAddVideoSpecifyPlaylistRangeText := settingsGUI.Add("Text", "yp+20 w580", "Index Range")
     settingsGUIAddVideoSpecifyPlaylistRangeInputEdit := settingsGUI.Add("Edit", "yp+20 w180 +Disabled", "1")
     ; Adds the grey "hint" text into the edit.
@@ -339,7 +342,7 @@ createSettingsGUI() {
     settingsGUIAddVideoURLIsAPlaylistCheckbox.ToolTip .=
         "`nonly the video specified in the URL or the very first video of the playlist will be added to the list."
     settingsGUIAddVideoURLIsAPlaylistCheckbox.ToolTip .=
-        "`nEnable this option to instead download the complete playlist by default."
+        "`nEnable this option to extract the complete playlist by default."
     settingsGUIAddVideoURLUsePlaylistRangeCheckbox.ToolTip :=
         "Allows for a fine grained selection of videos from the playlist. See the help section for more information."
     settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.ToolTip :=
@@ -557,8 +560,15 @@ handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick(pButton, pInf
         settingsGUIVideoDesiredSubtitleComboBox.Text, settingsGUIVideoDesiredSubtitleComboBox.ContentArray)) {
         return
     }
+    ; This option is simply invalid.
+    if (settingsGUIVideoDesiredSubtitleComboBox.Text = "Do not download subtitles" ||
+        settingsGUIVideoDesiredSubtitleComboBox.Text = "None") {
+        MsgBox("You should only enter subtitle languages.", "VD - Invalid Subtitle Entry",
+            "Iconi T3 Owner" . settingsGUI.Hwnd)
+        return
+    }
     ; This means the user possibly did not see the checkbox below.
-    if (settingsGUIVideoDesiredSubtitleComboBox.Text == "Embed all available subtitles") {
+    if (settingsGUIVideoDesiredSubtitleComboBox.Text = "Embed all available subtitles") {
         static misclickCounter := 0
         if (misclickCounter < 3) {
             MsgBox("It is recommended to use the checkbox below for this purpose.", "VD - Invalid Subtitle Entry",

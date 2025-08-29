@@ -14,6 +14,9 @@ ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoSpecifyPlaylistRangeIn
 Enter:: {
     handleVideoListGUI_addVideoToListButton_onClick("", "")
 }
+NumpadEnter:: {
+    handleVideoListGUI_addVideoToListButton_onClick("", "")
+}
 #HotIf
 
 /*
@@ -92,9 +95,9 @@ createVideoListGUI() {
     addVideoURLInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     ; Add URL elements.
     addVideoToListButton := videoListGUI.Add("Button", "xp-560 yp+29 w200", "Add Video(s) to List")
-    addVideoURLIsAPlaylistCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30", "Add videos from a playlist")
+    addVideoURLIsAPlaylistCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30", "URL refers to a playlist")
     addVideoURLUsePlaylistRangeCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
-        "Only add videos in a specific range")
+        "Use paylist range filter")
     addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
     addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled -Multi", "1")
     ; Adds the grey "hint" text into the edit.
@@ -214,7 +217,7 @@ createVideoListGUI() {
     addVideoURLIsAPlaylistCheckbox.ToolTip .=
         "`nonly the video specified in the URL or the very first video of the playlist will be added to the list."
     addVideoURLIsAPlaylistCheckbox.ToolTip .=
-        "`nEnable this option to instead extract the complete playlist by default."
+        "`nEnable this option to extract the complete playlist by default."
     addVideoURLUsePlaylistRangeCheckbox.ToolTip :=
         "Allows for a fine grained selection of videos from the playlist. See the help section for more information."
     addVideoSpecifyPlaylistRangeInputEdit.ToolTip :=
@@ -780,14 +783,14 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     ; We use the current time stamp to generate a unique name for the download folder.
     currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     defaultDownloadDirectory := readConfigFile("DEFAULT_DOWNLOAD_DIRECTORY")
-    currentDownloadDirectory := defaultDownloadDirectory . "\" . currentTime
+    currentDefaultDownloadDirectory := defaultDownloadDirectory . "\" . currentTime
     alternativeDownloadDirectory := downloadSelectDownloadDirectoryInputEdit.Value
     ; Use the alternative download directory if it exists.
     if (DirExist(alternativeDownloadDirectory)) {
         targetDownloadDirectory := alternativeDownloadDirectory
     }
     else {
-        targetDownloadDirectory := currentDownloadDirectory
+        targetDownloadDirectory := currentDefaultDownloadDirectory
     }
 
     ; Fill the currentYTDLPActionObject with data which can be used to cancel the download.
@@ -828,7 +831,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     ; Automatically exports all downloaded video URLs.
     if (autoExportVideoListCheckbox.Value && actuallyDownloadedVideoListViewElements.Count > 0) {
         exportFileName := currentTime . "_VD_auto_exported_urls.txt"
-        exportFileLocation := currentDownloadDirectory . "\" . exportFileName
+        exportFileLocation := targetDownloadDirectory . "\" . exportFileName
         ; There shouldn't be any invalid URLs. Really :D But if there are any, they will be ignored.
         exportVideoListViewElements(actuallyDownloadedVideoListViewElements, exportFileLocation, true)
     }
@@ -1347,7 +1350,7 @@ extractVideoMetaData(pVideoURL) {
     ; We add this property after the loops because it will not be written by yt-dlp.
     videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := thumbnailFileLocation
     /*
-    Extract the available subtitles from the yt-dlp string.
+    Extracts the available subtitles from the yt-dlp string.
     The returned map should contain the language as the key and the corresponding language code as the value.
     */
     videoMetaDataObject.VIDEO_SUBTITLES :=

@@ -614,7 +614,7 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
     }
     try
     {
-        FileAppend(exportFileContentFinal, pExportFileLocation,)
+        FileAppend(exportFileContentFinal, pExportFileLocation)
     }
     catch as error {
         displayErrorMessage(error, "File writing errors are usually rare. Please report this!")
