@@ -64,7 +64,7 @@ createVideoListGUI() {
     This section creates all the GUI control elements and event handlers.
     ********************************************************************************************************************
     */
-    ; Controlls that display the currently selected video.
+    ; Controls that display the currently selected video.
     currentlySelectedVideoGroupBox := videoListGUI.Add("GroupBox", "w300 h390", "Currently Selected Video")
     videoTitleText := videoListGUI.Add("Text", "xp+10 yp+20 w280 R1 -Wrap", "Video Title")
     videoUploaderText := videoListGUI.Add("Text", "yp+20 w280 R1 -Wrap", "Uploader")
@@ -74,7 +74,7 @@ createVideoListGUI() {
     ; Controls that change the download settings for the video.
     videoDesiredFormatText := videoListGUI.Add("Text", "yp+173", "Desired Format")
     videoDesiredFormatDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
-    videoDesiredSubtitleText := videoListGUI.Add("Text", "yp+30", "Desired Subtitle(s)")
+    videoDesiredSubtitleText := videoListGUI.Add("Text", "yp+30", "Desired Subtitles")
     videoDesiredSubtitleListBox := videoListGUI.Add("ListBox", "w280 yp+20 R1 +Multi", ["None"])
     videoAdvancedDownloadSettingsButton := videoListGUI.Add("Button", "w280 yp+30", "Advanced Download Settings")
     ; Video list controls.
@@ -98,7 +98,7 @@ createVideoListGUI() {
     addVideoToListButton := videoListGUI.Add("Button", "xp-560 yp+29 w200", "Add Video(s) to List")
     addVideoURLIsAPlaylistCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30", "URL refers to a playlist")
     addVideoURLUsePlaylistRangeCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
-        "Use paylist range filter")
+        "Use playlist range filter")
     addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
     addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled -Multi", "1")
     ; Adds the grey "hint" text into the edit.
@@ -109,12 +109,12 @@ createVideoListGUI() {
     removeVideoConfirmDeletionCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30",
         "Confirm deletion of selected videos")
     removeVideoConfirmOnlyWhenMultipleSelectedCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
-        "Only multiple videos")
+        "Only apply to multiple videos")
     ; Import and export elements.
     importVideoListButton := videoListGUI.Add("Button", "xp+200 yp-50 w75", "Import")
     exportVideoListButton := videoListGUI.Add("Button", "yp xp+85 w75 +Disabled", "Export")
     importAndExportOnlyValidURLsCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Only consider valid URLs")
-    autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
+    autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20 Checked", "Auto-export downloads")
     ; Controls that are relevant for downloading the videos in the video list.
     downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download")
     downloadStartButton := videoListGUI.Add("Button", "xp+10 yp+20 w135 +Disabled", "Start Download")
@@ -124,7 +124,7 @@ createVideoListGUI() {
     downloadRemoveVideosAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "xp-135 yp+30 Checked",
         "Automatically remove downloaded videos")
     downloadTerminateAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "yp+20",
-        "Terminate after download")
+        "Close application after download")
     downloadSelectDownloadDirectoryText := videoListGUI.Add("Text", "xp-10 yp+20", "Download Directory")
     downloadSelectDownloadDirectoryInputEdit := videoListGUI.Add("Edit", "yp+20 w255 R1 -WantReturn +ReadOnly",
         "default")
@@ -133,7 +133,7 @@ createVideoListGUI() {
     downloadProgressText := videoListGUI.Add("Text", "xp-260 yp+29 w280", "Downloaded (0 / 0)")
     downloadProgressBar := videoListGUI.Add("Progress", "yp+20 w280")
     ; Status bar
-    videoListGUIStatusBar := videoListGUI.Add("StatusBar", , "Add a video URL to start")
+    videoListGUIStatusBar := videoListGUI.Add("StatusBar", , "Enter a video URL to get started")
     videoListGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     videoListGUIStatusBar.loadingAnimationIsPlaying := false
     videoListGUIStatusBar.loadingAnimationCurrentStatusBarText := ""
@@ -191,21 +191,21 @@ createVideoListGUI() {
     */
     ; Controls that change the download settings for the video.
     videoDesiredFormatDDL.ToolTip :=
-        "Select a preferred download format. If available, the selected format will be downloaded directly."
+        "Select a preferred download format. If available, that format will be downloaded directly."
     videoDesiredFormatDDL.ToolTip .=
-        "`nOtherwise a conversion with FFmpeg might be required which can take some time."
+        "`nOtherwise, a conversion with FFmpeg may be required, which can take some time."
     videoDesiredSubtitleListBox.ToolTip :=
-        "Select on or more subtitles to be embedded into the (supported) video file."
+        "Select one or more subtitles to be embedded into the (supported) video file."
     videoDesiredSubtitleListBox.ToolTip .=
-        '`nEmbedding all available subtitles does only include actual subtitles. In other words, '
+        '`nEmbedding all available subtitles only includes actual subtitles. In other words,'
     videoDesiredSubtitleListBox.ToolTip .=
-        'entries embraced with square brackets "[]" (automatic captions) must be selected manually.'
+        '`nsubtitles enclosed in square brackets "[]" (automatic captions) must be selected manually.'
     videoDesiredSubtitleListBox.ToolTip .=
         "`nA maximum of 20 subtitles per video should not be exceeded to ensure a successful download."
     videoAdvancedDownloadSettingsButton.ToolTip := ""
     ; Video list controls.
     videoListSearchBarInputEdit.ToolTip :=
-        "You can also search a video with it's URL."
+        "You can also search for a video by its URL."
     videoListSearchBarInputClearButton.ToolTip := ""
     ; Controls that belong to the video list.
     addVideoURLInputEdit.ToolTip := "Enter a video URL here and press [Enter] or the [" . addVideoToListButton.Text "] button."
@@ -214,46 +214,44 @@ createVideoListGUI() {
     ; Add URL elements.
     addVideoToListButton.ToolTip := ""
     addVideoURLIsAPlaylistCheckbox.ToolTip :=
-        "If a URL contains a reference or is itself a link to a playlist,"
+        "If a URL references or links directly to a playlist,"
     addVideoURLIsAPlaylistCheckbox.ToolTip .=
-        "`nonly the video specified in the URL or the very first video of the playlist will be added to the list."
+        "`nonly the specified video or the first video of the playlist will be added."
     addVideoURLIsAPlaylistCheckbox.ToolTip .=
-        "`nEnable this option to extract the complete playlist by default."
+        "`nEnable this option to extract the full playlist by default."
     addVideoURLUsePlaylistRangeCheckbox.ToolTip :=
-        "Allows for a fine grained selection of videos from the playlist. See the help section for more information."
+        "Allows fine-grained selection of videos from a playlist. See the help section for details."
     addVideoSpecifyPlaylistRangeInputEdit.ToolTip :=
-        "Enter the index range to select specific videos from the playlist.`nMore information can be found in the help section."
+        "Enter the index range of videos to select from the playlist.`nSee the help section for more details."
     ; Remove video elements.
-    removeVideoFromListButton.ToolTip := "Removes all selected videos from the list."
+    removeVideoFromListButton.ToolTip := "Remove all selected videos from the list."
     removeVideoConfirmDeletionCheckbox.ToolTip :=
-        "Shows a prompt to confirm the removal of one or more videos from the list."
+        "Show a prompt to confirm removal of one or more videos from the list."
     removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.ToolTip :=
-        "If enabled, will only prompt to confirm the removal of multiple videos at once."
+        "If enabled, prompt only when removing multiple videos at once."
     ; Import and export elements.
     importVideoListButton.ToolTip :=
-        "Import a text file with video URLs. Each line must only contain one URL."
+        "Import a text file with video URLs. Each line must contain only one URL."
     exportVideoListButton.ToolTip :=
         "Export the URLs of all (selected) videos into a text file."
     importAndExportOnlyValidURLsCheckbox.ToolTip :=
-        "Only successfully extracted video URLs will be exported "
+        "Only video URLs that were successfully extracted will be exported."
     importAndExportOnlyValidURLsCheckbox.ToolTip .=
-        "when clicking the [" . exportVideoListButton.Text . "] button."
-    importAndExportOnlyValidURLsCheckbox.ToolTip .=
-        "`nThe same goes for the import function which only imports valid URLs in case this checkbox is enabled."
+        "`nSimilarly, importing will only include valid URLs if this option is enabled."
     autoExportVideoListCheckbox.ToolTip :=
-        "Automatically export the downloaded video URLs into a file."
+        "Automatically export downloaded video URLs into a file."
     ; Controls that are relevant for downloading the videos in the video list.
     downloadStartButton.ToolTip :=
-        "Start the download of all (selected) videos in the list."
+        "Start downloading all (selected) videos in the list."
     downloadCancelButton.ToolTip := ""
     downloadRemoveVideosAfterDownloadCheckbox.ToolTip :=
-        "Removes the video from the list after downloading and processing it."
+        "Remove the video from the list after downloading and processing."
     downloadTerminateAfterDownloadCheckbox.ToolTip :=
-        "Closes VideoDownloader after downloading and processing all (selected) videos."
+        "Exit after downloading and processing all (selected) videos."
     downloadSelectDownloadDirectoryInputEdit.ToolTip :=
         "Select a directory for the downloaded files."
     downloadSelectDownloadDirectoryInputEdit.ToolTip .=
-        "`nOtherwise the default directory specified in the settings is used."
+        "`nOtherwise, the default directory specified in the settings will be used."
     downloadSelectDownloadDirectoryButton.ToolTip := ""
 
     /*
