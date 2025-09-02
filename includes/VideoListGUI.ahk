@@ -918,6 +918,8 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
         ; Changes the taskbar progress bar to indicate that a download was canceled.
         setProgressOnTaskbarApplication(videoListGUI.Hwnd, 8)
         currentYTDLPActionObject.booleanCancelOneVideoDownload := true
+        ; Prevents the application from exiting after a video was canceled.
+        downloadTerminateAfterDownloadCheckbox.Value := false
     }
     else if (result == msgButton3) {
         if (!ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
@@ -929,6 +931,8 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
         ; Changes the taskbar progress bar to indicate that a download was canceled.
         setProgressOnTaskbarApplication(videoListGUI.Hwnd, 8)
         currentYTDLPActionObject.booleanCancelCompleteDownload := true
+        ; Prevents the application from exiting after the download was canceled.
+        downloadTerminateAfterDownloadCheckbox.Value := false
     }
 }
 
