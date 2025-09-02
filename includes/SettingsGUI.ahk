@@ -86,8 +86,8 @@ createSettingsGUI() {
         "Open the video list window at the start")
     settingsGUIRememberWindowPositionAndSizeCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "Remember the video list window position and size")
-    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
-        "Exit VideoDownloader when the video list window is closed")
+    settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
+        "Close to tray")
     settingsGUICheckForUpdatesAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+30 Checked",
         "Check for updates at the start")
     settingsGUIUpdateToBetaVersionsCheckbox := settingsGUI.Add("Checkbox", "yp+20",
@@ -217,7 +217,7 @@ createSettingsGUI() {
     settingsGUIEnableAutoStartCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIShowVideoListGUIAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIRememberWindowPositionAndSizeCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
-    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.OnEvent("Click",
+    settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox.OnEvent("Click",
         handleSettingsGUI_allCheckBox_onClick)
     settingsGUICheckForUpdatesAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIUpdateToBetaVersionsCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
@@ -284,11 +284,11 @@ createSettingsGUI() {
         "The state of the video list window will be saved when exiting VideoDownloader."
     settingsGUIRememberWindowPositionAndSizeCheckbox.ToolTip .=
         "`nNext time, it will be opened in the same position, size and minimized or maximized."
-    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip :=
-        "Terminates VideoDownloader when the video list window is closed."
-    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip .=
-        "`nIf this option is disabled, the video list window can be closed, but VideoDownloader would still be running in the background."
-    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip .=
+    settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip :=
+        "Minimize VideoDownloader to tray when the video list window is closed."
+    settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip .=
+        "`nIf this option is enabled, the video list window can be closed, but VideoDownloader will continue running in the background."
+    settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip .=
         "`nIn this case, the tray icon will be shown in the taskbar and you may close the application via the tray menu or the built-in hotkey."
     settingsGUICheckForUpdatesAtLaunchCheckbox.ToolTip :=
         "Starts a PowerShell script to check for a later version when starting VideoDownloader."
@@ -1037,8 +1037,8 @@ initializeCheckboxLinkedConfigFileEntryMap() {
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIShowVideoListGUIAtLaunchCheckbox, "SHOW_VIDEO_LIST_GUI_ON_LAUNCH")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIRememberWindowPositionAndSizeCheckbox,
         "REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE")
-    checkboxLinkedConfigFileEntryMap.Set(settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox,
-        "EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox,
+        "MINIMIZE_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUICheckForUpdatesAtLaunchCheckbox, "CHECK_FOR_UPDATES_AT_LAUNCH")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIUpdateToBetaVersionsCheckbox, "UPDATE_TO_BETA_VERSIONS")
     ; Notification settings.

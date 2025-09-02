@@ -35,6 +35,7 @@ videoListGUI_onInit() {
     global currentYTDLPActionObject := Object()
 
     ; Download related variables.
+    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := false
     currentYTDLPActionObject.booleanDownloadIsRunning := false
     currentYTDLPActionObject.booleanCancelOneVideoDownload := false
     currentYTDLPActionObject.booleanCancelCompleteDownload := false
@@ -1040,25 +1041,33 @@ handleVideoListGUI_onClose(pGUI) {
     if (GetKeyState("Shift", "P")) {
         saveCurrentVideoListGUIStateToConfigFile()
     }
-    if (!readConfigFile("EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")) {
+    ; Ignore any instructions below if the GUI is supposed to be minimized instead of closed.
+    if (readConfigFile("MINIMIZE_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")) {
         return
     }
-    ; This means there are no videos in the list view element.
-    if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
-        exitApplicationWithNotification()
-    }
+
     /*
     The no results entry is automatically added to the videoListViewContentMap once the user types something
     into the video list search bar which does not yield any results.
     We substract this entry from the amount of videos in the list if the user closes the video list GUI at this moment.
     */
     videoAmount := videoListViewContentMap.Count
-    if (videoAmount > 1 && videoListViewContentMap.Has("*****No results found.*****")) {
+    if (videoAmount > 0 && videoListViewContentMap.Has("*****No results found.*****")) {
+        videoAmount--
+    }
+    ; A similar case happens when there are no videos in the list at all.
+    if (videoAmount > 0 && videoListViewContentMap.Has("*****No videos added yet.*****")) {
         videoAmount--
     }
 
+    ; Warning message when there is an active video extraction process running at the moment.
+    if (currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning) {
+        result := MsgBox(
+            "There is an active video information extraction process running right now.`n`n"
+            "Do you want to close VideoDownloader anyway?", "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
+    }
     ; Warning message when there is an active download running at the moment.
-    if (currentYTDLPActionObject.booleanDownloadIsRunning) {
+    else if (currentYTDLPActionObject.booleanDownloadIsRunning) {
         result := MsgBox(
             "There is an active download running right now.`n`nDo you want to close VideoDownloader anyway?",
             "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
@@ -1075,10 +1084,16 @@ handleVideoListGUI_onClose(pGUI) {
             "`n`nDo you want to close VideoDownloader anyway?", "VD - Confirm Exit",
             "YN Icon? Owner" . videoListGUI.Hwnd)
     }
+    else {
+        ; Exits the application because there are no videos in the list and no active processes.
+        exitApplicationWithNotification()
+    }
+
     ; This means the user wants to close the GUI anyway.
     if (result == "Yes") {
         exitApplicationWithNotification()
     }
+
     ; This stops the GUI from closing.
     return true
 }
@@ -1269,6 +1284,7 @@ VideoMetaData.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and 
 extractVideoMetaData(pVideoURL) {
     global GUIBackgroundImageLocation
     global ffmpegDirectory
+    global currentYTDLPActionObject
 
     tempWorkingDirectory := readConfigFile("TEMP_DIRECTORY")
     if (!DirExist(tempWorkingDirectory)) {
@@ -1296,6 +1312,7 @@ extractVideoMetaData(pVideoURL) {
         "[        🎞️ ]", "[       🎞️  ]", "[      🎞️   ]", "[     🎞️    ]", "[    🎞️     ]",
         "[   🎞️      ]", "[  🎞️       ]", "[ 🎞️        ]"
     ]
+    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := true
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting video data...", spinnerCharArray)
     ; Starts a loading animation in the taskbar.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 1)
@@ -1357,6 +1374,8 @@ extractVideoMetaData(pVideoURL) {
         parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_SUBTITLES)
     videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS :=
         parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
+
+    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := false
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished video information extraction")
     ; Stops the taskbar loading animation.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
@@ -1415,6 +1434,7 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     global GUIBackgroundImageLocation
     global YTDLPFileLocation
     global ffmpegDirectory
+    global currentYTDLPActionObject
 
     ; We use the current time stamp to generate a unique name for each operation.
     currentTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
@@ -1447,6 +1467,7 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         "[        💾 ]", "[       💾  ]", "[      💾   ]", "[     💾    ]", "[    💾     ]",
         "[   💾      ]", "[  💾       ]", "[ 💾        ]"
     ]
+    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := true
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting playlist data...", spinnerCharArray)
     ; Starts a loading animation in the taskbar.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 1)
@@ -1508,6 +1529,8 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS :=
             parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
     }
+
+    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := false
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished playlist information extraction")
     ; Stops the taskbar loading animation.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)

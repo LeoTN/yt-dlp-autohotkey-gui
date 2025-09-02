@@ -406,7 +406,7 @@ setProgressOnTaskbarApplication(pWindowHwnd, pState := 0, pAlreadyCompletedPerce
 This function will try to extract the video meta data from any given URL and add the video to the video list.
 @param pVideoURL [String] Should be a valid URL from a video.
 @returns [Array] A status code which is the first element in the array.
-The array might have different values at other indexes depending on the status code at the first index
+The array might have different values at other indexes depending on the status code at the first index.
 */
 createVideoListViewEntry(pVideoURL) {
     global videoListViewContentMap
