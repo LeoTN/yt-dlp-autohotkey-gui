@@ -13,6 +13,9 @@ It only works while the settings GUI is the active window.
 Enter:: {
     handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick("", "")
 }
+NumpadEnter:: {
+    handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick("", "")
+}
 #HotIf
 
 /*
@@ -80,23 +83,24 @@ createSettingsGUI() {
     settingsGUIStartupSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h180", "Behavior")
     settingsGUIEnableAutoStartCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20", "Start with Windows")
     settingsGUIShowVideoListGUIAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
-        "Open the video list window at the start")
+        "Open the video list window when VideoDownloader starts")
     settingsGUIRememberWindowPositionAndSizeCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "Remember the video list window position and size")
-    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
-        "Exit VideoDownloader when the video list window is closed")
+    settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
+        "Close to tray")
     settingsGUICheckForUpdatesAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+30 Checked",
-        "Check for updates at the start")
+        "Check for updates when starting VideoDownloader")
     settingsGUIUpdateToBetaVersionsCheckbox := settingsGUI.Add("Checkbox", "yp+20",
-        "I want to receive beta versions")
+        "Include beta versions in update checks")
     settingsGUIUpdateCheckForUpdatesButton := settingsGUI.Add("Button", "yp+20 w200", "Check for Updates now")
     ; Notification settings.
     settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+225 w600 h80", "Notifications")
     settingsGUIDisplayStartupNotificationCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
-        "Program launch")
-    settingsGUIDisplayExitNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked", "Program exit")
+        "On program launch")
+    settingsGUIDisplayExitNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
+        "On program exit")
     settingsGUIDisplayFinishedDownloadNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
-        "Download finished")
+        "A download is finished")
     ; Directory settings.
     settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+315 w600 h175", "Directories")
     settingsGUIDirectoryDDL := settingsGUI.Add("DropDownList", "xp+10 yp+20 w580")
@@ -125,7 +129,7 @@ createSettingsGUI() {
         "Default Video Preferences")
     settingsGUIVideoDesiredFormatText := settingsGUI.Add("Text", "xp+10 yp+20 w580", "Desired Format")
     settingsGUIVideoDesiredFormatDDL := settingsGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
-    settingsGUIVideoDesiredSubtitleText := settingsGUI.Add("Text", "yp+30", "Desired Subtitle(s)")
+    settingsGUIVideoDesiredSubtitleText := settingsGUI.Add("Text", "yp+30", "Desired Subtitles")
     settingsGUIVideoDesiredSubtitleComboBox := settingsGUI.Add("ComboBox", "w280 yp+20")
     ; Retrieves the handle of the settingsGUIVideoDesiredSubtitleComboBox's edit element.
     settingsGUIVideoDesiredSubtitleComboBox.EditHwnd := DllCall("GetWindow", "Ptr",
@@ -136,15 +140,15 @@ createSettingsGUI() {
     settingsGUIVideoDesiredSubtitleRemoveButton := settingsGUI.Add("Button", "xp+55 w50 h20", "Remove")
     settingsGUIEmbedAllSubtitlesCheckbox := settingsGUI.Add("CheckBox", "xp-345 yp+26",
         "Embed all available subtitles")
-    settingsGUIConfirmChangingMultipleVideosCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
-        "Confirm changes to multiple videos")
+    settingsGUIConfirmChangingMultipleVideosCheckbox := settingsGUI.Add("CheckBox", "yp+20 Checked",
+        "Confirm changes to multiple selected videos")
     ; Default manage video list settings.
     settingsGUIDefaultManageVideoListSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+200 w600 h210",
         "Default Manage Video List Preferences")
     settingsGUIAddVideoURLIsAPlaylistCheckbox := settingsGUI.Add("CheckBox", "xp+10 yp+20",
-        "Add videos from a playlist")
+        "URL refers to a playlist")
     settingsGUIAddVideoURLUsePlaylistRangeCheckbox := settingsGUI.Add("CheckBox", "yp+20 +Disabled",
-        "Only add videos in a specific range")
+        "Use playlist range filter")
     settingsGUIAddVideoSpecifyPlaylistRangeText := settingsGUI.Add("Text", "yp+20 w580", "Index Range")
     settingsGUIAddVideoSpecifyPlaylistRangeInputEdit := settingsGUI.Add("Edit", "yp+20 w180 +Disabled", "1")
     ; Adds the grey "hint" text into the edit.
@@ -154,17 +158,18 @@ createSettingsGUI() {
     settingsGUIRemoveVideoConfirmDeletionCheckbox := settingsGUI.Add("CheckBox", "yp+40",
         "Confirm deletion of selected videos")
     settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox := settingsGUI.Add("CheckBox", "yp+20 +Disabled",
-        "Only multiple videos")
+        "Only apply to multiple videos")
     ; Import and export elements.
     settingsGUIimportAndExportOnlyValidURLsCheckbox := settingsGUI.Add("CheckBox", "yp+30", "Only consider valid URLs")
-    settingsGUIAutoExportVideoListCheckbox := settingsGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
+    settingsGUIAutoExportVideoListCheckbox := settingsGUI.Add("CheckBox", "yp+20 Checked",
+        "Auto-export downloads")
     ; Default download settings.
     settingsGUIDefaultDownloadSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+420 w600 h60",
         "Default Download Preferences")
     settingsGUIDownloadRemoveVideosAfterDownloadCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
         "Automatically remove downloaded videos")
     settingsGUIDownloadTerminateAfterDownloadCheckbox := settingsGUI.Add("Checkbox", "yp+20",
-        "Terminate after download")
+        "Close application after download")
 
     /*
     HOTKEY SETTINGS TAB
@@ -192,7 +197,7 @@ createSettingsGUI() {
     settingsGUIHotkeyResetChangesButton := settingsGUI.Add("Button", "xp+197 w187 +Disabled", "Reset to Default")
     settingsGUIHotkeyResetChangesButton.SetColor("ffe8a1", "000000", -1, "808080")
     ; Status bar.
-    settingsGUIStatusBar := settingsGUI.Add("StatusBar", , "Some settings might require a restart of VideoDownloader")
+    settingsGUIStatusBar := settingsGUI.Add("StatusBar", , "Some settings may require restarting VideoDownloader")
     settingsGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
 
     ; Adds the event handlers for the settings GUI.
@@ -214,7 +219,7 @@ createSettingsGUI() {
     settingsGUIEnableAutoStartCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIShowVideoListGUIAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIRememberWindowPositionAndSizeCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
-    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.OnEvent("Click",
+    settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox.OnEvent("Click",
         handleSettingsGUI_allCheckBox_onClick)
     settingsGUICheckForUpdatesAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIUpdateToBetaVersionsCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
@@ -276,35 +281,35 @@ createSettingsGUI() {
     */
     ; Application behavior settings.
     settingsGUIShowVideoListGUIAtLaunchCheckbox.ToolTip :=
-        "Opens the video list window when VideoDownloader is launched."
+        "Open the video list window when VideoDownloader starts."
     settingsGUIRememberWindowPositionAndSizeCheckbox.ToolTip :=
-        "The state of the video list window will be saved when exiting VideoDownloader."
+        "Save the state of the video list window when exiting VideoDownloader."
     settingsGUIRememberWindowPositionAndSizeCheckbox.ToolTip .=
-        "`nNext time, it will be opened in the same position, size and minimized or maximized."
-    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip :=
-        "Terminates VideoDownloader when the video list window is closed."
-    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip .=
-        "`nIf this option is disabled, the video list window can be closed, but VideoDownloader would still be running in the background."
-    settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip .=
-        "`nIn this case, the tray icon will be shown in the taskbar and you may close the application via the tray menu or the built-in hotkey."
+        "`nNext time, it will open in the same position and size, and with the same minimized or maximized state."
+    settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip :=
+        "Minimize VideoDownloader to the tray when the video list window is closed."
+    settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip .=
+        "`nIf enabled, the video list window can be closed while VideoDownloader continues running in the background."
+    settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox.ToolTip .=
+        "`nIn this case, a tray icon will appear in the taskbar. You may exit the application via the tray menu or the built-in hotkey."
     settingsGUICheckForUpdatesAtLaunchCheckbox.ToolTip :=
-        "Starts a PowerShell script to check for a later version when starting VideoDownloader."
+        "Run a PowerShell script to check for a newer version when starting VideoDownloader."
     settingsGUIUpdateToBetaVersionsCheckbox.ToolTip :=
-        "Newer beta versions will be considered as available updates."
+        "Include newer beta versions when checking for available updates."
     settingsGUIUpdateCheckForUpdatesButton.ToolTip := ""
     ; Notification settings.
     settingsGUIDisplayStartupNotificationCheckbox.ToolTip :=
-        "Shows a toast notification when starting VideoDownloader."
+        "Show a toast notification when starting VideoDownloader."
     settingsGUIDisplayExitNotificationCheckbox.ToolTip :=
-        "Shows a toast notification when VideoDownloader exits."
+        "Show a toast notification when VideoDownloader exits."
     settingsGUIDisplayExitNotificationCheckbox.ToolTip .=
-        "`nSome exit events ignore this setting."
+        "`nSome exit events may ignore this setting."
     settingsGUIDisplayFinishedDownloadNotificationCheckbox.ToolTip :=
-        "Shows a toast notification when finishing a download process."
+        "Show a toast notification when a download is finished."
     settingsGUIDisplayFinishedDownloadNotificationCheckbox.ToolTip .=
-        "`nClicking on this notification opens the directory containing the downloaded file(s)."
+        "`nClicking the notification opens the directory containing the downloaded file(s)."
     ; Directory settings.
-    settingsGUIDirectoryDDL.ToolTip := "You can change the path of each directory here."
+    settingsGUIDirectoryDDL.ToolTip := "Change the path for each directory here."
     settingsGUIDirectoryDescriptionEdit.ToolTip := ""
     settingsGUIDirectoryInputEdit.ToolTip := ""
     settingsGUISelectDirectoryButton.ToolTip := ""
@@ -318,56 +323,56 @@ createSettingsGUI() {
     */
     ; Default video settings.
     settingsGUIVideoDesiredFormatDDL.ToolTip :=
-        "Select a preferred download format. If available, the selected format will be downloaded directly."
+        "Select a preferred download format. If available, that format will be downloaded directly."
     settingsGUIVideoDesiredFormatDDL.ToolTip .=
-        "`nOtherwise a conversion with FFmpeg might be required which can take some time."
+        "`nOtherwise, a conversion with FFmpeg may be required, which can take some time."
     settingsGUIVideoDesiredFormatDDL.ToolTip .=
         "`nNot all video formats support embedded subtitles."
     settingsGUIVideoDesiredSubtitleComboBox.ToolTip :=
-        "Add subtitles you would like to select by default. Use the exact name of the subtitle language."
+        "Add subtitles you would like to select by default. Use the exact subtitle language name."
     settingsGUIVideoDesiredSubtitleComboBox.ToolTip .=
-        '`nFor example, "English" would not select "[English]". You would need to add "[English]" as well.'
+        '`nFor example, "English" will not select "[English]". You would need to add "[English]" as well.'
     settingsGUIEmbedAllSubtitlesCheckbox.ToolTip :=
         "If enabled, all available subtitles will be embedded into the video file by default."
     settingsGUIEmbedAllSubtitlesCheckbox.ToolTip .=
-        '`nThis does not include subtitles embraced with square brackets "[]" (automatic captions).'
+        '`nThis does not include subtitles enclosed in square brackets "[]" (automatic captions).'
     settingsGUIConfirmChangingMultipleVideosCheckbox.ToolTip :=
         "If enabled, you will be prompted to confirm changes to multiple selected videos at once."
     ; Default manage video list settings.
     settingsGUIAddVideoURLIsAPlaylistCheckbox.ToolTip :=
-        "If a URL contains a reference or is itself a link to a playlist,"
+        "If a URL references or links directly to a playlist,"
     settingsGUIAddVideoURLIsAPlaylistCheckbox.ToolTip .=
-        "`nonly the video specified in the URL or the very first video of the playlist will be added to the list."
+        "`nonly the specified video or the first video of the playlist will be added."
     settingsGUIAddVideoURLIsAPlaylistCheckbox.ToolTip .=
-        "`nEnable this option to instead download the complete playlist by default."
+        "`nEnable this option to extract the full playlist by default."
     settingsGUIAddVideoURLUsePlaylistRangeCheckbox.ToolTip :=
-        "Allows for a fine grained selection of videos from the playlist. See the help section for more information."
+        "Allows fine-grained selection of videos from a playlist. See the help section for details."
     settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.ToolTip :=
-        "Enter the index range to select the videos from the playlist.`nMore information can be found in the help section."
+        "Enter the index range of videos to select from the playlist.`nSee the help section for more details."
     ; Remove video elements.
     settingsGUIRemoveVideoConfirmDeletionCheckbox.ToolTip :=
-        "Shows a prompt to confirm the removal of one or more videos from the list."
+        "Show a prompt to confirm removal of one or more videos from the list."
     settingsGUIRemoveVideoConfirmOnlyWhenMultipleSelectedCheckbox.ToolTip :=
-        "If enabled, will only prompt to confirm the removal of multiple videos at once."
+        "If enabled, prompt only when removing multiple videos at once."
     ; Import and export elements.
     settingsGUIimportAndExportOnlyValidURLsCheckbox.ToolTip :=
-        "Only video URLs that have been successfully extracted will be exported."
+        "Only video URLs that were successfully extracted will be exported."
     settingsGUIimportAndExportOnlyValidURLsCheckbox.ToolTip .=
-        "`nThe same goes for the import function which only imports valid URLs in case this checkbox is enabled."
+        "`nSimilarly, importing will only include valid URLs if this option is enabled."
     settingsGUIAutoExportVideoListCheckbox.ToolTip :=
-        "Automatically exports the downloaded video URLs into a file."
+        "Automatically export downloaded video URLs into a file."
     ; Default download settings.
     settingsGUIDownloadRemoveVideosAfterDownloadCheckbox.ToolTip :=
-        "Removes the video from the list after downloading and processing it."
+        "Remove the video from the list after downloading and processing."
     settingsGUIDownloadTerminateAfterDownloadCheckbox.ToolTip :=
-        "Closes VideoDownloader after downloading and processing all (selected) videos."
+        "Exit after downloading and processing all (selected) videos."
 
     /*
     HOTKEY SETTINGS TAB
     -------------------------------------------------
     */
-    settingsGUIHotkeyDDL.ToolTip := "You can change each hotkey here."
-    settingsGUIHotkeyHotkeyInputField.ToolTip := "Focus this input field an press a key combination."
+    settingsGUIHotkeyDDL.ToolTip := "Change each hotkey here."
+    settingsGUIHotkeyHotkeyInputField.ToolTip := "Focus this input field and press a key combination."
     settingsGUIHotkeyDescriptionEdit.ToolTip := ""
     settingsGUIHotkeyEnabledRadio.ToolTip := "Enable the selected hotkey."
     settingsGUIHotkeyDisabledRadio.ToolTip := "Disable the selected hotkey."
@@ -557,8 +562,15 @@ handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick(pButton, pInf
         settingsGUIVideoDesiredSubtitleComboBox.Text, settingsGUIVideoDesiredSubtitleComboBox.ContentArray)) {
         return
     }
+    ; This option is simply invalid.
+    if (settingsGUIVideoDesiredSubtitleComboBox.Text = "Do not download subtitles" ||
+        settingsGUIVideoDesiredSubtitleComboBox.Text = "None") {
+        MsgBox("You should only enter subtitle languages.", "VD - Invalid Subtitle Entry",
+            "Iconi T3 Owner" . settingsGUI.Hwnd)
+        return
+    }
     ; This means the user possibly did not see the checkbox below.
-    if (settingsGUIVideoDesiredSubtitleComboBox.Text == "Embed all available subtitles") {
+    if (settingsGUIVideoDesiredSubtitleComboBox.Text = "Embed all available subtitles") {
         static misclickCounter := 0
         if (misclickCounter < 3) {
             MsgBox("It is recommended to use the checkbox below for this purpose.", "VD - Invalid Subtitle Entry",
@@ -1027,8 +1039,8 @@ initializeCheckboxLinkedConfigFileEntryMap() {
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIShowVideoListGUIAtLaunchCheckbox, "SHOW_VIDEO_LIST_GUI_ON_LAUNCH")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIRememberWindowPositionAndSizeCheckbox,
         "REMEMBER_LAST_VIDEO_LIST_GUI_POSITION_AND_SIZE")
-    checkboxLinkedConfigFileEntryMap.Set(settingsGUIExitApplicationWhenVideoListGUIIsClosedCheckbox,
-        "EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUIMinimizeApplicationWhenVideoListGUIIsClosedCheckbox,
+        "MINIMIZE_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUICheckForUpdatesAtLaunchCheckbox, "CHECK_FOR_UPDATES_AT_LAUNCH")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIUpdateToBetaVersionsCheckbox, "UPDATE_TO_BETA_VERSIONS")
     ; Notification settings.

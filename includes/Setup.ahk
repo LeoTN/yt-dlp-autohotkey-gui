@@ -5,8 +5,8 @@ SendMode "Input"
 CoordMode "Mouse", "Window"
 
 setup_onInit() {
-    createRequiredFolders()
     checkIfMSISetupIsRequired()
+    createRequiredFolders()
     ; Checks the system for other already running instances of this application.
     findAlreadyRunningVDInstance()
     ; Putting this behind the setup checks prevents issues when files are missing.
@@ -20,6 +20,8 @@ setup_onInit() {
     WinWaitClose("ahk_id " . setupGUI.Hwnd)
     ; The video list GUI is usually not present at this moment so we don't need to save it's state.
     Reload()
+    ; Makes sure that the old instance exits right away after the reload command has been issued.
+    ExitApp()
 }
 
 createSetupGUI() {

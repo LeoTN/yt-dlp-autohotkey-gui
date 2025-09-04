@@ -14,6 +14,9 @@ ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoSpecifyPlaylistRangeIn
 Enter:: {
     handleVideoListGUI_addVideoToListButton_onClick("", "")
 }
+NumpadEnter:: {
+    handleVideoListGUI_addVideoToListButton_onClick("", "")
+}
 #HotIf
 
 /*
@@ -32,6 +35,7 @@ videoListGUI_onInit() {
     global currentYTDLPActionObject := Object()
 
     ; Download related variables.
+    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := false
     currentYTDLPActionObject.booleanDownloadIsRunning := false
     currentYTDLPActionObject.booleanCancelOneVideoDownload := false
     currentYTDLPActionObject.booleanCancelCompleteDownload := false
@@ -60,7 +64,7 @@ createVideoListGUI() {
     This section creates all the GUI control elements and event handlers.
     ********************************************************************************************************************
     */
-    ; Controlls that display the currently selected video.
+    ; Controls that display the currently selected video.
     currentlySelectedVideoGroupBox := videoListGUI.Add("GroupBox", "w300 h390", "Currently Selected Video")
     videoTitleText := videoListGUI.Add("Text", "xp+10 yp+20 w280 R1 -Wrap", "Video Title")
     videoUploaderText := videoListGUI.Add("Text", "yp+20 w280 R1 -Wrap", "Uploader")
@@ -70,7 +74,7 @@ createVideoListGUI() {
     ; Controls that change the download settings for the video.
     videoDesiredFormatText := videoListGUI.Add("Text", "yp+173", "Desired Format")
     videoDesiredFormatDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
-    videoDesiredSubtitleText := videoListGUI.Add("Text", "yp+30", "Desired Subtitle(s)")
+    videoDesiredSubtitleText := videoListGUI.Add("Text", "yp+30", "Desired Subtitles")
     videoDesiredSubtitleListBox := videoListGUI.Add("ListBox", "w280 yp+20 R1 +Multi", ["None"])
     videoAdvancedDownloadSettingsButton := videoListGUI.Add("Button", "w280 yp+30", "Advanced Download Settings")
     ; Video list controls.
@@ -92,9 +96,9 @@ createVideoListGUI() {
     addVideoURLInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     ; Add URL elements.
     addVideoToListButton := videoListGUI.Add("Button", "xp-560 yp+29 w200", "Add Video(s) to List")
-    addVideoURLIsAPlaylistCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30", "Add videos from a playlist")
+    addVideoURLIsAPlaylistCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30", "URL refers to a playlist")
     addVideoURLUsePlaylistRangeCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
-        "Only add videos in a specific range")
+        "Use playlist range filter")
     addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
     addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled -Multi", "1")
     ; Adds the grey "hint" text into the edit.
@@ -105,12 +109,12 @@ createVideoListGUI() {
     removeVideoConfirmDeletionCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30",
         "Confirm deletion of selected videos")
     removeVideoConfirmOnlyWhenMultipleSelectedCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
-        "Only multiple videos")
+        "Only apply to multiple videos")
     ; Import and export elements.
     importVideoListButton := videoListGUI.Add("Button", "xp+200 yp-50 w75", "Import")
     exportVideoListButton := videoListGUI.Add("Button", "yp xp+85 w75 +Disabled", "Export")
     importAndExportOnlyValidURLsCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Only consider valid URLs")
-    autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20 Checked", "Auto export downloads")
+    autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20 Checked", "Auto-export downloads")
     ; Controls that are relevant for downloading the videos in the video list.
     downloadVideoGroupBox := videoListGUI.Add("GroupBox", "w300 xm+610 ym+400 h185", "Download")
     downloadStartButton := videoListGUI.Add("Button", "xp+10 yp+20 w135 +Disabled", "Start Download")
@@ -120,7 +124,7 @@ createVideoListGUI() {
     downloadRemoveVideosAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "xp-135 yp+30 Checked",
         "Automatically remove downloaded videos")
     downloadTerminateAfterDownloadCheckbox := videoListGUI.Add("Checkbox", "yp+20",
-        "Terminate after download")
+        "Close application after download")
     downloadSelectDownloadDirectoryText := videoListGUI.Add("Text", "xp-10 yp+20", "Download Directory")
     downloadSelectDownloadDirectoryInputEdit := videoListGUI.Add("Edit", "yp+20 w255 R1 -WantReturn +ReadOnly",
         "default")
@@ -129,7 +133,7 @@ createVideoListGUI() {
     downloadProgressText := videoListGUI.Add("Text", "xp-260 yp+29 w280", "Downloaded (0 / 0)")
     downloadProgressBar := videoListGUI.Add("Progress", "yp+20 w280")
     ; Status bar
-    videoListGUIStatusBar := videoListGUI.Add("StatusBar", , "Add a video URL to start")
+    videoListGUIStatusBar := videoListGUI.Add("StatusBar", , "Enter a video URL to get started")
     videoListGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     videoListGUIStatusBar.loadingAnimationIsPlaying := false
     videoListGUIStatusBar.loadingAnimationCurrentStatusBarText := ""
@@ -187,21 +191,21 @@ createVideoListGUI() {
     */
     ; Controls that change the download settings for the video.
     videoDesiredFormatDDL.ToolTip :=
-        "Select a preferred download format. If available, the selected format will be downloaded directly."
+        "Select a preferred download format. If available, that format will be downloaded directly."
     videoDesiredFormatDDL.ToolTip .=
-        "`nOtherwise a conversion with FFmpeg might be required which can take some time."
+        "`nOtherwise, a conversion with FFmpeg may be required, which can take some time."
     videoDesiredSubtitleListBox.ToolTip :=
-        "Select on or more subtitles to be embedded into the (supported) video file."
+        "Select one or more subtitles to be embedded into the (supported) video file."
     videoDesiredSubtitleListBox.ToolTip .=
-        '`nEmbedding all available subtitles does only include actual subtitles. In other words, '
+        '`nEmbedding all available subtitles only includes actual subtitles. In other words,'
     videoDesiredSubtitleListBox.ToolTip .=
-        'entries embraced with square brackets "[]" (automatic captions) must be selected manually.'
+        '`nsubtitles enclosed in square brackets "[]" (automatic captions) must be selected manually.'
     videoDesiredSubtitleListBox.ToolTip .=
         "`nA maximum of 20 subtitles per video should not be exceeded to ensure a successful download."
     videoAdvancedDownloadSettingsButton.ToolTip := ""
     ; Video list controls.
     videoListSearchBarInputEdit.ToolTip :=
-        "You can also search a video with it's URL."
+        "You can also search for a video by its URL."
     videoListSearchBarInputClearButton.ToolTip := ""
     ; Controls that belong to the video list.
     addVideoURLInputEdit.ToolTip := "Enter a video URL here and press [Enter] or the [" . addVideoToListButton.Text "] button."
@@ -210,46 +214,44 @@ createVideoListGUI() {
     ; Add URL elements.
     addVideoToListButton.ToolTip := ""
     addVideoURLIsAPlaylistCheckbox.ToolTip :=
-        "If a URL contains a reference or is itself a link to a playlist,"
+        "If a URL references or links directly to a playlist,"
     addVideoURLIsAPlaylistCheckbox.ToolTip .=
-        "`nonly the video specified in the URL or the very first video of the playlist will be added to the list."
+        "`nonly the specified video or the first video of the playlist will be added."
     addVideoURLIsAPlaylistCheckbox.ToolTip .=
-        "`nEnable this option to instead extract the complete playlist by default."
+        "`nEnable this option to extract the full playlist by default."
     addVideoURLUsePlaylistRangeCheckbox.ToolTip :=
-        "Allows for a fine grained selection of videos from the playlist. See the help section for more information."
+        "Allows fine-grained selection of videos from a playlist. See the help section for details."
     addVideoSpecifyPlaylistRangeInputEdit.ToolTip :=
-        "Enter the index range to select specific videos from the playlist.`nMore information can be found in the help section."
+        "Enter the index range of videos to select from the playlist.`nSee the help section for more details."
     ; Remove video elements.
-    removeVideoFromListButton.ToolTip := "Removes all selected videos from the list."
+    removeVideoFromListButton.ToolTip := "Remove all selected videos from the list."
     removeVideoConfirmDeletionCheckbox.ToolTip :=
-        "Shows a prompt to confirm the removal of one or more videos from the list."
+        "Show a prompt to confirm removal of one or more videos from the list."
     removeVideoConfirmOnlyWhenMultipleSelectedCheckbox.ToolTip :=
-        "If enabled, will only prompt to confirm the removal of multiple videos at once."
+        "If enabled, prompt only when removing multiple videos at once."
     ; Import and export elements.
     importVideoListButton.ToolTip :=
-        "Import a text file with video URLs. Each line must only contain one URL."
+        "Import a text file with video URLs. Each line must contain only one URL."
     exportVideoListButton.ToolTip :=
         "Export the URLs of all (selected) videos into a text file."
     importAndExportOnlyValidURLsCheckbox.ToolTip :=
-        "Only successfully extracted video URLs will be exported "
+        "Only video URLs that were successfully extracted will be exported."
     importAndExportOnlyValidURLsCheckbox.ToolTip .=
-        "when clicking the [" . exportVideoListButton.Text . "] button."
-    importAndExportOnlyValidURLsCheckbox.ToolTip .=
-        "`nThe same goes for the import function which only imports valid URLs in case this checkbox is enabled."
+        "`nSimilarly, importing will only include valid URLs if this option is enabled."
     autoExportVideoListCheckbox.ToolTip :=
-        "Automatically export the downloaded video URLs into a file."
+        "Automatically export downloaded video URLs into a file."
     ; Controls that are relevant for downloading the videos in the video list.
     downloadStartButton.ToolTip :=
-        "Start the download of all (selected) videos in the list."
+        "Start downloading all (selected) videos in the list."
     downloadCancelButton.ToolTip := ""
     downloadRemoveVideosAfterDownloadCheckbox.ToolTip :=
-        "Removes the video from the list after downloading and processing it."
+        "Remove the video from the list after downloading and processing."
     downloadTerminateAfterDownloadCheckbox.ToolTip :=
-        "Closes VideoDownloader after downloading and processing all (selected) videos."
+        "Exit after downloading and processing all (selected) videos."
     downloadSelectDownloadDirectoryInputEdit.ToolTip :=
         "Select a directory for the downloaded files."
     downloadSelectDownloadDirectoryInputEdit.ToolTip .=
-        "`nOtherwise the default directory specified in the settings is used."
+        "`nOtherwise, the default directory specified in the settings will be used."
     downloadSelectDownloadDirectoryButton.ToolTip := ""
 
     /*
@@ -780,14 +782,14 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     ; We use the current time stamp to generate a unique name for the download folder.
     currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     defaultDownloadDirectory := readConfigFile("DEFAULT_DOWNLOAD_DIRECTORY")
-    currentDownloadDirectory := defaultDownloadDirectory . "\" . currentTime
+    currentDefaultDownloadDirectory := defaultDownloadDirectory . "\" . currentTime
     alternativeDownloadDirectory := downloadSelectDownloadDirectoryInputEdit.Value
     ; Use the alternative download directory if it exists.
     if (DirExist(alternativeDownloadDirectory)) {
         targetDownloadDirectory := alternativeDownloadDirectory
     }
     else {
-        targetDownloadDirectory := currentDownloadDirectory
+        targetDownloadDirectory := currentDefaultDownloadDirectory
     }
 
     ; Fill the currentYTDLPActionObject with data which can be used to cancel the download.
@@ -828,7 +830,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     ; Automatically exports all downloaded video URLs.
     if (autoExportVideoListCheckbox.Value && actuallyDownloadedVideoListViewElements.Count > 0) {
         exportFileName := currentTime . "_VD_auto_exported_urls.txt"
-        exportFileLocation := currentDownloadDirectory . "\" . exportFileName
+        exportFileLocation := targetDownloadDirectory . "\" . exportFileName
         ; There shouldn't be any invalid URLs. Really :D But if there are any, they will be ignored.
         exportVideoListViewElements(actuallyDownloadedVideoListViewElements, exportFileLocation, true)
     }
@@ -916,6 +918,8 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
         ; Changes the taskbar progress bar to indicate that a download was canceled.
         setProgressOnTaskbarApplication(videoListGUI.Hwnd, 8)
         currentYTDLPActionObject.booleanCancelOneVideoDownload := true
+        ; Prevents the application from exiting after a video was canceled.
+        downloadTerminateAfterDownloadCheckbox.Value := false
     }
     else if (result == msgButton3) {
         if (!ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
@@ -927,6 +931,8 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
         ; Changes the taskbar progress bar to indicate that a download was canceled.
         setProgressOnTaskbarApplication(videoListGUI.Hwnd, 8)
         currentYTDLPActionObject.booleanCancelCompleteDownload := true
+        ; Prevents the application from exiting after the download was canceled.
+        downloadTerminateAfterDownloadCheckbox.Value := false
     }
 }
 
@@ -1037,25 +1043,33 @@ handleVideoListGUI_onClose(pGUI) {
     if (GetKeyState("Shift", "P")) {
         saveCurrentVideoListGUIStateToConfigFile()
     }
-    if (!readConfigFile("EXIT_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")) {
+    ; Ignore any instructions below if the GUI is supposed to be minimized instead of closed.
+    if (readConfigFile("MINIMIZE_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")) {
         return
     }
-    ; This means there are no videos in the list view element.
-    if (videoListViewContentMap.Has("*****No videos added yet.*****")) {
-        exitApplicationWithNotification()
-    }
+
     /*
     The no results entry is automatically added to the videoListViewContentMap once the user types something
     into the video list search bar which does not yield any results.
     We substract this entry from the amount of videos in the list if the user closes the video list GUI at this moment.
     */
     videoAmount := videoListViewContentMap.Count
-    if (videoAmount > 1 && videoListViewContentMap.Has("*****No results found.*****")) {
+    if (videoAmount > 0 && videoListViewContentMap.Has("*****No results found.*****")) {
+        videoAmount--
+    }
+    ; A similar case happens when there are no videos in the list at all.
+    if (videoAmount > 0 && videoListViewContentMap.Has("*****No videos added yet.*****")) {
         videoAmount--
     }
 
+    ; Warning message when there is an active video extraction process running at the moment.
+    if (currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning) {
+        result := MsgBox(
+            "There is an active video information extraction process running right now.`n`n"
+            "Do you want to close VideoDownloader anyway?", "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
+    }
     ; Warning message when there is an active download running at the moment.
-    if (currentYTDLPActionObject.booleanDownloadIsRunning) {
+    else if (currentYTDLPActionObject.booleanDownloadIsRunning) {
         result := MsgBox(
             "There is an active download running right now.`n`nDo you want to close VideoDownloader anyway?",
             "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
@@ -1072,10 +1086,16 @@ handleVideoListGUI_onClose(pGUI) {
             "`n`nDo you want to close VideoDownloader anyway?", "VD - Confirm Exit",
             "YN Icon? Owner" . videoListGUI.Hwnd)
     }
+    else {
+        ; Exits the application because there are no videos in the list and no active processes.
+        exitApplicationWithNotification()
+    }
+
     ; This means the user wants to close the GUI anyway.
     if (result == "Yes") {
         exitApplicationWithNotification()
     }
+
     ; This stops the GUI from closing.
     return true
 }
@@ -1266,6 +1286,7 @@ VideoMetaData.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and 
 extractVideoMetaData(pVideoURL) {
     global GUIBackgroundImageLocation
     global ffmpegDirectory
+    global currentYTDLPActionObject
 
     tempWorkingDirectory := readConfigFile("TEMP_DIRECTORY")
     if (!DirExist(tempWorkingDirectory)) {
@@ -1293,6 +1314,7 @@ extractVideoMetaData(pVideoURL) {
         "[        🎞️ ]", "[       🎞️  ]", "[      🎞️   ]", "[     🎞️    ]", "[    🎞️     ]",
         "[   🎞️      ]", "[  🎞️       ]", "[ 🎞️        ]"
     ]
+    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := true
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting video data...", spinnerCharArray)
     ; Starts a loading animation in the taskbar.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 1)
@@ -1347,13 +1369,15 @@ extractVideoMetaData(pVideoURL) {
     ; We add this property after the loops because it will not be written by yt-dlp.
     videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := thumbnailFileLocation
     /*
-    Extract the available subtitles from the yt-dlp string.
+    Extracts the available subtitles from the yt-dlp string.
     The returned map should contain the language as the key and the corresponding language code as the value.
     */
     videoMetaDataObject.VIDEO_SUBTITLES :=
         parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_SUBTITLES)
     videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS :=
         parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
+
+    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := false
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished video information extraction")
     ; Stops the taskbar loading animation.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
@@ -1412,6 +1436,7 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     global GUIBackgroundImageLocation
     global YTDLPFileLocation
     global ffmpegDirectory
+    global currentYTDLPActionObject
 
     ; We use the current time stamp to generate a unique name for each operation.
     currentTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
@@ -1444,6 +1469,7 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         "[        💾 ]", "[       💾  ]", "[      💾   ]", "[     💾    ]", "[    💾     ]",
         "[   💾      ]", "[  💾       ]", "[ 💾        ]"
     ]
+    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := true
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting playlist data...", spinnerCharArray)
     ; Starts a loading animation in the taskbar.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 1)
@@ -1505,6 +1531,8 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS :=
             parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
     }
+
+    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := false
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished playlist information extraction")
     ; Stops the taskbar loading animation.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
