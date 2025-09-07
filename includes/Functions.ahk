@@ -1,9 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-#Warn Unreachable, Off
-SendMode "Input"
-CoordMode "Mouse", "Client"
-
 functions_onInit() {
     /*
     This causes the application to react upon the user moving his mouse and show
@@ -12,6 +6,8 @@ functions_onInit() {
     OnMessage(0x0200, handleAllGUI_toolTips)
     ; Causes VideoDownloader to react upon toast notification events.
     OnMessage(0x404, handleAllApplication_toastNotifications_onClick)
+    ; Allows other instances of VideoDownloader to activate the main window of the current instance.
+    OnMessage(0x0400 + 0x1, handleVideoListGUI_activateMainWindow_onMessage)
 }
 
 /*
@@ -78,6 +74,15 @@ handleAllApplication_toastNotifications_onClick(wParam, lParam, msg, hwnd) {
     */
     if (IsSet(currentYTDLPActionObject) && DirExist(currentYTDLPActionObject.latestDownloadDirectory)) {
         openDirectoryInExplorer(currentYTDLPActionObject.latestDownloadDirectory)
+    }
+}
+
+; This function activates the main window of the video list GUI when another instance of VideoDownloader sends a message.
+handleVideoListGUI_activateMainWindow_onMessage(wParam, lParam, msg, hwnd) {
+    global videoListGUI
+
+    if (IsSet(videoListGUI)) {
+        videoListGUI.Show()
     }
 }
 
@@ -764,11 +769,23 @@ findAlreadyRunningVDInstance() {
     ; Searches for the process name and excludes this instance.
     query := 'SELECT * FROM Win32_Process WHERE Name = "VideoDownloader.exe"'
     childProcesses := ComObjGet("winmgmts:").ExecQuery(query)
+    scriptPID := DllCall("GetCurrentProcessId")
 
     for (childProcess in childProcesses) {
         ; Skipts this instance of the application.
-        if (childProcess.ExecutablePath == A_ScriptFullPath) {
+        if (childProcess.ProcessId == scriptPID) {
             continue
+        }
+        /*
+        Activates the same instance of the application if it is already running.
+        This usually happens when the user double clicks the application icon multiple times.
+        */
+        if (childProcess.ExecutablePath == A_ScriptFullPath) {
+            ; In case the old instance is minimized.
+            DetectHiddenWindows(true)
+            ; Send a custom message to activate the old instance.
+            PostMessage(0x0400 + 1, 0, 0, , "ahk_pid " . childProcess.ProcessId)
+            ExitApp()
         }
         askUserToTerminateOtherInstance(childProcess)
     }

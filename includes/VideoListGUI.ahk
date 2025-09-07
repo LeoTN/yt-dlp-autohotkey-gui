@@ -1,8 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-SendMode "Input"
-CoordMode "Mouse", "Window"
-
 /*
 Allows the ENTER key to function the same way as the add video to list button.
 This makes adding a video URL more convenient as the user can simply press enter while focused on the URL input field.

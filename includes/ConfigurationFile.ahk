@@ -1,9 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-#Warn Unreachable, Off
-SendMode "Input"
-CoordMode "Mouse", "Client"
-
 configurationFile_onInit() {
     ; Creates the base set of config file entry objects.
     initializeConfigEntryMap()

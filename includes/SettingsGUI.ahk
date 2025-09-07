@@ -1,8 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-SendMode "Input"
-CoordMode "Mouse", "Window"
-
 /*
 Allows the ENTER key to function the same way as the add subtitle button.
 This is done to allow the user to add subtitles to the combo box by pressing the ENTER key.

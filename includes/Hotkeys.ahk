@@ -1,8 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-SendMode "Input"
-CoordMode "Mouse", "Window"
-
 hotkeys_onInit() {
     /*
     The non debug hotkeys will be initialized by the initializeSettingsGUIHotkeyDDLEntryMap() function

@@ -9,13 +9,7 @@
 ;@Ahk2Exe-Obey U_fileVersion, U_fileVersion := RTrim(LTrim("%U_productVersion%"`, "v")`, "-beta")
 ;@Ahk2Exe-SetFileVersion %U_fileVersion%
 
-#MaxThreadsPerHotkey 2
-#Warn Unreachable, Off
-SendMode "Input"
-CoordMode "Mouse", "Client"
-
-; Imports important functions and variables.
-; Sets the directory for all following files.
+; Import relevant functions and variables.
 #Include "includes\"
 #Include "Acc.ahk"
 #Include "ColorButton.ahk"
@@ -28,6 +22,18 @@ CoordMode "Mouse", "Client"
 #Include "Tutorials.ahk"
 #Include "UpdateGUI.ahk"
 #Include "VideoListGUI.ahk"
+
+#SingleInstance Off
+
+; Close any running instance of this script when a new one starts (non-compiled only).
+;@Ahk2Exe-IgnoreBegin
+#SingleInstance Force
+;@Ahk2Exe-IgnoreEnd
+
+#MaxThreadsPerHotkey 2
+#Warn Unreachable, Off
+SendMode "Input"
+CoordMode "Mouse", "Client"
 
 onInit()
 

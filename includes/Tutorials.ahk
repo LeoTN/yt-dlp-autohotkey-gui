@@ -1,8 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-SendMode "Input"
-CoordMode "Mouse", "Window"
-
 tutorials_onInit() {
     ; Initializes all tutorials and info texts.
     tutorial_howToFindHelpGUI()
