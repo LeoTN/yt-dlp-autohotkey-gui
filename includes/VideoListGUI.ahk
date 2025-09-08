@@ -1265,6 +1265,32 @@ updateCurrentlySelectedVideo(pVideoListViewEntry) {
 }
 
 /*
+Focuses and selects a video list view entry in the video list view element.
+@param pVideoListViewEntry [VideoListViewEntry] The video list view entry object to focus and select.
+*/
+focusAndSelectVideoListViewEntry(pVideoListViewEntry) {
+    global videoListViewContentMap
+
+    ; Checks if the video list view entry is actually in the map.
+    if (!videoListViewContentMap.Has(pVideoListViewEntry.identifierString)) {
+        return
+    }
+    listViewRowCount := videoListView.GetCount()
+    loop listViewRowCount {
+        videoTitle := videoListView.GetText(A_Index, 1)
+        videoUploader := videoListView.GetText(A_Index, 2)
+        videoDurationString := videoListView.GetText(A_Index, 3)
+        ; Build the identifier string with the values from the video list view element.
+        entryIdentifierString := videoTitle . videoUploader . videoDurationString
+        if (entryIdentifierString == pVideoListViewEntry.identifierString) {
+            ; Selects the matching row and makes it visible.
+            videoListView.Modify(A_Index, "+Focus +Select +Vis")
+            return
+        }
+    }
+}
+
+/*
 Extracts the metadata of a SINGLE video from a given URL using yt-dlp.
 @param pVideoURL [String] The URL of the video.
 @returns [VideoMetaData] This object has the following properties:

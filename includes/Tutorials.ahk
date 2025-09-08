@@ -3,6 +3,7 @@ tutorials_onInit() {
     tutorial_howToFindHelpGUI()
     tutorial_gettingStarted()
     tutorial_howToUsePlaylistRangeIndex()
+    tutorial_howToDownloadMusic()
 }
 
 ; This tutorial aims to show the user how they can find the help section.
@@ -163,7 +164,7 @@ tutorial_gettingStarted() {
 ; Shows the syntax and use of the playlist range index.
 tutorial_howToUsePlaylistRangeIndex() {
     global howToUsePlaylistRangeIndexTutorial :=
-        InteractiveTutorialListViewEntry("Video Extraction", "Information", "How to use the Playlist Range Index")
+        InteractiveTutorialListViewEntry("Video Extraction", "Guide", "How to use the Playlist Range Index")
     currentlyHighlightedControlObject := ""
 
     ; Explain the need for the playlist range index.
@@ -268,6 +269,80 @@ tutorial_howToUsePlaylistRangeIndex() {
     }
 }
 
+tutorial_howToDownloadMusic() {
+    global GUIBackgroundImageLocation
+    global howToDownloadMusicTutorial :=
+        InteractiveTutorialListViewEntry("Audio Extraction", "Guide", "How to download music")
+    currentlyHighlightedControlObject := ""
+    tutorialVideoListEntry := ""
+
+    howToDownloadMusicTutorial.addText(
+        "This guide will show you how to extract audio from a video."
+        "`n`nA sample video has been added to the list.")
+    howToDownloadMusicTutorial.addAction((*) => start())
+    howToDownloadMusicTutorial.addText(
+        "By selecting the video, you can choose the desired download format."
+        "`n`nThis can be either a supported video or audio format."
+        "`n`nAlternatively, you can let the application automatically choose the best format.")
+    howToDownloadMusicTutorial.addAction((*) => showVideoListGUIAndHighlightDesiredFormatDDLAndClickIt())
+    howToDownloadMusicTutorial.addText("Your desired format is now selected and the audio is ready to be downloaded.")
+    howToDownloadMusicTutorial.addAction((*) => showVideoListGUIAndHighlightDownloadButton())
+
+    ; Makes sure the highlighted controls become normal again.
+    howToDownloadMusicTutorial.addExitAction((*) => hideAllHighlightedElements() deleteAndRemoveDummyVideoListEntry())
+
+    start() {
+        hideAllHighlightedElements()
+        saveCurrentVideoListGUIStateToConfigFile()
+        showVideoListGUIWithSavedStateData()
+        showGUIRelativeToOtherGUI(videoListGUI, howToDownloadMusicTutorial.gui, "MiddleRightCorner")
+        createAndAddDummyVideoListEntry()
+    }
+    createAndAddDummyVideoListEntry() {
+        ; Creates a dummy entry in the video list view element.
+        tmpVideoMetaDataObject := VideoMetaData()
+        tmpVideoMetaDataObject.VIDEO_TITLE := "Tutorial - How to download music"
+        tmpVideoMetaDataObject.VIDEO_URL := "_internal_entry_tutorial_how_to_download_music"
+        tmpVideoMetaDataObject.VIDEO_URL_ORIGINAL := "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        tmpVideoMetaDataObject.VIDEO_UPLOADER := "Tutorial Channel"
+        tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "4:20"
+        tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
+        ; Create the entry using the temporary video meta data object.
+        tutorialVideoListEntry := VideoListViewEntry(tmpVideoMetaDataObject)
+        updateCurrentlySelectedVideo(tutorialVideoListEntry)
+    }
+    deleteAndRemoveDummyVideoListEntry() {
+        if (!IsObject(tutorialVideoListEntry)) {
+            return
+        }
+        tutorialVideoListEntry.removeEntryFromVideoListViewContentMap()
+        tutorialVideoListEntry := ""
+    }
+    showVideoListGUIAndHighlightDesiredFormatDDLAndClickIt() {
+        hideAllHighlightedElements()
+        videoListGUI.Show()
+        showGUIRelativeToOtherGUI(videoListGUI, howToDownloadMusicTutorial.gui, "MiddleRightCorner")
+        ; Focus the dummy video list entry.
+        focusAndSelectVideoListViewEntry(tutorialVideoListEntry)
+        ; Selects .MP3 in the dropdown list.
+        videoDesiredFormatDDL.Choose("mp3")
+        currentlyHighlightedControlObject := highlightControl(videoDesiredFormatDDL)
+        ControlClick(videoDesiredFormatDDL)
+    }
+    showVideoListGUIAndHighlightDownloadButton() {
+        hideAllHighlightedElements()
+        videoListGUI.Show()
+        showGUIRelativeToOtherGUI(videoListGUI, howToDownloadMusicTutorial.gui, "MiddleRightCorner")
+        currentlyHighlightedControlObject := highlightControl(downloadStartButton)
+    }
+    hideAllHighlightedElements() {
+        if (IsObject(currentlyHighlightedControlObject)) {
+            ; Hides the highlighted control box.
+            currentlyHighlightedControlObject.destroy()
+        }
+    }
+}
+
 ; A small tutorial to show off the help GUI of this application.
 applicationTutorial() {
     ; Welcome message.
@@ -290,14 +365,14 @@ This object is used to create interactive tutorials and information texts. They 
 class InteractiveTutorialListViewEntry {
     __New(pTopic, pType, pTitle) {
         ; Used to determine input errors while creating new tutorial entries.
-        allowedTopicsArray := ["General", "Video Extraction"]
+        allowedTopicsArray := ["General", "Video Extraction", "Audio Extraction"]
         if (!checkIfStringIsInArray(pTopic, allowedTopicsArray)) {
             MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid topic received: [" . pTopic . "].",
                 "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
             exitApplicationWithNotification(true)
         }
         ; Used to determine input errors while creating new tutorial entries.
-        allowedTypesArray := ["Tutorial", "Information"]
+        allowedTypesArray := ["Tutorial", "Information", "Guide"]
         if (!checkIfStringIsInArray(pType, allowedTypesArray)) {
             MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid type received: [" . pType . "].",
                 "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")

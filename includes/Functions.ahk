@@ -516,8 +516,7 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
     invalidURLArray := Array()
     for (key, videoListEntry in pVideoListViewElementMap) {
         ; Skips all internal video list view entries used to communicate with the user.
-        if (videoListEntry.videoURL == "_internal_entry_no_results_found" || videoListEntry.videoURL ==
-            "_internal_entry_no_videos_added_yet") {
+        if (RegExMatch(videoListEntry.videoURL, "^_internal_entry_")) {
             continue
         }
         ; Sorts out all invalid URLs and saves them in the array.
@@ -655,8 +654,7 @@ getSelectedVideoListViewElements() {
         ; Retrieves the video list view element from the content map and adds it to the selected entries map.
         videoListEntry := videoListViewContentMap.Get(identifierString)
         ; Skips all internal video list view entries used to communicate with the user.
-        if (videoListEntry.videoURL == "_internal_entry_no_results_found" || videoListEntry.videoURL ==
-            "_internal_entry_no_videos_added_yet") {
+        if (RegExMatch(videoListEntry.videoURL, "^_internal_entry_")) {
             continue
         }
         selectedVideoListViewElementsMap.Set(identifierString, videoListEntry)
