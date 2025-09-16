@@ -473,10 +473,9 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URLs"
         }
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI)
         ; If the users wishes, the invalid URLs will be imported as well.
-        if (result == msgButton1) {
+        if (result[1] == msgButton1) {
             for (invalidURL in invalidURLArray) {
                 validURLArray.Push(invalidURL)
             }
@@ -560,10 +559,9 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URLs"
         }
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI)
         ; If the user wishes, the invalid URLs will be included in the export.
-        if (result == msgButton1) {
+        if (result[1] == msgButton1) {
             ; Adds the separation line into the array.
             validURLArray.Push("# ********************`n# Invalid URLs below.`n# ********************")
             ; Includes the invalid URLs in the export.
@@ -802,9 +800,9 @@ findAlreadyRunningVDInstance() {
         msgButton1 := "Continue"
         msgButton2 := "Abort"
         msgButton3 := "Terminate Other Instance"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
 
-        switch (result) {
+        switch (result[1]) {
             case msgButton3:
             {
                 try
@@ -1081,15 +1079,16 @@ Displays a customizable message box with up to 3 buttons and a headline.
 @param pMsgBoxTimeoutSeconds [int] Optional timeout in seconds. Closes the message box automatically after this duration.
 @param pBooleanAlwaysOnTop [boolean] If true, the message box will always stay on top of other windows.
 @param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the custom message box to make it modal.
-@returns [String] The text of the button clicked by the user.
-@returns (alt) [String] "_result_gui_closed" if the GUI was closed.
-@returns (alt) [String] "_result_timeout" if the timeout was reached.
+@returns [Array] The text of the button (first index) and possibly the checkbox (second index) clicked by the user.
+If the checkbox was not checked or not present, the second index will be an empty string.
+@returns (alt) [1][String] "_result_gui_closed" if the GUI was closed.
+@returns (alt) [1][String] "_result_timeout" if the timeout was reached.
 */
 customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_ScriptName,
-    pButton1Text?, pButton2Text := "Okay", pButton3Text?, pMsgBoxTimeoutSeconds?, pBooleanAlwaysOnTop := false,
-    pOwnerGUI?) {
+    pButton1Text?, pButton2Text := "Okay", pButton3Text?, pCheckBoxText?, pMsgBoxTimeoutSeconds?, pBooleanAlwaysOnTop := false, pOwnerGUI?) {
+    returnArray := Array("", "")
     ; This value represents either the user choice or any other possible outcome like a timeout for example.
-    returnValue := "_result_gui_closed"
+    returnArray[1] := "_result_gui_closed"
     ; Create the GUI which will mimic the style of a message box.
     if (IsSet(pOwnerGUI) && WinExist(pOwnerGUI.Hwnd)) {
         customMsgBoxGUI := Gui("Owner" . pOwnerGUI.Hwnd, pMsgBoxTitle)
@@ -1110,17 +1109,21 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     ; MsgBox message text.
     customMsgBoxGUITextGroupBox := customMsgBoxGUI.Add("GroupBox", "xm ym+30 w470 h220")
     customMsgBoxGUIText := customMsgBoxGUI.Add("Text", "xp+10 yp+10 w450 h200", pMsgBoxText)
+    ; Checkbox.
+    if (IsSet(pCheckBoxText) && pCheckBoxText != "") {
+        customMsgBoxGUICheckBox := customMsgBoxGUI.Add("CheckBox", "xm ym+255 w470 h20", pCheckBoxText)
+    }
     ; Creates the buttons for the user to choose.
     if (IsSet(pButton1Text) && pButton1Text != "") {
-        customMsgBoxGUIButton1 := customMsgBoxGUI.Add("Button", "xm ym+260 w150 h40", pButton1Text)
+        customMsgBoxGUIButton1 := customMsgBoxGUI.Add("Button", "xm ym+280 w150 h40", pButton1Text)
         customMsgBoxGUIButton1.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
     }
     if (IsSet(pButton2Text) && pButton2Text != "") {
-        customMsgBoxGUIButton2 := customMsgBoxGUI.Add("Button", "xm+160 ym+260 w150 h40 Default", pButton2Text)
+        customMsgBoxGUIButton2 := customMsgBoxGUI.Add("Button", "xm+160 ym+280 w150 h40 Default", pButton2Text)
         customMsgBoxGUIButton2.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
     }
     if (IsSet(pButton3Text) && pButton3Text != "") {
-        customMsgBoxGUIButton3 := customMsgBoxGUI.Add("Button", "xm+320 ym+260 w150 h40", pButton3Text)
+        customMsgBoxGUIButton3 := customMsgBoxGUI.Add("Button", "xm+320 ym+280 w150 h40", pButton3Text)
         customMsgBoxGUIButton3.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
     }
     ; Status bar.
@@ -1137,7 +1140,7 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     ; OnEvent function for the buttons.
     handleCustomMsgBoxGUI_button_onClick(pButton, pInfo) {
         ; The text of the pressed button will be returned.
-        returnValue := pButton.Text
+        returnArray[1] := pButton.Text
         if (WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
             WinClose()
         }
@@ -1152,7 +1155,9 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     if (IsSet(pMsgBoxTimeoutSeconds)) {
         loop (pMsgBoxTimeoutSeconds) {
             if (!WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
-                return returnValue
+                ; Return the checkbox value if it is checked.
+                returnArray[2] := IsSet(customMsgBoxGUICheckBox) && customMsgBoxGUICheckBox.Value ? customMsgBoxGUICheckBox.Text : ""
+                return returnArray
             }
             remainingSeconds := pMsgBoxTimeoutSeconds - A_Index + 1
             statusBarText := "Please choose an option - [The window will close in " . remainingSeconds
@@ -1165,13 +1170,15 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
             customMsgBoxGUIStatusBar.SetText(statusBarText)
             Sleep(1000)
         }
-        returnValue := "_result_timeout"
+        returnArray[1] := "_result_timeout"
         if (WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
             WinClose()
         }
     }
     WinWaitClose("ahk_id " . customMsgBoxGUI.Hwnd)
-    return returnValue
+    ; Return the checkbox value if it is checked.
+    returnArray[2] := IsSet(customMsgBoxGUICheckBox) && customMsgBoxGUICheckBox.Value ? customMsgBoxGUICheckBox.Text : ""
+    return returnArray
 }
 
 /*
@@ -1681,6 +1688,20 @@ checkInternetConnection() {
         if (httpRequest.Status = 200) {
             return true
         }
+    }
+    return false
+}
+
+/*
+Checks if a given string is a valid playlist URL.
+@param pString [String] The string that should be examined.
+@returns [boolean] True, if the provided string is a valid playlist URL. False otherwise
+*/
+checkIfStringIsAPlaylistURL(pString) {
+    ; Checks if the entered string is a valid playlist URL.
+    regExString := '^https?:\/\/(?:www\.)?(?:youtu\.be|youtube\.[A-Za-z.]{2,})\/.*[?&]list=([A-Za-z0-9_-]+)'
+    if (RegExMatch(pString, regExString)) {
+        return true
     }
     return false
 }

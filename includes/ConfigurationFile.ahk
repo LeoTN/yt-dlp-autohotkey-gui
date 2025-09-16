@@ -31,6 +31,7 @@ initializeConfigEntryMap() {
     CHECK_FOR_UPDATES_AT_LAUNCH := true
     UPDATE_TO_BETA_VERSIONS := false
     ASK_FOR_TUTORIAL := true
+    ASK_FOR_PLAYLIST_MODE := true
     ; [DirectoryPaths]
     DirectoryPaths := "DirectoryPaths"
     DEFAULT_DOWNLOAD_DIRECTORY := windowsDrive . "\Users\" . A_UserName . "\Downloads"
@@ -95,6 +96,7 @@ initializeConfigEntryMap() {
     ConfigFileEntry(UPDATE_TO_BETA_VERSIONS, "UPDATE_TO_BETA_VERSIONS", GeneralSettings,
         UPDATE_TO_BETA_VERSIONS, "boolean")
     ConfigFileEntry(ASK_FOR_TUTORIAL, "ASK_FOR_TUTORIAL", GeneralSettings, ASK_FOR_TUTORIAL, "boolean")
+    ConfigFileEntry(ASK_FOR_PLAYLIST_MODE, "ASK_FOR_PLAYLIST_MODE", GeneralSettings, ASK_FOR_PLAYLIST_MODE, "boolean")
     ; [DirectoryPaths]
     ConfigFileEntry(DEFAULT_DOWNLOAD_DIRECTORY, "DEFAULT_DOWNLOAD_DIRECTORY", DirectoryPaths,
         DEFAULT_DOWNLOAD_DIRECTORY, "directory")
@@ -300,11 +302,11 @@ importOldConfigFile(pOldConfigFileLocation, pBooleanAskForConfirmation := true, 
         msgButton1 := "Import"
         msgButton2 := "View Details"
         msgButton3 := "Abort"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
-        if (result == msgButton1) {
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
+        if (result[1] == msgButton1) {
             ; Leaves the if statement and executes the code at the end of the function.
         }
-        else if (result == msgButton2) {
+        else if (result[1] == msgButton2) {
             tempChangesFileLocation := A_Temp . "\VideoDownloader - Current Configuration Changes After Import.txt"
             tempChangesFileContent := "############################################################"
             tempChangesFileContent .= "`nThe following config file entrie(s) will be changed."
@@ -397,8 +399,8 @@ readConfigFile(pKey, pSection?) {
         msgButton1 := "Continue"
         msgButton2 := ""
         msgButton3 := "Exit"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
-        if (result != msgButton1) {
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
+        if (result[1] != msgButton1) {
             exitApplicationWithNotification(true)
         }
     }
@@ -416,8 +418,8 @@ readConfigFile(pKey, pSection?) {
         msgButton1 := "Continue"
         msgButton2 := ""
         msgButton3 := "Exit"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
-        if (result != msgButton1) {
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
+        if (result[1] != msgButton1) {
             exitApplicationWithNotification(true)
         }
     }
@@ -472,8 +474,8 @@ editConfigFile(pNewValue, pKey, pSection?) {
         msgButton1 := "Continue"
         msgButton2 := ""
         msgButton3 := "Exit"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
-        if (result != msgButton1) {
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
+        if (result[1] != msgButton1) {
             exitApplicationWithNotification(true)
         }
     }
@@ -491,8 +493,8 @@ editConfigFile(pNewValue, pKey, pSection?) {
         msgButton1 := "Continue"
         msgButton2 := ""
         msgButton3 := "Exit"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
-        if (result != msgButton1) {
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
+        if (result[1] != msgButton1) {
             exitApplicationWithNotification(true)
         }
     }

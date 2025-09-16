@@ -541,6 +541,42 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
             "O Icon! 16384 Owner" . videoListGUI.Hwnd)
         return
     }
+    ; The user might want to enable playlist mode.
+    if (readConfigFile("ASK_FOR_PLAYLIST_MODE") && !addVideoURLIsAPlaylistCheckbox.Value && checkIfStringIsAPlaylistURL(videoURL)) {
+        msgText := "The entered video URL seems to be a playlist."
+        msgText .= "`n`nDo you want to enable playlist mode?"
+        msgText .= "`n`nTip: You can set playlist mode as the default in the settings."
+        msgTitle := "VD - Playlist Mode"
+        msgHeadLine := "Enable Playlist Mode?"
+        msgButton1 := "Show Me How"
+        msgButton2 := ""
+        msgButton3 := "No Thanks"
+        checkBox := "Don't ask again"
+
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, checkBox, , true, videoListGUI)
+        ; Disables the popup in the config file.
+        if (result[2] == checkBox) {
+            editConfigFile(false, "ASK_FOR_PLAYLIST_MODE")
+        }
+        ; Shows the user how to enable playlist mode.
+        if (result[1] == msgButton1) {
+            highlightedCheckbox := highlightControl(addVideoURLIsAPlaylistCheckbox)
+            MsgBox("Please check [" . addVideoURLIsAPlaylistCheckbox.Text . "] to enable playlist mode."
+                "`n`nYou may want to enable the playlist range filter below to select specific videos from the playlist.",
+                "VD - How to Enable Playlist Mode", "Iconi 262144")
+            highlightedCheckbox.destroy()
+            ; The user should confirm that they want to continue without playlist mode.
+            if (!addVideoURLIsAPlaylistCheckbox.Value) {
+                result := MsgBox("You did not enable playlist mode.`n`nContinue?", "VD - Continue without Playlist Mode",
+                    "Icon? YN Owner" . videoListGUI.Hwnd)
+                if (result != "Yes") {
+                    return
+                }
+            }
+            ; Validate the playlist range index if the user decides to use it.
+            return handleVideoListGUI_addVideoToListButton_onClick("", "")
+        }
+    }
     ; This means the provided URL contains a reference to a playlist.
     if (addVideoURLIsAPlaylistCheckbox.Value) {
         playlistRangeIndex := addVideoSpecifyPlaylistRangeInputEdit.Value
@@ -881,13 +917,12 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
 
     ; Ignores the cancel complete download when there is only one video in total.
     if (currentYTDLPActionObject.remainingVideos == 1) {
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, , , true, videoListGUI)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, , , , true, videoListGUI)
     }
     else {
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI)
     }
-    if (result == msgButton1) {
+    if (result[1] == msgButton1) {
         if (!ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
             return
         }
@@ -900,7 +935,7 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
         ; Prevents the application from exiting after a video was canceled.
         downloadTerminateAfterDownloadCheckbox.Value := false
     }
-    else if (result == msgButton3) {
+    else if (result[1] == msgButton3) {
         if (!ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
             return
         }
