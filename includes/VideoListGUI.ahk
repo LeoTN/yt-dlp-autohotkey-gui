@@ -544,35 +544,12 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
         playlistRangeIndex := addVideoSpecifyPlaylistRangeInputEdit.Value
         ; This means the user wants to download only parts of the playlist.
         if (addVideoURLUsePlaylistRangeCheckbox.Value && playlistRangeIndex != "0") {
-            playlistVideoMetaDataObjectArray := extractVideoMetaDataPlaylist(videoURL, playlistRangeIndex)
+            extractVideoPlaylist(videoURL, playlistRangeIndex)
         }
         ; This means the user wants to download the whole playlist.
         else {
-            playlistVideoMetaDataObjectArray := extractVideoMetaDataPlaylist(videoURL)
+            extractVideoPlaylist(videoURL)
         }
-        ; This happens when the playlist could not be found.
-        if (playlistVideoMetaDataObjectArray.Length == 0) {
-            tmpVideoMetaDataObject := VideoMetaData()
-            tmpVideoMetaDataObject.VIDEO_TITLE := "playlist_not_found: " . videoURL
-            tmpVideoMetaDataObject.VIDEO_URL := "playlist_not_found: " . videoURL
-            tmpVideoMetaDataObject.VIDEO_UPLOADER := "Not found"
-            tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "Not found"
-            tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
-            newVideoEntry := VideoListViewEntry(tmpVideoMetaDataObject)
-            ; Flashes the video list GUI to indicate that the playlist could not be found.
-            videoListGUI.Flash(true)
-        }
-        else {
-            ; Creates a new video list view entry object for each video.
-            for (index, videoMetaDataObject in playlistVideoMetaDataObjectArray) {
-                /*
-                Create a new video entry but do not update the video list view element.
-                When updating the element for each object, there is a flickering effect which is unpleasant to look at.
-                */
-                newVideoEntry := VideoListViewEntry(videoMetaDataObject, false)
-            }
-        }
-        newVideoEntry.updateVideoListViewElement()
     }
     else {
         newVideoEntry := VideoListViewEntry(videoURL)
@@ -1111,6 +1088,7 @@ handleVideoListGUI_videoListGUIStatusBar_startAnimation(pStatusBarText, pSpinner
             "[   ⌛      ]", "[  ⌛       ]", "[ ⌛        ]"
         ]
     }
+    videoListGUIStatusBar.spinnerCharArray := pSpinnerCharArray
     /*
     If this function is called while the loading animation is playing, it will simply swap out the text
     but not start another timer. This avoids multiple timers overlapping and causing graphical issues in the status bar.
@@ -1121,17 +1099,17 @@ handleVideoListGUI_videoListGUIStatusBar_startAnimation(pStatusBarText, pSpinner
     }
     videoListGUIStatusBar.loadingAnimationIsPlaying := true
     SetTimer(step, 150)
-    step() {
+    static step() {
         ; Arrays in AHK start with the index of 1.
         static i := 1
         if (!videoListGUIStatusBar.loadingAnimationIsPlaying) {
             SetTimer(step, 0)
             return
         }
-        currentChar := pSpinnerCharArray[i]
+        currentChar := videoListGUIStatusBar.spinnerCharArray[i]
         videoListGUIStatusBar.SetText(videoListGUIStatusBar.loadingAnimationCurrentStatusBarText . " " . currentChar)
         ; Increases the index for the next time this function is called.
-        i := Mod(i, pSpinnerCharArray.Length) + 1
+        i := Mod(i, videoListGUIStatusBar.spinnerCharArray.Length) + 1
     }
 }
 
@@ -1293,6 +1271,8 @@ focusAndSelectVideoListViewEntry(pVideoListViewEntry) {
 /*
 Extracts the metadata of a SINGLE video from a given URL using yt-dlp.
 @param pVideoURL [String] The URL of the video.
+@param pVideoOriginalPlaylistURL [String] The original playlist URL if the video belongs to a playlist.
+If set, the extraction animation indicates that a playlist video is being processed and the original playlist URL is added to the list entry.
 @returns [VideoMetaData] This object has the following properties:
 VideoMetaData.VIDEO_TITLE (The title of the video)
 VideoMetaData.VIDEO_URL (The URL of the video)
@@ -1304,7 +1284,7 @@ VideoMetaData.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
 VideoMetaData.VIDEO_SUBTITLES (A map where keys are language names and values are language codes)
 VideoMetaData.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and values are language codes)
 */
-extractVideoMetaData(pVideoURL) {
+extractVideoMetaData(pVideoURL, pVideoOriginalPlaylistURL := unset) {
     global GUIBackgroundImageLocation
     global ffmpegDirectory
     global currentYTDLPActionObject
@@ -1314,12 +1294,11 @@ extractVideoMetaData(pVideoURL) {
         DirCreate(tempWorkingDirectory)
     }
     ; We use the current time stamp to generate a unique name for both files.
-    currentTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
+    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     metaDataFileLocation := tempWorkingDirectory . "\" . currentTime . ".ini"
     ; The video thumbnail will be stored and it's location saved in the object.
     thumbnailFileLocation := tempWorkingDirectory . "\" . currentTime . ".%(ext)s"
 
-    ; This object stores the video metadata extracted by yt-dlp.
     videoMetaDataObject := VideoMetaData(true)
     ; Build the actual yt-dlp command.
     ytdlpCommand := '--skip-download --no-playlist --convert-thumbnails "jpg/png" '
@@ -1336,7 +1315,12 @@ extractVideoMetaData(pVideoURL) {
         "[   🎞️      ]", "[  🎞️       ]", "[ 🎞️        ]"
     ]
     currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := true
-    handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting video data...", spinnerCharArray)
+    if (IsSet(pVideoOriginalPlaylistURL)) {
+        handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting playlist video data...", spinnerCharArray)
+    }
+    else {
+        handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting video data...", spinnerCharArray)
+    }
     ; Starts a loading animation in the taskbar.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 1)
 
@@ -1374,8 +1358,14 @@ extractVideoMetaData(pVideoURL) {
         ; Flashes the video list GUI to indicate that the video could not be found.
         videoListGUI.Flash(true)
     }
-    ; Save the original URL which was used by yt-dlp to find the video.
-    videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoURL
+    if (IsSet(pVideoOriginalPlaylistURL)) {
+        ; Allows the user to find the extracted video by the playlist URL.
+        videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoOriginalPlaylistURL
+    }
+    else {
+        ; Save the original URL which was used by yt-dlp to find the video.
+        videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoURL
+    }
     ; We have to find out the extension of the thumbnail file because we don't know it in advance.
     loop files (tempWorkingDirectory . "\" . currentTime ".*") {
         if (A_LoopFileExt != "ini") {
@@ -1399,9 +1389,13 @@ extractVideoMetaData(pVideoURL) {
         parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
 
     currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := false
-    handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished video information extraction")
-    ; Stops the taskbar loading animation.
-    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
+
+    ; Make the animation continue because the extractVideoPlaylist() function will stop it later.
+    if (!IsSet(pVideoOriginalPlaylistURL)) {
+        handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished video information extraction")
+        ; Stops the taskbar loading animation.
+        setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
+    }
 
     if (readConfigFile("ENABLE_DEBUG_MODE")) {
         ; Moves the log files into the VideoDownloader temp directory in case the debug mode is enabled.
@@ -1427,7 +1421,8 @@ extractVideoMetaData(pVideoURL) {
 }
 
 /*
-Extracts the metadata of one more videos from a given (playlist) URL using yt-dlp.
+Extracts the individual video URLs from a given (playlist) URL using yt-dlp.
+The URLs will be processed by the extractVideoMetaData() function which causes the videos to appear one by one in the video list.
 @param pVideoPlaylistURL [String] The URL of the video or playlist.
 @param pPlayListRangeIndex [String] Used to only extract specific videos from the playlist.
 From the yt-dlp documentation:
@@ -1440,55 +1435,33 @@ From the yt-dlp documentation:
     order. E.g. "--playlist-items 1:3,7,-5::2" used on a
     playlist of size 15 will download the items
     at index 1,2,3,7,11,13,15.
-@returns [Array] An array containing a [VideoMetaData] object for each video in the playlist (or the provided range index).
-
-[VideoMetaData] This object has the following properties:
-VideoMetaData.VIDEO_TITLE (The title of the video)
-VideoMetaData.VIDEO_URL (The URL of the video)
-VideoMetaData.VIDEO_URL_ORIGINAL (The (playlist) URL used by yt-dlp to find the video)
-VideoMetaData.VIDEO_UPLOADER (The uploader of the video)
-VideoMetaData.VIDEO_UPLOADER_URL (The URL of the uploader)
-VideoMetaData.VIDEO_DURATION_STRING (The duration of the video in this format [HH:mm:ss])
-VideoMetaData.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
-VideoMetaData.VIDEO_SUBTITLES (A map where keys are language names and values are language codes)
-VideoMetaData.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and values are language codes)
 */
-extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
-    global GUIBackgroundImageLocation
-    global YTDLPFileLocation
-    global ffmpegDirectory
-    global currentYTDLPActionObject
-
+extractVideoPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     ; We use the current time stamp to generate a unique name for each operation.
-    currentTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
+    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     tempWorkingDirectory := readConfigFile("TEMP_DIRECTORY")
     tempWorkingDirectoryPlaylist := tempWorkingDirectory . "\" . currentTime . "_playlist"
-    ; The %(id)s part will be filled by yt-dlp.
-    metaDataFileLocation := tempWorkingDirectoryPlaylist . "\" . currentTime . "_%(id)s.ini"
-    thumbnailFileLocation := tempWorkingDirectoryPlaylist . "\" . currentTime . "_%(id)s.%(ext)s"
+    ; This file contains the individual URLs of the playlist's videos.
+    playlistURLsFileLocation := tempWorkingDirectoryPlaylist . "\" . currentTime . "_playlist.txt"
     if (!DirExist(tempWorkingDirectoryPlaylist)) {
         DirCreate(tempWorkingDirectoryPlaylist)
     }
 
-    ; This object stores the video metadata extracted by yt-dlp.
-    videoMetaDataObject := VideoMetaData(true)
-    ; Build the actual yt-dlp command.
-    ytdlpCommand := '--skip-download --yes-playlist --convert-thumbnails "jpg/png" '
-    ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
+    ytdlpCommand := '--skip-download --flat-playlist '
     ytdlpCommand .= '--paths "home:' . tempWorkingDirectoryPlaylist . '" '
-    ytdlpCommand .= '--print-to-file "' . videoMetaDataObject.relevantMetaDataString . '" '
-    ytdlpCommand .= '"' . metaDataFileLocation . '" --ffmpeg-location "' . ffmpegDirectory . '" '
+    ytdlpCommand .= '--print-to-file "%(webpage_url)s" "' . playlistURLsFileLocation . '" '
     ; If the user wants to download only a specific range of the playlist.
     if (pPlayListRangeIndex != "-1") {
         ytdlpCommand .= '--playlist-items "' . pPlayListRangeIndex . '" '
     }
     ytdlpCommand .= '"' . pVideoPlaylistURL . '"'
+
     ; Start the status bar loading animation.
     spinnerCharArray := [
-        "[💾         ]", "[ 💾        ]", "[  💾       ]", "[   💾      ]", "[    💾     ]",
-        "[     💾    ]", "[      💾   ]", "[       💾  ]", "[        💾 ]", "[         💾]",
-        "[        💾 ]", "[       💾  ]", "[      💾   ]", "[     💾    ]", "[    💾     ]",
-        "[   💾      ]", "[  💾       ]", "[ 💾        ]"
+        "[🎬         ]", "[ 🎬        ]", "[  🎬       ]", "[   🎬      ]", "[    🎬     ]",
+        "[     🎬    ]", "[      🎬   ]", "[       🎬  ]", "[        🎬 ]", "[         🎬]",
+        "[        🎬 ]", "[       🎬  ]", "[      🎬   ]", "[     🎬    ]", "[    🎬     ]",
+        "[   🎬      ]", "[  🎬       ]", "[ 🎬        ]"
     ]
     currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := true
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting playlist data...", spinnerCharArray)
@@ -1507,56 +1480,19 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         ytdlpLogFileLocation := A_Temp . "\yt-dlp.log"
         ytdlpErrorLogFileLocation := A_Temp . "\yt-dlp_errors.log"
     }
-    ; Run yt-dlp and create a .INI and a thumbnail file for each video in the playlist.
+    ; Run yt-dlp and extract the individual URLs of the videos in the playlist.
     processPID := executeYTDLPCommand(ytdlpCommand, ytdlpLogFileLocation, ytdlpErrorLogFileLocation)
     ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
     if (processPID != "_result_error_while_starting_ytdlp_executable") {
         ProcessWaitClose(processPID)
     }
 
-    videoMetaDataObjectArray := []
-    ; Parse all .INI files in the temp directory and extract the metadata.
-    iniFileSearchString := tempWorkingDirectoryPlaylist . "\" . currentTime . "_*.ini"
-    loop files (iniFileSearchString) {
-        videoMetaDataObject := VideoMetaData(true)
-        ; Extract the meta data from the .INI file.
-        for (property, value in videoMetaDataObject.relevantMetaDataProperties) {
-            videoMetaDataObject.%property% := IniRead(A_LoopFileFullPath, "VideoMetaData", property,
-                "Not found")
-        }
-        ; We have to find out the extension of the thumbnail file because we don't know it in advance.
-        videoID := videoMetaDataObject.VIDEO_ID
-        thumbnailSearchString := tempWorkingDirectoryPlaylist . "\" . currentTime . "_" . videoID . ".*"
-        thumbnailFileLocation := ""
-        loop files (thumbnailSearchString) {
-            if (A_LoopFileExt != "ini") {
-                thumbnailFileLocation := A_LoopFileFullPath
-                break
-            }
-        }
-        ; Save the original (playlist) URL which was used by yt-dlp to find the video.
-        videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoPlaylistURL
-        ; In case the file does not exist, we use a default thumbnail.
-        if (!FileExist(thumbnailFileLocation)) {
-            thumbnailFileLocation := GUIBackgroundImageLocation
-        }
-        ; We add this property after the loops because it will not be written by yt-dlp.
-        videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := thumbnailFileLocation
-        videoMetaDataObjectArray.Push(videoMetaDataObject)
-        /*
-        Extract the available subtitles from the yt-dlp string.
-        The returned map should contain the language as the key and the corresponding language code as the value.
-        */
-        videoMetaDataObject.VIDEO_SUBTITLES :=
-            parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_SUBTITLES)
-        videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS :=
-            parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
-    }
-
     currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := false
     handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished playlist information extraction")
     ; Stops the taskbar loading animation.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
+    ; Enough time for the user to possibly read this :D
+    Sleep(200)
 
     if (readConfigFile("ENABLE_DEBUG_MODE")) {
         ; Moves the log files into the VideoDownloader temp directory in case the debug mode is enabled.
@@ -1578,7 +1514,56 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
                 tempWorkingDirectoryPlaylist . "\" . ytdlpErrorLogFileName)
         }
     }
-    return videoMetaDataObjectArray
+
+    ; This usually means there was an error while extracting the playlist URL.
+    if (!FileExist(playlistURLsFileLocation)) {
+        tmpVideoMetaDataObject := VideoMetaData()
+        tmpVideoMetaDataObject.VIDEO_TITLE := "playlist_not_found: " . pVideoPlaylistURL
+        tmpVideoMetaDataObject.VIDEO_URL := "playlist_not_found: " . pVideoPlaylistURL
+        tmpVideoMetaDataObject.VIDEO_UPLOADER := "Not found"
+        tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "Not found"
+        tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
+        newVideoEntry := VideoListViewEntry(tmpVideoMetaDataObject)
+        ; Flashes the video list GUI to indicate that the playlist could not be found.
+        videoListGUI.Flash(true)
+        return
+    }
+
+    ; Check if there are any valid URLs in the file.
+    validURLArray := Array()
+    loop read (playlistURLsFileLocation) {
+        ; Save valid URLs into the array.
+        if (checkIfStringIsAValidURL(A_LoopReadLine)) {
+            validURLArray.Push(A_LoopReadLine)
+        }
+    }
+    ; This usually means there was an error while extracting the playlist URL.
+    if (validURLArray.Length == 0) {
+        tmpVideoMetaDataObject := VideoMetaData()
+        tmpVideoMetaDataObject.VIDEO_TITLE := "playlist_not_found: " . pVideoPlaylistURL
+        tmpVideoMetaDataObject.VIDEO_URL := "playlist_not_found: " . pVideoPlaylistURL
+        tmpVideoMetaDataObject.VIDEO_UPLOADER := "Not found"
+        tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "Not found"
+        tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
+        newVideoEntry := VideoListViewEntry(tmpVideoMetaDataObject)
+        ; Flashes the video list GUI to indicate that the playlist could not be found.
+        videoListGUI.Flash(true)
+        return
+    }
+
+    for (validURL in validURLArray) {
+        tmpVideoMetaDataObject := extractVideoMetaData(validURL, pVideoPlaylistURL)
+        VideoListViewEntry(tmpVideoMetaDataObject)
+    }
+    if (validURLArray.Length == 1) {
+        handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished playlist information extraction for 1 video")
+    }
+    else {
+        handleVideoListGUI_videoListGUIStatusBar_stopAnimation(
+            "Finished playlist information extraction for " . validURLArray.Length . " videos")
+    }
+    ; Stops the taskbar loading animation.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
 }
 
 /*
@@ -1610,6 +1595,8 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     ytdlpCommand .=
         '--progress-template "[Downloading...] [%(progress._percent_str)s of %(progress._total_bytes_str)s ' .
         'at %(progress._speed_str)s. Time passed: %(progress._elapsed_str)s]" '
+    ; Removes the ID from the file name to make it cleaner.
+    ytdlpCommand .= '--output "%(title)s.%(ext)s" '
     ; These printed lines will be used to track the download progress more accurately.
     ytdlpCommand .=
         '--print "pre_process:[PROGRESS_INFO_PRE_PROCESS] [Tracking Point: Video information has been extracted.]" '
@@ -1688,7 +1675,7 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
 /*
 Extracts the metadata of a video from a given URL using yt-dlp.
 This object is used as a data container for the video list view element.
-@param pVideoURL [String] The URL of the video OR a [videoMetaDataObject]. See extractVideoMetaData() for more information.
+@param pVideoURLOrVideoMetaDataObject [String] The URL of the video OR a [videoMetaDataObject]. See extractVideoMetaData() for more information.
 @param pBooleanUpdateVideoListViewElement[boolean] if set to true, the video list view element will be updated.
 */
 class VideoListViewEntry {

@@ -441,7 +441,7 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
     invalidURLArray := Array()
     loop read (pImportFileLocation) {
         ; Comments will be skipped.
-        if (InStr(A_LoopReadLine, "#")) {
+        if (RegExMatch(A_LoopReadLine, "^#")) {
             continue
         }
         ; Sorts out all invalid URLs and saves them in the array.
@@ -870,7 +870,7 @@ backupOldVersionFiles(pBackupParentDirectory) {
     global versionFullName
 
     oldVersion := versionFullName
-    backupDate := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
+    backupDate := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     backupFolderName := "VideoDownloader_backup_from_version_" . oldVersion . "_at_" . backupDate
     sourceDirectory := A_ScriptDir
     destinationDirectory := pBackupParentDirectory . "\" . backupFolderName
@@ -1688,7 +1688,7 @@ checkInternetConnection() {
 /*
 Checks if a given string is a valid video URL.
 NOTE: URLs without any content after the top level domain won't be considered valid!
-For example [www.youtube.com] would be invalid but [https://www.youtube.com/watch?v=dQw4w9WgXcQ] would be valid.
+For example [https://youtube.com] would be invalid, but [https://www.youtube.com/watch?v=dQw4w9WgXcQ] would be valid.
 @param pString [String] The string that should be examined.
 @returns [boolean] True, if the provided string is a valid URL. False otherwise.
 */
