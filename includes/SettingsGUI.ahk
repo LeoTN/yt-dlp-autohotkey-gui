@@ -361,6 +361,8 @@ createSettingsGUI() {
         "Remove the video from the list after downloading and processing."
     settingsGUIDownloadTerminateAfterDownloadCheckbox.ToolTip :=
         "Exit after downloading and processing all (selected) videos."
+    settingsGUIDownloadTerminateAfterDownloadCheckbox.ToolTip .=
+        '`nDepending on the "Close to tray" setting, this may only minimize the window to the tray.'
 
     /*
     HOTKEY SETTINGS TAB

@@ -243,6 +243,8 @@ createVideoListGUI() {
         "Remove the video from the list after downloading and processing."
     downloadTerminateAfterDownloadCheckbox.ToolTip :=
         "Exit after downloading and processing all (selected) videos."
+    downloadTerminateAfterDownloadCheckbox.ToolTip .=
+        '`nDepending on the "Close to tray" setting, this may only minimize the window to the tray.'
     downloadSelectDownloadDirectoryInputEdit.ToolTip :=
         "Select a directory for the downloaded files."
     downloadSelectDownloadDirectoryInputEdit.ToolTip .=
@@ -835,8 +837,13 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     }
     currentYTDLPActionObject.booleanDownloadIsRunning := false
     if (downloadTerminateAfterDownloadCheckbox.Value) {
-        ; We call this method to check if there are still videos in the video list.
-        handleVideoListGUI_onClose(videoListGUI)
+        if (readConfigFile("MINIMIZE_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")) {
+            videoListGUI.Hide()
+        }
+        else {
+            ; We call this method to check if there are still videos in the video list.
+            handleVideoListGUI_onClose(videoListGUI)
+        }
     }
 
     ; The download start button will only be activated when there are still videos left in the list.
