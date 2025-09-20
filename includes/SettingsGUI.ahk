@@ -88,6 +88,7 @@ createSettingsGUI() {
     settingsGUIUpdateToBetaVersionsCheckbox := settingsGUI.Add("Checkbox", "yp+20",
         "Include beta versions in update checks")
     settingsGUIUpdateCheckForUpdatesButton := settingsGUI.Add("Button", "yp+20 w200", "Check for Updates now")
+    setButtonIcon(settingsGUIUpdateCheckForUpdatesButton, iconFileLocation, 20) ; ICON_DLL_USED_HERE
     ; Notification settings.
     settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+225 w600 h80", "Notifications")
     settingsGUIDisplayStartupNotificationCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
@@ -131,9 +132,11 @@ createSettingsGUI() {
         settingsGUIVideoDesiredSubtitleComboBox.Hwnd, "Int", 5, "UPtr")
     ; This array contains all entries from the combo box.
     settingsGUIVideoDesiredSubtitleComboBox.ContentArray := Array()
-    settingsGUIVideoDesiredSubtitleAddButton := settingsGUI.Add("Button", "xp+290 yp-1 w50 h20", "Add")
-    settingsGUIVideoDesiredSubtitleRemoveButton := settingsGUI.Add("Button", "xp+55 w50 h20", "Remove")
-    settingsGUIEmbedAllSubtitlesCheckbox := settingsGUI.Add("CheckBox", "xp-345 yp+26",
+    settingsGUIVideoDesiredSubtitleAddButton := settingsGUI.Add("Button", "xp+290 yp-1 w70 h20", "Add")
+    setButtonIcon(settingsGUIVideoDesiredSubtitleAddButton, iconFileLocation, 23) ; ICON_DLL_USED_HERE
+    settingsGUIVideoDesiredSubtitleRemoveButton := settingsGUI.Add("Button", "xp+75 w70 h20", "Remove")
+    setButtonIcon(settingsGUIVideoDesiredSubtitleRemoveButton, iconFileLocation, 24) ; ICON_DLL_USED_HERE
+    settingsGUIEmbedAllSubtitlesCheckbox := settingsGUI.Add("CheckBox", "xp-365 yp+26",
         "Embed all available subtitles")
     settingsGUIConfirmChangingMultipleVideosCheckbox := settingsGUI.Add("CheckBox", "yp+20 Checked",
         "Confirm changes to multiple selected videos")
@@ -181,7 +184,9 @@ createSettingsGUI() {
     settingsGUIHotkeyEnabledRadio := settingsGUI.Add("Radio", "xp-310 yp+90", "Hotkey enabled")
     settingsGUIHotkeyDisabledRadio := settingsGUI.Add("Radio", "xp+150", "Hotkey disabled")
     settingsGUIHotkeyEnableAllButton := settingsGUI.Add("Button", "xp+160 yp-5 w130", "Enable all Hotkeys")
+    setButtonIcon(settingsGUIHotkeyEnableAllButton, iconFileLocation, 26) ; ICON_DLL_USED_HERE
     settingsGUIHotkeyDisableAllButton := settingsGUI.Add("Button", "xp+140 w130", "Disable all Hotkeys")
+    setButtonIcon(settingsGUIHotkeyDisableAllButton, iconFileLocation, 27) ; ICON_DLL_USED_HERE
     ; A separator line.
     settingsGUIHotkeyHeadLineSeparatorLineProgressBar := settingsGUI.Add("Progress", "xp-450 yp+30 w580 h5 cSilver")
     settingsGUIHotkeyHeadLineSeparatorLineProgressBar.Value := 100
@@ -926,8 +931,8 @@ handleSettingsGUI_allCheckBox_onClick(pCheckBox, pInfo) {
     }
     else {
         settingsGUIVideoDesiredSubtitleComboBox.Opt("-Disabled")
-        settingsGUIVideoDesiredSubtitleAddButton.Opt("-Disabled")
-        settingsGUIVideoDesiredSubtitleRemoveButton.Opt("-Disabled")
+        ; Enable or disable the subtitle add and remove button.
+        handleSettingsGUI_settingsGUIVideoDesiredSubtitleComboBox_onChange("", "")
     }
     ; Enable or disable certain checkboxes according to the value of other checkboxes.
     if (settingsGUIAddVideoURLIsAPlaylistCheckbox.Value) {
@@ -1115,7 +1120,7 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
     entryName := "Start Download Hotkey"
     entryDescription := "This hotkey starts the download process. "
     entryDescription .= "It has the same effect as pressing the "
-    entryDescription .= "[" . downloadStartButton.Text . "] button in the video list window."
+    entryDescription .= "[" . Trim(downloadStartButton.Text) . "] button in the video list window."
     linkedConfigFileEntryHotkey := configFileEntryMap.Get("START_DOWNLOAD_HKHotkeySettings")
     linkedConfigFileEntryHotkeyEnabled := configFileEntryMap.Get("START_DOWNLOAD_HK_ENABLEDHotkeySettings")
     hotkeyFunction := (*) => hotkey_startDownload()

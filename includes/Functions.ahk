@@ -408,6 +408,59 @@ setProgressOnTaskbarApplication(pWindowHwnd, pState := 0, pAlreadyCompletedPerce
 }
 
 /*
+Add an icon to a button.
+@param pButton [Gui.Button] The button object to which the icon should be added.
+@param pFileLocation [String] The file location of the icon file. Default is "shell32.dll".
+@param pIconNumber [int] The icon index in the icon file. Pass -1 to remove any icon. Note: AHK’s icon functions start at 1,
+but the DLL's index at 0. This function automatically subtracts -1 to match that behavior. Defaults to 1 (used as 0).
+*/
+setButtonIcon(pButton, pFileLocation := "shell32.dll", pIconNumber := 1) {
+    ; Validate all critical parameters.
+    if (!IsObject(pButton)) {
+        MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid button object received.", "VideoDownloader - [" . A_ThisFunc . "()]",
+            "Icon! 262144")
+        return
+    }
+    if (pFileLocation != "shell32.dll" && !FileExist(pFileLocation)) {
+        MsgBox("[" . A_ThisFunc . "()] [WARNING] The icon file [" . pFileLocation . "] does not exist.",
+            "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+        return
+    }
+    ; Removes any existing icon from the button.
+    if (pIconNumber == -1) {
+        ; BM_SETIMAGE = 0xF7, IMAGE_ICON = 1
+        oldIcon := SendMessage(0xF7, 1, 0, pButton.Hwnd)
+        if (oldIcon) {
+            DllCall("DestroyIcon", "ptr", oldIcon)
+        }
+        return
+    }
+
+    ; AHK's icon functions start at 1, but the DLL's index at 0.
+    pIconNumber--
+    iconCount := DllCall("Shell32\ExtractIconExW", "str", pFileLocation, "int", -1, "ptr*", 0, "ptr*", 0, "uint", 0, "int")
+    if (pIconNumber < 0 || pIconNumber > iconCount) {
+        MsgBox("[" . A_ThisFunc . "()] [WARNING] The icon number [" . pIconNumber . "] does not exist in [" . pFileLocation . "].",
+            "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+        return
+    }
+
+    ; Load the icon from the DDL file.
+    hIcon := 0
+    DllCall("Shell32\ExtractIconExW", "str", pFileLocation, "int", pIconNumber, "ptr*", 0, "ptr*", &hIcon, "uint", 1, "int")
+    SendMessage(0xF7, 1, hIcon, pButton.Hwnd)
+
+    ; Add a space between the icon and the text.
+    if (pButton.Text != "") {
+        pButton.Text := A_Space . pButton.Text
+    }
+    else {
+        ; This means the button has no text and we need to convert it in order to show the icon.
+        pButton.Opt("+0x40")
+    }
+}
+
+/*
 This function will try to extract the video meta data from any given URL and add the video to the video list.
 @param pVideoURL [String] Should be a valid URL from a video.
 @returns [Array] A status code which is the first element in the array.
@@ -415,6 +468,7 @@ The array might have different values at other indexes depending on the status c
 */
 createVideoListViewEntry(pVideoURL) {
     global videoListViewContentMap
+
     ; This object will store the information about the given video URL.
     extractedVideoMetaDataObject := extractVideoMetaData(pVideoURL)
     extractedVideoIdentifierString := extractedVideoMetaDataObject.VIDEO_TITLE . extractedVideoMetaDataObject.VIDEO_UPLOADER .
@@ -1079,13 +1133,18 @@ Displays a customizable message box with up to 3 buttons and a headline.
 @param pMsgBoxTimeoutSeconds [int] Optional timeout in seconds. Closes the message box automatically after this duration.
 @param pBooleanAlwaysOnTop [boolean] If true, the message box will always stay on top of other windows.
 @param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the custom message box to make it modal.
+@param pIconFileLocation [String] The file path to the icon file. Defaults to "shell32.dll".
+@param pButton1IconNumber [int] The icon number for the leftmost button. Optional.
+@param pButton2IconNumber [int] The icon number for the middle button. Optional.
+@param pButton3IconNumber [int] The icon number for the rightmost button. Optional.
 @returns [Array] The text of the button (first index) and possibly the checkbox (second index) clicked by the user.
 If the checkbox was not checked or not present, the second index will be an empty string.
 @returns (alt) [1][String] "_result_gui_closed" if the GUI was closed.
 @returns (alt) [1][String] "_result_timeout" if the timeout was reached.
 */
 customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_ScriptName,
-    pButton1Text?, pButton2Text := "Okay", pButton3Text?, pCheckBoxText?, pMsgBoxTimeoutSeconds?, pBooleanAlwaysOnTop := false, pOwnerGUI?) {
+    pButton1Text?, pButton2Text := "Okay", pButton3Text?, pCheckBoxText?, pMsgBoxTimeoutSeconds?, pBooleanAlwaysOnTop := false, pOwnerGUI?,
+    pIconFileLocation := "shell32.dll", pButton1IconNumber?, pButton2IconNumber?, pButton3IconNumber?) {
     returnArray := Array("", "")
     ; This value represents either the user choice or any other possible outcome like a timeout for example.
     returnArray[1] := "_result_gui_closed"
@@ -1117,14 +1176,23 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     if (IsSet(pButton1Text) && pButton1Text != "") {
         customMsgBoxGUIButton1 := customMsgBoxGUI.Add("Button", "xm ym+280 w150 h40", pButton1Text)
         customMsgBoxGUIButton1.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
+        if (pButton1IconNumber) {
+            setButtonIcon(customMsgBoxGUIButton1, pIconFileLocation, pButton1IconNumber)
+        }
     }
     if (IsSet(pButton2Text) && pButton2Text != "") {
         customMsgBoxGUIButton2 := customMsgBoxGUI.Add("Button", "xm+160 ym+280 w150 h40 Default", pButton2Text)
         customMsgBoxGUIButton2.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
+        if (pButton2IconNumber) {
+            setButtonIcon(customMsgBoxGUIButton2, pIconFileLocation, pButton2IconNumber)
+        }
     }
     if (IsSet(pButton3Text) && pButton3Text != "") {
         customMsgBoxGUIButton3 := customMsgBoxGUI.Add("Button", "xm+320 ym+280 w150 h40", pButton3Text)
         customMsgBoxGUIButton3.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
+        if (pButton3IconNumber) {
+            setButtonIcon(customMsgBoxGUIButton3, pIconFileLocation, pButton3IconNumber)
+        }
     }
     ; Status bar.
     customMsgBoxGUIStatusBar := customMsgBoxGUI.Add("StatusBar", , "Please choose an option")
@@ -1139,8 +1207,11 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     }
     ; OnEvent function for the buttons.
     handleCustomMsgBoxGUI_button_onClick(pButton, pInfo) {
-        ; The text of the pressed button will be returned.
-        returnArray[1] := pButton.Text
+        /*
+        The text of the pressed button will be returned.
+        Triming is necessary because adding icons to any of the buttons inserts an additional space.
+        */
+        returnArray[1] := Trim(pButton.Text)
         if (WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
             WinClose()
         }
