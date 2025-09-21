@@ -274,6 +274,7 @@ This is required so that users don't loose their configuration between updates.
 */
 importOldConfigFile(pOldConfigFileLocation, pBooleanAskForConfirmation := true, pBooleanReloadAfterImport := true) {
     global configFileEntryMap
+    global iconFileLocation
 
     ; We use a copy because we don't want to modify the live config yet.
     configFileEntryMapCopy := configFileEntryMap.Clone()
@@ -300,13 +301,17 @@ importOldConfigFile(pOldConfigFileLocation, pBooleanAskForConfirmation := true, 
         msgTitle := "VD - Confirm Config File Import"
         msgHeadLine := "Confirm Config File Import"
         msgButton1 := "Import"
-        msgButton2 := "View Details"
-        msgButton3 := "Abort"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
+        msgButton1Icon := 2
+        msgButton2 := "Abort"
+        msgButton2Icon := 15
+        msgButton3 := "View Details"
+        msgButton3Icon := 10
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI, iconFileLocation,
+            msgButton1Icon, msgButton2Icon, msgButton3Icon)
         if (result[1] == msgButton1) {
             ; Leaves the if statement and executes the code at the end of the function.
         }
-        else if (result[1] == msgButton2) {
+        else if (result[1] == msgButton3) {
             tempChangesFileLocation := A_Temp . "\VideoDownloader - Current Configuration Changes After Import.txt"
             tempChangesFileContent := "############################################################"
             tempChangesFileContent .= "`nThe following config file entrie(s) will be changed."
@@ -361,6 +366,7 @@ If there is a chance, that the key name might be used in multiple sections, this
 readConfigFile(pKey, pSection?) {
     global configFileLocation
     global configFileEntryMap
+    global iconFileLocation
 
     matchingEntryArray := Array()
     for (key, configEntry in configFileEntryMap) {
@@ -396,13 +402,6 @@ readConfigFile(pKey, pSection?) {
         msgText .= "`n`nContinue at your own risk."
         msgTitle := "VD - Config File Reading Error"
         msgHeadLine := "Config File Reading Error"
-        msgButton1 := "Continue"
-        msgButton2 := ""
-        msgButton3 := "Exit"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
-        if (result[1] != msgButton1) {
-            exitApplicationWithNotification(true)
-        }
     }
     else {
         msgText := "There was a problem while reading the config file."
@@ -415,13 +414,16 @@ readConfigFile(pKey, pSection?) {
         msgText .= "`n`nContinue at your own risk."
         msgTitle := "VD - Config File Reading Error"
         msgHeadLine := "Config File Reading Error"
-        msgButton1 := "Continue"
-        msgButton2 := ""
-        msgButton3 := "Exit"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
-        if (result[1] != msgButton1) {
-            exitApplicationWithNotification(true)
-        }
+    }
+    msgButton1 := "Continue"
+    msgButton1Icon := 30
+    msgButton2 := ""
+    msgButton3 := "Exit"
+    msgButton3Icon := 27
+    result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, , iconFileLocation,
+        msgButton1Icon, , msgButton3Icon)
+    if (result[1] != msgButton1) {
+        exitApplicationWithNotification(true)
     }
 }
 
@@ -454,6 +456,7 @@ editConfigFile(pNewValue, pKey, pSection?) {
     if (matchingEntryArray.Length == 1) {
         ; Edits the value of the config file entry.
         matchingEntryArray.Get(1).changeValue(pNewValue)
+        return
     }
     else if (matchingEntryArray.Length == 0) {
         msgText := "There was a problem while editing the config file."
@@ -471,13 +474,6 @@ editConfigFile(pNewValue, pKey, pSection?) {
         msgText .= "`n`nContinue at your own risk."
         msgTitle := "VD - Config File Editing Error"
         msgHeadLine := "Config File Editing Error"
-        msgButton1 := "Continue"
-        msgButton2 := ""
-        msgButton3 := "Exit"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
-        if (result[1] != msgButton1) {
-            exitApplicationWithNotification(true)
-        }
     }
     else {
         msgText := "There was a problem while editing the config file."
@@ -490,13 +486,16 @@ editConfigFile(pNewValue, pKey, pSection?) {
         msgText .= "`n`nContinue at your own risk."
         msgTitle := "VD - Config File Editing Error"
         msgHeadLine := "Config File Editing Error"
-        msgButton1 := "Continue"
-        msgButton2 := ""
-        msgButton3 := "Exit"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
-        if (result[1] != msgButton1) {
-            exitApplicationWithNotification(true)
-        }
+    }
+    msgButton1 := "Continue"
+    msgButton1Icon := 30
+    msgButton2 := ""
+    msgButton3 := "Exit"
+    msgButton3Icon := 27
+    result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, , iconFileLocation,
+        msgButton1Icon, , msgButton3Icon)
+    if (result[1] != msgButton1) {
+        exitApplicationWithNotification(true)
     }
 }
 

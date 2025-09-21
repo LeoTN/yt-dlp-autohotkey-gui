@@ -176,16 +176,7 @@ hotkey_debug_1() {
 }
 
 hotkey_debug_2() {
-    msgText := "This is text for a customMsgBox"
-    msgText .= "`n`nWould you like some more text?"
-    msgTitle := "VD - I am a customMsgBox"
-    msgHeadLine := "This is a headline"
-    msgButton1 := "Button 1"
-    msgButton2 := "Button 2"
-    msgButton3 := "Button 3"
-    checkBox := "Checkmate!"
-    result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, checkBox, , true)
-    MsgBox(result[1] . "`n" . result[2])
+    MsgBox("This debug hotkey is currently not used.", "VD - WIP", "O Iconi 262144 T1")
 }
 
 hotkey_debug_3() {

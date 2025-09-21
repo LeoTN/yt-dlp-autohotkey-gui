@@ -491,6 +491,8 @@ Imports URLs from a text file which must contain one URL per line.
 @param pBooleanSkipInvalidURLs [boolean] If set to true, all invalid URLs will automatically not be imported.
 */
 importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := false) {
+    global iconFileLocation
+
     validURLArray := Array()
     invalidURLArray := Array()
     loop read (pImportFileLocation) {
@@ -514,8 +516,10 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
             msgTitle := "VD - Invalid URL Found"
             msgHeadLine := "Import Invalid URL?"
             msgButton1 := "Import Invalid URL"
+            msgButton1Icon := 24
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URL"
+            msgButton3Icon := 26
         }
         else {
             msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the file ["
@@ -524,15 +528,22 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
             msgTitle := "VD - Invalid URLs Found"
             msgHeadLine := "Import Invalid URLs?"
             msgButton1 := "Import Invalid URLs"
+            msgButton1Icon := 24
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URLs"
+            msgButton3Icon := 26
         }
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI, iconFileLocation,
+            msgButton1Icon, , msgButton3Icon)
         ; If the users wishes, the invalid URLs will be imported as well.
         if (result[1] == msgButton1) {
             for (invalidURL in invalidURLArray) {
                 validURLArray.Push(invalidURL)
             }
+        }
+        ; This means the user closed the message box.
+        else if (result[1] != msgButton3) {
+            return
         }
     }
 
@@ -601,8 +612,10 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             msgTitle := "VD - Invalid URL Found"
             msgHeadLine := "Export Invalid URL?"
             msgButton1 := "Export Invalid URL"
+            msgButton1Icon := 24
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URL"
+            msgButton3Icon := 26
         }
         else {
             msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the list."
@@ -610,10 +623,13 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             msgTitle := "VD - Invalid URLs Found"
             msgHeadLine := "Export Invalid URLs?"
             msgButton1 := "Export Invalid URLs"
+            msgButton1Icon := 24
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URLs"
+            msgButton3Icon := 26
         }
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI, iconFileLocation,
+            msgButton1Icon, , msgButton3Icon)
         ; If the user wishes, the invalid URLs will be included in the export.
         if (result[1] == msgButton1) {
             ; Adds the separation line into the array.
@@ -622,6 +638,10 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             for (invalidURL in invalidURLArray) {
                 validURLArray.Push(invalidURL)
             }
+        }
+        ; This means the user closed the message box.
+        else if (result[1] != msgButton3) {
+            return
         }
     }
 
@@ -816,6 +836,8 @@ parseYTDLPSubtitleString(pRawString) {
 
 ; Tries to find currently running instances of the application and warns the user about it.
 findAlreadyRunningVDInstance() {
+    global iconFileLocation
+
     ; Searches for the process name and excludes this instance.
     query := 'SELECT * FROM Win32_Process WHERE Name = "VideoDownloader.exe"'
     childProcesses := ComObjGet("winmgmts:").ExecQuery(query)
@@ -852,9 +874,13 @@ findAlreadyRunningVDInstance() {
         msgTitle := "VD - Multiple Instances Found!"
         msgHeadLine := "Multiple Instances Found!"
         msgButton1 := "Continue"
+        msgButton1Icon := 30
         msgButton2 := "Abort"
+        msgButton2Icon := 15
         msgButton3 := "Terminate Other Instance"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true)
+        msgButton3Icon := 27
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, , iconFileLocation,
+            msgButton1Icon, msgButton2Icon, msgButton3Icon)
 
         switch (result[1]) {
             case msgButton3:
@@ -1176,21 +1202,21 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     if (IsSet(pButton1Text) && pButton1Text != "") {
         customMsgBoxGUIButton1 := customMsgBoxGUI.Add("Button", "xm ym+280 w150 h40", pButton1Text)
         customMsgBoxGUIButton1.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
-        if (pButton1IconNumber) {
+        if (IsSet(pButton1IconNumber)) {
             setButtonIcon(customMsgBoxGUIButton1, pIconFileLocation, pButton1IconNumber)
         }
     }
     if (IsSet(pButton2Text) && pButton2Text != "") {
         customMsgBoxGUIButton2 := customMsgBoxGUI.Add("Button", "xm+160 ym+280 w150 h40 Default", pButton2Text)
         customMsgBoxGUIButton2.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
-        if (pButton2IconNumber) {
+        if (IsSet(pButton2IconNumber)) {
             setButtonIcon(customMsgBoxGUIButton2, pIconFileLocation, pButton2IconNumber)
         }
     }
     if (IsSet(pButton3Text) && pButton3Text != "") {
         customMsgBoxGUIButton3 := customMsgBoxGUI.Add("Button", "xm+320 ym+280 w150 h40", pButton3Text)
         customMsgBoxGUIButton3.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
-        if (pButton3IconNumber) {
+        if (IsSet(pButton3IconNumber)) {
             setButtonIcon(customMsgBoxGUIButton3, pIconFileLocation, pButton3IconNumber)
         }
     }

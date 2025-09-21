@@ -526,6 +526,8 @@ handleVideoListGUI_addVideoURLInputEdit_onDoubleClick(wParam, lParam, msg, hwnd)
         return
     }
     addVideoURLInputEdit.Value := A_Clipboard
+    ; Enable or disable the add video button.
+    handleVideoListGUI_addVideoURLInputEdit_onChange(addVideoURLInputEdit, "")
     handleVideoListGUI_addVideoToListButton_addMode_onClick("", "")
     ; Tells Windows to not process this message further.
     return false
@@ -556,6 +558,7 @@ handleVideoListGUI_addVideoURLInputClearButton_onClick(pButton, pInfo) {
 
 handleVideoListGUI_addVideoToListButton_addMode_onClick(pButton, pInfo) {
     global currentYTDLPActionObject
+    global iconFileLocation
 
     ; Prevents multiple extraction processes from running at the same time.
     if (!(currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning ||
@@ -568,7 +571,7 @@ handleVideoListGUI_addVideoToListButton_addMode_onClick(pButton, pInfo) {
         return
     }
 
-    ; REMOVE
+    ; This section is technically not required (because it should not be possible to click the button with an invalid URL in the input field).
     videoURL := Trim(addVideoURLInputEdit.Value)
     ; Avoids the invalid URL MsgBox when the edit is empty.
     if (videoURL == "") {
@@ -579,6 +582,7 @@ handleVideoListGUI_addVideoToListButton_addMode_onClick(pButton, pInfo) {
         MsgBox("Please enter a valid URL.", "VD - Invalid URL", "O Icon! T1 Owner" . videoListGUI.Hwnd)
         return
     }
+
     ; Only relevant when downloading specific parts of a playlist.
     if (addVideoURLUsePlaylistRangeCheckbox.Value &&
         !checkIfStringIsValidPlaylistIndexRange(addVideoSpecifyPlaylistRangeInputEdit.Value)) {
@@ -594,11 +598,14 @@ handleVideoListGUI_addVideoToListButton_addMode_onClick(pButton, pInfo) {
         msgTitle := "VD - Playlist Mode"
         msgHeadLine := "Enable Playlist Mode?"
         msgButton1 := "Show Me How"
+        msgButton1Icon := 9
         msgButton2 := ""
         msgButton3 := "No Thanks"
+        msgButton3Icon := 27
         checkBox := "Don't ask again"
 
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, checkBox, , true, videoListGUI)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, checkBox, , true, videoListGUI,
+            iconFileLocation, msgButton1Icon, , msgButton3Icon)
         ; Disables the popup in the config file.
         if (result[2] == checkBox) {
             editConfigFile(false, "ASK_FOR_PLAYLIST_MODE")
@@ -645,6 +652,7 @@ handleVideoListGUI_addVideoToListButton_addMode_onClick(pButton, pInfo) {
 
 handleVideoListGUI_addVideoToListButton_cancelMode_onClick(pButton, pInfo) {
     global currentYTDLPActionObject
+    global iconFileLocation
 
     ; Parameters for the customMsgBox.
     msgTitle := "VD - Cancel Extraction"
@@ -1008,6 +1016,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
 
 handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
     global currentYTDLPActionObject
+    global iconFileLocation
 
     if (!currentYTDLPActionObject.booleanDownloadIsRunning) {
         return
