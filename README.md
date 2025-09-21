@@ -51,6 +51,7 @@
 * **FFmpeg** (<https://ffmpeg.org>) → additional functionality for yt-dlp
 * **Acc library** (<https://github.com/Descolada/Acc-v2>) → important functions regarding direct URL capture
 * **ColorButton library** (<https://github.com/nperovic/ColorButton.ahk>) → colored button functionality
+* **Icons8** (<https://icons8.com>) → some of the used icons
 
 > [!IMPORTANT]
 > I appreciate your **constructive** and **honest** feedback. Feel free to create an **issue** or **feature** request.
