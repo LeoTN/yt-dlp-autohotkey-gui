@@ -1,8 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-SendMode "Input"
-CoordMode "Mouse", "Window"
-
 helpGUI_onInit() {
     createHelpGUI()
 }

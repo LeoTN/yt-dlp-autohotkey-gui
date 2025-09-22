@@ -1,8 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-SendMode "Input"
-CoordMode "Mouse", "Window"
-
 hotkeys_onInit() {
     /*
     The non debug hotkeys will be initialized by the initializeSettingsGUIHotkeyDDLEntryMap() function
@@ -187,13 +182,11 @@ hotkey_debug_2() {
 hotkey_debug_3() {
     booleanIsConnected := checkInternetConnection()
     MsgBox("[" . A_ThisFunc . "()] [INFO] Internet Connection Status: " . booleanIsConnected .
-        "`nDebug hotkey 3 executed.", "VideoDownloader - [" . A_ThisFunc . "()]", "Iconi 262144")
+        "`nDebug hotkey executed.", "VideoDownloader - [" . A_ThisFunc . "()]", "Iconi 262144")
 }
 
 hotkey_debug_4() {
-    saveCurrentVideoListGUIStateToConfigFile()
-    MsgBox("[" . A_ThisFunc . "()] [INFO] Debug hotkey 4 executed.",
-        "VideoDownloader - [" . A_ThisFunc . "()]", "Iconi 262144 T1")
+    MsgBox("This debug hotkey is currently not used.", "VD - WIP", "O Iconi 262144 T1")
 }
 
 /*

@@ -1,9 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-#Warn Unreachable, Off
-SendMode "Input"
-CoordMode "Mouse", "Client"
-
 functions_onInit() {
     /*
     This causes the application to react upon the user moving his mouse and show
@@ -12,6 +6,8 @@ functions_onInit() {
     OnMessage(0x0200, handleAllGUI_toolTips)
     ; Causes VideoDownloader to react upon toast notification events.
     OnMessage(0x404, handleAllApplication_toastNotifications_onClick)
+    ; Allows other instances of VideoDownloader to activate the main window of the current instance.
+    OnMessage(0x0400 + 0x1, handleVideoListGUI_activateMainWindow_onMessage)
 }
 
 /*
@@ -78,6 +74,15 @@ handleAllApplication_toastNotifications_onClick(wParam, lParam, msg, hwnd) {
     */
     if (IsSet(currentYTDLPActionObject) && DirExist(currentYTDLPActionObject.latestDownloadDirectory)) {
         openDirectoryInExplorer(currentYTDLPActionObject.latestDownloadDirectory)
+    }
+}
+
+; This function activates the main window of the video list GUI when another instance of VideoDownloader sends a message.
+handleVideoListGUI_activateMainWindow_onMessage(wParam, lParam, msg, hwnd) {
+    global videoListGUI
+
+    if (IsSet(videoListGUI)) {
+        videoListGUI.Show()
     }
 }
 
@@ -403,6 +408,59 @@ setProgressOnTaskbarApplication(pWindowHwnd, pState := 0, pAlreadyCompletedPerce
 }
 
 /*
+Add an icon to a button.
+@param pButton [Gui.Button] The button object to which the icon should be added.
+@param pFileLocation [String] The file location of the icon file. Default is "shell32.dll".
+@param pIconNumber [int] The icon index in the icon file. Pass -1 to remove any icon. Note: AHK’s icon functions start at 1,
+but the DLL's index at 0. This function automatically subtracts -1 to match that behavior. Defaults to 1 (used as 0).
+*/
+setButtonIcon(pButton, pFileLocation := "shell32.dll", pIconNumber := 1) {
+    ; Validate all critical parameters.
+    if (!IsObject(pButton)) {
+        MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid button object received.", "VideoDownloader - [" . A_ThisFunc . "()]",
+            "Icon! 262144")
+        return
+    }
+    if (pFileLocation != "shell32.dll" && !FileExist(pFileLocation)) {
+        MsgBox("[" . A_ThisFunc . "()] [WARNING] The icon file [" . pFileLocation . "] does not exist.",
+            "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+        return
+    }
+    ; Removes any existing icon from the button.
+    if (pIconNumber == -1) {
+        ; BM_SETIMAGE = 0xF7, IMAGE_ICON = 1
+        oldIcon := SendMessage(0xF7, 1, 0, pButton.Hwnd)
+        if (oldIcon) {
+            DllCall("DestroyIcon", "ptr", oldIcon)
+        }
+        return
+    }
+
+    ; AHK's icon functions start at 1, but the DLL's index at 0.
+    pIconNumber--
+    iconCount := DllCall("Shell32\ExtractIconExW", "str", pFileLocation, "int", -1, "ptr*", 0, "ptr*", 0, "uint", 0, "int")
+    if (pIconNumber < 0 || pIconNumber > iconCount) {
+        MsgBox("[" . A_ThisFunc . "()] [WARNING] The icon number [" . pIconNumber . "] does not exist in [" . pFileLocation . "].",
+            "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+        return
+    }
+
+    ; Load the icon from the DDL file.
+    hIcon := 0
+    DllCall("Shell32\ExtractIconExW", "str", pFileLocation, "int", pIconNumber, "ptr*", 0, "ptr*", &hIcon, "uint", 1, "int")
+    SendMessage(0xF7, 1, hIcon, pButton.Hwnd)
+
+    ; Add a space between the icon and the text.
+    if (pButton.Text != "") {
+        pButton.Text := A_Space . pButton.Text
+    }
+    else {
+        ; This means the button has no text and we need to convert it in order to show the icon.
+        pButton.Opt("+0x40")
+    }
+}
+
+/*
 This function will try to extract the video meta data from any given URL and add the video to the video list.
 @param pVideoURL [String] Should be a valid URL from a video.
 @returns [Array] A status code which is the first element in the array.
@@ -410,6 +468,7 @@ The array might have different values at other indexes depending on the status c
 */
 createVideoListViewEntry(pVideoURL) {
     global videoListViewContentMap
+
     ; This object will store the information about the given video URL.
     extractedVideoMetaDataObject := extractVideoMetaData(pVideoURL)
     extractedVideoIdentifierString := extractedVideoMetaDataObject.VIDEO_TITLE . extractedVideoMetaDataObject.VIDEO_UPLOADER .
@@ -432,11 +491,13 @@ Imports URLs from a text file which must contain one URL per line.
 @param pBooleanSkipInvalidURLs [boolean] If set to true, all invalid URLs will automatically not be imported.
 */
 importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := false) {
+    global iconFileLocation
+
     validURLArray := Array()
     invalidURLArray := Array()
     loop read (pImportFileLocation) {
         ; Comments will be skipped.
-        if (InStr(A_LoopReadLine, "#")) {
+        if (RegExMatch(A_LoopReadLine, "^#")) {
             continue
         }
         ; Sorts out all invalid URLs and saves them in the array.
@@ -455,8 +516,10 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
             msgTitle := "VD - Invalid URL Found"
             msgHeadLine := "Import Invalid URL?"
             msgButton1 := "Import Invalid URL"
+            msgButton1Icon := 24
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URL"
+            msgButton3Icon := 26
         }
         else {
             msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the file ["
@@ -465,16 +528,22 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
             msgTitle := "VD - Invalid URLs Found"
             msgHeadLine := "Import Invalid URLs?"
             msgButton1 := "Import Invalid URLs"
+            msgButton1Icon := 24
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URLs"
+            msgButton3Icon := 26
         }
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI, iconFileLocation,
+            msgButton1Icon, , msgButton3Icon)
         ; If the users wishes, the invalid URLs will be imported as well.
-        if (result == msgButton1) {
+        if (result[1] == msgButton1) {
             for (invalidURL in invalidURLArray) {
                 validURLArray.Push(invalidURL)
             }
+        }
+        ; This means the user closed the message box.
+        else if (result[1] != msgButton3) {
+            return
         }
     }
 
@@ -511,8 +580,7 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
     invalidURLArray := Array()
     for (key, videoListEntry in pVideoListViewElementMap) {
         ; Skips all internal video list view entries used to communicate with the user.
-        if (videoListEntry.videoURL == "_internal_entry_no_results_found" || videoListEntry.videoURL ==
-            "_internal_entry_no_videos_added_yet") {
+        if (RegExMatch(videoListEntry.videoURL, "^_internal_entry_")) {
             continue
         }
         ; Sorts out all invalid URLs and saves them in the array.
@@ -544,8 +612,10 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             msgTitle := "VD - Invalid URL Found"
             msgHeadLine := "Export Invalid URL?"
             msgButton1 := "Export Invalid URL"
+            msgButton1Icon := 24
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URL"
+            msgButton3Icon := 26
         }
         else {
             msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the list."
@@ -553,19 +623,25 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             msgTitle := "VD - Invalid URLs Found"
             msgHeadLine := "Export Invalid URLs?"
             msgButton1 := "Export Invalid URLs"
+            msgButton1Icon := 24
             msgButton2 := ""
             msgButton3 := "Exclude Invalid URLs"
+            msgButton3Icon := 26
         }
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI, iconFileLocation,
+            msgButton1Icon, , msgButton3Icon)
         ; If the user wishes, the invalid URLs will be included in the export.
-        if (result == msgButton1) {
+        if (result[1] == msgButton1) {
             ; Adds the separation line into the array.
             validURLArray.Push("# ********************`n# Invalid URLs below.`n# ********************")
             ; Includes the invalid URLs in the export.
             for (invalidURL in invalidURLArray) {
                 validURLArray.Push(invalidURL)
             }
+        }
+        ; This means the user closed the message box.
+        else if (result[1] != msgButton3) {
+            return
         }
     }
 
@@ -650,8 +726,7 @@ getSelectedVideoListViewElements() {
         ; Retrieves the video list view element from the content map and adds it to the selected entries map.
         videoListEntry := videoListViewContentMap.Get(identifierString)
         ; Skips all internal video list view entries used to communicate with the user.
-        if (videoListEntry.videoURL == "_internal_entry_no_results_found" || videoListEntry.videoURL ==
-            "_internal_entry_no_videos_added_yet") {
+        if (RegExMatch(videoListEntry.videoURL, "^_internal_entry_")) {
             continue
         }
         selectedVideoListViewElementsMap.Set(identifierString, videoListEntry)
@@ -761,14 +836,28 @@ parseYTDLPSubtitleString(pRawString) {
 
 ; Tries to find currently running instances of the application and warns the user about it.
 findAlreadyRunningVDInstance() {
+    global iconFileLocation
+
     ; Searches for the process name and excludes this instance.
     query := 'SELECT * FROM Win32_Process WHERE Name = "VideoDownloader.exe"'
     childProcesses := ComObjGet("winmgmts:").ExecQuery(query)
+    scriptPID := DllCall("GetCurrentProcessId")
 
     for (childProcess in childProcesses) {
         ; Skipts this instance of the application.
-        if (childProcess.ExecutablePath == A_ScriptFullPath) {
+        if (childProcess.ProcessId == scriptPID) {
             continue
+        }
+        /*
+        Activates the same instance of the application if it is already running.
+        This usually happens when the user double clicks the application icon multiple times.
+        */
+        if (childProcess.ExecutablePath == A_ScriptFullPath) {
+            ; In case the old instance is minimized.
+            DetectHiddenWindows(true)
+            ; Send a custom message to activate the old instance.
+            PostMessage(0x0400 + 1, 0, 0, , "ahk_pid " . childProcess.ProcessId)
+            ExitApp()
         }
         askUserToTerminateOtherInstance(childProcess)
     }
@@ -785,11 +874,15 @@ findAlreadyRunningVDInstance() {
         msgTitle := "VD - Multiple Instances Found!"
         msgHeadLine := "Multiple Instances Found!"
         msgButton1 := "Continue"
+        msgButton1Icon := 30
         msgButton2 := "Abort"
+        msgButton2Icon := 15
         msgButton3 := "Terminate Other Instance"
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true)
+        msgButton3Icon := 27
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, , iconFileLocation,
+            msgButton1Icon, msgButton2Icon, msgButton3Icon)
 
-        switch (result) {
+        switch (result[1]) {
             case msgButton3:
             {
                 try
@@ -855,7 +948,7 @@ backupOldVersionFiles(pBackupParentDirectory) {
     global versionFullName
 
     oldVersion := versionFullName
-    backupDate := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
+    backupDate := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     backupFolderName := "VideoDownloader_backup_from_version_" . oldVersion . "_at_" . backupDate
     sourceDirectory := A_ScriptDir
     destinationDirectory := pBackupParentDirectory . "\" . backupFolderName
@@ -1066,15 +1159,21 @@ Displays a customizable message box with up to 3 buttons and a headline.
 @param pMsgBoxTimeoutSeconds [int] Optional timeout in seconds. Closes the message box automatically after this duration.
 @param pBooleanAlwaysOnTop [boolean] If true, the message box will always stay on top of other windows.
 @param pOwnerGUI [Gui] An optional GUI object. This GUI will be the owner of the custom message box to make it modal.
-@returns [String] The text of the button clicked by the user.
-@returns (alt) [String] "_result_gui_closed" if the GUI was closed.
-@returns (alt) [String] "_result_timeout" if the timeout was reached.
+@param pIconFileLocation [String] The file path to the icon file. Defaults to "shell32.dll".
+@param pButton1IconNumber [int] The icon number for the leftmost button. Optional.
+@param pButton2IconNumber [int] The icon number for the middle button. Optional.
+@param pButton3IconNumber [int] The icon number for the rightmost button. Optional.
+@returns [Array] The text of the button (first index) and possibly the checkbox (second index) clicked by the user.
+If the checkbox was not checked or not present, the second index will be an empty string.
+@returns (alt) [1][String] "_result_gui_closed" if the GUI was closed.
+@returns (alt) [1][String] "_result_timeout" if the timeout was reached.
 */
 customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_ScriptName,
-    pButton1Text?, pButton2Text := "Okay", pButton3Text?, pMsgBoxTimeoutSeconds?, pBooleanAlwaysOnTop := false,
-    pOwnerGUI?) {
+    pButton1Text?, pButton2Text := "Okay", pButton3Text?, pCheckBoxText?, pMsgBoxTimeoutSeconds?, pBooleanAlwaysOnTop := false, pOwnerGUI?,
+    pIconFileLocation := "shell32.dll", pButton1IconNumber?, pButton2IconNumber?, pButton3IconNumber?) {
+    returnArray := Array("", "")
     ; This value represents either the user choice or any other possible outcome like a timeout for example.
-    returnValue := "_result_gui_closed"
+    returnArray[1] := "_result_gui_closed"
     ; Create the GUI which will mimic the style of a message box.
     if (IsSet(pOwnerGUI) && WinExist(pOwnerGUI.Hwnd)) {
         customMsgBoxGUI := Gui("Owner" . pOwnerGUI.Hwnd, pMsgBoxTitle)
@@ -1095,18 +1194,31 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     ; MsgBox message text.
     customMsgBoxGUITextGroupBox := customMsgBoxGUI.Add("GroupBox", "xm ym+30 w470 h220")
     customMsgBoxGUIText := customMsgBoxGUI.Add("Text", "xp+10 yp+10 w450 h200", pMsgBoxText)
+    ; Checkbox.
+    if (IsSet(pCheckBoxText) && pCheckBoxText != "") {
+        customMsgBoxGUICheckBox := customMsgBoxGUI.Add("CheckBox", "xm ym+255 w470 h20", pCheckBoxText)
+    }
     ; Creates the buttons for the user to choose.
     if (IsSet(pButton1Text) && pButton1Text != "") {
-        customMsgBoxGUIButton1 := customMsgBoxGUI.Add("Button", "xm ym+260 w150 h40", pButton1Text)
+        customMsgBoxGUIButton1 := customMsgBoxGUI.Add("Button", "xm ym+280 w150 h40", pButton1Text)
         customMsgBoxGUIButton1.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
+        if (IsSet(pButton1IconNumber)) {
+            setButtonIcon(customMsgBoxGUIButton1, pIconFileLocation, pButton1IconNumber)
+        }
     }
     if (IsSet(pButton2Text) && pButton2Text != "") {
-        customMsgBoxGUIButton2 := customMsgBoxGUI.Add("Button", "xm+160 ym+260 w150 h40 Default", pButton2Text)
+        customMsgBoxGUIButton2 := customMsgBoxGUI.Add("Button", "xm+160 ym+280 w150 h40 Default", pButton2Text)
         customMsgBoxGUIButton2.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
+        if (IsSet(pButton2IconNumber)) {
+            setButtonIcon(customMsgBoxGUIButton2, pIconFileLocation, pButton2IconNumber)
+        }
     }
     if (IsSet(pButton3Text) && pButton3Text != "") {
-        customMsgBoxGUIButton3 := customMsgBoxGUI.Add("Button", "xm+320 ym+260 w150 h40", pButton3Text)
+        customMsgBoxGUIButton3 := customMsgBoxGUI.Add("Button", "xm+320 ym+280 w150 h40", pButton3Text)
         customMsgBoxGUIButton3.OnEvent("Click", handleCustomMsgBoxGUI_button_onClick)
+        if (IsSet(pButton3IconNumber)) {
+            setButtonIcon(customMsgBoxGUIButton3, pIconFileLocation, pButton3IconNumber)
+        }
     }
     ; Status bar.
     customMsgBoxGUIStatusBar := customMsgBoxGUI.Add("StatusBar", , "Please choose an option")
@@ -1121,8 +1233,11 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     }
     ; OnEvent function for the buttons.
     handleCustomMsgBoxGUI_button_onClick(pButton, pInfo) {
-        ; The text of the pressed button will be returned.
-        returnValue := pButton.Text
+        /*
+        The text of the pressed button will be returned.
+        Triming is necessary because adding icons to any of the buttons inserts an additional space.
+        */
+        returnArray[1] := Trim(pButton.Text)
         if (WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
             WinClose()
         }
@@ -1137,7 +1252,9 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
     if (IsSet(pMsgBoxTimeoutSeconds)) {
         loop (pMsgBoxTimeoutSeconds) {
             if (!WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
-                return returnValue
+                ; Return the checkbox value if it is checked.
+                returnArray[2] := IsSet(customMsgBoxGUICheckBox) && customMsgBoxGUICheckBox.Value ? customMsgBoxGUICheckBox.Text : ""
+                return returnArray
             }
             remainingSeconds := pMsgBoxTimeoutSeconds - A_Index + 1
             statusBarText := "Please choose an option - [The window will close in " . remainingSeconds
@@ -1150,13 +1267,15 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
             customMsgBoxGUIStatusBar.SetText(statusBarText)
             Sleep(1000)
         }
-        returnValue := "_result_timeout"
+        returnArray[1] := "_result_timeout"
         if (WinExist("ahk_id " . customMsgBoxGUI.Hwnd)) {
             WinClose()
         }
     }
     WinWaitClose("ahk_id " . customMsgBoxGUI.Hwnd)
-    return returnValue
+    ; Return the checkbox value if it is checked.
+    returnArray[2] := IsSet(customMsgBoxGUICheckBox) && customMsgBoxGUICheckBox.Value ? customMsgBoxGUICheckBox.Text : ""
+    return returnArray
 }
 
 /*
@@ -1671,9 +1790,23 @@ checkInternetConnection() {
 }
 
 /*
+Checks if a given string is a valid playlist URL.
+@param pString [String] The string that should be examined.
+@returns [boolean] True, if the provided string is a valid playlist URL. False otherwise
+*/
+checkIfStringIsAPlaylistURL(pString) {
+    ; Checks if the entered string is a valid playlist URL.
+    regExString := '^https?:\/\/(?:www\.)?(?:youtu\.be|youtube\.[A-Za-z.]{2,})\/.*[?&]list=([A-Za-z0-9_-]+)'
+    if (RegExMatch(pString, regExString)) {
+        return true
+    }
+    return false
+}
+
+/*
 Checks if a given string is a valid video URL.
 NOTE: URLs without any content after the top level domain won't be considered valid!
-For example [www.youtube.com] would be invalid but [https://www.youtube.com/watch?v=dQw4w9WgXcQ] would be valid.
+For example [https://youtube.com] would be invalid, but [https://www.youtube.com/watch?v=dQw4w9WgXcQ] would be valid.
 @param pString [String] The string that should be examined.
 @returns [boolean] True, if the provided string is a valid URL. False otherwise.
 */

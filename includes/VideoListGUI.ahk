@@ -1,8 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-SendMode "Input"
-CoordMode "Mouse", "Window"
-
 /*
 Allows the ENTER key to function the same way as the add video to list button.
 This makes adding a video URL more convenient as the user can simply press enter while focused on the URL input field.
@@ -12,10 +7,10 @@ Only works while the URL input field or the playlist range input field is focuse
 ((ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoURLInputEdit.Hwnd ||
 ControlGetFocus("ahk_id " . videoListGUI.Hwnd) == addVideoSpecifyPlaylistRangeInputEdit.Hwnd)))
 Enter:: {
-    handleVideoListGUI_addVideoToListButton_onClick("", "")
+    handleVideoListGUI_addVideoToListButton_addMode_onClick("", "")
 }
 NumpadEnter:: {
-    handleVideoListGUI_addVideoToListButton_onClick("", "")
+    handleVideoListGUI_addVideoToListButton_addMode_onClick("", "")
 }
 #HotIf
 
@@ -36,6 +31,13 @@ videoListGUI_onInit() {
 
     ; Download related variables.
     currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := false
+    currentYTDLPActionObject.booleanVideoPlaylistMetaDataExtractionIsRunning := false
+    currentYTDLPActionObject.booleanCancelVideoMetaDataExtraction := false
+    currentYTDLPActionObject.booleanCancelVideoPlaylistMetaDataExtraction := false
+    currentYTDLPActionObject.currentlyExtractedURL := ""
+    currentYTDLPActionObject.currentlyExtractedPlaylistURL := ""
+    currentYTDLPActionObject.videoMetaDataExtractionProcessYTDLPPID := 0
+    currentYTDLPActionObject.videoMetaDataPlaylistExtractionProcessYTDLPPID := 0
     currentYTDLPActionObject.booleanDownloadIsRunning := false
     currentYTDLPActionObject.booleanCancelOneVideoDownload := false
     currentYTDLPActionObject.booleanCancelCompleteDownload := false
@@ -73,10 +75,11 @@ createVideoListGUI() {
     videoThumbnailImage := videoListGUI.Add("Picture", "w280 h158 yp+20", GUIBackgroundImageLocation)
     ; Controls that change the download settings for the video.
     videoDesiredFormatText := videoListGUI.Add("Text", "yp+173", "Desired Format")
-    videoDesiredFormatDDL := videoListGUI.Add("DropDownList", "w280 yp+20 Choose1", ["None"])
-    videoDesiredSubtitleText := videoListGUI.Add("Text", "yp+30", "Desired Subtitles")
-    videoDesiredSubtitleListBox := videoListGUI.Add("ListBox", "w280 yp+20 R1 +Multi", ["None"])
-    videoAdvancedDownloadSettingsButton := videoListGUI.Add("Button", "w280 yp+30", "Advanced Download Settings")
+    videoDesiredFormatDDL := videoListGUI.Add("DropDownList", "w255 yp+20 Choose1", ["None"])
+    videoAdvancedDownloadSettingsButton := videoListGUI.Add("Button", "xp+260 w20 h20 yp-1")
+    setButtonIcon(videoAdvancedDownloadSettingsButton, iconFileLocation, 21) ; ICON_DLL_USED_HERE
+    videoDesiredSubtitleText := videoListGUI.Add("Text", "xp-260 yp+30", "Desired Subtitles")
+    videoDesiredSubtitleListBox := videoListGUI.Add("ListBox", "w280 yp+20 R4 +Multi", ["None"])
     ; Video list controls.
     videoListSearchBarText := videoListGUI.Add("Text", "xm+310 ym", "Video List")
     videoListSearchBarInputEdit := videoListGUI.Add("Edit", "yp+20 w300 -Multi", "")
@@ -95,7 +98,8 @@ createVideoListGUI() {
     addVideoURLInputClearButton := videoListGUI.Add("Button", "xp+560 yp+1 w20 h20", "X")
     addVideoURLInputClearButton.SetColor("ced4da", "000000", -1, "808080")
     ; Add URL elements.
-    addVideoToListButton := videoListGUI.Add("Button", "xp-560 yp+29 w200", "Add Video(s) to List")
+    addVideoToListButton := videoListGUI.Add("Button", "xp-560 yp+29 w200 +Disabled", "Add Video(s) to List")
+    setButtonIcon(addVideoToListButton, iconFileLocation, 23) ; ICON_DLL_USED_HERE
     addVideoURLIsAPlaylistCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30", "URL refers to a playlist")
     addVideoURLUsePlaylistRangeCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
         "Use playlist range filter")
@@ -106,13 +110,16 @@ createVideoListGUI() {
         "For example: 1-3,4,5", "UInt")
     ; Remove video elements.
     removeVideoFromListButton := videoListGUI.Add("Button", "xp+200 yp-90 w200 +Disabled", "Remove Video(s) from List")
+    setButtonIcon(removeVideoFromListButton, iconFileLocation, 24) ; ICON_DLL_USED_HERE
     removeVideoConfirmDeletionCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30",
         "Confirm deletion of selected videos")
     removeVideoConfirmOnlyWhenMultipleSelectedCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
         "Only apply to multiple videos")
     ; Import and export elements.
     importVideoListButton := videoListGUI.Add("Button", "xp+200 yp-50 w75", "Import")
+    setButtonIcon(importVideoListButton, iconFileLocation, 2) ; ICON_DLL_USED_HERE
     exportVideoListButton := videoListGUI.Add("Button", "yp xp+85 w75 +Disabled", "Export")
+    setButtonIcon(exportVideoListButton, iconFileLocation, 17) ; ICON_DLL_USED_HERE
     importAndExportOnlyValidURLsCheckbox := videoListGUI.Add("CheckBox", "xp-75 yp+30", "Only consider valid URLs")
     autoExportVideoListCheckbox := videoListGUI.Add("CheckBox", "yp+20 Checked", "Auto-export downloads")
     ; Controls that are relevant for downloading the videos in the video list.
@@ -152,8 +159,10 @@ createVideoListGUI() {
     This will be used to copy the current content of the clipboard into the input edit.
     */
     OnMessage(0x203, handleVideoListGUI_addVideoURLInputEdit_onDoubleClick)
+    addVideoURLInputEdit.OnEvent("Change", handleVideoListGUI_addVideoURLInputEdit_onChange)
     addVideoURLInputClearButton.OnEvent("Click", handleVideoListGUI_addVideoURLInputClearButton_onClick)
-    addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_onClick)
+    ; The button has two modes: One to add videos and one to stop the video extraction process.
+    addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_addMode_onClick)
     addVideoURLIsAPlaylistCheckbox.OnEvent("Click", handleVideoListGUI_addVideoURLIsAPlaylistCheckbox_onClick)
     addVideoURLUsePlaylistRangeCheckbox.OnEvent("Click",
         handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick)
@@ -202,13 +211,13 @@ createVideoListGUI() {
         '`nsubtitles enclosed in square brackets "[]" (automatic captions) must be selected manually.'
     videoDesiredSubtitleListBox.ToolTip .=
         "`nA maximum of 20 subtitles per video should not be exceeded to ensure a successful download."
-    videoAdvancedDownloadSettingsButton.ToolTip := ""
+    videoAdvancedDownloadSettingsButton.ToolTip := "Will contain advanced download configuration options one day."
     ; Video list controls.
     videoListSearchBarInputEdit.ToolTip :=
         "You can also search for a video by its URL."
     videoListSearchBarInputClearButton.ToolTip := ""
     ; Controls that belong to the video list.
-    addVideoURLInputEdit.ToolTip := "Enter a video URL here and press [Enter] or the [" . addVideoToListButton.Text "] button."
+    addVideoURLInputEdit.ToolTip := "Enter a video URL here and press [Enter] or the [" . Trim(addVideoToListButton.Text) "] button."
     addVideoURLInputEdit.ToolTip .= "`nDouble-click this input field to paste the current clipboard content."
     addVideoURLInputClearButton.ToolTip := ""
     ; Add URL elements.
@@ -248,6 +257,8 @@ createVideoListGUI() {
         "Remove the video from the list after downloading and processing."
     downloadTerminateAfterDownloadCheckbox.ToolTip :=
         "Exit after downloading and processing all (selected) videos."
+    downloadTerminateAfterDownloadCheckbox.ToolTip .=
+        '`nDepending on the "Close to tray" setting, this may only minimize the window to the tray.'
     downloadSelectDownloadDirectoryInputEdit.ToolTip :=
         "Select a directory for the downloaded files."
     downloadSelectDownloadDirectoryInputEdit.ToolTip .=
@@ -339,9 +350,9 @@ createVideoListGUI() {
 
     GUIControlResizeLink(videoDesiredFormatText, 4)
     GUIControlResizeLink(videoDesiredFormatDDL, 4)
+    GUIControlResizeLink(videoAdvancedDownloadSettingsButton, 4)
     GUIControlResizeLink(videoDesiredSubtitleText, 4)
     GUIControlResizeLink(videoDesiredSubtitleListBox, 6)
-    GUIControlResizeLink(videoAdvancedDownloadSettingsButton, 1)
 
     GUIControlResizeLink(videoListSearchBarText, 5)
     GUIControlResizeLink(videoListSearchBarInputEdit, 5)
@@ -515,18 +526,52 @@ handleVideoListGUI_addVideoURLInputEdit_onDoubleClick(wParam, lParam, msg, hwnd)
         return
     }
     addVideoURLInputEdit.Value := A_Clipboard
-    handleVideoListGUI_addVideoToListButton_onClick(addVideoToListButton, "")
+    ; Enable or disable the add video button.
+    handleVideoListGUI_addVideoURLInputEdit_onChange(addVideoURLInputEdit, "")
+    handleVideoListGUI_addVideoToListButton_addMode_onClick("", "")
     ; Tells Windows to not process this message further.
     return false
 }
 
+; Enables or disables the add button depending on whether the input edit is empty or not.
+handleVideoListGUI_addVideoURLInputEdit_onChange(pEdit, pInfo) {
+    videoURL := Trim(addVideoURLInputEdit.Value)
+    ; The button should not change when it is in cancel mode.
+    if (Trim(addVideoToListButton.Text) == "Cancel Extraction") {
+        return
+    }
+    ; Checks if the entered string is a valid URL.
+    if (checkIfStringIsAValidURL(videoURL)) {
+        addVideoToListButton.Opt("-Disabled")
+        return
+    }
+    addVideoToListButton.Opt("+Disabled")
+}
+
 handleVideoListGUI_addVideoURLInputClearButton_onClick(pButton, pInfo) {
     addVideoURLInputEdit.Value := ""
+    ; Enable or disable the add video button.
+    handleVideoListGUI_addVideoURLInputEdit_onChange(addVideoURLInputEdit, "")
     ; Focus the URL input edit.
     addVideoURLInputEdit.Focus()
 }
 
-handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
+handleVideoListGUI_addVideoToListButton_addMode_onClick(pButton, pInfo) {
+    global currentYTDLPActionObject
+    global iconFileLocation
+
+    ; Prevents multiple extraction processes from running at the same time.
+    if (!(currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning ||
+        currentYTDLPActionObject.booleanVideoPlaylistMetaDataExtractionIsRunning)) {
+        currentYTDLPActionObject.booleanCancelVideoMetaDataExtraction := false
+        currentYTDLPActionObject.booleanCancelVideoPlaylistMetaDataExtraction := false
+    }
+    else {
+        MsgBox("There is already another extraction in progress.", "VD - Other Extraction Running", "O Iconi T3 Owner" . videoListGUI.Hwnd)
+        return
+    }
+
+    ; This section is technically not required (because it should not be possible to click the button with an invalid URL in the input field).
     videoURL := Trim(addVideoURLInputEdit.Value)
     ; Avoids the invalid URL MsgBox when the edit is empty.
     if (videoURL == "") {
@@ -537,6 +582,7 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
         MsgBox("Please enter a valid URL.", "VD - Invalid URL", "O Icon! T1 Owner" . videoListGUI.Hwnd)
         return
     }
+
     ; Only relevant when downloading specific parts of a playlist.
     if (addVideoURLUsePlaylistRangeCheckbox.Value &&
         !checkIfStringIsValidPlaylistIndexRange(addVideoSpecifyPlaylistRangeInputEdit.Value)) {
@@ -544,44 +590,130 @@ handleVideoListGUI_addVideoToListButton_onClick(pButton, pInfo) {
             "O Icon! 16384 Owner" . videoListGUI.Hwnd)
         return
     }
+    ; The user might want to enable playlist mode.
+    if (readConfigFile("ASK_FOR_PLAYLIST_MODE") && !addVideoURLIsAPlaylistCheckbox.Value && checkIfStringIsAPlaylistURL(videoURL)) {
+        msgText := "The entered video URL seems to be a playlist."
+        msgText .= "`n`nDo you want to enable playlist mode?"
+        msgText .= "`n`nTip: You can set playlist mode as the default in the settings."
+        msgTitle := "VD - Playlist Mode"
+        msgHeadLine := "Enable Playlist Mode?"
+        msgButton1 := "Show Me How"
+        msgButton1Icon := 9
+        msgButton2 := ""
+        msgButton3 := "No Thanks"
+        msgButton3Icon := 27
+        checkBox := "Don't ask again"
+
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, checkBox, , true, videoListGUI,
+            iconFileLocation, msgButton1Icon, , msgButton3Icon)
+        ; Disables the popup in the config file.
+        if (result[2] == checkBox) {
+            editConfigFile(false, "ASK_FOR_PLAYLIST_MODE")
+        }
+        ; Shows the user how to enable playlist mode.
+        if (result[1] == msgButton1) {
+            highlightedCheckbox := highlightControl(addVideoURLIsAPlaylistCheckbox)
+            MsgBox("Please check [" . addVideoURLIsAPlaylistCheckbox.Text . "] to enable playlist mode."
+                "`n`nYou may want to enable the playlist range filter below to select specific videos from the playlist.",
+                "VD - How to Enable Playlist Mode", "Iconi 262144")
+            highlightedCheckbox.destroy()
+            ; The user should confirm that they want to continue without playlist mode.
+            if (!addVideoURLIsAPlaylistCheckbox.Value) {
+                result := MsgBox("You did not enable playlist mode.`n`nContinue?", "VD - Continue without Playlist Mode",
+                    "Icon? YN Owner" . videoListGUI.Hwnd)
+                if (result != "Yes") {
+                    return
+                }
+            }
+            ; Validate the playlist range index if the user decides to use it.
+            return handleVideoListGUI_addVideoToListButton_addMode_onClick("", "")
+        }
+    }
     ; This means the provided URL contains a reference to a playlist.
     if (addVideoURLIsAPlaylistCheckbox.Value) {
         playlistRangeIndex := addVideoSpecifyPlaylistRangeInputEdit.Value
         ; This means the user wants to download only parts of the playlist.
         if (addVideoURLUsePlaylistRangeCheckbox.Value && playlistRangeIndex != "0") {
-            playlistVideoMetaDataObjectArray := extractVideoMetaDataPlaylist(videoURL, playlistRangeIndex)
+            extractVideoPlaylist(videoURL, playlistRangeIndex)
         }
         ; This means the user wants to download the whole playlist.
         else {
-            playlistVideoMetaDataObjectArray := extractVideoMetaDataPlaylist(videoURL)
+            extractVideoPlaylist(videoURL)
         }
-        ; This happens when the playlist could not be found.
-        if (playlistVideoMetaDataObjectArray.Length == 0) {
-            tmpVideoMetaDataObject := VideoMetaData()
-            tmpVideoMetaDataObject.VIDEO_TITLE := "playlist_not_found: " . videoURL
-            tmpVideoMetaDataObject.VIDEO_URL := "playlist_not_found: " . videoURL
-            tmpVideoMetaDataObject.VIDEO_UPLOADER := "Not found"
-            tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "Not found"
-            tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
-            newVideoEntry := VideoListViewEntry(tmpVideoMetaDataObject)
-            ; Flashes the video list GUI to indicate that the playlist could not be found.
-            videoListGUI.Flash(true)
-        }
-        else {
-            ; Creates a new video list view entry object for each video.
-            for (index, videoMetaDataObject in playlistVideoMetaDataObjectArray) {
-                /*
-                Create a new video entry but do not update the video list view element.
-                When updating the element for each object, there is a flickering effect which is unpleasant to look at.
-                */
-                newVideoEntry := VideoListViewEntry(videoMetaDataObject, false)
-            }
-        }
-        newVideoEntry.updateVideoListViewElement()
     }
     else {
         newVideoEntry := VideoListViewEntry(videoURL)
-        updateCurrentlySelectedVideo(newVideoEntry)
+        ; Only update the currently selected video if the object is not a dummy.
+        if (newVideoEntry.videoURL != "_internal_entry_extraction_canceled") {
+            updateCurrentlySelectedVideo(newVideoEntry)
+        }
+    }
+}
+
+handleVideoListGUI_addVideoToListButton_cancelMode_onClick(pButton, pInfo) {
+    global currentYTDLPActionObject
+    global iconFileLocation
+
+    ; Parameters for the customMsgBox.
+    msgTitle := "VD - Cancel Extraction"
+    msgHeadLine := "Cancel Extraction Process"
+    msgButton1 := "Cancel Current"
+    msgButton1Icon := 28
+    msgButton2 := "Abort"
+    msgButton2Icon := 15
+    msgButton3 := "Cancel Playlist"
+    msgButton3Icon := 29
+
+    ; Single video extraction.
+    if (currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning &&
+        !currentYTDLPActionObject.booleanVideoPlaylistMetaDataExtractionIsRunning) {
+        msgText := "Cancel current extraction:"
+        msgText .= "`n`n" . currentYTDLPActionObject.currentlyExtractedURL
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, , , , true, videoListGUI, iconFileLocation,
+            msgButton1Icon, msgButton2Icon, msgButton3Icon)
+    }
+
+    ; Playlist metadata extraction only.
+    else if (currentYTDLPActionObject.booleanVideoPlaylistMetaDataExtractionIsRunning &&
+        !currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning) {
+        msgText := "Cancel entire playlist extraction:"
+        msgText .= "`n`n" . currentYTDLPActionObject.currentlyExtractedPlaylistURL
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, , msgButton2, msgButton3, , , true, videoListGUI, iconFileLocation,
+            msgButton1Icon, msgButton2Icon, msgButton3Icon)
+    }
+
+    ; Videos from a playlist are being extracted.
+    else if (currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning &&
+        currentYTDLPActionObject.booleanVideoPlaylistMetaDataExtractionIsRunning) {
+        msgText := "Cancel current extraction:"
+        msgText .= "`n`n" . currentYTDLPActionObject.currentlyExtractedURL
+        msgText .= "`n`n`nCancel entire playlist extraction:"
+        msgText .= "`n`n" . currentYTDLPActionObject.currentlyExtractedPlaylistURL
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI, iconFileLocation,
+            msgButton1Icon, msgButton2Icon, msgButton3Icon)
+    }
+
+    ; Single video extraction.
+    if (result[1] == msgButton1) {
+        currentYTDLPActionObject.booleanCancelVideoMetaDataExtraction := true
+        closeYTDLPProcess(currentYTDLPActionObject.videoMetaDataExtractionProcessYTDLPPID)
+    }
+
+    ; Playlist metadata extraction only / Videos from a playlist are being extracted.
+    if (result[1] == msgButton3) {
+        ; Stops a (possibly) running video extraction as well.
+        currentYTDLPActionObject.booleanCancelVideoMetaDataExtraction := true
+        closeYTDLPProcess(currentYTDLPActionObject.videoMetaDataExtractionProcessYTDLPPID)
+        ; Stops the extraction of a playlist.
+        currentYTDLPActionObject.booleanCancelVideoPlaylistMetaDataExtraction := true
+        closeYTDLPProcess(currentYTDLPActionObject.videoMetaDataPlaylistExtractionProcessYTDLPPID)
+    }
+
+    closeYTDLPProcess(pPID) {
+        if (ProcessExist(pPID)) {
+            ProcessClose(pPID)
+            terminateAllChildProcesses(pPID, "yt-dlp.exe", true)
+        }
     }
 }
 
@@ -840,8 +972,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         currentYTDLPActionObject.alreadyDownloadedVideoAmount - currentYTDLPActionObject.canceledDownloadVideoAmount
     ; Updates the downloaded video progress text.
     downloadProgressText.Value := "Downloaded (" . currentYTDLPActionObject.alreadyDownloadedVideoAmount . " / " .
-        currentYTDLPActionObject.completeVideoAmount . ") - [" . currentYTDLPActionObject.remainingVideos .
-        "] Remaining"
+        currentYTDLPActionObject.completeVideoAmount . ") - [" . currentYTDLPActionObject.remainingVideos . "] Remaining"
     if (currentYTDLPActionObject.alreadyDownloadedVideoAmount == 1) {
         statusText := "Downloaded 1 file to [" . targetDownloadDirectory . "]"
         videoListGUIStatusBar.SetText(statusText)
@@ -863,8 +994,13 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     }
     currentYTDLPActionObject.booleanDownloadIsRunning := false
     if (downloadTerminateAfterDownloadCheckbox.Value) {
-        ; We call this method to check if there are still videos in the video list.
-        handleVideoListGUI_onClose(videoListGUI)
+        if (readConfigFile("MINIMIZE_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")) {
+            videoListGUI.Hide()
+        }
+        else {
+            ; We call this method to check if there are still videos in the video list.
+            handleVideoListGUI_onClose(videoListGUI)
+        }
     }
 
     ; The download start button will only be activated when there are still videos left in the list.
@@ -880,35 +1016,35 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
 
 handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
     global currentYTDLPActionObject
+    global iconFileLocation
 
     if (!currentYTDLPActionObject.booleanDownloadIsRunning) {
         return
     }
-    msgText := "Would you like to cancel the current video download of"
-    msgText .= "`n`n[" . currentYTDLPActionObject.currentlyDownloadedVideoTitle . "]"
-    ; Ignores the cancel complete download when there is only one video in total.
-    if (currentYTDLPActionObject.remainingVideos == 1) {
-        msgText .= "?"
-    }
-    else {
-        msgText .= "`n`nor the complete download of [" . currentYTDLPActionObject.remainingVideos .
-            "] remaining video(s)?"
+    msgText := "Cancel current download:"
+    msgText .= "`n`n" . currentYTDLPActionObject.currentlyDownloadedVideoTitle
+    if (currentYTDLPActionObject.remainingVideos != 1) {
+        msgText .= "`n`n`nCancel all remaining downloads: " . currentYTDLPActionObject.remainingVideos
     }
     msgTitle := "VD - Cancel Download"
     msgHeadLine := "Cancel Download Process"
-    msgButton1 := "Cancel Current Download"
+    msgButton1 := "Cancel Current"
+    msgButton1Icon := 28
     msgButton2 := "Abort"
-    msgButton3 := "Cancel Complete Download"
+    msgButton2Icon := 15
+    msgButton3 := "Cancel All"
+    msgButton3Icon := 29
 
     ; Ignores the cancel complete download when there is only one video in total.
     if (currentYTDLPActionObject.remainingVideos == 1) {
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, , , true, videoListGUI)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, , , , true, videoListGUI, iconFileLocation,
+            msgButton1Icon, msgButton2Icon, msgButton3Icon)
     }
     else {
-        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , true,
-            videoListGUI)
+        result := customMsgBox(msgText, msgTitle, msgHeadLine, msgButton1, msgButton2, msgButton3, , , true, videoListGUI, iconFileLocation,
+            msgButton1Icon, msgButton2Icon, msgButton3Icon)
     }
-    if (result == msgButton1) {
+    if (result[1] == msgButton1) {
         if (!ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
             return
         }
@@ -921,7 +1057,7 @@ handleVideoListGUI_downloadCancelButton_onClick(pButton, pInfo) {
         ; Prevents the application from exiting after a video was canceled.
         downloadTerminateAfterDownloadCheckbox.Value := false
     }
-    else if (result == msgButton3) {
+    else if (result[1] == msgButton3) {
         if (!ProcessExist(currentYTDLPActionObject.downloadProcessYTDLPPID)) {
             return
         }
@@ -1062,28 +1198,33 @@ handleVideoListGUI_onClose(pGUI) {
         videoAmount--
     }
 
-    ; Warning message when there is an active video extraction process running at the moment.
-    if (currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning) {
+    ; Warning message when a video or playlist information extraction is active.
+    if (currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning ||
+        currentYTDLPActionObject.booleanVideoPlaylistMetaDataExtractionIsRunning) {
         result := MsgBox(
-            "There is an active video information extraction process running right now.`n`n"
-            "Do you want to close VideoDownloader anyway?", "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
+            "A video or playlist information extraction is currently in progress.`n`nDo you still want to close VideoDownloader?",
+            "VD - Confirm Exit",
+            "YN Icon! Owner" . videoListGUI.Hwnd)
     }
-    ; Warning message when there is an active download running at the moment.
+    ; Warning message when a download is active.
     else if (currentYTDLPActionObject.booleanDownloadIsRunning) {
         result := MsgBox(
-            "There is an active download running right now.`n`nDo you want to close VideoDownloader anyway?",
-            "VD - Confirm Exit", "YN Icon! Owner" . videoListGUI.Hwnd)
+            "A download is currently in progress.`n`nDo you still want to close VideoDownloader?",
+            "VD - Confirm Exit",
+            "YN Icon! Owner" . videoListGUI.Hwnd)
     }
-    ; Warning message when there are still videos in the list view element.
+    ; Warning message when one video remains in the list.
     else if (videoAmount == 1) {
         result := MsgBox(
-            "There is still one video in the video list.`n`nDo you want to close VideoDownloader anyway?",
-            "VD - Confirm Exit", "YN Icon? Owner" . videoListGUI.Hwnd)
+            "There is still one video in the list.`n`nDo you still want to close VideoDownloader?",
+            "VD - Confirm Exit",
+            "YN Icon? Owner" . videoListGUI.Hwnd)
     }
+    ; Warning message when multiple videos remain in the list.
     else if (videoAmount > 1) {
         result := MsgBox(
-            "There are still " . videoAmount . " videos in the video list."
-            "`n`nDo you want to close VideoDownloader anyway?", "VD - Confirm Exit",
+            "There are still " . videoAmount . " videos in the list.`n`nDo you still want to close VideoDownloader?",
+            "VD - Confirm Exit",
             "YN Icon? Owner" . videoListGUI.Hwnd)
     }
     else {
@@ -1116,6 +1257,7 @@ handleVideoListGUI_videoListGUIStatusBar_startAnimation(pStatusBarText, pSpinner
             "[   ⌛      ]", "[  ⌛       ]", "[ ⌛        ]"
         ]
     }
+    videoListGUIStatusBar.spinnerCharArray := pSpinnerCharArray
     /*
     If this function is called while the loading animation is playing, it will simply swap out the text
     but not start another timer. This avoids multiple timers overlapping and causing graphical issues in the status bar.
@@ -1126,17 +1268,17 @@ handleVideoListGUI_videoListGUIStatusBar_startAnimation(pStatusBarText, pSpinner
     }
     videoListGUIStatusBar.loadingAnimationIsPlaying := true
     SetTimer(step, 150)
-    step() {
+    static step() {
         ; Arrays in AHK start with the index of 1.
         static i := 1
         if (!videoListGUIStatusBar.loadingAnimationIsPlaying) {
             SetTimer(step, 0)
             return
         }
-        currentChar := pSpinnerCharArray[i]
+        currentChar := videoListGUIStatusBar.spinnerCharArray[i]
         videoListGUIStatusBar.SetText(videoListGUIStatusBar.loadingAnimationCurrentStatusBarText . " " . currentChar)
         ; Increases the index for the next time this function is called.
-        i := Mod(i, pSpinnerCharArray.Length) + 1
+        i := Mod(i, videoListGUIStatusBar.spinnerCharArray.Length) + 1
     }
 }
 
@@ -1270,8 +1412,36 @@ updateCurrentlySelectedVideo(pVideoListViewEntry) {
 }
 
 /*
+Focuses and selects a video list view entry in the video list view element.
+@param pVideoListViewEntry [VideoListViewEntry] The video list view entry object to focus and select.
+*/
+focusAndSelectVideoListViewEntry(pVideoListViewEntry) {
+    global videoListViewContentMap
+
+    ; Checks if the video list view entry is actually in the map.
+    if (!videoListViewContentMap.Has(pVideoListViewEntry.identifierString)) {
+        return
+    }
+    listViewRowCount := videoListView.GetCount()
+    loop listViewRowCount {
+        videoTitle := videoListView.GetText(A_Index, 1)
+        videoUploader := videoListView.GetText(A_Index, 2)
+        videoDurationString := videoListView.GetText(A_Index, 3)
+        ; Build the identifier string with the values from the video list view element.
+        entryIdentifierString := videoTitle . videoUploader . videoDurationString
+        if (entryIdentifierString == pVideoListViewEntry.identifierString) {
+            ; Selects the matching row and makes it visible.
+            videoListView.Modify(A_Index, "+Focus +Select +Vis")
+            return
+        }
+    }
+}
+
+/*
 Extracts the metadata of a SINGLE video from a given URL using yt-dlp.
 @param pVideoURL [String] The URL of the video.
+@param pVideoOriginalPlaylistURL [String] The original playlist URL if the video belongs to a playlist.
+If set, the extraction animation indicates that a playlist video is being processed and the original playlist URL is added to the list entry.
 @returns [VideoMetaData] This object has the following properties:
 VideoMetaData.VIDEO_TITLE (The title of the video)
 VideoMetaData.VIDEO_URL (The URL of the video)
@@ -1283,7 +1453,7 @@ VideoMetaData.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
 VideoMetaData.VIDEO_SUBTITLES (A map where keys are language names and values are language codes)
 VideoMetaData.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and values are language codes)
 */
-extractVideoMetaData(pVideoURL) {
+extractVideoMetaData(pVideoURL, pVideoOriginalPlaylistURL := unset) {
     global GUIBackgroundImageLocation
     global ffmpegDirectory
     global currentYTDLPActionObject
@@ -1293,12 +1463,11 @@ extractVideoMetaData(pVideoURL) {
         DirCreate(tempWorkingDirectory)
     }
     ; We use the current time stamp to generate a unique name for both files.
-    currentTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
+    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     metaDataFileLocation := tempWorkingDirectory . "\" . currentTime . ".ini"
     ; The video thumbnail will be stored and it's location saved in the object.
     thumbnailFileLocation := tempWorkingDirectory . "\" . currentTime . ".%(ext)s"
 
-    ; This object stores the video metadata extracted by yt-dlp.
     videoMetaDataObject := VideoMetaData(true)
     ; Build the actual yt-dlp command.
     ytdlpCommand := '--skip-download --no-playlist --convert-thumbnails "jpg/png" '
@@ -1307,6 +1476,7 @@ extractVideoMetaData(pVideoURL) {
     ytdlpCommand .= '--print-to-file "' . videoMetaDataObject.relevantMetaDataString . '" '
     ytdlpCommand .= '"' . metaDataFileLocation . '" --ffmpeg-location "' . ffmpegDirectory . '" '
     ytdlpCommand .= '"' . pVideoURL . '"'
+
     ; Start the status bar loading animation.
     spinnerCharArray := [
         "[🎞️         ]", "[ 🎞️        ]", "[  🎞️       ]", "[   🎞️      ]", "[    🎞️     ]",
@@ -1315,7 +1485,22 @@ extractVideoMetaData(pVideoURL) {
         "[   🎞️      ]", "[  🎞️       ]", "[ 🎞️        ]"
     ]
     currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := true
-    handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting video data...", spinnerCharArray)
+    currentYTDLPActionObject.currentlyExtractedURL := pVideoURL
+    ; Allows the button to cancel the extraction process.
+    addVideoToListButton.Text := "Cancel Extraction"
+    addVideoToListButton.Opt("-Disabled")
+    setButtonIcon(addVideoToListButton, iconFileLocation, 15) ; ICON_DLL_USED_HERE
+    ; Disable the "addMode" callback function.
+    addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_addMode_onClick, 0)
+    ; Enable the "cancelMode" callback function.
+    addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_cancelMode_onClick, 1)
+
+    if (IsSet(pVideoOriginalPlaylistURL)) {
+        handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting playlist video data...", spinnerCharArray)
+    }
+    else {
+        handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting video data...", spinnerCharArray)
+    }
     ; Starts a loading animation in the taskbar.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 1)
 
@@ -1335,6 +1520,8 @@ extractVideoMetaData(pVideoURL) {
     processPID := executeYTDLPCommand(ytdlpCommand, ytdlpLogFileLocation, ytdlpErrorLogFileLocation)
     ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
     if (processPID != "_result_error_while_starting_ytdlp_executable") {
+        ; Fill the currentYTDLPActionObject with data which can be used to cancel the extraction.
+        currentYTDLPActionObject.videoMetaDataExtractionProcessYTDLPPID := processPID
         ProcessWaitClose(processPID)
     }
 
@@ -1347,14 +1534,20 @@ extractVideoMetaData(pVideoURL) {
     Usually, every property of the meta data object would be "Not found" if the file was not created.
     If this is the case, we replace the video title with the video URL to show that this URL could not be found.
     */
-    if (!FileExist(metaDataFileLocation)) {
+    if (!FileExist(metaDataFileLocation) && !currentYTDLPActionObject.booleanCancelVideoMetaDataExtraction) {
         videoMetaDataObject.VIDEO_TITLE := "video_not_found: " . pVideoURL
         videoMetaDataObject.VIDEO_URL := "video_not_found: " . pVideoURL
         ; Flashes the video list GUI to indicate that the video could not be found.
         videoListGUI.Flash(true)
     }
-    ; Save the original URL which was used by yt-dlp to find the video.
-    videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoURL
+    if (IsSet(pVideoOriginalPlaylistURL)) {
+        ; Allows the user to find the extracted video by the playlist URL.
+        videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoOriginalPlaylistURL
+    }
+    else {
+        ; Save the original URL which was used by yt-dlp to find the video.
+        videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoURL
+    }
     ; We have to find out the extension of the thumbnail file because we don't know it in advance.
     loop files (tempWorkingDirectory . "\" . currentTime ".*") {
         if (A_LoopFileExt != "ini") {
@@ -1378,9 +1571,27 @@ extractVideoMetaData(pVideoURL) {
         parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
 
     currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := false
-    handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished video information extraction")
-    ; Stops the taskbar loading animation.
-    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
+    currentYTDLPActionObject.currentlyExtractedURL := ""
+
+    ; Make the animation continue because the extractVideoPlaylist() function will stop it later.
+    if (!IsSet(pVideoOriginalPlaylistURL)) {
+        ; Allows the button to add more videos again (only if a single video has been extracted and not a playlist).
+        addVideoToListButton.Text := "Add Video(s) to List"
+        setButtonIcon(addVideoToListButton, iconFileLocation, 23) ; ICON_DLL_USED_HERE
+        ; Enable the "addMode" callback function.
+        addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_addMode_onClick, 1)
+        ; Disable the "cancelMode" callback function.
+        addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_cancelMode_onClick, 0)
+
+        if (currentYTDLPActionObject.booleanCancelVideoMetaDataExtraction) {
+            handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Canceled video information extraction")
+        }
+        else {
+            handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished video information extraction")
+        }
+        ; Stops the taskbar loading animation.
+        setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
+    }
 
     if (readConfigFile("ENABLE_DEBUG_MODE")) {
         ; Moves the log files into the VideoDownloader temp directory in case the debug mode is enabled.
@@ -1402,11 +1613,28 @@ extractVideoMetaData(pVideoURL) {
                 tempWorkingDirectory . "\" . ytdlpErrorLogFileName)
         }
     }
+
+    /*
+    Create a dummy metadata object because this function’s callers expect a return value.
+    If this dummy object is passed to the VideoListViewEntry constructor,
+    the constructor will abort to prevent adding it to the video list.
+    */
+    if (currentYTDLPActionObject.booleanCancelVideoMetaDataExtraction) {
+        ; Reset the value for the following videos.
+        currentYTDLPActionObject.booleanCancelVideoMetaDataExtraction := false
+        videoMetaDataObject := VideoMetaData()
+        videoMetaDataObject.VIDEO_TITLE := "*****"
+        videoMetaDataObject.VIDEO_URL := "_internal_entry_extraction_canceled"
+        videoMetaDataObject.VIDEO_UPLOADER := "Video extraction canceled."
+        videoMetaDataObject.VIDEO_DURATION_STRING := "*****"
+    }
+
     return videoMetaDataObject
 }
 
 /*
-Extracts the metadata of one more videos from a given (playlist) URL using yt-dlp.
+Extracts the individual video URLs from a given (playlist) URL using yt-dlp.
+The URLs will be processed by the extractVideoMetaData() function which causes the videos to appear one by one in the video list.
 @param pVideoPlaylistURL [String] The URL of the video or playlist.
 @param pPlayListRangeIndex [String] Used to only extract specific videos from the playlist.
 From the yt-dlp documentation:
@@ -1419,57 +1647,44 @@ From the yt-dlp documentation:
     order. E.g. "--playlist-items 1:3,7,-5::2" used on a
     playlist of size 15 will download the items
     at index 1,2,3,7,11,13,15.
-@returns [Array] An array containing a [VideoMetaData] object for each video in the playlist (or the provided range index).
-
-[VideoMetaData] This object has the following properties:
-VideoMetaData.VIDEO_TITLE (The title of the video)
-VideoMetaData.VIDEO_URL (The URL of the video)
-VideoMetaData.VIDEO_URL_ORIGINAL (The (playlist) URL used by yt-dlp to find the video)
-VideoMetaData.VIDEO_UPLOADER (The uploader of the video)
-VideoMetaData.VIDEO_UPLOADER_URL (The URL of the uploader)
-VideoMetaData.VIDEO_DURATION_STRING (The duration of the video in this format [HH:mm:ss])
-VideoMetaData.VIDEO_THUMBNAIL_FILE_LOCATION (The location of the thumbnail file)
-VideoMetaData.VIDEO_SUBTITLES (A map where keys are language names and values are language codes)
-VideoMetaData.VIDEO_AUTOMATIC_CAPTIONS (A map where keys are language names and values are language codes)
 */
-extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
-    global GUIBackgroundImageLocation
-    global YTDLPFileLocation
-    global ffmpegDirectory
-    global currentYTDLPActionObject
-
+extractVideoPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
     ; We use the current time stamp to generate a unique name for each operation.
-    currentTime := FormatTime(A_Now, "dd.MM.yyyy_HH-mm-ss")
+    currentTime := FormatTime(A_Now, "yyyy.MM.dd_HH-mm-ss")
     tempWorkingDirectory := readConfigFile("TEMP_DIRECTORY")
     tempWorkingDirectoryPlaylist := tempWorkingDirectory . "\" . currentTime . "_playlist"
-    ; The %(id)s part will be filled by yt-dlp.
-    metaDataFileLocation := tempWorkingDirectoryPlaylist . "\" . currentTime . "_%(id)s.ini"
-    thumbnailFileLocation := tempWorkingDirectoryPlaylist . "\" . currentTime . "_%(id)s.%(ext)s"
+    ; This file contains the individual URLs of the playlist's videos.
+    playlistURLsFileLocation := tempWorkingDirectoryPlaylist . "\" . currentTime . "_playlist.txt"
     if (!DirExist(tempWorkingDirectoryPlaylist)) {
         DirCreate(tempWorkingDirectoryPlaylist)
     }
 
-    ; This object stores the video metadata extracted by yt-dlp.
-    videoMetaDataObject := VideoMetaData(true)
-    ; Build the actual yt-dlp command.
-    ytdlpCommand := '--skip-download --yes-playlist --convert-thumbnails "jpg/png" '
-    ytdlpCommand .= '--output "thumbnail:' . thumbnailFileLocation . '" --write-thumbnail '
+    ytdlpCommand := '--skip-download --flat-playlist '
     ytdlpCommand .= '--paths "home:' . tempWorkingDirectoryPlaylist . '" '
-    ytdlpCommand .= '--print-to-file "' . videoMetaDataObject.relevantMetaDataString . '" '
-    ytdlpCommand .= '"' . metaDataFileLocation . '" --ffmpeg-location "' . ffmpegDirectory . '" '
+    ytdlpCommand .= '--print-to-file "%(webpage_url)s" "' . playlistURLsFileLocation . '" '
     ; If the user wants to download only a specific range of the playlist.
     if (pPlayListRangeIndex != "-1") {
         ytdlpCommand .= '--playlist-items "' . pPlayListRangeIndex . '" '
     }
     ytdlpCommand .= '"' . pVideoPlaylistURL . '"'
+
     ; Start the status bar loading animation.
     spinnerCharArray := [
-        "[💾         ]", "[ 💾        ]", "[  💾       ]", "[   💾      ]", "[    💾     ]",
-        "[     💾    ]", "[      💾   ]", "[       💾  ]", "[        💾 ]", "[         💾]",
-        "[        💾 ]", "[       💾  ]", "[      💾   ]", "[     💾    ]", "[    💾     ]",
-        "[   💾      ]", "[  💾       ]", "[ 💾        ]"
+        "[🎬         ]", "[ 🎬        ]", "[  🎬       ]", "[   🎬      ]", "[    🎬     ]",
+        "[     🎬    ]", "[      🎬   ]", "[       🎬  ]", "[        🎬 ]", "[         🎬]",
+        "[        🎬 ]", "[       🎬  ]", "[      🎬   ]", "[     🎬    ]", "[    🎬     ]",
+        "[   🎬      ]", "[  🎬       ]", "[ 🎬        ]"
     ]
-    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := true
+    currentYTDLPActionObject.booleanVideoPlaylistMetaDataExtractionIsRunning := true
+    currentYTDLPActionObject.currentlyExtractedPlaylistURL := pVideoPlaylistURL
+    ; Allows the button to cancel the extraction process.
+    addVideoToListButton.Text := "Cancel Extraction"
+    addVideoToListButton.Opt("-Disabled")
+    setButtonIcon(addVideoToListButton, iconFileLocation, 15) ; ICON_DLL_USED_HERE
+    ; Disable the "addMode" callback function.
+    addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_addMode_onClick, 0)
+    ; Enable the "cancelMode" callback function.
+    addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_cancelMode_onClick, 1)
     handleVideoListGUI_videoListGUIStatusBar_startAnimation("Extracting playlist data...", spinnerCharArray)
     ; Starts a loading animation in the taskbar.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 1)
@@ -1486,56 +1701,22 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
         ytdlpLogFileLocation := A_Temp . "\yt-dlp.log"
         ytdlpErrorLogFileLocation := A_Temp . "\yt-dlp_errors.log"
     }
-    ; Run yt-dlp and create a .INI and a thumbnail file for each video in the playlist.
+    ; Run yt-dlp and extract the individual URLs of the videos in the playlist.
     processPID := executeYTDLPCommand(ytdlpCommand, ytdlpLogFileLocation, ytdlpErrorLogFileLocation)
     ; Checks if the yt-dlp executable was launched correctly and if so, waits for it to finish.
     if (processPID != "_result_error_while_starting_ytdlp_executable") {
+        ; Fill the currentYTDLPActionObject with data which can be used to cancel the extraction.
+        currentYTDLPActionObject.videoMetaDataPlaylistExtractionProcessYTDLPPID := processPID
         ProcessWaitClose(processPID)
     }
 
-    videoMetaDataObjectArray := []
-    ; Parse all .INI files in the temp directory and extract the metadata.
-    iniFileSearchString := tempWorkingDirectoryPlaylist . "\" . currentTime . "_*.ini"
-    loop files (iniFileSearchString) {
-        videoMetaDataObject := VideoMetaData(true)
-        ; Extract the meta data from the .INI file.
-        for (property, value in videoMetaDataObject.relevantMetaDataProperties) {
-            videoMetaDataObject.%property% := IniRead(A_LoopFileFullPath, "VideoMetaData", property,
-                "Not found")
-        }
-        ; We have to find out the extension of the thumbnail file because we don't know it in advance.
-        videoID := videoMetaDataObject.VIDEO_ID
-        thumbnailSearchString := tempWorkingDirectoryPlaylist . "\" . currentTime . "_" . videoID . ".*"
-        thumbnailFileLocation := ""
-        loop files (thumbnailSearchString) {
-            if (A_LoopFileExt != "ini") {
-                thumbnailFileLocation := A_LoopFileFullPath
-                break
-            }
-        }
-        ; Save the original (playlist) URL which was used by yt-dlp to find the video.
-        videoMetaDataObject.VIDEO_URL_ORIGINAL := pVideoPlaylistURL
-        ; In case the file does not exist, we use a default thumbnail.
-        if (!FileExist(thumbnailFileLocation)) {
-            thumbnailFileLocation := GUIBackgroundImageLocation
-        }
-        ; We add this property after the loops because it will not be written by yt-dlp.
-        videoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := thumbnailFileLocation
-        videoMetaDataObjectArray.Push(videoMetaDataObject)
-        /*
-        Extract the available subtitles from the yt-dlp string.
-        The returned map should contain the language as the key and the corresponding language code as the value.
-        */
-        videoMetaDataObject.VIDEO_SUBTITLES :=
-            parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_SUBTITLES)
-        videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS :=
-            parseYTDLPSubtitleString(videoMetaDataObject.VIDEO_AUTOMATIC_CAPTIONS)
+    if (!currentYTDLPActionObject.booleanCancelVideoPlaylistMetaDataExtraction) {
+        handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished playlist information extraction")
     }
-
-    currentYTDLPActionObject.booleanVideoMetaDataExtractionIsRunning := false
-    handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished playlist information extraction")
     ; Stops the taskbar loading animation.
     setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
+    ; Enough time for the user to possibly read this :D
+    Sleep(200)
 
     if (readConfigFile("ENABLE_DEBUG_MODE")) {
         ; Moves the log files into the VideoDownloader temp directory in case the debug mode is enabled.
@@ -1557,7 +1738,81 @@ extractVideoMetaDataPlaylist(pVideoPlaylistURL, pPlayListRangeIndex := "-1") {
                 tempWorkingDirectoryPlaylist . "\" . ytdlpErrorLogFileName)
         }
     }
-    return videoMetaDataObjectArray
+
+    validURLArray := Array()
+    ; This code should only run when the playlist extraction has not been canceled.
+    if (!currentYTDLPActionObject.booleanCancelVideoPlaylistMetaDataExtraction) {
+        ; This usually means there was an error while extracting the playlist URL.
+        if (!FileExist(playlistURLsFileLocation)) {
+            tmpVideoMetaDataObject := VideoMetaData()
+            tmpVideoMetaDataObject.VIDEO_TITLE := "playlist_not_found: " . pVideoPlaylistURL
+            tmpVideoMetaDataObject.VIDEO_URL := "playlist_not_found: " . pVideoPlaylistURL
+            tmpVideoMetaDataObject.VIDEO_UPLOADER := "Not found"
+            tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "Not found"
+            tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
+            newVideoEntry := VideoListViewEntry(tmpVideoMetaDataObject)
+            ; Flashes the video list GUI to indicate that the playlist could not be found.
+            videoListGUI.Flash(true)
+            enableAddVideoToListButton_addMode()
+            return
+        }
+
+        ; Check if there are any valid URLs in the file.
+        loop read (playlistURLsFileLocation) {
+            ; Save valid URLs into the array.
+            if (checkIfStringIsAValidURL(A_LoopReadLine)) {
+                validURLArray.Push(A_LoopReadLine)
+            }
+        }
+        ; This usually means there was an error while extracting the playlist URL.
+        if (validURLArray.Length == 0) {
+            tmpVideoMetaDataObject := VideoMetaData()
+            tmpVideoMetaDataObject.VIDEO_TITLE := "playlist_not_found: " . pVideoPlaylistURL
+            tmpVideoMetaDataObject.VIDEO_URL := "playlist_not_found: " . pVideoPlaylistURL
+            tmpVideoMetaDataObject.VIDEO_UPLOADER := "Not found"
+            tmpVideoMetaDataObject.VIDEO_DURATION_STRING := "Not found"
+            tmpVideoMetaDataObject.VIDEO_THUMBNAIL_FILE_LOCATION := GUIBackgroundImageLocation
+            newVideoEntry := VideoListViewEntry(tmpVideoMetaDataObject)
+            ; Flashes the video list GUI to indicate that the playlist could not be found.
+            videoListGUI.Flash(true)
+            enableAddVideoToListButton_addMode()
+            return
+        }
+    }
+
+    for (validURL in validURLArray) {
+        ; The complete playlist extraction has been canceled.
+        if (currentYTDLPActionObject.booleanCancelVideoPlaylistMetaDataExtraction) {
+            break
+        }
+        tmpVideoMetaDataObject := extractVideoMetaData(validURL, pVideoPlaylistURL)
+        VideoListViewEntry(tmpVideoMetaDataObject)
+    }
+    if (currentYTDLPActionObject.booleanCancelVideoPlaylistMetaDataExtraction) {
+        handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Canceled playlist information extraction")
+    }
+    else if (validURLArray.Length == 1) {
+        handleVideoListGUI_videoListGUIStatusBar_stopAnimation("Finished playlist information extraction for 1 video")
+    }
+    else {
+        handleVideoListGUI_videoListGUIStatusBar_stopAnimation(
+            "Finished playlist information extraction for " . validURLArray.Length . " videos")
+    }
+    ; Stops the taskbar loading animation.
+    setProgressOnTaskbarApplication(videoListGUI.Hwnd, 0)
+    enableAddVideoToListButton_addMode()
+
+    ; Allows the button to add more videos again.
+    enableAddVideoToListButton_addMode() {
+        currentYTDLPActionObject.booleanVideoPlaylistMetaDataExtractionIsRunning := false
+        currentYTDLPActionObject.currentlyExtractedPlaylistURL := ""
+        addVideoToListButton.Text := "Add Video(s) to List"
+        setButtonIcon(addVideoToListButton, iconFileLocation, 23) ; ICON_DLL_USED_HERE
+        ; Enable the "addMode" callback function.
+        addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_addMode_onClick, 1)
+        ; Disable the "cancelMode" callback function.
+        addVideoToListButton.OnEvent("Click", handleVideoListGUI_addVideoToListButton_cancelMode_onClick, 0)
+    }
 }
 
 /*
@@ -1589,6 +1844,8 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     ytdlpCommand .=
         '--progress-template "[Downloading...] [%(progress._percent_str)s of %(progress._total_bytes_str)s ' .
         'at %(progress._speed_str)s. Time passed: %(progress._elapsed_str)s]" '
+    ; Removes the ID from the file name to make it cleaner.
+    ytdlpCommand .= '--output "%(title)s.%(ext)s" '
     ; These printed lines will be used to track the download progress more accurately.
     ytdlpCommand .=
         '--print "pre_process:[PROGRESS_INFO_PRE_PROCESS] [Tracking Point: Video information has been extracted.]" '
@@ -1667,7 +1924,7 @@ downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
 /*
 Extracts the metadata of a video from a given URL using yt-dlp.
 This object is used as a data container for the video list view element.
-@param pVideoURL [String] The URL of the video OR a [videoMetaDataObject]. See extractVideoMetaData() for more information.
+@param pVideoURLOrVideoMetaDataObject [String] The URL of the video OR a [VideoMetaDataObject]. See extractVideoMetaData() for more information.
 @param pBooleanUpdateVideoListViewElement[boolean] if set to true, the video list view element will be updated.
 */
 class VideoListViewEntry {
@@ -1690,6 +1947,7 @@ class VideoListViewEntry {
         else {
             metaData := extractVideoMetaData(pVideoURLOrVideoMetaDataObject)
         }
+
         this.videoTitle := metaData.VIDEO_TITLE
         this.videoUploader := metaData.VIDEO_UPLOADER
         this.videoDurationString := metaData.VIDEO_DURATION_STRING
@@ -1698,6 +1956,14 @@ class VideoListViewEntry {
         this.videoUploaderURL := metaData.VIDEO_UPLOADER_URL
         this.videoThumbailFileLocation := metaData.VIDEO_THUMBNAIL_FILE_LOCATION
         this.videoSubtitleMap := metaData.VIDEO_SUBTITLES
+        /*
+        This should ONLY happen when the extractVideoMetaData() function needs to return a "dummy" object.
+        We cancel the processing of such "dummy" objects, as they are not meant to be added to the video list.
+        */
+        if (metaData.VIDEO_URL == "_internal_entry_extraction_canceled") {
+            return
+        }
+
         /*
         This map contains the keys of the videoSubtitleMap as it's values and vice versa because
         we want to search for language codes in the next step and it would be more inefficient to traverse the
@@ -1970,8 +2236,8 @@ This object can be linked to a GUI control to resize it when the GUI is resized.
     1: All controls in the manageVideoListGroupBox and downloadVideoGroupBox.
     2: currentlySelectedVideoGroupBox and videoListView.
     3: videoTitleText, videoUploaderText, videoDurationText and videoThumbnailImage.
-    4: videoDesiredFormatText, videoDesiredSubtitleText,
-       videoDesiredFormatDDL and videoAdvancedDownloadSettingsButton.
+    4: videoDesiredFormatText, videoDesiredFormatDDL,
+       videoAdvancedDownloadSettingsButton and videoDesiredSubtitleText.
     5: videoListSearchBarText, videoListSearchBarInputEdit and videoListSearchBarInputClearButton.
 */
 class GUIControlResizeLink {

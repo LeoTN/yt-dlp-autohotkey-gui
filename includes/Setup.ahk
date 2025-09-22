@@ -1,9 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-#Warn Unreachable, Off
-SendMode "Input"
-CoordMode "Mouse", "Window"
-
 setup_onInit() {
     checkIfMSISetupIsRequired()
     createRequiredFolders()
@@ -48,7 +42,9 @@ createSetupGUI() {
     setupGUIFFprobeCheckbox.SetFont("bold")
 
     setupGUIDeleteAllDependenciesButton := setupGUI.Add("Button", "xp-150 yp+120 w140 R2", "Delete Dependencies")
-    setupGUIStartAndCompleteSetupButton := setupGUI.Add("Button", "xp+160 w140 R2 +Default", "Download Dependencies")
+    setButtonIcon(setupGUIDeleteAllDependenciesButton, iconFileLocation, 7) ; ICON_DLL_USED_HERE
+    setupGUIStartAndCompleteSetupButton := setupGUI.Add("Button", "xp+160 w140 R2 +Default", "Start Installation")
+    setButtonIcon(setupGUIStartAndCompleteSetupButton, iconFileLocation, 25) ; ICON_DLL_USED_HERE
     setupGUIUseOwnExecutablesText := setupGUI.Add("Text", "xp-160 yp+45 w300 h30 +BackgroundTrans +Center",
         "I want to use my own executables")
     setupGUIUseOwnExecutablesText.SetFont("s10 underline cBlue")
@@ -226,10 +222,12 @@ deleteAllDependencyFiles() {
 
 ; Changes the setup start button text and action depending on the setup state.
 updateSetupButton() {
+    global iconFileLocation
+
     if (checkIfFFmpegOrYTDLPSetupIsRequired()) {
-        setupGUIStartAndCompleteSetupButton.Text := "Download Dependencies"
-        setupGUIStartAndCompleteSetupButton.ToolTip :=
-            "Existing files will not be overwritten."
+        setupGUIStartAndCompleteSetupButton.Text := "Start Installation"
+        setupGUIStartAndCompleteSetupButton.ToolTip := "Existing files will not be overwritten."
+        setButtonIcon(setupGUIStartAndCompleteSetupButton, iconFileLocation, 25) ; ICON_DLL_USED_HERE
         ; Disable the old event function.
         setupGUIStartAndCompleteSetupButton.OnEvent("Click",
             handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_2, 0)
@@ -240,6 +238,7 @@ updateSetupButton() {
     else {
         setupGUIStartAndCompleteSetupButton.Text := "Complete Setup"
         setupGUIStartAndCompleteSetupButton.ToolTip := "Finish the setup process."
+        setButtonIcon(setupGUIStartAndCompleteSetupButton, iconFileLocation, 20) ; ICON_DLL_USED_HERE
         ; Disable the old event function.
         setupGUIStartAndCompleteSetupButton.OnEvent("Click",
             handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_1, 0)

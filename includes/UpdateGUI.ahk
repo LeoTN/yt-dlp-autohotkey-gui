@@ -1,8 +1,3 @@
-#SingleInstance Force
-#MaxThreadsPerHotkey 2
-SendMode "Input"
-CoordMode "Mouse", "Window"
-
 updateGUI_onInit() {
     /*
     The application won't check for updates, if the option is disabled in the config file,
