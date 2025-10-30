@@ -30,12 +30,19 @@ Write-Host "Terminal ready..."
 # --- Helper functions ---
 function checkInternetConnectionStatus {
     try {
-        Test-Connection -ComputerName "www.google.com" -Count 1 -ErrorAction Stop | Out-Null
-        Write-Host "[INFO] Internet connection detected."
-        return $true
+        # Attempt to make a web request to a reliable URL
+        $response = Invoke-WebRequest -Uri "https://www.google.com" -UseBasicParsing -TimeoutSec 5
+        if ($response.StatusCode -eq 200) {
+            Write-Host "[INFO] Internet connection detected."
+            return $true
+        }
+        else {
+            Write-Host "[WARNING] No Internet connection detected. Status code: $($response.StatusCode)" -ForegroundColor Yellow
+            return $false
+        }
     }
     catch {
-        Write-Host "[WARNING] No Internet connection detected." -ForegroundColor "Yellow"
+        Write-Host "[WARNING] No Internet connection detected." -ForegroundColor Yellow
         return $false
     }
 }
@@ -125,8 +132,8 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
                 if ($tmpTag -notmatch '^\d+\.\d+\.\d+(\.\d+)?$') { continue }
                 $latestTag = compareVersions $latestTag $tag.name
             }
-
-            $availableVersion = if ($latestTag -ne $currentVDVersion) { $latestTag } else { "no_available_update" }
+            # If the latestTag is higher than the currentVDVersion this means that an update is available
+            $availableVersion = if ((compareVersions -v1 $currentVDVersion -v2 $latestTag) -eq $latestTag) { $latestTag } else { "no_available_update" }
             if ($availableVersion -ne "no_available_update") {
                 Write-Host "[INFO] Update available for VideoDownloader: $latestTag"
                 Set-ItemProperty -Path $pRegistryDirectory -Name $vdKey -Value $latestTag
