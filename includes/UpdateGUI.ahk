@@ -7,11 +7,19 @@ updateGUI_onInit() {
     || !checkInternetConnection()) {
         return
     }
-    availableUpdateVersion := checkForAvailableUpdates()
-    if (availableUpdateVersion == "_result_no_update_available") {
+
+    global availableYTDLPUpdateVersion := checkForAvailableYTDLPUpdates()
+    ; Add a small reminder "pop-up menu" to update yt-dlp
+    if (availableYTDLPUpdateVersion != "_result_no_update_available") {
+        allMenus.Add("&Update yt-dlp → " . availableYTDLPUpdateVersion, (*) => updateYTDLP())
+        allMenus.SetIcon("&Update yt-dlp → " . availableYTDLPUpdateVersion, iconFileLocation, 31) ; ICON_DLL_USED_HERE
+    }
+
+    availableVDUpdateVersion := checkForAvailableUpdates()
+    if (availableVDUpdateVersion == "_result_no_update_available") {
         return
     }
-    createUpdateGUI(availableUpdateVersion)
+    createUpdateGUI(availableVDUpdateVersion)
 }
 
 /*

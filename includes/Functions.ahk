@@ -1719,7 +1719,7 @@ checkForAvailableUpdates() {
     parameterString :=
         '-pGitHubRepositoryLink "https://github.com/LeoTN/yt-dlp-autohotkey-gui" '
         . '-pRegistryDirectory "' . psCompatibleScriptRegistryPath . '" '
-        . '-pCurrentVersionTag "' . versionFullName . '"'
+        . '-pCurrentVDVersionTag "' . versionFullName . '"'
 
     if (readConfigFile("UPDATE_TO_BETA_VERSIONS")) {
         parameterString .= " -pSwitchConsiderBetaReleases"
@@ -1741,6 +1741,70 @@ checkForAvailableUpdates() {
         default:
         {
             return "_result_no_update_available"
+        }
+    }
+}
+
+/*
+Checks all GitHub Repository tags to find new versions for yt-dlp.
+@returns [String] Returns the update version (which is usually the tag name), when an update is available.
+@returns (alt) [String] "_result_no_update_available", when no update is available.
+*/
+checkForAvailableYTDLPUpdates() {
+    global psUpdateScriptLocation
+    global applicationRegistryDirectory
+    global YTDLPFileLocation
+
+    ; Does not check for updates, if the application isn't compiled.
+    if (!A_IsCompiled) {
+        return "_result_no_update_available"
+    }
+    /*
+    Changes "HKCU\SOFTWARE\LeoTN\VideoDownloader" to "HKCU:SOFTWARE\LeoTN\VideoDownloader"
+    to make the path compatible with PowerShell.
+    */
+    psCompatibleScriptRegistryPath := StrReplace(applicationRegistryDirectory, "\", ":", , , 1)
+    parameterString :=
+        '-pRegistryDirectory "' . psCompatibleScriptRegistryPath . '" '
+        . '-pYTDLPFileLocation "' . YTDLPFileLocation . '"'
+
+    ; Calls the PowerShell script to check for available yt-dlp updates.
+    exitCode := RunWait('powershell.exe -executionPolicy bypass -file "'
+        . psUpdateScriptLocation . '" ' . parameterString, , "Hide")
+    switch (exitCode) {
+        ; Available update found.
+        case 101:
+        {
+            ; Extracts the available update from the registry.
+            updateVersion := RegRead(applicationRegistryDirectory, "AVAILABLE_YTDLP_UPDATE", "v0.0.0.1")
+            if (updateVersion == "no_available_update") {
+                return "_result_no_update_available"
+            }
+            return updateVersion
+        }
+        default:
+        {
+            return "_result_no_update_available"
+        }
+    }
+}
+
+; Updates the yt-dlp executable.
+updateYTDLP() {
+    global availableYTDLPUpdateVersion
+
+    showGUIRelativeToOtherGUI(videoListGUI, setupGUI, "MiddleCenter", "AutoSize")
+    if (FileExist(YTDLPFileLocation)) {
+        FileDelete(YTDLPFileLocation)
+    }
+    updateDependencyCheckboxes()
+    updateSetupButton()
+    setupGUISetupProgressBar.Value := 0
+    handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_1(setupGUIStartAndCompleteSetupButton, "")
+    ; Delete the "pop-up menu" after a successful update
+    if (FileExist(YTDLPFileLocation)) {
+        try {
+            allMenus.Delete("&Update yt-dlp → " . availableYTDLPUpdateVersion)
         }
     }
 }

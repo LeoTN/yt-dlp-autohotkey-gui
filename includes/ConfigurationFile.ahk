@@ -30,6 +30,7 @@ initializeConfigEntryMap() {
     MINIMIZE_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED := false
     CHECK_FOR_UPDATES_AT_LAUNCH := true
     UPDATE_TO_BETA_VERSIONS := false
+    CHECK_FOR_YTDLP_UPDATES := true
     ASK_FOR_TUTORIAL := true
     ASK_FOR_PLAYLIST_MODE := true
     ; [DirectoryPaths]
@@ -95,6 +96,8 @@ initializeConfigEntryMap() {
         CHECK_FOR_UPDATES_AT_LAUNCH, "boolean")
     ConfigFileEntry(UPDATE_TO_BETA_VERSIONS, "UPDATE_TO_BETA_VERSIONS", GeneralSettings,
         UPDATE_TO_BETA_VERSIONS, "boolean")
+    ConfigFileEntry(CHECK_FOR_YTDLP_UPDATES, "CHECK_FOR_YTDLP_UPDATES", GeneralSettings,
+        CHECK_FOR_YTDLP_UPDATES, "boolean")
     ConfigFileEntry(ASK_FOR_TUTORIAL, "ASK_FOR_TUTORIAL", GeneralSettings, ASK_FOR_TUTORIAL, "boolean")
     ConfigFileEntry(ASK_FOR_PLAYLIST_MODE, "ASK_FOR_PLAYLIST_MODE", GeneralSettings, ASK_FOR_PLAYLIST_MODE, "boolean")
     ; [DirectoryPaths]

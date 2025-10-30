@@ -42,6 +42,7 @@ settingsGUI_onInit() {
         settingsGUIEnableAutoStartCheckbox.Opt("+Disabled")
         settingsGUICheckForUpdatesAtLaunchCheckbox.Opt("+Disabled")
         settingsGUIUpdateToBetaVersionsCheckbox.Opt("+Disabled")
+        settingsGUICheckForYTDLPUpdates.Opt("+Disabled")
         settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
     }
     ; Set the autostart according to the config file.
@@ -62,7 +63,7 @@ createSettingsGUI() {
     settingsGUI.MarginY := -5
     ; The space is intentional as it increases the tab size.
     local tabNames := ["   General   ", "   Video List   ", "   Hotkeys   "]
-    settingsGUITabs := settingsGUI.Add("Tab3", "xm+5 ym+5 w626 h499", tabNames)
+    settingsGUITabs := settingsGUI.Add("Tab3", "xm+5 ym+5 w626 h519", tabNames)
 
     /*
     ********************************************************************************************************************
@@ -75,7 +76,7 @@ createSettingsGUI() {
     */
     settingsGUITabs.UseTab(1)
     ; Application behavior settings.
-    settingsGUIStartupSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h180", "Behavior")
+    settingsGUIStartupSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+35 w600 h200", "Behavior")
     settingsGUIEnableAutoStartCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20", "Start with Windows")
     settingsGUIShowVideoListGUIAtLaunchCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "Open the video list window when VideoDownloader starts")
@@ -87,10 +88,11 @@ createSettingsGUI() {
         "Check for updates when starting VideoDownloader")
     settingsGUIUpdateToBetaVersionsCheckbox := settingsGUI.Add("Checkbox", "yp+20",
         "Include beta versions in update checks")
+    settingsGUICheckForYTDLPUpdates := settingsGUI.Add("Checkbox", "yp+20", "Check for yt-dlp updates")
     settingsGUIUpdateCheckForUpdatesButton := settingsGUI.Add("Button", "yp+20 w200", "Check for Updates now")
     setButtonIcon(settingsGUIUpdateCheckForUpdatesButton, iconFileLocation, 20) ; ICON_DLL_USED_HERE
     ; Notification settings.
-    settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+225 w600 h80", "Notifications")
+    settingsGUINotificationSettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+245 w600 h80", "Notifications")
     settingsGUIDisplayStartupNotificationCheckbox := settingsGUI.Add("Checkbox", "xp+10 yp+20 Checked",
         "On program launch")
     settingsGUIDisplayExitNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
@@ -98,7 +100,7 @@ createSettingsGUI() {
     settingsGUIDisplayFinishedDownloadNotificationCheckbox := settingsGUI.Add("Checkbox", "yp+20 Checked",
         "A download is finished")
     ; Directory settings.
-    settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+315 w600 h175", "Directories")
+    settingsGUIDirectorySettingsGroupBox := settingsGUI.Add("GroupBox", "xm+16 ym+335 w600 h175", "Directories")
     settingsGUIDirectoryDDL := settingsGUI.Add("DropDownList", "xp+10 yp+20 w580")
     settingsGUIDirectoryDescriptionEdit := settingsGUI.Add("Edit", "yp+30 w580 h40 -WantReturn +ReadOnly",
         "Please select a directory above.")
@@ -223,6 +225,7 @@ createSettingsGUI() {
         handleSettingsGUI_allCheckBox_onClick)
     settingsGUICheckForUpdatesAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIUpdateToBetaVersionsCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
+    settingsGUICheckForYTDLPUpdates.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDisplayStartupNotificationCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDisplayExitNotificationCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDisplayFinishedDownloadNotificationCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
@@ -296,6 +299,8 @@ createSettingsGUI() {
         "Run a PowerShell script to check for a newer version when starting VideoDownloader."
     settingsGUIUpdateToBetaVersionsCheckbox.ToolTip :=
         "Include newer beta versions when checking for available updates."
+    settingsGUICheckForYTDLPUpdates.ToolTip :=
+        "Tries to find updates for yt-dlp."
     settingsGUIUpdateCheckForUpdatesButton.ToolTip := ""
     ; Notification settings.
     settingsGUIDisplayStartupNotificationCheckbox.ToolTip :=
@@ -400,13 +405,26 @@ handleSettingsGUI_settingsGUIUpdateCheckForUpdatesButton_onClick(pButton, pInfo)
         return
     }
     settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
-    availableUpdateVersion := checkForAvailableUpdates()
-    if (availableUpdateVersion == "_result_no_update_available") {
+
+    availableYTDLPUpdateVersion := checkForAvailableYTDLPUpdates()
+    availableVDUpdateVersion := checkForAvailableUpdates()
+    ; A new yt-dlp version is available
+    if (availableYTDLPUpdateVersion != "_result_no_update_available") {
+        result := MsgBox("New yt-dlp version available: " . availableYTDLPUpdateVersion . "`n`nUpdate now?", "VD - Manual Update Check",
+            "YN Icon? Owner" . settingsGUI.Hwnd)
+        ; Update yt-dlp
+        if (result == "Yes") {
+            updateYTDLP()
+        }
+    }
+    ; A new VideoDownloader version is available
+    if (availableVDUpdateVersion != "_result_no_update_available") {
+        createUpdateGUI(availableVDUpdateVersion)
+    }
+
+    if (availableVDUpdateVersion == "_result_no_update_available" && availableYTDLPUpdateVersion == "_result_no_update_available") {
         MsgBox("There are currently no updates available.", "VD - Manual Update Check",
             "O Iconi T2 Owner" . settingsGUI.Hwnd)
-    }
-    else {
-        createUpdateGUI(availableUpdateVersion)
     }
     settingsGUIUpdateCheckForUpdatesButton.Opt("-Disabled")
 }
@@ -1045,6 +1063,7 @@ initializeCheckboxLinkedConfigFileEntryMap() {
         "MINIMIZE_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUICheckForUpdatesAtLaunchCheckbox, "CHECK_FOR_UPDATES_AT_LAUNCH")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIUpdateToBetaVersionsCheckbox, "UPDATE_TO_BETA_VERSIONS")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUICheckForYTDLPUpdates, "CHECK_FOR_YTDLP_UPDATES")
     ; Notification settings.
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIDisplayStartupNotificationCheckbox, "DISPLAY_STARTUP_NOTIFICATION")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIDisplayExitNotificationCheckbox, "DISPLAY_EXIT_NOTIFICATION")
