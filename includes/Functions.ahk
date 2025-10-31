@@ -1789,10 +1789,11 @@ checkForAvailableYTDLPUpdates() {
     }
 }
 
-; Updates the yt-dlp executable.
-updateYTDLP() {
-    global availableYTDLPUpdateVersion
-
+/*
+Updates the yt-dlp executable.
+@param availableYTDLPUpdateVersion [String] The new yt-dlp version.
+*/
+updateYTDLP(availableYTDLPUpdateVersion) {
     showGUIRelativeToOtherGUI(videoListGUI, setupGUI, "MiddleCenter", "AutoSize")
     if (FileExist(YTDLPFileLocation)) {
         FileDelete(YTDLPFileLocation)

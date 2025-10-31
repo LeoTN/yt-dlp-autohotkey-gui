@@ -406,17 +406,20 @@ handleSettingsGUI_settingsGUIUpdateCheckForUpdatesButton_onClick(pButton, pInfo)
     }
     settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
 
-    availableYTDLPUpdateVersion := checkForAvailableYTDLPUpdates()
-    availableVDUpdateVersion := checkForAvailableUpdates()
-    ; A new yt-dlp version is available
-    if (availableYTDLPUpdateVersion != "_result_no_update_available") {
-        result := MsgBox("New yt-dlp version available: " . availableYTDLPUpdateVersion . "`n`nUpdate now?", "VD - Manual Update Check",
-            "YN Icon? Owner" . settingsGUI.Hwnd)
-        ; Update yt-dlp
-        if (result == "Yes") {
-            updateYTDLP()
+    if (readConfigFile("CHECK_FOR_YTDLP_UPDATES")) {
+        availableYTDLPUpdateVersion := checkForAvailableYTDLPUpdates()
+        ; A new yt-dlp version is available
+        if (availableYTDLPUpdateVersion != "_result_no_update_available") {
+            result := MsgBox("New yt-dlp version available: " . availableYTDLPUpdateVersion . "`n`nUpdate now?", "VD - Manual Update Check",
+                "YN Icon? Owner" . settingsGUI.Hwnd)
+            ; Update yt-dlp
+            if (result == "Yes") {
+                updateYTDLP(availableYTDLPUpdateVersion)
+            }
         }
     }
+
+    availableVDUpdateVersion := checkForAvailableUpdates()
     ; A new VideoDownloader version is available
     if (availableVDUpdateVersion != "_result_no_update_available") {
         createUpdateGUI(availableVDUpdateVersion)

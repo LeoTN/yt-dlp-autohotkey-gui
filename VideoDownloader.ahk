@@ -125,8 +125,8 @@ onInit() {
     settingsGUI_onInit()
     ; Initializes the tutorials for the help GUI.
     tutorials_onInit()
-    ; Checks for available updates (depending on the user's choice regarding updates).
-    updateGUI_onInit()
+    ; Checks for available updates (depending on the user's choice regarding updates) without interrupting the flow of the main code.
+    SetTimer(updateGUI_onInit, -1)
 
     /*
     INCLUDED COMPONENTS INIT FUNCTIONS END
