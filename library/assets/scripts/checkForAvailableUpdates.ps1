@@ -6,12 +6,12 @@ Param (
     # Checks for VideoDownloader updates if provided
     [Parameter(Mandatory = $false)]
     [String]$pGitHubRepositoryLink,
-    # Required when pGitHubRepositoryLink is provided
+    # Required when pGitHubRepositoryLink is provided. For example "v1.2.3.4"
     [Parameter(Mandatory = $false)]
     [String]$pCurrentVDVersionTag,
-    # Checks for yt-dlp updates if provided
+    # Checks for yt-dlp updates if provided. For example "2025.10.22.0"
     [Parameter(Mandatory = $false)]
-    [String]$pYTDLPFileLocation,
+    [String]$pCurrentYTDLPVersion,
     # Consider beta releases
     [Parameter(Mandatory = $false)]
     [switch]$pSwitchConsiderBetaReleases
@@ -28,7 +28,7 @@ Clear-Host
 Write-Host "Terminal ready..."
 
 # --- Helper functions ---
-function checkInternetConnectionStatus {
+function Get-InternetConnectionStatus {
     try {
         # Attempt to make a web request to a reliable URL
         $response = Invoke-WebRequest -Uri "https://www.google.com" -UseBasicParsing -TimeoutSec 5
@@ -48,22 +48,32 @@ function checkInternetConnectionStatus {
 }
 
 # Returns the higher version; "identical_versions" if equal
-function compareVersions($v1, $v2) {
-    $ver1 = [version]$v1.Replace("v", "").Replace("-beta", "")
-    $ver2 = [version]$v2.Replace("v", "").Replace("-beta", "")
+function Compare-Versions($v1, $v2) {
+    # Helper: normalize version string to always have 4 components
+    function Normalize-Version([string]$v) {
+        $clean = $v.Replace("v", "").Replace("-beta", "")
+        $parts = $clean -split '\.'
+        while ($parts.Count -lt 4) { $parts += '0' }  # Fill missing parts with zeros
+        return [version]($parts -join '.')
+    }
+
+    $ver1 = Normalize-Version $v1
+    $ver2 = Normalize-Version $v2
+
     $isV1Beta = $v1 -match "-beta$"
     $isV2Beta = $v2 -match "-beta$"
 
     if ($ver1 -gt $ver2) { return $v1 }
     elseif ($ver1 -lt $ver2) { return $v2 }
     else {
-        if ($isV1Beta -and !$isV2Beta) { return $v2 }
-        elseif ($isV2Beta -and !$isV1Beta) { return $v1 }
+        # Handle beta suffix priority
+        if ($isV1Beta -and -not $isV2Beta) { return $v2 }
+        elseif ($isV2Beta -and -not $isV1Beta) { return $v1 }
         else { return "identical_versions" }
     }
 }
 
-function exitScript($code) {
+function Exit-Script($code) {
     Write-Host "[INFO] Exiting with code '$code'."
     Stop-Transcript | Out-Null
     exit $code
@@ -86,14 +96,14 @@ function Get-GitHubLatestReleaseVersion {
 # --- Ensure registry path ---
 if (-not (Test-Path $pRegistryDirectory)) {
     Write-Host "[ERROR] Missing registry path at '$pRegistryDirectory'!" -ForegroundColor Red
-    exitScript 1
+    Exit-Script 1
 }
 
 # --- Registry keys ---
 $vdKey = "AVAILABLE_UPDATE"
-$ytDlpKey = "AVAILABLE_YTDLP_UPDATE"
+$ytdlpKey = "AVAILABLE_YTDLP_UPDATE"
 
-foreach ($key in @($vdKey, $ytDlpKey)) {
+foreach ($key in @($vdKey, $ytdlpKey)) {
     try { Get-ItemPropertyValue -Path $pRegistryDirectory -Name $key | Out-Null }
     catch {
         Write-Host "[INFO] Missing registry key '$key', creating it..."
@@ -102,16 +112,20 @@ foreach ($key in @($vdKey, $ytDlpKey)) {
 }
 
 # --- Check Internet once ---
-$internetAvailable = checkInternetConnectionStatus
+$internetAvailable = Get-InternetConnectionStatus
 
 # --- VideoDownloader update check ---
 if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
     Write-Host "`n[INFO] Checking VideoDownloader updates..."
+    if ($pSwitchConsiderBetaReleases) {
+        Write-Host "[INFO] Beta versions will be considered as available updates."
+    }
 
-    $currentVDVersion = $pCurrentVDVersionTag.Replace("v", "").Replace("-beta", "")
-    if ($currentVDVersion -notmatch '^\d+\.\d+\.\d+(\.\d+)?$') {
+    $currentVDVersion = $pCurrentVDVersionTag.Replace("v", "")
+    # Find versions matching the format '1.2.3' or 'v1.2.3-beta'
+    if ($currentVDVersion -notmatch "^\d+\.\d+\.\d+(\.\d+)?(-beta)?$") {
         Write-Host "[ERROR] Invalid current version tag: $currentVDVersion." -ForegroundColor Red
-        exitScript 2
+        Exit-Script 2
     }
     Write-Host "[INFO] VideoDownloader version detected: $currentVDVersion"
 
@@ -130,16 +144,16 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
                 if ($tmpTag -like "*-beta" -and !$pSwitchConsiderBetaReleases) { continue }
                 $tmpTag = $tmpTag.Replace("-beta", "")
                 if ($tmpTag -notmatch '^\d+\.\d+\.\d+(\.\d+)?$') { continue }
-                $latestTag = compareVersions $latestTag $tag.name
+                $latestTag = Compare-Versions $latestTag $tag.name
             }
             # If the latestTag is higher than the currentVDVersion this means that an update is available
-            $availableVersion = if ((compareVersions -v1 $currentVDVersion -v2 $latestTag) -eq $latestTag) { $latestTag } else { "no_available_update" }
+            $availableVersion = if ((Compare-Versions -v1 $currentVDVersion -v2 $latestTag) -eq $latestTag) { $latestTag } else { "no_available_update" }
             if ($availableVersion -ne "no_available_update") {
                 Write-Host "[INFO] Update available for VideoDownloader: $latestTag"
                 Set-ItemProperty -Path $pRegistryDirectory -Name $vdKey -Value $latestTag
             }
             else {
-                Write-Host "[INFO] No update available for VideoDownloader."
+                Write-Host "[INFO] VideoDownloader is up-to-date (version: $pCurrentVDVersionTag)."
                 Set-ItemProperty -Path $pRegistryDirectory -Name $vdKey -Value "no_available_update"
             }
         }
@@ -151,49 +165,40 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
 }
 
 # --- yt-dlp update check ---
-if ($pYTDLPFileLocation) {
+if ($pCurrentYTDLPVersion) {
     Write-Host "`n[INFO] Checking yt-dlp updates..."
-    try {
-        $currentYTDLPVersion = & $pYTDLPFileLocation --version 2>&1
-        if (-not $currentYTDLPVersion) { 
-            Write-Host "[ERROR] Failed to extract version info from '$pYTDLPFileLocation'"
-            exitScript 3 
-        }
-        Write-Host "[INFO] yt-dlp version detected: $currentYTDLPVersion"
-    }
-    catch {
-        Write-Host "[ERROR] Failed to extract version info from '$pYTDLPFileLocation': $($_.Exception.Message)"
-        exitScript 3 
-    }
-
+    
+    Write-Host "[INFO] yt-dlp version detected: $pCurrentYTDLPVersion"
     if (-not $internetAvailable) {
         Write-Host "[WARNING] Skipping yt-dlp check, offline." -ForegroundColor Yellow
-        Set-ItemProperty -Path $pRegistryDirectory -Name $ytDlpKey -Value "no_available_update"
+        Set-ItemProperty -Path $pRegistryDirectory -Name $ytdlpKey -Value "no_available_update"
     }
     else {
         $latestTag = Get-GitHubLatestReleaseVersion -OwnerRepo "yt-dlp/yt-dlp"
         if (-not $latestTag) { $latestTag = "v0.0.0.0" }
         Write-Host "[INFO] Latest GitHub release for yt-dlp: $latestTag"
 
-        $highestTag = compareVersions $currentYTDLPVersion $latestTag
+        $highestTag = Compare-Versions -v1 $pCurrentYTDLPVersion -v2 $latestTag
         $availableVersion = if ($highestTag -ne "identical_versions" -and ($highestTag -eq $latestTag)) { $latestTag } else { "no_available_update" }
-        Set-ItemProperty -Path $pRegistryDirectory -Name $ytDlpKey -Value $availableVersion
-
+        
         if ($availableVersion -ne "no_available_update") {
-            Write-Host "[INFO] A newer version of yt-dlp is available (local: $currentYTDLPVersion, remote: $latestTag)."
+            Write-Host "[INFO] A newer version of yt-dlp is available (local: $pCurrentYTDLPVersion, remote: $latestTag)."
         }
         elseif ($highestTag -eq "identical_versions") {
-            Write-Host "[INFO] yt-dlp is up-to-date (version $currentYTDLPVersion)."
+            Write-Host "[INFO] yt-dlp is up-to-date (version: $pCurrentYTDLPVersion)."
         }
         else {
-            Write-Host "[WARNING] Local yt-dlp version ($currentYTDLPVersion) appears newer than latest release ($latestTag)."
+            Write-Host "[WARNING] Local yt-dlp version ($pCurrentYTDLPVersion) appears newer than latest release ($latestTag)."
+            # Avoid unnecessary update notifications when using a higher (nightly) version of yt-dlp
+            $availableVersion = "no_available_update"
         }
+        Set-ItemProperty -Path $pRegistryDirectory -Name $ytdlpKey -Value $availableVersion
     }
 }
 
 # --- Exit with update status ---
 $vdUpdate = if ($pGitHubRepositoryLink) { Get-ItemPropertyValue -Path $pRegistryDirectory -Name $vdKey } else { "no_check" }
-$ytDlpUpdate = if ($pYTDLPFileLocation) { Get-ItemPropertyValue -Path $pRegistryDirectory -Name $ytDlpKey } else { "no_check" }
+$ytDlpUpdate = if ($pCurrentYTDLPVersion) { Get-ItemPropertyValue -Path $pRegistryDirectory -Name $ytdlpKey } else { "no_check" }
 
 $exitCode = 100  # default: no updates
 if (($vdUpdate -ne "no_available_update" -and $vdUpdate -ne "no_check") -or ($ytDlpUpdate -ne "no_available_update" -and $ytDlpUpdate -ne "no_check")) {
@@ -201,7 +206,7 @@ if (($vdUpdate -ne "no_available_update" -and $vdUpdate -ne "no_check") -or ($yt
 }
 
 Write-Host "`n[INFO] Update check finished."
-exitScript $exitCode
+Exit-Script $exitCode
 
 <# 
 Exit Code List

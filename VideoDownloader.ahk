@@ -63,12 +63,14 @@ onInit() {
     global psRunYTDLPExecutableLocation := psScriptDirectory . "\runYTDLPExecutableWithRedirectedStdout.ps1"
 
     global ytdlpDirectory := assetDirectory . "\yt-dlp"
-    global YTDLPFileLocation := ytdlpDirectory . "\yt-dlp.exe"
+    global ytdlpFileLocation := ytdlpDirectory . "\yt-dlp.exe"
 
     ; When this value is true, certain functions will behave differently and do not show unnecessary prompts.
     global booleanFirstTimeLaunch := RegRead(applicationRegistryDirectory, "booleanFirstTimeLaunch", false)
     ; The version of this application. For example "v1.2.3.4".
     global versionFullName := getCorrectScriptVersion()
+    ; The version of the yt-dlp executable. For example "2025.10.22.0".
+    global ytdlpVersion := getCorrectYTDLPVersion()
 
     ; Determine the available download formats and subtitle options.
     global desiredDownloadFormatArray := [

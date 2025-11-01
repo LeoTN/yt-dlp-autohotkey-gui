@@ -204,7 +204,7 @@ handleSetupGUI_setupGUIUseOwnExecutablesText_onClick(pText, pInfo) {
 
 deleteAllDependencyFiles() {
     global ffmpegDirectory
-    global YTDLPFileLocation
+    global ytdlpFileLocation
 
     ; Delete all existing FFmpeg files.
     relevantFiles := ["ffmpeg.exe", "ffplay.exe", "ffprobe.exe"]
@@ -215,8 +215,8 @@ deleteAllDependencyFiles() {
         }
     }
     ; Delete the yt-dlp file.
-    if (FileExist(YTDLPFileLocation)) {
-        FileDelete(YTDLPFileLocation)
+    if (FileExist(ytdlpFileLocation)) {
+        FileDelete(ytdlpFileLocation)
     }
 }
 

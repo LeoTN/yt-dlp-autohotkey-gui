@@ -23,11 +23,11 @@ createHelpGUI() {
     helpGUIListView := helpGUI.Add("ListView", "yp+40 w400 R10 +Grid -Multi", helpGUIListViewArray)
     helpGUIListView.OnEvent("DoubleClick", handleHelpGUI_helpGUIListView_onDoubleClick)
 
-    helpGUIInfoGroupBox := helpGUI.Add("GroupBox", "xp+170 yp-65 w230 R2", "Application Info")
+    helpGUIInfoGroupBox := helpGUI.Add("GroupBox", "xp+170 yp-65 w230 R2", "About")
 
-    local currentVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/" . versionFullName
-    local currentVersionString := 'Version: <a href="' . currentVersionLink . '">' . versionFullName . '</a>'
-    helpGUIApplicationtVersionLink := helpGUI.Add("Link", "xp+10 yp+18", currentVersionString)
+    local currentVDVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/tag/" . versionFullName
+    local currentVDVersionString := 'VD: <a href="' . currentVDVersionLink . '">' . versionFullName . '</a> | yt-dlp: ' . ytdlpVersion
+    helpGUIApplicationtVersionLink := helpGUI.Add("Link", "xp+10 yp+18", currentVDVersionString)
     helpGUIApplicationtVersionLink.ToolTip :=
         "Made by LeoTN (https://github.com/LeoTN). © 2025. Licensed under the MIT License."
 

@@ -96,13 +96,13 @@ Executes a given command with the yt-dlp executable.
 executeYTDLPCommand(pYTDLPCommandString, pLogFileLocation := A_Temp . "\yt-dlp.log",
     pErrorLogFileLocation := A_Temp . "\yt-dlp_errors.log") {
     global psRunYTDLPExecutableLocation
-    global YTDLPFileLocation
+    global ytdlpFileLocation
 
     ; Replaces all single quotation marks with tripple quoation marks to make the string compatible with PowerShell.
     formattedYTDLPCommandString := StrReplace(pYTDLPCommandString, '"', '"""')
 
     commandString := 'powershell.exe -executionPolicy bypass -file "' . psRunYTDLPExecutableLocation . '" '
-    commandString .= '-pYTDLPExecutableFileLocation "' . YTDLPFileLocation . '" '
+    commandString .= '-pYTDLPExecutableFileLocation "' . ytdlpFileLocation . '" '
     commandString .= '-pYTDLPLogFileLocation "' . pLogFileLocation . '" '
     commandString .= '-pYTDLPErrorLogFileLocation "' . pErrorLogFileLocation . '" '
     commandString .= '-pYTDLPCommandString "' . formattedYTDLPCommandString . '"'
@@ -752,7 +752,7 @@ getCorrectScriptVersion() {
             fileVersion := "v0.0.0.2"
         }
     }
-    ; Finds versions matching this format [v1.2.3.4]
+    ; Find versions matching the format 'v1.2.3.4'.
     if (RegExMatch(fileVersion, "^v\d+\.\d+\.\d+\.(\d+)$", &match)) {
         buildVersionNumber := match[1]
         ; A version number with a build version is only used for beta versions.
@@ -761,13 +761,39 @@ getCorrectScriptVersion() {
         }
         return fileVersion
     }
-    ; Finds versions matching this format [v1.2.3], [v1.2.3-beta], [1.2.3] or [1.2.3-beta].
+    ; Find versions matching this format: 'v1.2.3', 'v1.2.3-beta', '1.2.3' or '1.2.3-beta'.
     else if (RegExMatch(fileVersion, "^v?\d+\.\d+\.\d+(\.\d+)?(-beta)?$")) {
         return fileVersion
     }
     else {
         ; In case the version from the compiled file is invalid.
         fileVersion := "v0.0.0.3"
+    }
+    return fileVersion
+}
+
+/*
+Reads the version information from the yt-dlp executable file.
+@returns [String] The version from the executable or "0.0.0.1" or "0.0.0.2" in case of an error.
+*/
+getCorrectYTDLPVersion() {
+    global ytdlpFileLocation
+
+    try {
+        ; Extract the version from the executable file.
+        fileVersion := FileGetVersion(ytdlpFileLocation)
+    }
+    catch {
+        ; Used as a fallback.
+        fileVersion := "v0.0.0.1"
+    }
+    ; Find versions matching the format '1.2.3.4'.
+    if (RegExMatch(fileVersion, "^\d+\.\d+\.\d+\.(\d+)$", &match)) {
+        return fileVersion
+    }
+    else {
+        ; In case the version from the compiled file is invalid.
+        fileVersion := "v0.0.0.2"
     }
     return fileVersion
 }
@@ -1753,7 +1779,7 @@ Checks all GitHub Repository tags to find new versions for yt-dlp.
 checkForAvailableYTDLPUpdates() {
     global psUpdateScriptLocation
     global applicationRegistryDirectory
-    global YTDLPFileLocation
+    global ytdlpVersion
 
     ; Does not check for updates, if the application isn't compiled.
     if (!A_IsCompiled) {
@@ -1766,7 +1792,7 @@ checkForAvailableYTDLPUpdates() {
     psCompatibleScriptRegistryPath := StrReplace(applicationRegistryDirectory, "\", ":", , , 1)
     parameterString :=
         '-pRegistryDirectory "' . psCompatibleScriptRegistryPath . '" '
-        . '-pYTDLPFileLocation "' . YTDLPFileLocation . '"'
+        . '-pCurrentYTDLPVersion "' . ytdlpVersion . '"'
 
     ; Calls the PowerShell script to check for available yt-dlp updates.
     exitCode := RunWait('powershell.exe -executionPolicy bypass -file "'
@@ -1795,15 +1821,15 @@ Updates the yt-dlp executable.
 */
 updateYTDLP(availableYTDLPUpdateVersion) {
     showGUIRelativeToOtherGUI(videoListGUI, setupGUI, "MiddleCenter", "AutoSize")
-    if (FileExist(YTDLPFileLocation)) {
-        FileDelete(YTDLPFileLocation)
+    if (FileExist(ytdlpFileLocation)) {
+        FileDelete(ytdlpFileLocation)
     }
     updateDependencyCheckboxes()
     updateSetupButton()
     setupGUISetupProgressBar.Value := 0
     handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_1(setupGUIStartAndCompleteSetupButton, "")
     ; Delete the "pop-up menu" after a successful update
-    if (FileExist(YTDLPFileLocation)) {
+    if (FileExist(ytdlpFileLocation)) {
         try {
             allMenus.Delete("&Update yt-dlp → " . availableYTDLPUpdateVersion)
         }
