@@ -28,9 +28,9 @@ createHelpGUI() {
 
     helpGUIInfoGroupBox := helpGUI.Add("GroupBox", "xp+170 yp-65 w230 R2", "About")
 
-    local currentVDVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/tag/" . versionFullName
-    local currentVDVersionString := 'VD: <a href="' . currentVDVersionLink . '">' . versionFullName . '</a> | yt-dlp: ' . ytdlpVersion
-    helpGUIApplicationtVersionLink := helpGUI.Add("Link", "xp+10 yp+18", currentVDVersionString)
+    ; Definitions moved to the createHelpGUI_updateAbout() function to allow updates of the yt-dlp version without reloading.
+    helpGUIApplicationtVersionLink := helpGUI.Add("Link", "xp+10 yp+18 w210", "")
+    createHelpGUI_updateAbout()
     helpGUIApplicationtVersionLink.ToolTip :=
         "Made by LeoTN (https://github.com/LeoTN). © 2025. Licensed under the MIT License."
 
@@ -47,6 +47,15 @@ createHelpGUI() {
     helpGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     ; This is used for the easter egg.
     helpGUIStatusBar.OnEvent("Click", handleHelpGUI_helpGUIStatusBar_onClick)
+}
+
+; Allows updates of the yt-dlp version without reloading the application.
+createHelpGUI_updateAbout() {
+    global ytdlpVersion
+
+    local currentVDVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/tag/" . versionFullName
+    local currentVDVersionString := 'VD: <a href="' . currentVDVersionLink . '">' . versionFullName . '</a> | yt-dlp: ' . ytdlpVersion
+    helpGUIApplicationtVersionLink.Text := currentVDVersionString
 }
 
 handleHelpGUI_helpGUISearchBarEdit_onChange(pEdit, pInfo) {

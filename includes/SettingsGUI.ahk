@@ -42,7 +42,7 @@ settingsGUI_onInit() {
         settingsGUIEnableAutoStartCheckbox.Opt("+Disabled")
         settingsGUICheckForUpdatesAtLaunchCheckbox.Opt("+Disabled")
         settingsGUIUpdateToBetaVersionsCheckbox.Opt("+Disabled")
-        settingsGUICheckForYTDLPUpdates.Opt("+Disabled")
+        settingsGUICheckForYTDLPUpdatesCheckbox.Opt("+Disabled")
         settingsGUIUpdateCheckForUpdatesButton.Opt("+Disabled")
     }
     ; Set the autostart according to the config file.
@@ -91,7 +91,7 @@ createSettingsGUI() {
         "Check for updates when starting VideoDownloader")
     settingsGUIUpdateToBetaVersionsCheckbox := settingsGUI.Add("Checkbox", "yp+20",
         "Include beta versions in update checks")
-    settingsGUICheckForYTDLPUpdates := settingsGUI.Add("Checkbox", "yp+20", "Check for yt-dlp updates")
+    settingsGUICheckForYTDLPUpdatesCheckbox := settingsGUI.Add("Checkbox", "yp+20", "Check for yt-dlp updates")
     settingsGUIUpdateCheckForUpdatesButton := settingsGUI.Add("Button", "yp+20 w200", "Check for Updates now")
     setButtonIcon(settingsGUIUpdateCheckForUpdatesButton, iconFileLocation, 20) ; ICON_DLL_USED_HERE
     ; Notification settings.
@@ -228,7 +228,7 @@ createSettingsGUI() {
         handleSettingsGUI_allCheckBox_onClick)
     settingsGUICheckForUpdatesAtLaunchCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIUpdateToBetaVersionsCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
-    settingsGUICheckForYTDLPUpdates.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
+    settingsGUICheckForYTDLPUpdatesCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDisplayStartupNotificationCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDisplayExitNotificationCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
     settingsGUIDisplayFinishedDownloadNotificationCheckbox.OnEvent("Click", handleSettingsGUI_allCheckBox_onClick)
@@ -302,7 +302,7 @@ createSettingsGUI() {
         "Run a PowerShell script to check for a newer version when starting VideoDownloader."
     settingsGUIUpdateToBetaVersionsCheckbox.ToolTip :=
         "Include newer beta versions when checking for available updates."
-    settingsGUICheckForYTDLPUpdates.ToolTip :=
+    settingsGUICheckForYTDLPUpdatesCheckbox.ToolTip :=
         "Tries to find updates for yt-dlp."
     settingsGUIUpdateCheckForUpdatesButton.ToolTip := ""
     ; Notification settings.
@@ -1085,7 +1085,7 @@ initializeCheckboxLinkedConfigFileEntryMap() {
         "MINIMIZE_APPLICATION_WHEN_VIDEO_LIST_GUI_IS_CLOSED")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUICheckForUpdatesAtLaunchCheckbox, "CHECK_FOR_UPDATES_AT_LAUNCH")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIUpdateToBetaVersionsCheckbox, "UPDATE_TO_BETA_VERSIONS")
-    checkboxLinkedConfigFileEntryMap.Set(settingsGUICheckForYTDLPUpdates, "CHECK_FOR_YTDLP_UPDATES")
+    checkboxLinkedConfigFileEntryMap.Set(settingsGUICheckForYTDLPUpdatesCheckbox, "CHECK_FOR_YTDLP_UPDATES")
     ; Notification settings.
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIDisplayStartupNotificationCheckbox, "DISPLAY_STARTUP_NOTIFICATION")
     checkboxLinkedConfigFileEntryMap.Set(settingsGUIDisplayExitNotificationCheckbox, "DISPLAY_EXIT_NOTIFICATION")

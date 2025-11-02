@@ -74,9 +74,13 @@ createSetupGUI() {
 }
 
 handleSetupGUI_setupGUI_onClose(pGUI) {
+    global ytdlpVersion
     if (checkIfFFmpegOrYTDLPSetupIsRequired()) {
         exitApplicationWithNotification(true)
     }
+    ; Update the internal yt-dlp version after a (possible) update.
+    ytdlpVersion := getCorrectYTDLPVersion()
+    createHelpGUI_updateAbout()
 }
 
 handleSetupGUI_setupGUIYTDLPCheckbox_onDoubleClick(pCheckbox, pInfo) {
