@@ -6,6 +6,9 @@ createHelpGUI() {
     global
     helpGUI := Gui(, "VideoDownloader - Info & Help")
 
+    ; Make the help GUI a child window of the video list GUI.
+    helpGUI.Opt("+Owner" . videoListGUI.Hwnd)
+
     /*
     ********************************************************************************************************************
     This section creates all the GUI control elements and event handlers.

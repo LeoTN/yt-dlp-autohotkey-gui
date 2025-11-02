@@ -65,6 +65,9 @@ createSettingsGUI() {
     local tabNames := ["   General   ", "   Video List   ", "   Hotkeys   "]
     settingsGUITabs := settingsGUI.Add("Tab3", "xm+5 ym+5 w626 h519", tabNames)
 
+    ; Make the settings GUI a child window of the video list GUI.
+    settingsGUI.Opt("+Owner" . videoListGUI.Hwnd)
+
     /*
     ********************************************************************************************************************
     This section creates all the GUI control elements and event handlers.
@@ -436,9 +439,10 @@ handleSettingsGUI_settingsGUIDirectoryDDL_onChange(pDDL, pInfo) {
     global booleanUnsavedDirectoryChangesExist
     global settingsGUIDirectoryDDLEntryMap
     ; This is used to select the previous DDL entry which has not been saved or discarded yet.
-    static previouslySelectedDDLEntryIndex
+    static previouslySelectedDDLEntryIndex := 0
+    static previouslySelectedDDLEntryText := ""
 
-    msgBoxText := "The directory path has been modified."
+    msgBoxText := "The directory path '" . previouslySelectedDDLEntryText . "' has been modified."
     msgBoxText .= "`n`nContinue without saving?"
     ; Checks for any unsaved changes.
     if (booleanUnsavedDirectoryChangesExist && !askUserToDiscardUnsavedChanges(msgBoxText)) {
@@ -455,6 +459,7 @@ handleSettingsGUI_settingsGUIDirectoryDDL_onChange(pDDL, pInfo) {
     }
 
     previouslySelectedDDLEntryIndex := pDDL.Value
+    previouslySelectedDDLEntryText := pDDL.Text
     selectedDirectoryDDLEntry := settingsGUIDirectoryDDLEntryMap.Get(pDDL.Text)
     ; Update the corresponding GUI elements.
     settingsGUIDirectoryDescriptionEdit.Value := selectedDirectoryDDLEntry.entryDescription
@@ -710,9 +715,10 @@ handleSettingsGUI_settingsGUIHotkeyDDL_onChange(pDDL, pInfo) {
     global booleanUnsavedHotkeyEnabledChangesExist
     global settingsGUIHotkeyDDLEntryMap
     ; This is used to select the previous DDL entry which has not been saved or discarded yet.
-    static previouslySelectedDDLEntryIndex
+    static previouslySelectedDDLEntryIndex := 0
+    static previouslySelectedDDLEntryText := ""
 
-    msgBoxText := "The hotkey has been modified."
+    msgBoxText := "The hotkey '" . previouslySelectedDDLEntryText . "' has been modified."
     msgBoxText .= "`n`nContinue without saving?"
     ; Checks for any unsaved changes.
     if ((booleanUnsavedHotkeyChangesExist || booleanUnsavedHotkeyEnabledChangesExist)
@@ -731,6 +737,7 @@ handleSettingsGUI_settingsGUIHotkeyDDL_onChange(pDDL, pInfo) {
     }
 
     previouslySelectedDDLEntryIndex := pDDL.Value
+    previouslySelectedDDLEntryText := pDDL.Text
     selectedHotkeyDDLEntry := settingsGUIHotkeyDDLEntryMap.Get(pDDL.Text)
     ; Update the corresponding GUI elements.
     settingsGUIHotkeyDescriptionEdit.Value := selectedHotkeyDDLEntry.entryDescription
@@ -742,6 +749,30 @@ handleSettingsGUI_settingsGUIHotkeyDDL_onChange(pDDL, pInfo) {
     else {
         settingsGUIHotkeyDisabledRadio.Value := true
     }
+
+    ; Enable or disable the buttons for all hotkeys.
+    enabledHotkeysCount := 0
+    disabledHotkeysCount := 0
+    for (key, hotkeyDDLEntry in settingsGUIHotkeyDDLEntryMap) {
+        if (hotkeyDDLEntry.hotkeyEnabled) {
+            enabledHotkeysCount++
+        }
+        else {
+            disabledHotkeysCount++
+        }
+    }
+    if (enabledHotkeysCount == 0) {
+        settingsGUIHotkeyEnableAllButton.Opt("-Disabled")
+        settingsGUIHotkeyDisableAllButton.Opt("+Disabled")
+    } else if (disabledHotkeysCount == 0) {
+        settingsGUIHotkeyEnableAllButton.Opt("+Disabled")
+        settingsGUIHotkeyDisableAllButton.Opt("-Disabled")
+    }
+    else {
+        settingsGUIHotkeyEnableAllButton.Opt("-Disabled")
+        settingsGUIHotkeyDisableAllButton.Opt("-Disabled")
+    }
+
     ; Enables the button to reset the hotkey to default.
     if ((selectedHotkeyDDLEntry.hotkey != selectedHotkeyDDLEntry.defaultHotkey) ||
     (selectedHotkeyDDLEntry.hotkeyEnabled != selectedHotkeyDDLEntry.defaultHotkeyEnabled)) {
@@ -832,11 +863,8 @@ handleSettingsGUI_settingsGUIHotkeyEnableAllButton_onClick(pButton, pInfo) {
     for (key, hotkeyEntry in settingsGUIHotkeyDDLEntryMap) {
         hotkeyEntry.changeHotkeyEnabled(true)
     }
-    ; This makes sure that there is a selected entry.
-    if (settingsGUIHotkeyDDL.Value != 0) {
-        ; This function is called to update the corresponding GUI elements.
-        handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
-    }
+    ; This function is called to update the corresponding GUI elements.
+    handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
 }
 
 handleSettingsGUI_settingsGUIHotkeyDisableAllButton_onClick(pButton, pInfo) {
@@ -865,11 +893,8 @@ handleSettingsGUI_settingsGUIHotkeyDisableAllButton_onClick(pButton, pInfo) {
     for (key, hotkeyEntry in settingsGUIHotkeyDDLEntryMap) {
         hotkeyEntry.changeHotkeyEnabled(false)
     }
-    ; This makes sure that there is a selected entry.
-    if (settingsGUIHotkeyDDL.Value != 0) {
-        ; This function is called to update the corresponding GUI elements.
-        handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
-    }
+    ; This function is called to update the corresponding GUI elements.
+    handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
 }
 
 handleSettingsGUI_settingsGUIHotkeySaveChangesButton_onClick(pButton, pInfo) {
@@ -1024,10 +1049,7 @@ handleSettingsGUI_settingsGUI_onClose(pGUI) {
     settingsGUIDirectorySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIDirectoryDiscardChangesButton.Opt("+Disabled")
     settingsGUIDirectoryDiscardChangesButton.SetColor("e6a4aa", "000000", -1, "808080")
-    ; This makes sure that there is a selected entry.
-    if (settingsGUIDirectoryDDL.Value != 0) {
-        handleSettingsGUI_settingsGUIDirectoryDDL_onChange(settingsGUIDirectoryDDL, "")
-    }
+    handleSettingsGUI_settingsGUIDirectoryDDL_onChange(settingsGUIDirectoryDDL, "")
 
     ; Discards the playlist range index changes.
     booleanUnsavedPlaylistRangeIndexChangesExist := false
@@ -1039,10 +1061,7 @@ handleSettingsGUI_settingsGUI_onClose(pGUI) {
     ; Discards the hotkey changes.
     booleanUnsavedHotkeyChangesExist := false
     booleanUnsavedHotkeyEnabledChangesExist := false
-    ; This makes sure that there is a selected entry.
-    if (settingsGUIHotkeyDDL.Value != 0) {
-        handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
-    }
+    handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
     settingsGUIHotkeySaveChangesButton.Opt("+Disabled")
     settingsGUIHotkeySaveChangesButton.SetColor("94d3a2", "000000", -1, "808080")
     settingsGUIHotkeyDiscardChangesButton.Opt("+Disabled")
@@ -1212,10 +1231,6 @@ initializeSettingsGUIHotkeyDDLEntryMap() {
         ddlContentArray.Push(entryName)
     }
     settingsGUIHotkeyDDL.Add(ddlContentArray)
-
-    ; Makes the settings and help GUI the child window of the video list GUI.
-    settingsGUI.Opt("+Owner" . videoListGUI.Hwnd)
-    helpGUI.Opt("+Owner" . videoListGUI.Hwnd)
 }
 
 ; Imports the config file content and sets the controls' values accordingly.
@@ -1260,6 +1275,14 @@ importConfigFileValuesIntoSettingsGUI() {
     settingsGUIVideoDesiredSubtitleComboBox.Add(settingsGUIVideoDesiredSubtitleComboBox.ContentArray)
     ; This function is called to update buttons.
     handleSettingsGUI_settingsGUIVideoDesiredSubtitleComboBox_onChange(settingsGUIVideoDesiredSubtitleComboBox, "")
+
+    ; Select the first entry and update the GUI elements for the directory settings.
+    settingsGUIDirectoryDDL.Value := 1
+    handleSettingsGUI_settingsGUIDirectoryDDL_onChange(settingsGUIDirectoryDDL, "")
+
+    ; Update the buttons to enable or disable all hotkeys.
+    settingsGUIHotkeyDDL.Value := 1
+    handleSettingsGUI_settingsGUIHotkeyDDL_onChange(settingsGUIHotkeyDDL, "")
 }
 
 /*
@@ -1286,16 +1309,16 @@ askUserToDiscardUnsavedChanges(pMsgBoxText?) {
         ; Creates a report with all settings with unsaved changes.
         msgBoxText := "The following settings contain unsaved changes:`n`n"
         if (booleanUnsavedDirectoryChangesExist) {
-            msgBoxText .= "Directory Settings`n"
+            msgBoxText .= "General → Directories → Unsaved path`n"
         }
         if (booleanUnsavedPlaylistRangeIndexChangesExist) {
-            msgBoxText .= "Playlist Range Index`n"
+            msgBoxText .= "Video List → Default Manage Video List Preferences → Index Range`n"
         }
         if (booleanUnsavedHotkeyChangesExist) {
-            msgBoxText .= "Hotkey Combination`n"
+            msgBoxText .= "Hotkeys → Hotkey Management Settings → Key Combination`n"
         }
         if (booleanUnsavedHotkeyEnabledChangesExist) {
-            msgBoxText .= "Hotkey Enabled`n"
+            msgBoxText .= "Hotkeys → Hotkey Management Settings → Hotkey enabled / disabled`n"
         }
         msgBoxText .= "`nContinue without saving?"
     }

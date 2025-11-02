@@ -119,10 +119,10 @@ onInit() {
     configurationFile_onInit()
     ; Initializes the hotkeys.
     hotkeys_onInit()
-    ; Creates the help GUI.
-    helpGUI_onInit()
     ; Creates the video list GUI.
     videoListGUI_onInit()
+    ; Creates the help GUI.
+    helpGUI_onInit()
     ; Creates the settings GUI.
     settingsGUI_onInit()
     ; Initializes the tutorials for the help GUI.
