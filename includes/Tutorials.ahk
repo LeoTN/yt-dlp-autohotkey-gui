@@ -2,8 +2,10 @@ tutorials_onInit() {
     ; Initializes all tutorials and info texts.
     tutorial_howToFindHelpGUI()
     tutorial_gettingStarted()
-    tutorial_howToUsePlaylistRangeIndex()
-    tutorial_howToDownloadMusic()
+    guide_howToUsePlaylistRangeIndex()
+    guide_howToDownloadMusic()
+    guide_howToKeepYTDLPUpToDate()
+    information_reasonsForVideoNotFound()
 }
 
 ; This tutorial aims to show the user how they can find the help section.
@@ -162,7 +164,7 @@ tutorial_gettingStarted() {
 }
 
 ; Shows the syntax and use of the playlist range index.
-tutorial_howToUsePlaylistRangeIndex() {
+guide_howToUsePlaylistRangeIndex() {
     global howToUsePlaylistRangeIndexTutorial :=
         InteractiveTutorialListViewEntry("Video Extraction", "Guide", "How to use the Playlist Range Index")
     currentlyHighlightedControlObject := ""
@@ -269,7 +271,7 @@ tutorial_howToUsePlaylistRangeIndex() {
     }
 }
 
-tutorial_howToDownloadMusic() {
+guide_howToDownloadMusic() {
     global GUIBackgroundImageLocation
     global howToDownloadMusicTutorial :=
         InteractiveTutorialListViewEntry("Audio Extraction", "Guide", "How to download music")
@@ -343,14 +345,99 @@ tutorial_howToDownloadMusic() {
     }
 }
 
+guide_howToKeepYTDLPUpToDate() {
+    global howToKeepYTDLPUpToDateTutorial :=
+        InteractiveTutorialListViewEntry("General", "Guide", "How to update yt-dlp")
+    currentlyHighlightedControlObject := ""
+
+    howToKeepYTDLPUpToDateTutorial.addText(
+        "This guide will show you how to keep your yt-dlp executable up to date."
+        "`n`nMake sure to update it from time to time, as extraction and download processes may stop working otherwise."
+    )
+    howToKeepYTDLPUpToDateTutorial.addAction((*) => start())
+
+    howToKeepYTDLPUpToDateTutorial.addText(
+        "All relevant settings for yt-dlp updates are located under the [General] tab."
+        "`n`nCheck [" . settingsGUICheckForYTDLPUpdatesCheckbox.Text . "] and click the ["
+        . Trim(settingsGUIUpdateCheckForUpdatesButton.Text) . "] button to manually check for updates."
+    )
+    howToKeepYTDLPUpToDateTutorial.addAction((*) => highlightCheckForYTDLPUpdatesCheckbox())
+
+    howToKeepYTDLPUpToDateTutorial.addText(
+        "Alternatively, enable both [" . settingsGUICheckForUpdatesAtLaunchCheckbox.Text . "] and ["
+        . settingsGUICheckForYTDLPUpdatesCheckbox.Text . "]."
+        "`n`nThis way, you will be notified automatically whenever a new yt-dlp version is available."
+    )
+    howToKeepYTDLPUpToDateTutorial.addAction((*) => createAndHighlightYTDLPUpdateNotificationMenu())
+
+    ; Makes sure the highlighted controls become normal again.
+    howToKeepYTDLPUpToDateTutorial.addExitAction((*) => hideAllHighlightedElements())
+    start() {
+        hideAllHighlightedElements()
+        saveCurrentVideoListGUIStateToConfigFile()
+        showVideoListGUIWithSavedStateData()
+        showGUIRelativeToOtherGUI(videoListGUI, howToKeepYTDLPUpToDateTutorial.gui, "MiddleRightCorner")
+    }
+    highlightCheckForYTDLPUpdatesCheckbox() {
+        hideAllHighlightedElements()
+        /*
+        Selects another tab element before returning to the original element
+        to avoid an issue with "ghost" control elements from other tabs appearing in the current tab.
+        */
+        currentTabNumber := settingsGUITabs.Value
+        maxTabNumber := 3
+        selectTabNumber := (maxTabNumber - currentTabNumber) ? (maxTabNumber - currentTabNumber) : 1
+        settingsGUITabs.Choose(selectTabNumber)
+        ; Switches back to the original tab.
+        settingsGUITabs.Choose(currentTabNumber)
+        showGUIRelativeToOtherGUI(videoListGUI, settingsGUI, "MiddleLeftCorner")
+        currentlyHighlightedControlObject := highlightControl(settingsGUICheckForYTDLPUpdatesCheckbox)
+    }
+    createAndHighlightYTDLPUpdateNotificationMenu() {
+        hideAllHighlightedElements()
+        settingsGUI.Hide()
+        videoListGUI.Show()
+        allMenus.Add("&Update yt-dlp → New Version", (*) => MsgBox(
+            "This is a fake yt-dlp update notification ^^", "VD - Nice Try", "O Iconi T2 Owner" . videoListGUI.Hwnd))
+        allMenus.SetIcon("&Update yt-dlp → New Version", iconFileLocation, 31) ; ICON_DLL_USED_HERE
+        ; Makes sure the icon loads correctly
+        allMenus.Enable("&Update yt-dlp → New Version")
+        currentlyHighlightedControlObject := highlightMenuElement(videoListGUI.Hwnd, 6)
+    }
+    hideAllHighlightedElements() {
+        if (IsObject(currentlyHighlightedControlObject)) {
+            ; Hides the highlighted control box.
+            currentlyHighlightedControlObject.destroy()
+        }
+        try {
+            allMenus.Delete("&Update yt-dlp → New Version")
+        }
+    }
+}
+
+information_reasonsForVideoNotFound() {
+    global reasonsForVideoNotFound :=
+        InteractiveTutorialListViewEntry("Video Extraction", "Information", "Possible reasons for 'video_not_found'")
+    reasonsForVideoNotFound.addText(
+        "There are a variety of reasons why a video could appear as not found:"
+        "`n`n* The video URL is incorrect"
+        "`n* The video is private or deleted"
+        "`n* Your VideoDownloader version is out of date"
+        "`n* Your yt-dlp version is out of date"
+        "`n* Your Internet connection is unstable"
+    )
+    reasonsForVideoNotFound.addAction((*) =>)
+    reasonsForVideoNotFound.addExitAction((*) =>)
+}
+
 ; A small tutorial to show off the help GUI of this application.
 applicationTutorial() {
     ; Welcome message.
-    result_1 := MsgBox("Hello there... General Kenobi!`n`nThank you for installing VideoDownloader!"
+    result := MsgBox("Thank you for installing VideoDownloader!"
         "`n`nWould you like to start a short tutorial?",
         "VD - Start Tutorial", "YN Iconi Owner" . videoListGUI.Hwnd)
     editConfigFile(false, "ASK_FOR_TUTORIAL")
-    if (result_1 == "Yes") {
+    if (result == "Yes") {
         videoListGUI.Maximize()
         howToUseHelpGUITutorial.start()
     }

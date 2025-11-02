@@ -7,11 +7,23 @@ updateGUI_onInit() {
     || !checkInternetConnection()) {
         return
     }
-    availableUpdateVersion := checkForAvailableUpdates()
-    if (availableUpdateVersion == "_result_no_update_available") {
+
+    if (readConfigFile("CHECK_FOR_YTDLP_UPDATES")) {
+        availableYTDLPUpdateVersion := checkForAvailableYTDLPUpdates()
+        ; Add a small reminder "pop-up menu" to update yt-dlp
+        if (availableYTDLPUpdateVersion != "_result_no_update_available") {
+            allMenus.Add("&Update yt-dlp → " . availableYTDLPUpdateVersion, (*) => updateYTDLP(availableYTDLPUpdateVersion))
+            allMenus.SetIcon("&Update yt-dlp → " . availableYTDLPUpdateVersion, iconFileLocation, 31) ; ICON_DLL_USED_HERE
+            ; Makes sure the icon loads correctly
+            allMenus.Enable("&Update yt-dlp → " . availableYTDLPUpdateVersion)
+        }
+    }
+
+    availableVDUpdateVersion := checkForAvailableUpdates()
+    if (availableVDUpdateVersion == "_result_no_update_available") {
         return
     }
-    createUpdateGUI(availableUpdateVersion)
+    createUpdateGUI(availableVDUpdateVersion)
 }
 
 /*

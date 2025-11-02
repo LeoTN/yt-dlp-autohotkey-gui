@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<DOCUMENT Type="Advanced Installer" CreateVersion="22.6" version="22.6" Modules="simple" RootPath="." Language="en" Id="{D1E086B7-5749-4976-9EA1-EF5A1FF70F73}">
+<DOCUMENT Type="Advanced Installer" CreateVersion="22.6" version="23.2" Modules="simple" RootPath="." Language="en" Id="{D1E086B7-5749-4976-9EA1-EF5A1FF70F73}">
   <COMPONENT cid="caphyon.advinst.msicomp.MsiPropsComponent">
     <ROW Property="AI_APP_FILE" Value="[#VideoDownloader.exe]"/>
     <ROW Property="AI_BITMAP_DISPLAY_MODE" Value="0"/>
@@ -53,8 +53,8 @@
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
     <ROW Component="APPDIR" ComponentId="{BA90ABB1-27B3-4AEB-825A-FC8BC0EA2474}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="AVAILABLE_UPDATE" ComponentId="{BD309766-C230-4013-9FA9-A07D937BB6E8}" Directory_="APPDIR" Attributes="4" KeyPath="AVAILABLE_UPDATE"/>
+    <ROW Component="AVAILABLE_YTDLP_UPDATE" ComponentId="{BEC08792-572A-49DC-8BD8-5EBAA68F8DEF}" Directory_="APPDIR" Attributes="4" KeyPath="AVAILABLE_YTDLP_UPDATE"/>
     <ROW Component="CURRENT_VERSION" ComponentId="{E823C690-EC59-4FCB-A1AF-4FE1856FCEB3}" Directory_="APPDIR" Attributes="4" KeyPath="CURRENT_VERSION"/>
-    <ROW Component="CURRENT_VERSION_LAST_UPDATED" ComponentId="{F4EF3873-96EA-4302-861D-71AC6E02E0E4}" Directory_="APPDIR" Attributes="4" KeyPath="CURRENT_VERSION_LAST_UPDATED"/>
     <ROW Component="NewFolder" ComponentId="{C7078C81-7EAD-4691-829E-66558607C094}" Directory_="NewFolder_Dir" Attributes="0"/>
     <ROW Component="SHORTCUTDIR" ComponentId="{9BEBC03A-5E6A-456F-A21B-4396D399C56B}" Directory_="SHORTCUTDIR" Attributes="0"/>
     <ROW Component="VideoDownloader.exe" ComponentId="{F7BE539C-5705-40D3-ABAD-80FA957101B1}" Directory_="APPDIR" Attributes="256" KeyPath="VideoDownloader.exe"/>
@@ -190,13 +190,13 @@
     <ROW Feature_="MainFeature" Component_="VideoDownloader.exe"/>
     <ROW Feature_="MainFeature" Component_="SHORTCUTDIR"/>
     <ROW Feature_="MainFeature" Component_="AVAILABLE_UPDATE"/>
-    <ROW Feature_="MainFeature" Component_="CURRENT_VERSION_LAST_UPDATED"/>
     <ROW Feature_="MainFeature" Component_="booleanFirstTimeLaunch"/>
     <ROW Feature_="MainFeature" Component_="CURRENT_VERSION"/>
     <ROW Feature_="MainFeature" Component_="ffmpeg.exe"/>
     <ROW Feature_="MainFeature" Component_="ffplay.exe"/>
     <ROW Feature_="MainFeature" Component_="ffprobe.exe"/>
     <ROW Feature_="MainFeature" Component_="ytdlp.exe"/>
+    <ROW Feature_="MainFeature" Component_="AVAILABLE_YTDLP_UPDATE"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="SystemFoldermsiexec.exe" SourcePath="&lt;AI_RES&gt;uninstall.ico" Index="0"/>
@@ -231,8 +231,8 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiRegsComponent">
     <ROW Registry="AVAILABLE_UPDATE" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="AVAILABLE_UPDATE" Component_="AVAILABLE_UPDATE"/>
+    <ROW Registry="AVAILABLE_YTDLP_UPDATE" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="AVAILABLE_YTDLP_UPDATE" Component_="AVAILABLE_YTDLP_UPDATE"/>
     <ROW Registry="CURRENT_VERSION" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="CURRENT_VERSION" Value="v[ProductVersion]" Component_="CURRENT_VERSION"/>
-    <ROW Registry="CURRENT_VERSION_LAST_UPDATED" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="CURRENT_VERSION_LAST_UPDATED" Component_="CURRENT_VERSION_LAST_UPDATED"/>
     <ROW Registry="Manufacturer" Root="-1" Key="Software\[Manufacturer]" Name="\"/>
     <ROW Registry="ProductName" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="\"/>
     <ROW Registry="Software" Root="-1" Key="Software" Name="\"/>

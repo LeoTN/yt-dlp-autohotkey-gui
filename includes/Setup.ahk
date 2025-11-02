@@ -74,9 +74,13 @@ createSetupGUI() {
 }
 
 handleSetupGUI_setupGUI_onClose(pGUI) {
+    global ytdlpVersion
     if (checkIfFFmpegOrYTDLPSetupIsRequired()) {
         exitApplicationWithNotification(true)
     }
+    ; Update the internal yt-dlp version after a (possible) update.
+    ytdlpVersion := getCorrectYTDLPVersion()
+    createHelpGUI_updateAbout()
 }
 
 handleSetupGUI_setupGUIYTDLPCheckbox_onDoubleClick(pCheckbox, pInfo) {
@@ -157,7 +161,9 @@ handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_1(pButton, pInfo) {
     updateDependencyCheckboxes()
     setupGUIStatusBar.SetText("Setup completed")
     Sleep(2000)
-    WinClose("ahk_id " . setupGUI.Hwnd)
+    if (WinExist("ahk_id " . setupGUI.Hwnd)) {
+        WinClose()
+    }
 }
 
 ; Finishes the setup.
@@ -170,7 +176,9 @@ handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_2(pButton, pInfo) {
         return
     }
     setupGUIStatusBar.SetText("Setup completed")
-    WinClose("ahk_id " . setupGUI.Hwnd)
+    if (WinExist("ahk_id " . setupGUI.Hwnd)) {
+        WinClose()
+    }
 }
 
 handleSetupGUI_setupGUIDeleteAllDependenciesButton_onClick(pButton, pInfo) {
@@ -204,7 +212,7 @@ handleSetupGUI_setupGUIUseOwnExecutablesText_onClick(pText, pInfo) {
 
 deleteAllDependencyFiles() {
     global ffmpegDirectory
-    global YTDLPFileLocation
+    global ytdlpFileLocation
 
     ; Delete all existing FFmpeg files.
     relevantFiles := ["ffmpeg.exe", "ffplay.exe", "ffprobe.exe"]
@@ -215,8 +223,8 @@ deleteAllDependencyFiles() {
         }
     }
     ; Delete the yt-dlp file.
-    if (FileExist(YTDLPFileLocation)) {
-        FileDelete(YTDLPFileLocation)
+    if (FileExist(ytdlpFileLocation)) {
+        FileDelete(ytdlpFileLocation)
     }
 }
 

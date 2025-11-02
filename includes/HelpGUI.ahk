@@ -6,6 +6,9 @@ createHelpGUI() {
     global
     helpGUI := Gui(, "VideoDownloader - Info & Help")
 
+    ; Make the help GUI a child window of the video list GUI.
+    helpGUI.Opt("+Owner" . videoListGUI.Hwnd)
+
     /*
     ********************************************************************************************************************
     This section creates all the GUI control elements and event handlers.
@@ -23,11 +26,11 @@ createHelpGUI() {
     helpGUIListView := helpGUI.Add("ListView", "yp+40 w400 R10 +Grid -Multi", helpGUIListViewArray)
     helpGUIListView.OnEvent("DoubleClick", handleHelpGUI_helpGUIListView_onDoubleClick)
 
-    helpGUIInfoGroupBox := helpGUI.Add("GroupBox", "xp+170 yp-65 w230 R2", "Application Info")
+    helpGUIInfoGroupBox := helpGUI.Add("GroupBox", "xp+170 yp-65 w230 R2", "About")
 
-    local currentVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/" . versionFullName
-    local currentVersionString := 'Version: <a href="' . currentVersionLink . '">' . versionFullName . '</a>'
-    helpGUIApplicationtVersionLink := helpGUI.Add("Link", "xp+10 yp+18", currentVersionString)
+    ; Definitions moved to the createHelpGUI_updateAbout() function to allow updates of the yt-dlp version without reloading.
+    helpGUIApplicationtVersionLink := helpGUI.Add("Link", "xp+10 yp+18 w210", "")
+    createHelpGUI_updateAbout()
     helpGUIApplicationtVersionLink.ToolTip :=
         "Made by LeoTN (https://github.com/LeoTN). © 2025. Licensed under the MIT License."
 
@@ -44,6 +47,15 @@ createHelpGUI() {
     helpGUIStatusBar.SetIcon(iconFileLocation, 14) ; ICON_DLL_USED_HERE
     ; This is used for the easter egg.
     helpGUIStatusBar.OnEvent("Click", handleHelpGUI_helpGUIStatusBar_onClick)
+}
+
+; Allows updates of the yt-dlp version without reloading the application.
+createHelpGUI_updateAbout() {
+    global ytdlpVersion
+
+    local currentVDVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/tag/" . versionFullName
+    local currentVDVersionString := 'VD: <a href="' . currentVDVersionLink . '">' . versionFullName . '</a> | yt-dlp: ' . ytdlpVersion
+    helpGUIApplicationtVersionLink.Text := currentVDVersionString
 }
 
 handleHelpGUI_helpGUISearchBarEdit_onChange(pEdit, pInfo) {

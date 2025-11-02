@@ -1822,7 +1822,7 @@ Downloads a video from a given video list view entry object.
 */
 downloadVideoListViewEntry(pVideoListViewEntry, pDownloadTargetDirectory) {
     global currentYTDLPActionObject
-    global YTDLPFileLocation
+    global ytdlpFileLocation
     global ffmpegDirectory
 
     if (!DirExist(pDownloadTargetDirectory)) {
