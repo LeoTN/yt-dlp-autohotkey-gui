@@ -161,7 +161,9 @@ handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_1(pButton, pInfo) {
     updateDependencyCheckboxes()
     setupGUIStatusBar.SetText("Setup completed")
     Sleep(2000)
-    WinClose("ahk_id " . setupGUI.Hwnd)
+    if (WinExist("ahk_id " . setupGUI.Hwnd)) {
+        WinClose()
+    }
 }
 
 ; Finishes the setup.
@@ -174,7 +176,9 @@ handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_2(pButton, pInfo) {
         return
     }
     setupGUIStatusBar.SetText("Setup completed")
-    WinClose("ahk_id " . setupGUI.Hwnd)
+    if (WinExist("ahk_id " . setupGUI.Hwnd)) {
+        WinClose()
+    }
 }
 
 handleSetupGUI_setupGUIDeleteAllDependenciesButton_onClick(pButton, pInfo) {
