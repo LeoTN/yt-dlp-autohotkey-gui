@@ -37,12 +37,12 @@ function Get-InternetConnectionStatus {
             return $true
         }
         else {
-            Write-Host "[WARNING] No Internet connection detected. Status code: $($response.StatusCode)" -ForegroundColor Yellow
+            Write-Warning "[WARNING] No Internet connection detected. Status code: $($response.StatusCode)"
             return $false
         }
     }
     catch {
-        Write-Host "[WARNING] No Internet connection detected." -ForegroundColor Yellow
+        Write-Warning "[WARNING] No Internet connection detected."
         return $false
     }
 }
@@ -88,14 +88,14 @@ function Get-GitHubLatestReleaseVersion {
         return $json.tag_name
     }
     catch {
-        Write-Host "[ERROR] Failed to query GitHub for '$OwnerRepo' : $($_.Exception.Message)"
+        Write-Error "[ERROR] Failed to query GitHub for '$OwnerRepo' : $($_.Exception.Message)"
         return $null
     }
 }
 
 # --- Ensure registry path ---
 if (-not (Test-Path $pRegistryDirectory)) {
-    Write-Host "[ERROR] Missing registry path at '$pRegistryDirectory'!" -ForegroundColor Red
+    Write-Error "[ERROR] Missing registry path at '$pRegistryDirectory'"
     Exit-Script 1
 }
 
@@ -124,13 +124,13 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
     $currentVDVersion = $pCurrentVDVersionTag.Replace("v", "")
     # Find versions matching the format '1.2.3' or 'v1.2.3-beta'
     if ($currentVDVersion -notmatch "^\d+\.\d+\.\d+(\.\d+)?(-beta)?$") {
-        Write-Host "[ERROR] Invalid current version tag: $currentVDVersion." -ForegroundColor Red
+        Write-Error "[ERROR] Invalid current version tag: $currentVDVersion"
         Exit-Script 2
     }
-    Write-Host "[INFO] VideoDownloader version detected: $currentVDVersion"
+    Write-Host "[INFO] VideoDownloader version detected: $currentVDVersion."
 
     if (-not $internetAvailable) {
-        Write-Host "[WARNING] Skipping VideoDownloader check, offline." -ForegroundColor Yellow
+        Write-Warning "[WARNING] Skipping VideoDownloader check, offline."
         Set-ItemProperty -Path $pRegistryDirectory -Name $vdKey -Value "no_available_update"
     }
     else {
@@ -149,7 +149,7 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
             # If the latestTag is higher than the currentVDVersion this means that an update is available
             $availableVersion = if ((Compare-Versions -v1 $currentVDVersion -v2 $latestTag) -eq $latestTag) { $latestTag } else { "no_available_update" }
             if ($availableVersion -ne "no_available_update") {
-                Write-Host "[INFO] Update available for VideoDownloader: $latestTag"
+                Write-Host "[INFO] Update available for VideoDownloader: $latestTag."
                 Set-ItemProperty -Path $pRegistryDirectory -Name $vdKey -Value $latestTag
             }
             else {
@@ -158,7 +158,7 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
             }
         }
         catch {
-            Write-Host "[ERROR] Failed to fetch latest tag from GitHub: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Error "[ERROR] Failed to fetch latest tag from GitHub: $($_.Exception.Message)"
             Set-ItemProperty -Path $pRegistryDirectory -Name $vdKey -Value "no_available_update"
         }
     }
@@ -168,15 +168,15 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
 if ($pCurrentYTDLPVersion) {
     Write-Host "`n[INFO] Checking yt-dlp updates..."
     
-    Write-Host "[INFO] yt-dlp version detected: $pCurrentYTDLPVersion"
+    Write-Host "[INFO] yt-dlp version detected: $pCurrentYTDLPVersion."
     if (-not $internetAvailable) {
-        Write-Host "[WARNING] Skipping yt-dlp check, offline." -ForegroundColor Yellow
+        Write-Warning "[WARNING] Skipping yt-dlp check, offline."
         Set-ItemProperty -Path $pRegistryDirectory -Name $ytdlpKey -Value "no_available_update"
     }
     else {
         $latestTag = Get-GitHubLatestReleaseVersion -OwnerRepo "yt-dlp/yt-dlp"
         if (-not $latestTag) { $latestTag = "v0.0.0.0" }
-        Write-Host "[INFO] Latest GitHub release for yt-dlp: $latestTag"
+        Write-Host "[INFO] Latest GitHub release for yt-dlp: $latestTag."
 
         $highestTag = Compare-Versions -v1 $pCurrentYTDLPVersion -v2 $latestTag
         $availableVersion = if ($highestTag -ne "identical_versions" -and ($highestTag -eq $latestTag)) { $latestTag } else { "no_available_update" }
@@ -188,7 +188,7 @@ if ($pCurrentYTDLPVersion) {
             Write-Host "[INFO] yt-dlp is up-to-date (version: $pCurrentYTDLPVersion)."
         }
         else {
-            Write-Host "[WARNING] Local yt-dlp version ($pCurrentYTDLPVersion) appears newer than latest release ($latestTag)."
+            Write-Warning "[WARNING] Local yt-dlp version ($pCurrentYTDLPVersion) appears newer than latest release ($latestTag)."
             # Avoid unnecessary update notifications when using a higher (nightly) version of yt-dlp
             $availableVersion = "no_available_update"
         }
@@ -214,8 +214,8 @@ Exit Code List
 Bad exit codes
 Range: 1-99
 1: Provided registry path where the registry keys (CURRENT_VERSION_LAST_UPDATED and AVAILABLE_UPDATE) should be, is invalid or does not exist
-2: The current version registry key has an invalid version syntaxt.
-3: Could not extract version info from the 'yt-dlp.exe'
+2: The current version registry key has an invalid version syntax
+3: Could not extract version info from 'yt-dlp.exe'
 
 Normal exit codes
 Range: 100-199
