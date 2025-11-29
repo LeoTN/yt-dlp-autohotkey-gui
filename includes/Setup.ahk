@@ -80,7 +80,10 @@ handleSetupGUI_setupGUI_onClose(pGUI) {
     }
     ; Update the internal yt-dlp version after a (possible) update.
     ytdlpVersion := getCorrectYTDLPVersion()
-    createHelpGUI_updateAbout()
+    ; Update the GUI only if it is already initialized
+    if (IsSet(helpGUI)) {
+        createHelpGUI_updateAbout()
+    }
 }
 
 handleSetupGUI_setupGUIYTDLPCheckbox_onDoubleClick(pCheckbox, pInfo) {
@@ -418,10 +421,7 @@ installYTDLP() {
     ; Update the GUI.
     setupGUIStatusBar.SetText("Downloading yt-dlp...")
     setupGUISetupProgressBar.Value += 25
-    ; The existing file will not be overwritten.
-    if (!FileExist(downloadedFileLocation)) {
-        Download(YTDLPDownloadLink, downloadedFileLocation)
-    }
+    Download(YTDLPDownloadLink, downloadedFileLocation)
     ; Update the GUI.
     setupGUISetupProgressBar.Value += 25
 }
