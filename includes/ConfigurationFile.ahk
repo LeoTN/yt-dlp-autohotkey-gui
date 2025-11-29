@@ -40,8 +40,8 @@ initializeConfigEntryMap() {
     TEMP_DOWNLOAD_DIRECTORY := TEMP_DIRECTORY . "\download_temp"
     ; [NotificationSettings]
     NotificationSettings := "NotificationSettings"
-    DISPLAY_STARTUP_NOTIFICATION := true
-    DISPLAY_EXIT_NOTIFICATION := true
+    DISPLAY_STARTUP_NOTIFICATION := false
+    DISPLAY_EXIT_NOTIFICATION := false
     DISPLAY_FINISHED_DOWNLOAD_NOTIFICATION := true
     ; [HotkeySettings]
     HotkeySettings := "HotkeySettings"
