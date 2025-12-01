@@ -1,12 +1,11 @@
-name: Build VideoDownloader Installer
+name: Publish a new release
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release Version"
+        description: "Release Version (1.2.3.4)"
         type: string
-        default: "0.0.0.0"
         required: true
 
       is_pre_release:
@@ -14,13 +13,12 @@ on:
         description: "Beta-Release"
         default: true
         required: true
-        
+
   workflow_call:
     inputs:
       version:
-        description: "Release Version"
+        description: "Release Version (1.2.3.4)"
         type: string
-        default: "0.0.0.0"
         required: true
 
       is_pre_release:
@@ -31,79 +29,94 @@ on:
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
-  FINAL_INSTALLER_NAME: VideoDownloader_v${{ inputs.version }}_Installer.msi
   RELEASE_VERSION: ${{ inputs.version }}
-  RELEASE_NAME: ""
   IS_PRE_RELEASE: ${{ inputs.is_pre_release }}
 
 jobs:
+  validate_version:
+    name: Validate version input
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate version input
+        id: check_version
+        shell: bash
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "[ERROR] Version format invalid: $VERSION. Expected format: X.Y.Z.W (example: 1.2.3.4)"
+              exit 1
+          fi
+
   build_exe_files:
-    name: Build and Upload Executable Artifacts
+    name: Build and upload executable artifacts
+    needs: validate_version
     runs-on: windows-2025
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Validate Release Version Input
-      run: |
-        if (-not ($env:RELEASE_VERSION -match '^\d+\.\d+\.\d+\.\d+$')) {
-          $null = Write-Host "[ERROR] Invalid release version [$env:RELEASE_VERSION] received! Exiting workflow..."
-          throw
-        }
+      - name: Validate release version input
+        run: |
+          if (-not ($env:RELEASE_VERSION -match '^\d+\.\d+\.\d+\.\d+$')) {
+            $null = Write-Host "[ERROR] Invalid release version [$env:RELEASE_VERSION] received! Exiting workflow..."
+            throw
+          }
 
-    - name: Define Version Name File
-      run: |
-        if ($env:IS_PRE_RELEASE -eq "true") {
-          $versionName = "v${{ inputs.version }}-beta"
-        }
-        else {
-          $versionName = "v${{ inputs.version }}-beta"
-        }
-        $null = Write-Host "[INFO] The version name is [$versionName]."
-        # This text file will be used by the AutoHotkey compiler to set the version of the executable file.
-        $null = Set-Content -Path "${{ github.workspace }}\compiler\currentVersion.txt" -Value $versionName -Force
+      - name: Define version name file
+        run: |
+          if ($env:IS_PRE_RELEASE -eq "true") {
+            $versionName = "v${{ inputs.version }}-beta"
+          }
+          else {
+            $versionName = "v${{ inputs.version }}-beta"
+          }
+          $null = Write-Host "[INFO] The version name is [$versionName]."
+          # This text file will be used by the AutoHotkey compiler to set the version of the executable file
+          $null = Set-Content -Path "${{ github.workspace }}\compiler\currentVersion.txt" -Value $versionName -Force
 
-    - name: Compile Autohotkey Main Application
-      run: |
-        # Set the paths to execute more easily.
-        $scriptPathIn = "${{ github.workspace }}\VideoDownloader.ahk"
-        $scriptPathOut = "${{ github.workspace }}\$env:FINAL_EXECUTABLE_NAME"
-        $compilerFileLocation = "${{ github.workspace }}\compiler\Ahk2Exe.exe"
-        $baseFileLocation = "${{ github.workspace }}\compiler\AutoHotkey64.exe"
+      - name: Compile Autohotkey main executable
+        run: |
+          # Set the paths to execute more easily
+          $scriptPathIn = "${{ github.workspace }}\VideoDownloader.ahk"
+          $scriptPathOut = "${{ github.workspace }}\$env:FINAL_EXECUTABLE_NAME"
+          $compilerFileLocation = "${{ github.workspace }}\compiler\Ahk2Exe.exe"
+          $baseFileLocation = "${{ github.workspace }}\compiler\AutoHotkey64.exe"
 
-        $stdoutLogFileLocation = Join-Path -Path $env:TEMP -ChildPath "ahk_compiler_stdout.log"
-        $errorLogFileLocation = Join-Path -Path $env:TEMP -ChildPath "ahk_compiler_error.log"
+          $stdoutLogFileLocation = Join-Path -Path $env:TEMP -ChildPath "ahk_compiler_stdout.log"
+          $errorLogFileLocation = Join-Path -Path $env:TEMP -ChildPath "ahk_compiler_error.log"
 
-        # Compile the application.
-        $null = Start-Process -FilePath $compilerFileLocation -ArgumentList "/silent verbose /in ""$scriptPathIn"" /out ""$scriptPathOut"" /base ""$baseFileLocation""" `
-            -RedirectStandardOutput $stdoutLogFileLocation -RedirectStandardError $errorLogFileLocation -Wait
+          # Compile the application
+          $null = Start-Process -FilePath $compilerFileLocation -ArgumentList "/silent verbose /in ""$scriptPathIn"" /out ""$scriptPathOut"" /base ""$baseFileLocation""" `
+              -RedirectStandardOutput $stdoutLogFileLocation -RedirectStandardError $errorLogFileLocation -Wait
 
-        $null = Write-Host "AHK Compiler Stdout Log`n[`n$(Get-Content -Path $stdoutLogFileLocation | Out-String)]`n"
-        $null = Write-Host "AHK Compiler Error Log`n[`n$(Get-Content -Path $errorLogFileLocation | Out-String)]`n"
-        $null = Write-Host "[INFO] The executable will be saved to [$scriptPathOut]."
+          $null = Write-Host "AHK Compiler Stdout Log`n[`n$(Get-Content -Path $stdoutLogFileLocation | Out-String)]`n"
+          $null = Write-Host "AHK Compiler Error Log`n[`n$(Get-Content -Path $errorLogFileLocation | Out-String)]`n"
+          $null = Write-Host "[INFO] The executable will be saved to [$scriptPathOut]."
 
-    - name: Upload Main Executable as Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.FINAL_EXECUTABLE_NAME }}
-        path: ${{ github.workspace }}\${{ env.FINAL_EXECUTABLE_NAME }}
+      - name: Upload main executable as artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ env.FINAL_EXECUTABLE_NAME }}
+          path: ${{ github.workspace }}\${{ env.FINAL_EXECUTABLE_NAME }}
 
   build_msi_file:
-    runs-on: windows-2025
-    name: Build and Upload MSI Installer File
+    name: Build and upload MSI installer file
     needs: build_exe_files
+    runs-on: windows-2025
+    outputs:
+      FINAL_INSTALLER_NAME: ${{ steps.define_final_installer_name.outputs.FINAL_INSTALLER_NAME }}
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Download Main Executable Artifact
-        uses: actions/download-artifact@v4
+      - name: Download main executable artifact
+        uses: actions/download-artifact@v6
         with:
           name: ${{ env.FINAL_EXECUTABLE_NAME }}
           path: ${{ github.workspace }}
 
-      - name: Download yt-dlp Executable
+      - name: Download yt-dlp executable
         run: |
           $null = Write-Host "[INFO] Downloading yt-dlp executable..."
           $downloadURL = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
@@ -113,8 +126,8 @@ jobs:
           $null = New-Item -Type "Directory" -Path $targetDirectory -Force
           $null = Invoke-WebRequest -Uri $downloadURL -OutFile $targetFileLocation
 
-      - name: Download and Extract FFmpeg Executables
-        run : |
+      - name: Download and extract FFmpeg executables
+        run: |
           $null = Write-Host "[INFO] Downloading FFmpeg executables..."
           $downloadURL = "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
           $targetFileName = "ffmpeg-master-latest-win64-gpl.zip"
@@ -126,7 +139,7 @@ jobs:
           $null = Write-Host "[INFO] Extracting FFmpeg executables..."
           $destinationPath = Join-Path -Path $targetDirectory -ChildPath "ffmpeg-files"
           $null = Expand-Archive -Path $targetFileLocation -DestinationPath $destinationPath
-          # Extract the relevant executables from the archive.
+          # Extract the relevant executables from the archive
           $exeNames = @("ffmpeg.exe", "ffprobe.exe", "ffplay.exe")
           foreach ($exeName in $exeNames) {
             Get-ChildItem -Path $destinationPath -Recurse -Filter $exeName | ForEach-Object {
@@ -134,124 +147,109 @@ jobs:
             $null = Move-Item -Path $_.FullName -Destination $destination -Force
             }
           }
-          
-      - name: Define Final Installer Name
+
+      - name: Define final installer name
+        id: define_final_installer_name
         run: |
-          # The name only changes when the release is a beta release.
+          # The name only changes when the release is a beta release
+          $finalInstallerName = "VideoDownloader_v${{ inputs.version }}_Installer.msi"
           if ($env:IS_PRE_RELEASE -eq "true") {
             $finalInstallerName = "VideoDownloader_v${{ inputs.version }}-beta_Installer.msi"
-            echo "FINAL_INSTALLER_NAME=$finalInstallerName" >> $env:GITHUB_ENV
-          }
-          else {
-            $finalInstallerName = "${{ env.FINAL_INSTALLER_NAME }}"
           }
           $null = Write-Host "[INFO] The final installer name is [$finalInstallerName]."
+          echo "FINAL_INSTALLER_NAME=$finalInstallerName" >> $env:GITHUB_OUTPUT
 
-      - name: Build .AIP Project
+      - name: Build Advanced Installer project
         uses: caphyon/advinst-github-action@main
         with:
           advinst-enable-automation: true
           aip-path: ${{ github.workspace }}\compiler\VideoDownloaderInstaller.aip
           aip-build-name: DefaultBuild
-          aip-package-name: ${{ env.FINAL_INSTALLER_NAME }}
-          aip-output-dir:  ${{ github.workspace }}
+          aip-package-name: ${{ steps.define_final_installer_name.outputs.FINAL_INSTALLER_NAME }}
+          aip-output-dir: ${{ github.workspace }}
           aip-commands: |
             SetVersion "${{ env.RELEASE_VERSION }}"
-            
-      - name: Upload Installer as Artifact
-        uses: actions/upload-artifact@v4
+
+      - name: Upload installer as artifact
+        uses: actions/upload-artifact@v5
         with:
-          name: ${{ env.FINAL_INSTALLER_NAME }}
-          path: ${{ github.workspace }}\${{ env.FINAL_INSTALLER_NAME }}
- 
+          name: ${{ steps.define_final_installer_name.outputs.FINAL_INSTALLER_NAME }}
+          path: ${{ github.workspace }}\${{ steps.define_final_installer_name.outputs.FINAL_INSTALLER_NAME }}
+
   create_release:
-    name: Download Executable Artifact and Create Release
+    name: Download executable artifact and create release
     needs: build_msi_file
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
+    env:
+      FINAL_INSTALLER_NAME: ${{ needs.build_msi_file.outputs.FINAL_INSTALLER_NAME }}
+      RELEASE_NAME: ${{ inputs.version }}${{ inputs.IS_PRE_RELEASE && '-beta' || '' }}
+
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-     
-    - name: Define Final Installer Name
-      run: |
-        # The name only changes when the release is a beta release.
-        if [ "${{ env.IS_PRE_RELEASE }}" == "true" ]; then
-          finalInstallerName="VideoDownloader_v${{ inputs.version }}-beta_Installer.msi"
-          echo "FINAL_INSTALLER_NAME=$finalInstallerName" >> $GITHUB_ENV
-        else
-          finalInstallerName="${{ env.FINAL_INSTALLER_NAME }}"
-        fi
-        echo "[INFO] The final installer name is [$finalInstallerName]."
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Define Release Name
-      run: |
-        if [ "${{ env.IS_PRE_RELEASE }}" == "true" ]; then
-          releaseName="v${{ env.RELEASE_VERSION }}-beta"
-        else
-          releaseName="v${{ env.RELEASE_VERSION }}"
-        fi
-        echo "RELEASE_NAME=$releaseName" >> $GITHUB_ENV
-        echo "[INFO] The release name is [$releaseName]."
-
-    - name: Download Installer Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ env.FINAL_INSTALLER_NAME }}
-        path: ${{ github.workspace }}
-
-    - name: Delete Old Beta Release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        git fetch --prune --unshallow --tags
-        latest_tag=$(git describe --tags --abbrev=0)
-        echo "[INFO] Found latest tag [$latest_tag]."
-
-        # Check if the tag is a beta release.
-        if [[ "$latest_tag" == v* && "$latest_tag" == *-beta ]]; then
-          echo "[INFO] Deleting old beta release and tag [$latest_tag]."
-            
-          # Delete the old beta release.
-          RELEASE_ID=$(gh api -X GET "/repos/${{ github.repository }}/releases" | jq -r ".[] | select(.tag_name==\"$latest_tag\") | .id")
-          if [ -n "$RELEASE_ID" ]; then
-            gh api -X DELETE "/repos/${{ github.repository }}/releases/$RELEASE_ID"
-            echo "[INFO] Deleted release for tag [$latest_tag]."
+      - name: Define final installer name
+        run: |
+          # The name only changes when the release is a beta release
+          if [ "${{ env.IS_PRE_RELEASE }}" == "true" ]; then
+            finalInstallerName="VideoDownloader_v${{ inputs.version }}-beta_Installer.msi"
+            echo "FINAL_INSTALLER_NAME=$finalInstallerName" >> $GITHUB_ENV
           else
-            echo "[INFO] No release found for tag [$latest_tag]."
+            finalInstallerName="${{ env.FINAL_INSTALLER_NAME }}"
+          fi
+          echo "[INFO] The final installer name is [$finalInstallerName]."
+
+      - name: Download installer artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ env.FINAL_INSTALLER_NAME }}
+          path: ${{ github.workspace }}
+
+      - name: Delete old beta tags and releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch --prune --unshallow --tags
+          latest_tag=$(git describe --tags --abbrev=0)
+          echo "[INFO] Found latest tag [$latest_tag]."
+
+          # Check if the tag is a beta release
+          if [[ "$latest_tag" == v* && "$latest_tag" == *-beta ]]; then
+            echo "[INFO] Deleting old beta release and tag [$latest_tag]."
+              
+            # Delete the old beta release
+            RELEASE_ID=$(gh api -X GET "/repos/${{ github.repository }}/releases" | jq -r ".[] | select(.tag_name==\"$latest_tag\") | .id")
+            if [ -n "$RELEASE_ID" ]; then
+              gh api -X DELETE "/repos/${{ github.repository }}/releases/$RELEASE_ID"
+              echo "[INFO] Deleted release for tag [$latest_tag]."
+            else
+              echo "[INFO] No release found for tag [$latest_tag]."
+            fi
+
+            # Deletes the old beta tag
+            git tag --delete "$latest_tag"
+            git push --delete origin "$latest_tag"
+            echo "[INFO] Deleted tag [$latest_tag]."
+
+          else
+            echo "[WARNING] Could not find a beta release and tag to delete."
           fi
 
-          # Deletes the old beta tag.
-          git tag --delete "$latest_tag"
-          git push --delete origin "$latest_tag"
-          echo "[INFO] Deleted tag [$latest_tag]."
-
-        else
-          echo "[WARNING] Could not find a beta release and tag to delete."
-        fi
-
-
-    - name: Create or Update Release Tag
-      uses: richardsimko/update-tag@v1
-      with:
-        tag_name: ${{ env.RELEASE_NAME }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Create Release
-      uses: ncipollo/release-action@v1
-      with:
-        allowUpdates: true
-        artifacts: ${{ github.workspace }}/${{ env.FINAL_INSTALLER_NAME }}
-        artifactErrorsFailBuild: true
-        artifactContentType: "application/executable"
-        removeArtifacts: true
-        replacesArtifacts: true
-        body: '**Download** the **[${{ env.FINAL_INSTALLER_NAME }}](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/download/${{ env.RELEASE_NAME }}/${{ env.FINAL_INSTALLER_NAME }})** file and install it. Have fun :)'
-        generateReleaseNotes: false
-        makeLatest: true
-        prerelease: ${{ env.IS_PRE_RELEASE == 'true' }}
-        name: ${{ env.RELEASE_NAME }}
-        tag: ${{ env.RELEASE_NAME }}
+      - name: Create GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: ${{ github.workspace }}/${{ env.FINAL_INSTALLER_NAME }}
+          artifactErrorsFailBuild: true
+          artifactContentType: "application/executable"
+          removeArtifacts: true
+          replacesArtifacts: true
+          body: "**Download** the **[${{ env.FINAL_INSTALLER_NAME }}](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/download/${{ env.RELEASE_NAME }}/${{ env.FINAL_INSTALLER_NAME }})** file and install it. Have fun :)"
+          generateReleaseNotes: false
+          makeLatest: true
+          prerelease: ${{ env.IS_PRE_RELEASE == 'true' }}
+          name: ${{ env.RELEASE_NAME }}
+          tag: ${{ env.RELEASE_NAME }}

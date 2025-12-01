@@ -1,79 +1,79 @@
-name: Update Latest Beta Release
+name: Update latest beta release
 
 on:
-    workflow_dispatch:
+  workflow_dispatch:
 
-    push:
-      branches: 
-        - development
-      paths-ignore:
-        - ".github/ISSUE_TEMPLATE/**"
-        - ".github/workflows/**"
-        - "compiler/**"
-        - ".gitattributes"
-        - ".gitignore"
-        - "LICENSE"
-        - "README.md"
+  push:
+    branches:
+      - development
+    paths-ignore:
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/workflows/**"
+      - "compiler/**"
+      - ".gitattributes"
+      - ".gitignore"
+      - "LICENSE"
+      - "README.md"
 
 env:
   LATEST_TAG_NAME: "null"
 
 jobs:
-    figure_out_release_version:
-        name: Evaluate Correct Beta Release Version
-        runs-on: windows-2025
-        outputs:
-          beta_version: ${{ steps.set_latest_release_version_id.outputs.FINAL_BETA_VERSION }}
+  figure_out_release_version:
+    name: Evaluate correct beta release version
+    runs-on: windows-2025
+    outputs:
+      beta_version: ${{ steps.set_latest_release_version_id.outputs.FINAL_BETA_VERSION }}
 
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
-            - name: Get Latest Release Version
-              id: get_latest_release_version_id
-              run: |
-                # Calling GitHub API for the latest tag name.
-                $response = Invoke-WebRequest -Uri "https://api.github.com/repos/LeoTN/yt-dlp-autohotkey-gui/tags" -Method Get
-                $latestTag = ($response.Content | ConvertFrom-Json)[0].name
-                $null = Write-Host "[INFO] The received tag name is [$latestTag]."
-                if ($latestTag -like "") {
-                  $null = Write-Host "[ERROR] Empty tag received! Exiting workflow..."   
-                  throw
-                }
-                echo "LATEST_TAG_NAME=$latestTag" >> $env:GITHUB_OUTPUT
+      - name: Get latest release version
+        id: get_latest_release_version_id
+        run: |
+          # Calling GitHub API for the latest tag name
+          $response = Invoke-WebRequest -Uri "https://api.github.com/repos/LeoTN/yt-dlp-autohotkey-gui/tags" -Method Get
+          $latestTag = ($response.Content | ConvertFrom-Json)[0].name
+          $null = Write-Host "[INFO] The received tag name is [$latestTag]."
+          if ($latestTag -like "") {
+            $null = Write-Host "[ERROR] Empty tag received! Exiting workflow..."   
+            throw
+          }
+          echo "LATEST_TAG_NAME=$latestTag" >> $env:GITHUB_OUTPUT
 
-            - name: Figure Out Beta Release Version
-              id: set_latest_release_version_id
-              run: |
-                $currentVersion = "${{ steps.get_latest_release_version_id.outputs.LATEST_TAG_NAME }}"
-                # Remove unwanted letters.
-                $currentVersion = $currentVersion.Replace("v", "")
-                if ($currentVersion -like "*-beta") {
-                  $currentVersion = $currentVersion.Replace("-beta", "")
-                }
-                try {
-                    $version = [version]$currentVersion
-                }
-                catch {
-                  $null = Write-Host "[ERROR] Failed to convert [$currentVersion] into version object! Exiting workflow..."
-                  throw
-                }
-                $version = [version]::new($version.Major, $version.Minor, $version.Build, $version.Revision + 1)
-                $currentVersion = $version.ToString()
-                $finalVersion = $currentVersion
-                $null = Write-Host "[INFO] The beta version will be [$finalVersion]."
-                if (-not ($finalVersion -match '^\d+\.\d+\.\d+\.\d+$')) {
-                  $null = Write-Host "[ERROR] Invalid beta version [$finalVersion]! Exiting workflow..."
-                  throw
-                }
-                echo "FINAL_BETA_VERSION=$finalVersion" >> $env:GITHUB_OUTPUT
-    
-    start_ci_workflow:
-        name: Launch Release Workflow
-        needs: figure_out_release_version
-        permissions:
-          contents: write
-        uses: ./.github/workflows/build-installer-archive.yml
-        with:
-          version: "${{ needs.figure_out_release_version.outputs.beta_version }}"
-          is_pre_release: true
+      - name: Figure out beta release version
+        id: set_latest_release_version_id
+        run: |
+          $currentVersion = "${{ steps.get_latest_release_version_id.outputs.LATEST_TAG_NAME }}"
+          # Remove unwanted letters
+          $currentVersion = $currentVersion.Replace("v", "")
+          if ($currentVersion -like "*-beta") {
+            $currentVersion = $currentVersion.Replace("-beta", "")
+          }
+          try {
+              $version = [version]$currentVersion
+          }
+          catch {
+            $null = Write-Host "[ERROR] Failed to convert [$currentVersion] into version object! Exiting workflow..."
+            throw
+          }
+          $version = [version]::new($version.Major, $version.Minor, $version.Build, $version.Revision + 1)
+          $currentVersion = $version.ToString()
+          $finalVersion = $currentVersion
+          $null = Write-Host "[INFO] The beta version will be [$finalVersion]."
+          if (-not ($finalVersion -match '^\d+\.\d+\.\d+\.\d+$')) {
+            $null = Write-Host "[ERROR] Invalid beta version [$finalVersion]! Exiting workflow..."
+            throw
+          }
+          echo "FINAL_BETA_VERSION=$finalVersion" >> $env:GITHUB_OUTPUT
+
+  start_ci_workflow:
+    name: Launch release workflow
+    needs: figure_out_release_version
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build-installer-archive.yml
+    with:
+      version: "${{ needs.figure_out_release_version.outputs.beta_version }}"
+      is_pre_release: true
