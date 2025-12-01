@@ -10,11 +10,6 @@ functions_onInit() {
     OnMessage(0x0400 + 0x1, handleVideoListGUI_activateMainWindow_onMessage)
 }
 
-/*
-FUNCTION SECTION
--------------------------------------------------
-*/
-
 ; This function determines the current control under the mouse cursor and if it has a tooltip, displays it.
 handleAllGUI_toolTips(wParam, lParam, msg, hwnd) {
     static oldHWND := 0
@@ -1955,8 +1950,3 @@ expandHotkey(pHotkey) {
 
     return hotkeyString
 }
-
-/*
-FUNCTION SECTION END
--------------------------------------------------
-*/

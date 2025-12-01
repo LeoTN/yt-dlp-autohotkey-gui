@@ -16,7 +16,7 @@
 
 ## 🚀 Getting Started
 
-1. Download and install the latest installer **[here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest)**.
+1. Download and install the latest installer [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest).
 2. Open the [video](https://www.youtube.com/watch?v=xvFZjo5PgG0) you want to download in your browser.
 3. Press <code><strong><em>SHIFT + CTRL + ALT + S</em></strong></code> to save the URL.
 4. Alternatively, you can copy the URL and enter it into the video list manually.
@@ -38,20 +38,21 @@
 <details>
 <summary><strong>Known Issues</strong></summary>
 
-* The hotkey to indirectly capture video URLs is still **experimental** and won't work every time.
-* Embedding **video subtitles** might not work sometimes.
-* Sometimes yt-dlp's requests will be **blocked by YouTube**. This causes some videos to appear as **not found** in the video list.
-  * If this is the case, I recommend waiting a little before trying again.
+* The hotkey to indirectly capture video URLs is still **experimental** and may not work every time.
+* Embedding **video subtitles** may occasionally fail, causing the download to fail as well.
+  * The issue seems to occur due to YouTube blocking requests caused by too many API calls.
+* Sometimes yt-dlp requests may get temporarily **blocked (by YouTube)**, causing certain videos to show up as **not found** in the list.
+  * If this happens, simply wait a bit before trying again.
 
 </details>
 
 ## Credits & License
 
-* **yt-dlp** (<https://github.com/yt-dlp/yt-dlp>) → incredibly useful piece of software
-* **FFmpeg** (<https://ffmpeg.org>) → additional functionality for yt-dlp
-* **Acc library** (<https://github.com/Descolada/Acc-v2>) → important functions regarding direct URL capture
-* **ColorButton library** (<https://github.com/nperovic/ColorButton.ahk>) → colored button functionality
-* **Icons8** (<https://icons8.com>) → some of the used icons
+* [**yt-dlp**](https://github.com/yt-dlp/yt-dlp) → incredibly useful piece of software
+* [**FFmpeg**](https://ffmpeg.org) → additional functionality for yt-dlp
+* [**Acc library**](https://github.com/Descolada/Acc-v2) → important functions regarding direct URL capture
+* [**ColorButton library**](https://github.com/nperovic/ColorButton.ahk) → colored button functionality
+* [**Icons8**](https://icons8.com) → some of the used icons
 
 > [!IMPORTANT]
 > I appreciate your **constructive** and **honest** feedback. Feel free to create an **issue** or **feature** request.

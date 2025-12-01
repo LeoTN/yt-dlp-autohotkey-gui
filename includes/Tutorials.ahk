@@ -382,8 +382,8 @@ guide_howToKeepYTDLPUpToDate() {
         hideAllHighlightedElements()
         if (!WinExist("ahk_id " . settingsGUI.Hwnd)) {
             /*
-                    Selects another tab element before returning to the original element
-                    to avoid an issue with "ghost" control elements from other tabs appearing in the current tab.
+            Selects another tab element before returning to the original element
+            to avoid an issue with "ghost" control elements from other tabs appearing in the current tab.
             */
             currentTabNumber := settingsGUITabs.Value
             maxTabNumber := 3
