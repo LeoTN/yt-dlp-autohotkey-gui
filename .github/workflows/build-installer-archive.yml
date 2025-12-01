@@ -185,7 +185,7 @@ jobs:
 
     env:
       FINAL_INSTALLER_NAME: ${{ needs.build_msi_file.outputs.FINAL_INSTALLER_NAME }}
-      RELEASE_NAME: ${{ inputs.version }}${{ inputs.IS_PRE_RELEASE && '-beta' || '' }}
+      RELEASE_NAME: v${{ inputs.version }}${{ inputs.IS_PRE_RELEASE && '-beta' || '' }}
 
     steps:
       - name: Checkout repository
