@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       is_beta: ${{ steps.check_version.outputs.is_beta }}
+      clean_version: ${{ steps.get_clean_version.outputs.clean_version }}
     steps:
       - name: Validate version input
         id: check_version
@@ -117,6 +118,14 @@ jobs:
               print(f"New version {new} is higher than latest release {latest}. Continuing...")
           EOF
 
+      - name: Get clean version for Advanced Installer
+        id: get_clean_version
+        run: |
+          # Advanced Installer does not support 'b' in version numbers, so we need to clean it
+          $cleanVersion = "${{ inputs.version }}" -replace "b(\d+)$", ""
+          $null = Write-Host "[INFO] Clean version for Advanced Installer: $cleanVersion."
+          echo "clean_version=$cleanVersion" >> "$GITHUB_OUTPUT"
+
   build_exe_files:
     name: Build and upload executable artifacts
     needs: validate_version
@@ -158,10 +167,8 @@ jobs:
 
   build_msi_file:
     name: Build and upload MSI installer file
-    needs: build_exe_files
+    needs: [validate_version, build_exe_files]
     runs-on: windows-2025
-    env:
-      CLEAN_VERSION: ""
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6
@@ -212,12 +219,6 @@ jobs:
             }
           }
 
-      - name: Clean version for Advanced Installer
-        run: |
-          $cleanVersion = "${{ inputs.version }}" -replace "b(\d+)$", ""
-          $null = Write-Host "[INFO] Clean version for Advanced Installer: $cleanVersion."
-          echo "CLEAN_VERSION=$cleanVersion" >> "$GITHUB_ENV"
-
       - name: Build Advanced Installer project
         uses: caphyon/advinst-github-action@main
         with:
@@ -227,7 +228,7 @@ jobs:
           aip-package-name: ${{ env.FINAL_INSTALLER_NAME }}
           aip-output-dir: ${{ github.workspace }}
           aip-commands: |
-            SetVersion "${{ env.CLEAN_VERSION }}"
+            SetVersion "${{ needs.validate_version.outputs.clean_version }}"
             SetProperty releaseTagName="${{ env.RELEASE_TAG_NAME }}"
 
       - name: Upload installer as artifact
