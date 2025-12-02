@@ -208,7 +208,7 @@ createVideoListGUI() {
     videoDesiredSubtitleListBox.ToolTip .=
         '`nEmbedding all available subtitles only includes actual subtitles. In other words,'
     videoDesiredSubtitleListBox.ToolTip .=
-        '`nsubtitles enclosed in square brackets "[]" (automatic captions) must be selected manually.'
+        "`nsubtitles enclosed in square brackets '[]' (automatic captions) must be selected manually."
     videoDesiredSubtitleListBox.ToolTip .=
         "`nA maximum of 20 subtitles per video should not be exceeded to ensure a successful download."
     videoAdvancedDownloadSettingsButton.ToolTip := "Will contain advanced download configuration options one day."
@@ -217,7 +217,7 @@ createVideoListGUI() {
         "You can also search for a video by its URL."
     videoListSearchBarInputClearButton.ToolTip := ""
     ; Controls that belong to the video list.
-    addVideoURLInputEdit.ToolTip := "Enter a video URL here and press [Enter] or the [" . Trim(addVideoToListButton.Text) "] button."
+    addVideoURLInputEdit.ToolTip := "Enter a video URL here and press [Enter] or the [" . Trim(addVideoToListButton.Text) . "] button."
     addVideoURLInputEdit.ToolTip .= "`nDouble-click this input field to paste the current clipboard content."
     addVideoURLInputClearButton.ToolTip := ""
     ; Add URL elements.

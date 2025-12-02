@@ -583,9 +583,8 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
     ; This happens when the user only selected invalid URLs but the option to ignore them is still enabled.
     if (pBooleanSkipInvalidURLs && validURLArray.Length == 0) {
         highlightedCheckbox := highlightControl(importAndExportOnlyValidURLsCheckbox)
-        MsgBox("You only selected invalid URLs to export.`n`nDisable the checkbox [" .
-            importAndExportOnlyValidURLsCheckbox.Text . "] to export invalid URLs.", "VD - Canceled URL Export",
-            "O Icon! Owner" . videoListGUI.Hwnd)
+        MsgBox("You only selected invalid URLs to export.`n`nDisable the checkbox [" . importAndExportOnlyValidURLsCheckbox.Text .
+            "] to export invalid URLs.", "VD - Canceled URL Export", "O Icon! Owner" . videoListGUI.Hwnd)
         highlightedCheckbox.destroy()
 
         statusBarText := "Canceled URL export - There are no valid URLs to export"
