@@ -731,64 +731,56 @@ getSelectedVideoListViewElements() {
 
 /*
 Reads the version information from the application executable file (if compiled).
-@returns [String] The version from the executable or "v0.0.0.1" in case the application is not compiled.
+@returns [String] The version from the executable or "uncompiled" if the script is not compiled or "N/A" in case of an error.
 */
-getCorrectScriptVersion() {
+getProductVersion() {
     if (!A_IsCompiled) {
-        fileVersion := "v0.0.0.1"
+        fileProductVersion := "uncompiled"
     }
     else {
         try {
-            ; Extract the version from the executable file.
-            fileVersion := "v" . FileGetVersion(A_ScriptFullPath)
+            ; Extract the version from the executable file
+            size := DllCall("version\GetFileVersionInfoSizeW", "str", A_ScriptFullPath, "uint*", 0, "uint")
+            if (size = 0) {
+                throw
+            }
+            buf := Buffer(size)
+            if (!DllCall("version\GetFileVersionInfoW", "str", A_ScriptFullPath, "uint", 0, "uint", size, "ptr", buf)) {
+                throw
+            }
+            if (!DllCall("version\VerQueryValueW", "ptr", buf, "str", "\VarFileInfo\Translation", "ptr*", &transPtr := 0, "uint*",
+                &transLen := 0)) {
+                throw
+            }
+            lang := Format("{:04X}{:04X}", NumGet(transPtr, 0, "ushort"), NumGet(transPtr, 2, "ushort"))
+            query := "\StringFileInfo\" lang "\ProductVersion"
+            if (!DllCall("version\VerQueryValueW", "ptr", buf, "str", query, "ptr*", &outPtr := 0, "uint*", &outLen := 0)) {
+                throw
+            }
+            fileProductVersion := StrGet(outPtr)
         }
         catch {
-            ; Used as a fallback.
-            fileVersion := "v0.0.0.2"
+            ; Used as a fallback
+            fileProductVersion := "N/A"
         }
     }
-    ; Find versions matching the format 'v1.2.3.4'.
-    if (RegExMatch(fileVersion, "^v\d+\.\d+\.\d+\.(\d+)$", &match)) {
-        buildVersionNumber := match[1]
-        ; A version number with a build version is only used for beta versions.
-        if (buildVersionNumber != 0) {
-            fileVersion := fileVersion . "-beta"
-        }
-        return fileVersion
-    }
-    ; Find versions matching this format: 'v1.2.3', 'v1.2.3-beta', '1.2.3' or '1.2.3-beta'.
-    else if (RegExMatch(fileVersion, "^v?\d+\.\d+\.\d+(\.\d+)?(-beta)?$")) {
-        return fileVersion
-    }
-    else {
-        ; In case the version from the compiled file is invalid.
-        fileVersion := "v0.0.0.3"
-    }
-    return fileVersion
+    return fileProductVersion
 }
 
 /*
 Reads the version information from the yt-dlp executable file.
-@returns [String] The version from the executable or "0.0.0.1" or "0.0.0.2" in case of an error.
+@returns [String] The version from the executable or "N/A" in case of an error.
 */
-getCorrectYTDLPVersion() {
+getYTDLPVersion() {
     global ytdlpFileLocation
 
     try {
-        ; Extract the version from the executable file.
+        ; Extract the version from the executable file
         fileVersion := FileGetVersion(ytdlpFileLocation)
     }
     catch {
-        ; Used as a fallback.
-        fileVersion := "v0.0.0.1"
-    }
-    ; Find versions matching the format '1.2.3.4'.
-    if (RegExMatch(fileVersion, "^\d+\.\d+\.\d+\.(\d+)$", &match)) {
-        return fileVersion
-    }
-    else {
-        ; In case the version from the compiled file is invalid.
-        fileVersion := "v0.0.0.2"
+        ; Used as a fallback
+        fileVersion := "N/A"
     }
     return fileVersion
 }
@@ -1753,7 +1745,7 @@ checkForAvailableUpdates() {
         case 101:
         {
             ; Extracts the available update from the registry.
-            updateVersion := RegRead(applicationRegistryDirectory, "AVAILABLE_UPDATE", "v0.0.0.1")
+            updateVersion := RegRead(applicationRegistryDirectory, "AVAILABLE_UPDATE", "N/A")
             if (updateVersion == "no_available_update") {
                 return "_result_no_update_available"
             }
@@ -1797,7 +1789,7 @@ checkForAvailableYTDLPUpdates() {
         case 101:
         {
             ; Extracts the available update from the registry.
-            updateVersion := RegRead(applicationRegistryDirectory, "AVAILABLE_YTDLP_UPDATE", "v0.0.0.1")
+            updateVersion := RegRead(applicationRegistryDirectory, "AVAILABLE_YTDLP_UPDATE", "N/A")
             if (updateVersion == "no_available_update") {
                 return "_result_no_update_available"
             }

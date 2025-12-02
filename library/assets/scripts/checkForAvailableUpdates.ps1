@@ -48,28 +48,34 @@ function Get-InternetConnectionStatus {
 }
 
 # Returns the higher version; "identical_versions" if equal
-function Compare-Versions($v1, $v2) {
-    # Helper: normalize version string to always have 4 components
-    function Normalize-Version([string]$v) {
-        $clean = $v.Replace("v", "").Replace("-beta", "")
+function Compare-Versions() {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$v1,
+        [Parameter(Mandatory = $true)]
+        [string]$v2
+    )
+    function Parse-Version([string]$v) {
+        $isBeta = $v -match "b(\d+)$"
+        $betaNum = if ($isBeta) { [int]$Matches[1] } else { 0 }
+        $clean = $v.Replace("v", "") -replace "b\d+$", ""
         $parts = $clean -split '\.'
-        while ($parts.Count -lt 4) { $parts += '0' }  # Fill missing parts with zeros
-        return [version]($parts -join '.')
+        while ($parts.Count -lt 4) { $parts += '0' }
+        return @{Version = [version]($parts -join '.'); BetaNum = $betaNum }
     }
 
-    $ver1 = Normalize-Version $v1
-    $ver2 = Normalize-Version $v2
+    $pv1 = Parse-Version $v1
+    $pv2 = Parse-Version $v2
 
-    $isV1Beta = $v1 -match "-beta$"
-    $isV2Beta = $v2 -match "-beta$"
-
-    if ($ver1 -gt $ver2) { return $v1 }
-    elseif ($ver1 -lt $ver2) { return $v2 }
+    if ($pv1.Version -gt $pv2.Version) { return $v1 }
+    elseif ($pv1.Version -lt $pv2.Version) { return $v2 }
     else {
-        # Handle beta suffix priority
-        if ($isV1Beta -and -not $isV2Beta) { return $v2 }
-        elseif ($isV2Beta -and -not $isV1Beta) { return $v1 }
-        else { return "identical_versions" }
+        # Both have same numeric version, compare beta number
+        if ($pv1.BetaNum -eq $pv2.BetaNum) { return "identical_versions" }
+        elseif ($pv1.BetaNum -eq 0) { return $v1 }           # v1 stable > v2 beta
+        elseif ($pv2.BetaNum -eq 0) { return $v2 }           # v2 stable > v1 beta
+        elseif ($pv1.BetaNum -gt $pv2.BetaNum) { return $v1 }
+        else { return $v2 }
     }
 }
 
@@ -80,11 +86,13 @@ function Exit-Script($code) {
 }
 
 function Get-GitHubLatestReleaseVersion {
-    param ([Parameter(Mandatory = $true)][string]$OwnerRepo)
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$OwnerRepo
+    )
     try {
         $apiUrl = "https://api.github.com/repos/$OwnerRepo/releases/latest"
-        $response = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing -ErrorAction Stop
-        $json = $response.Content | ConvertFrom-Json
+        $json = Invoke-RestMethod -Uri $apiUrl -ErrorAction Stop
         return $json.tag_name
     }
     catch {
@@ -121,13 +129,12 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
         Write-Host "[INFO] Beta versions will be considered as available updates."
     }
 
-    $currentVDVersion = $pCurrentVDVersionTag.Replace("v", "")
-    # Find versions matching the format '1.2.3' or 'v1.2.3-beta'
-    if ($currentVDVersion -notmatch "^\d+\.\d+\.\d+(\.\d+)?(-beta)?$") {
-        Write-Error "[ERROR] Invalid current version tag: $currentVDVersion"
+    # Find versions matching the format '1.2.3' or 'v1.2.3b1'
+    if ($pCurrentVDVersionTag -notmatch "^v?\d+\.\d+\.\d+(b\d+)?$") {
+        Write-Error "[ERROR] Invalid current version tag: $pCurrentVDVersionTag"
         Exit-Script 2
     }
-    Write-Host "[INFO] VideoDownloader version detected: $currentVDVersion."
+    Write-Host "[INFO] VideoDownloader version detected: $pCurrentVDVersionTag."
 
     if (-not $internetAvailable) {
         Write-Warning "[WARNING] Skipping VideoDownloader check, offline."
@@ -138,16 +145,16 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
         $tagsUrl = "$apiUrl/tags"
         try {
             $tagsResponse = Invoke-RestMethod -Uri $tagsUrl -Method Get
-            $latestTag = "v0.0.0.0"
+            $latestTag = "v0.0.0"
             foreach ($tag in $tagsResponse) {
-                $tmpTag = $tag.name.Replace("v", "")
-                if ($tmpTag -like "*-beta" -and !$pSwitchConsiderBetaReleases) { continue }
-                $tmpTag = $tmpTag.Replace("-beta", "")
-                if ($tmpTag -notmatch '^\d+\.\d+\.\d+(\.\d+)?$') { continue }
-                $latestTag = Compare-Versions $latestTag $tag.name
+                # Skip beta releases if the switch is not set
+                if ($tag.name -match "b(\d+)$" -and !$pSwitchConsiderBetaReleases) { continue }
+                # Skip invalid version tags
+                if ($tag.name -notmatch "^v?\d+\.\d+\.\d+(b\d+)?$") { continue }
+                $latestTag = Compare-Versions -v1 $latestTag -v2 $tag.name
             }
             # If the latestTag is higher than the currentVDVersion this means that an update is available
-            $availableVersion = if ((Compare-Versions -v1 $currentVDVersion -v2 $latestTag) -eq $latestTag) { $latestTag } else { "no_available_update" }
+            $availableVersion = if ((Compare-Versions -v1 $pCurrentVDVersionTag -v2 $latestTag) -eq $latestTag) { $latestTag } else { "no_available_update" }
             if ($availableVersion -ne "no_available_update") {
                 Write-Host "[INFO] Update available for VideoDownloader: $latestTag."
                 Set-ItemProperty -Path $pRegistryDirectory -Name $vdKey -Value $latestTag
@@ -175,7 +182,7 @@ if ($pCurrentYTDLPVersion) {
     }
     else {
         $latestTag = Get-GitHubLatestReleaseVersion -OwnerRepo "yt-dlp/yt-dlp"
-        if (-not $latestTag) { $latestTag = "v0.0.0.0" }
+        if (-not $latestTag) { $latestTag = "v0.0.0" }
         Write-Host "[INFO] Latest GitHub release for yt-dlp: $latestTag."
 
         $highestTag = Compare-Versions -v1 $pCurrentYTDLPVersion -v2 $latestTag
@@ -213,7 +220,7 @@ Exit Code List
 
 Bad exit codes
 Range: 1-99
-1: Provided registry path where the registry keys (CURRENT_VERSION_LAST_UPDATED and AVAILABLE_UPDATE) should be, is invalid or does not exist
+1: Provided registry path where the registry keys (AVAILABLE_UPDATE and AVAILABLE_YTDLP_UPDATE) should be, is invalid or does not exist
 2: The current version registry key has an invalid version syntax
 3: Could not extract version info from 'yt-dlp.exe'
 

@@ -57,8 +57,7 @@ createUpdateGUI(pUpdateVersion) {
     If the current version is a beta version and the available update is another beta version,
     the old beta version tag will be already deleted which would eliminate the ability to compare the versions.
     */
-    if (!(InStr(versionFullName, "-beta") && InStr(pUpdateVersion, "-beta"))
-    && !(InStr(versionFullName, "-beta") && !InStr(pUpdateVersion, "-beta"))) {
+    if (RegExMatch(versionFullName, "b\d+$") && RegExMatch(pUpdateVersion, "b\d+$")) {
         updateGUICompareVersionsLink := updateGUI.Add("Text", "yp+30 w320 R2 Center", "Compare Versions")
         updateGUICompareVersionsLink.SetFont("s10 underline cBlue")
         updateGUICompareVersionsLink.OnEvent("Click", (*) => Run(compareVersionsURL))

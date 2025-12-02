@@ -21,59 +21,101 @@ env:
 jobs:
   figure_out_release_version:
     name: Evaluate correct beta release version
-    runs-on: windows-2025
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     outputs:
-      beta_version: ${{ steps.set_latest_release_version_id.outputs.FINAL_BETA_VERSION }}
+      beta_version: ${{ steps.set_latest_release_version_id.outputs.final_beta_version }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Get latest release version
-        id: get_latest_release_version_id
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install packaging
+        run: python3 -m pip install packaging --upgrade
+
+      - name: Determine latest release (semver)
         run: |
-          # Calling GitHub API for the latest tag name
-          $response = Invoke-WebRequest -Uri "https://api.github.com/repos/LeoTN/yt-dlp-autohotkey-gui/tags" -Method Get
-          $latestTag = ($response.Content | ConvertFrom-Json)[0].name
-          $null = Write-Host "[INFO] The received tag name is [$latestTag]."
-          if ($latestTag -like "") {
-            $null = Write-Host "[ERROR] Empty tag received! Exiting workflow..."   
-            throw
-          }
-          echo "LATEST_TAG_NAME=$latestTag" >> $env:GITHUB_OUTPUT
+          python3 - <<'EOF'
+          import os
+          import subprocess
+          from packaging.version import parse
+
+          # Fetch up to 50 releases from GitHub
+          result = subprocess.run(
+              ["gh", "release", "list", "--repo", os.environ["GITHUB_REPOSITORY"], "--limit", "50"],
+              capture_output=True,
+              text=True,
+              check=True,
+          )
+
+          releases = result.stdout.splitlines()
+          versions = []
+
+          for line in releases:
+              if not line.strip():
+                  continue
+              tag = line.split()[0]
+              try:
+                  versions.append(parse(tag))
+              except Exception:
+                  # Skip tags that are not valid versions
+                  continue
+
+          if not versions:
+              print("[ERROR] No valid releases found.")
+              exit(1)
+
+          latest_version = str(max(versions))
+          print(f"[INFO] Latest release (semver): {latest_version}")
+
+          env_file = os.environ.get("GITHUB_ENV")
+          with open(env_file, "a") as f:
+            f.write(f"LATEST_RELEASE={latest_version}\n")
+          EOF
 
       - name: Figure out beta release version
         id: set_latest_release_version_id
         run: |
-          $currentVersion = "${{ steps.get_latest_release_version_id.outputs.LATEST_TAG_NAME }}"
-          # Remove unwanted letters
-          $currentVersion = $currentVersion.Replace("v", "")
-          if ($currentVersion -like "*-beta") {
-            $currentVersion = $currentVersion.Replace("-beta", "")
-          }
-          try {
-              $version = [version]$currentVersion
-          }
-          catch {
-            $null = Write-Host "[ERROR] Failed to convert [$currentVersion] into version object! Exiting workflow..."
-            throw
-          }
-          $version = [version]::new($version.Major, $version.Minor, $version.Build, $version.Revision + 1)
-          $currentVersion = $version.ToString()
-          $finalVersion = $currentVersion
-          $null = Write-Host "[INFO] The beta version will be [$finalVersion]."
-          if (-not ($finalVersion -match '^\d+\.\d+\.\d+\.\d+$')) {
-            $null = Write-Host "[ERROR] Invalid beta version [$finalVersion]! Exiting workflow..."
-            throw
-          }
-          echo "FINAL_BETA_VERSION=$finalVersion" >> $env:GITHUB_OUTPUT
+          # Check if the current version is already a beta
+          if [[ "$LATEST_RELEASE" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)b([0-9]+)$ ]]; then
+            MAJOR="${BASH_REMATCH[1]}"
+            MINOR="${BASH_REMATCH[2]}"
+            PATCH="${BASH_REMATCH[3]}"
+            BETA="${BASH_REMATCH[4]}"
+
+            # Increment beta version
+            NEXT_BETA=$((BETA + 1))
+            final_beta_version="${MAJOR}.${MINOR}.${PATCH}b${NEXT_BETA}"
+
+          # If current version is a stable release
+          elif [[ "$LATEST_RELEASE" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            MAJOR="${BASH_REMATCH[1]}"
+            MINOR="${BASH_REMATCH[2]}"
+            PATCH="${BASH_REMATCH[3]}"
+
+            # Increment patch and start beta at 0
+            PATCH=$((PATCH + 1))
+            final_beta_version="${MAJOR}.${MINOR}.${PATCH}b0"
+
+          else
+            echo "[ERROR] Could not parse latest release version: $LATEST_RELEASE."
+            exit 1
+          fi
+
+          echo "[INFO] New beta version: $final_beta_version."
+          echo "final_beta_version=$final_beta_version" >> $GITHUB_OUTPUT
 
   start_ci_workflow:
     name: Launch release workflow
     needs: figure_out_release_version
     permissions:
       contents: write
-    uses: ./.github/workflows/build-installer-archive.yml
+    uses: ./.github/workflows/release.yml
     with:
       version: "${{ needs.figure_out_release_version.outputs.beta_version }}"
-      is_pre_release: true

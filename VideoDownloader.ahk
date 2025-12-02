@@ -4,9 +4,9 @@
 ;@Ahk2Exe-SetMainIcon library\assets\icons\1.ico
 ;@Ahk2Exe-SetName VideoDownloader
 ; Define the version information based on the content of the text file.
-;@Ahk2Exe-Obey U_productVersion, = FileExist("%A_ScriptDir%\compiler\currentVersion.txt") ? RegExReplace(FileRead("%A_ScriptDir%\compiler\currentVersion.txt")`, "[\r\n]") : "v0.0.0.1"
+;@Ahk2Exe-Obey U_productVersion, = FileExist("%A_ScriptDir%\compiler\currentVersion.txt") ? RegExReplace(FileRead("%A_ScriptDir%\compiler\currentVersion.txt")`, "[\r\n]") : "N/A"
 ;@Ahk2Exe-SetProductVersion %U_productVersion%
-;@Ahk2Exe-Obey U_fileVersion, U_fileVersion := RTrim(LTrim("%U_productVersion%"`, "v")`, "-beta")
+;@Ahk2Exe-Obey U_fileVersion, U_fileVersion := RegExReplace(LTrim("%U_productVersion%"`, "v")`, "b\d+$"`)
 ;@Ahk2Exe-SetFileVersion %U_fileVersion%
 
 ; Import relevant functions and variables.
@@ -68,9 +68,9 @@ onInit() {
     ; When this value is true, certain functions will behave differently and do not show unnecessary prompts.
     global booleanFirstTimeLaunch := RegRead(applicationRegistryDirectory, "booleanFirstTimeLaunch", false)
     ; The version of this application. For example "v1.2.3.4".
-    global versionFullName := getCorrectScriptVersion()
+    global versionFullName := getProductVersion()
     ; The version of the yt-dlp executable. For example "2025.10.22.0".
-    global ytdlpVersion := getCorrectYTDLPVersion()
+    global ytdlpVersion := getYTDLPVersion()
 
     ; Determine the available download formats and subtitle options.
     global desiredDownloadFormatArray := [

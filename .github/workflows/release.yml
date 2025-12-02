@@ -4,48 +4,117 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release Version (1.2.3.4)"
+        description: "Release Version (1.2.3 or 1.2.3b1)"
+        required: true
         type: string
-        required: true
-
-      is_pre_release:
-        type: boolean
-        description: "Beta-Release"
-        default: true
-        required: true
 
   workflow_call:
     inputs:
       version:
-        description: "Release Version (1.2.3.4)"
+        description: "Release Version (1.2.3 or 1.2.3b1)"
+        required: true
         type: string
-        required: true
-
-      is_pre_release:
-        type: boolean
-        description: Beta-Release"
-        default: true
-        required: true
 
 env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
+  FINAL_INSTALLER_NAME: VideoDownloader_v${{ inputs.version }}_Installer.msi
+  RELEASE_TAG_NAME: v${{ inputs.version }}
   RELEASE_VERSION: ${{ inputs.version }}
-  IS_PRE_RELEASE: ${{ inputs.is_pre_release }}
 
 jobs:
   validate_version:
     name: Validate version input
     runs-on: ubuntu-latest
+    outputs:
+      is_beta: ${{ steps.check_version.outputs.is_beta }}
     steps:
       - name: Validate version input
         id: check_version
         shell: bash
         run: |
-          VERSION="${{ inputs.version }}"
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              echo "[ERROR] Version format invalid: $VERSION. Expected format: X.Y.Z.W (example: 1.2.3.4)"
+          VERSION=${{ env.RELEASE_VERSION }}
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+b[0-9]+$ ]]; then
+              echo "Invalid version format: $VERSION."
+              echo "Use X.Y.Z or X.Y.ZbN (only normal or beta releases allowed). Exiting..."
               exit 1
+          else
+              # Check if it's a beta version
+              if [[ "$VERSION" == *b* ]]; then
+                  echo "Version $VERSION is a beta release."
+                  echo "is_beta=true" >> "$GITHUB_OUTPUT"
+              else
+                  echo "Version $VERSION is a normal release."
+                  echo "is_beta=false" >> "$GITHUB_OUTPUT"
+              fi
           fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install packaging
+        run: python3 -m pip install packaging --upgrade
+
+      - name: Determine latest release (semver)
+        run: |
+          python3 - <<'EOF'
+          import os
+          import subprocess
+          from packaging.version import parse
+
+          # Fetch up to 50 releases from GitHub
+          result = subprocess.run(
+              ["gh", "release", "list", "--repo", os.environ["GITHUB_REPOSITORY"], "--limit", "50"],
+              capture_output=True,
+              text=True,
+              check=True,
+          )
+
+          releases = result.stdout.splitlines()
+          versions = []
+
+          for line in releases:
+              if not line.strip():
+                  continue
+              tag = line.split()[0]
+              try:
+                  versions.append(parse(tag))
+              except Exception:
+                  # Skip tags that are not valid versions
+                  continue
+
+          if not versions:
+              print("[ERROR] No valid releases found.")
+              exit(1)
+
+          latest_version = str(max(versions))
+          print(f"[INFO] Latest release (semver): {latest_version}")
+
+          env_file = os.environ.get("GITHUB_ENV")
+          with open(env_file, "a") as f:
+            f.write(f"LATEST_RELEASE={latest_version}\n")
+          EOF
+
+      - name: Verify new version is higher than latest release
+        shell: bash
+        run: |
+          python3 - <<EOF
+          from packaging.version import parse
+          import sys
+
+          latest = parse("$LATEST_RELEASE")
+          new = parse("${{ env.RELEASE_VERSION }}")
+
+          if new <= latest:
+              print(f"New version {new} is not higher than latest release {latest}. Exiting...")
+              sys.exit(1)
+          else:
+              print(f"New version {new} is higher than latest release {latest}. Continuing...")
+          EOF
 
   build_exe_files:
     name: Build and upload executable artifacts
@@ -56,24 +125,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Validate release version input
-        run: |
-          if (-not ($env:RELEASE_VERSION -match '^\d+\.\d+\.\d+\.\d+$')) {
-            $null = Write-Host "[ERROR] Invalid release version [$env:RELEASE_VERSION] received! Exiting workflow..."
-            throw
-          }
-
       - name: Define version name file
         run: |
-          if ($env:IS_PRE_RELEASE -eq "true") {
-            $versionName = "v${{ inputs.version }}-beta"
-          }
-          else {
-            $versionName = "v${{ inputs.version }}-beta"
-          }
-          $null = Write-Host "[INFO] The version name is [$versionName]."
           # This text file will be used by the AutoHotkey compiler to set the version of the executable file
-          $null = Set-Content -Path "${{ github.workspace }}\compiler\currentVersion.txt" -Value $versionName -Force
+          $null = Set-Content -Path "${{ github.workspace }}\compiler\currentVersion.txt" -Value "${{ env.RELEASE_VERSION }}" -Force
 
       - name: Compile Autohotkey main executable
         run: |
@@ -104,8 +159,6 @@ jobs:
     name: Build and upload MSI installer file
     needs: build_exe_files
     runs-on: windows-2025
-    outputs:
-      FINAL_INSTALLER_NAME: ${{ steps.define_final_installer_name.outputs.FINAL_INSTALLER_NAME }}
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6
@@ -125,6 +178,10 @@ jobs:
           $targetFileLocation = Join-Path -Path $targetDirectory -ChildPath $targetFileName
           $null = New-Item -Type "Directory" -Path $targetDirectory -Force
           $null = Invoke-WebRequest -Uri $downloadURL -OutFile $targetFileLocation
+          if (-not (Test-Path -Path $targetFileLocation)) {
+            $null = Write-Host "[ERROR] Failed to download yt-dlp executable! Exiting workflow..."
+            throw
+          }
 
       - name: Download and extract FFmpeg executables
         run: |
@@ -135,6 +192,10 @@ jobs:
           $targetFileLocation = Join-Path -Path $targetDirectory -ChildPath $targetFileName
           $null = New-Item -Type "Directory" -Path $targetDirectory -Force
           $null = Invoke-WebRequest -Uri $downloadURL -OutFile $targetFileLocation
+          if (-not (Test-Path -Path $targetFileLocation)) {
+            $null = Write-Host "[ERROR] Failed to download FFmpeg executables! Exiting workflow..."
+            throw
+          }
 
           $null = Write-Host "[INFO] Extracting FFmpeg executables..."
           $destinationPath = Join-Path -Path $targetDirectory -ChildPath "ffmpeg-files"
@@ -148,59 +209,34 @@ jobs:
             }
           }
 
-      - name: Define final installer name
-        id: define_final_installer_name
-        run: |
-          # The name only changes when the release is a beta release
-          $finalInstallerName = "VideoDownloader_v${{ inputs.version }}_Installer.msi"
-          if ($env:IS_PRE_RELEASE -eq "true") {
-            $finalInstallerName = "VideoDownloader_v${{ inputs.version }}-beta_Installer.msi"
-          }
-          $null = Write-Host "[INFO] The final installer name is [$finalInstallerName]."
-          echo "FINAL_INSTALLER_NAME=$finalInstallerName" >> $env:GITHUB_OUTPUT
-
       - name: Build Advanced Installer project
         uses: caphyon/advinst-github-action@main
         with:
           advinst-enable-automation: true
           aip-path: ${{ github.workspace }}\compiler\VideoDownloaderInstaller.aip
           aip-build-name: DefaultBuild
-          aip-package-name: ${{ steps.define_final_installer_name.outputs.FINAL_INSTALLER_NAME }}
+          aip-package-name: ${{ env.FINAL_INSTALLER_NAME }}
           aip-output-dir: ${{ github.workspace }}
           aip-commands: |
             SetVersion "${{ env.RELEASE_VERSION }}"
+            SetProperty releaseTagName="${{ env.RELEASE_TAG_NAME }}"
 
       - name: Upload installer as artifact
         uses: actions/upload-artifact@v5
         with:
-          name: ${{ steps.define_final_installer_name.outputs.FINAL_INSTALLER_NAME }}
-          path: ${{ github.workspace }}\${{ steps.define_final_installer_name.outputs.FINAL_INSTALLER_NAME }}
+          name: ${{ env.FINAL_INSTALLER_NAME }}
+          path: ${{ env.FINAL_INSTALLER_NAME }}
 
   create_release:
     name: Download executable artifact and create release
-    needs: build_msi_file
+    needs: [validate_version, build_msi_file]
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
-    env:
-      FINAL_INSTALLER_NAME: ${{ needs.build_msi_file.outputs.FINAL_INSTALLER_NAME }}
-      RELEASE_NAME: v${{ inputs.version }}${{ inputs.IS_PRE_RELEASE && '-beta' || '' }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-
-      - name: Define final installer name
-        run: |
-          # The name only changes when the release is a beta release
-          if [ "${{ env.IS_PRE_RELEASE }}" == "true" ]; then
-            finalInstallerName="VideoDownloader_v${{ inputs.version }}-beta_Installer.msi"
-            echo "FINAL_INSTALLER_NAME=$finalInstallerName" >> $GITHUB_ENV
-          else
-            finalInstallerName="${{ env.FINAL_INSTALLER_NAME }}"
-          fi
-          echo "[INFO] The final installer name is [$finalInstallerName]."
 
       - name: Download installer artifact
         uses: actions/download-artifact@v6
@@ -217,7 +253,7 @@ jobs:
           echo "[INFO] Found latest tag [$latest_tag]."
 
           # Check if the tag is a beta release
-          if [[ "$latest_tag" == v* && "$latest_tag" == *-beta ]]; then
+          if [[ "$latest_tag" =~ ^v.*b[0-9]+$ ]]; then
             echo "[INFO] Deleting old beta release and tag [$latest_tag]."
               
             # Delete the old beta release
@@ -247,9 +283,9 @@ jobs:
           artifactContentType: "application/executable"
           removeArtifacts: true
           replacesArtifacts: true
-          body: "**Download** the **[${{ env.FINAL_INSTALLER_NAME }}](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/download/${{ env.RELEASE_NAME }}/${{ env.FINAL_INSTALLER_NAME }})** file and install it. Have fun :)"
+          body: "**Download** the **[${{ env.FINAL_INSTALLER_NAME }}](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/download/${{ env.RELEASE_TAG_NAME }}/${{ env.FINAL_INSTALLER_NAME }})** file and install it. Have fun :)"
           generateReleaseNotes: false
           makeLatest: true
-          prerelease: ${{ env.IS_PRE_RELEASE == 'true' }}
-          name: ${{ env.RELEASE_NAME }}
-          tag: ${{ env.RELEASE_NAME }}
+          prerelease: ${{ needs.validate_version.outputs.is_beta }}
+          name: ${{ env.RELEASE_TAG_NAME }}
+          tag: ${{ env.RELEASE_TAG_NAME }}

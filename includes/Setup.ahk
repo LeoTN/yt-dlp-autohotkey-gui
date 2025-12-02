@@ -79,7 +79,7 @@ handleSetupGUI_setupGUI_onClose(pGUI) {
         exitApplicationWithNotification(true)
     }
     ; Update the internal yt-dlp version after a (possible) update.
-    ytdlpVersion := getCorrectYTDLPVersion()
+    ytdlpVersion := getYTDLPVersion()
     ; Update the GUI only if it is already initialized
     if (IsSet(helpGUI)) {
         createHelpGUI_updateAbout()

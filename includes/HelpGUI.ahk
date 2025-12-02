@@ -49,12 +49,16 @@ createHelpGUI() {
     helpGUIStatusBar.OnEvent("Click", handleHelpGUI_helpGUIStatusBar_onClick)
 }
 
-; Allows updates of the yt-dlp version without reloading the application.
+; Allows updates of the yt-dlp version without reloading the application
 createHelpGUI_updateAbout() {
     global ytdlpVersion
 
-    local currentVDVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/tag/" . versionFullName
-    local currentVDVersionString := 'VD: <a href="' . currentVDVersionLink . '">' . versionFullName . '</a> | yt-dlp: ' . ytdlpVersion
+    currentVDVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/tag/" . versionFullName
+    ; Redirect to the main repository if the application is uncompiled or the version is not available
+    if (versionFullName == "uncompiled" || versionFullName == "N/A") {
+        currentVDVersionLink := "https://github.com/LeoTN/yt-dlp-autohotkey-gui"
+    }
+    currentVDVersionString := 'VD: <a href="' . currentVDVersionLink . '">' . versionFullName . '</a> | yt-dlp: ' . ytdlpVersion
     helpGUIApplicationtVersionLink.Text := currentVDVersionString
 }
 

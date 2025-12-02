@@ -11,10 +11,10 @@
     <ROW Property="CTRLS" Value="2"/>
     <ROW Property="IAgree" Value="No" Type="4"/>
     <ROW Property="Manufacturer" Value="LeoTN"/>
-    <ROW Property="ProductCode" Value="1033:{ACD9DC1E-48A8-41C2-B12A-E263766B2B72} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{3721A4C0-257F-4526-AD5D-21ACD8AC959D} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="VideoDownloader"/>
-    <ROW Property="ProductVersion" Value="0.0.0.0" Options="4"/>
+    <ROW Property="ProductVersion" Value="0.0.0" Options="4"/>
     <ROW Property="RUNAPPLICATION" Value="1" Type="4"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{D7889C57-A8FB-4412-992A-8BEE98744251}"/>
@@ -32,6 +32,7 @@
     <ROW Property="WindowsTypeNT64" MultiBuildValue="DefaultBuild:Windows 7 x64, Windows Server 2008 R2 x64" ValueLocId="-"/>
     <ROW Property="WindowsTypeNT64Display" MultiBuildValue="DefaultBuild:Windows 7 x64, Windows Server 2008 R2 x64" ValueLocId="-"/>
     <ROW Property="WindowsTypeNTDisplay" MultiBuildValue="DefaultBuild:Windows 7 x86" ValueLocId="-"/>
+    <ROW Property="releaseTagName" Value="v0.0.0" Comments="This value is set by the CI workflow to store the GitHub tag name for the corresponding version"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiDirsComponent">
     <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1"/>
@@ -232,7 +233,7 @@
   <COMPONENT cid="caphyon.advinst.msicomp.MsiRegsComponent">
     <ROW Registry="AVAILABLE_UPDATE" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="AVAILABLE_UPDATE" Component_="AVAILABLE_UPDATE"/>
     <ROW Registry="AVAILABLE_YTDLP_UPDATE" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="AVAILABLE_YTDLP_UPDATE" Component_="AVAILABLE_YTDLP_UPDATE"/>
-    <ROW Registry="CURRENT_VERSION" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="CURRENT_VERSION" Value="v[ProductVersion]" Component_="CURRENT_VERSION"/>
+    <ROW Registry="CURRENT_VERSION" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="RELEASE_TAG_NAME" Value="[releaseTagName]" Component_="CURRENT_VERSION"/>
     <ROW Registry="Manufacturer" Root="-1" Key="Software\[Manufacturer]" Name="\"/>
     <ROW Registry="ProductName" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="\"/>
     <ROW Registry="Software" Root="-1" Key="Software" Name="\"/>
@@ -247,7 +248,7 @@
     <ATTRIBUTE name="UsedTheme" value="classic"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiUpgradeComponent">
-    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="0.0.1" VersionMax="255.255.6555.6555" Attributes="257" ActionProperty="OLDPRODUCTS"/>
-    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="255.255.6555.6555" Attributes="2" ActionProperty="AI_NEWERPRODUCTFOUND"/>
+    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="0.0.1" VersionMax="[|ProductVersion]" Attributes="769" ActionProperty="OLDPRODUCTS"/>
+    <ROW UpgradeCode="[|UpgradeCode]" VersionMin="[|ProductVersion]" Attributes="2" ActionProperty="AI_NEWERPRODUCTFOUND"/>
   </COMPONENT>
 </DOCUMENT>
