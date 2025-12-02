@@ -34,7 +34,7 @@
 | 📋 **Video List**           | Easily manage and download videos                                         |
 | 💡 **Help Window**          | Provides additional **information** and **interactive tutorials**         |
 | 🌐 **Direct Capture**       | Capture a **video URL** while the video is **open** in your **browser**   |
-| 🖱️ **Indirect Capture**     | Capture a **video URL** by **hovering** over the **video thumbnail** (e.g. on YouTube) and pressing <code><strong><em>SHIFT + CTRL + ALT + F</em></strong></code> |
+| 🖱️ **Indirect Capture**     | Capture a **video URL** by **hovering** over the **video thumbnail** and pressing <code><strong><em>SHIFT + CTRL + ALT + F</em></strong></code> |
 
 <details>
 <summary><strong>Known Issues</strong></summary>
