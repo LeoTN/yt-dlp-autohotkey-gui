@@ -215,7 +215,7 @@ jobs:
         run: |
           $cleanVersion = "${{ inputs.version }}" -replace "b(\d+)$", ""
           $null = Write-Host "[INFO] Clean version for Advanced Installer: $cleanVersion."
-          echo "clean_version=$cleanVersion" >> "$GITHUB_OUTPUT"
+          echo clean_version=$cleanVersion >> $GITHUB_OUTPUT
 
       - name: Build Advanced Installer project
         uses: caphyon/advinst-github-action@main
