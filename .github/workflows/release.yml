@@ -60,6 +60,8 @@ jobs:
         run: python3 -m pip install packaging --upgrade
 
       - name: Determine latest release (semver)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 - <<'EOF'
           import os
@@ -283,7 +285,7 @@ jobs:
           artifactContentType: "application/executable"
           removeArtifacts: true
           replacesArtifacts: true
-          body: "**Download** the **[${{ env.FINAL_INSTALLER_NAME }}](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/download/${{ env.RELEASE_TAG_NAME }}/${{ env.FINAL_INSTALLER_NAME }})** file and install it. Have fun :)"
+          body: "**Download** the **[${{ env.FINAL_INSTALLER_NAME }}](https://github.com/${{ github.repository }}/releases/download/${{ env.RELEASE_TAG_NAME }}/${{ env.FINAL_INSTALLER_NAME }})** file and install it. Have fun :)"
           generateReleaseNotes: false
           makeLatest: true
           prerelease: ${{ needs.validate_version.outputs.is_beta }}
