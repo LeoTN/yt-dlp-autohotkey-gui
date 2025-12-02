@@ -61,7 +61,7 @@ jobs:
 
       - name: Determine latest release (semver)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 - <<'EOF'
           import os
@@ -256,7 +256,7 @@ jobs:
 
       - name: Delete old beta tags and releases
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git fetch --prune --unshallow --tags
           latest_tag=$(git describe --tags --abbrev=0)
