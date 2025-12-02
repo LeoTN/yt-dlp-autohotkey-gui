@@ -103,7 +103,7 @@ createVideoListGUI() {
     addVideoURLIsAPlaylistCheckbox := videoListGUI.Add("CheckBox", "xp+10 yp+30", "URL refers to a playlist")
     addVideoURLUsePlaylistRangeCheckbox := videoListGUI.Add("CheckBox", "yp+20 +Disabled",
         "Use playlist range filter")
-    addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Index Range")
+    addVideoSpecifyPlaylistRangeText := videoListGUI.Add("Text", "yp+20 w180", "Playlist Range")
     addVideoSpecifyPlaylistRangeInputEdit := videoListGUI.Add("Edit", "yp+20 w180 +Disabled -Multi", "1")
     ; Adds the grey "hint" text into the edit.
     DllCall("SendMessage", "Ptr", addVideoSpecifyPlaylistRangeInputEdit.Hwnd, "UInt", 0x1501, "Ptr", 1, "WStr",
@@ -231,7 +231,7 @@ createVideoListGUI() {
     addVideoURLUsePlaylistRangeCheckbox.ToolTip :=
         "Allows fine-grained selection of videos from a playlist. See the help section for details."
     addVideoSpecifyPlaylistRangeInputEdit.ToolTip :=
-        "Enter the index range of videos to select from the playlist.`nSee the help section for more details."
+        "Enter the playlist range of videos to select from the playlist.`nSee the help section for more details."
     ; Remove video elements.
     removeVideoFromListButton.ToolTip := "Remove all selected videos from the list."
     removeVideoConfirmDeletionCheckbox.ToolTip :=
@@ -593,7 +593,7 @@ handleVideoListGUI_addVideoToListButton_addMode_onClick(pButton, pInfo) {
     ; The user might want to enable playlist mode.
     if (readConfigFile("ASK_FOR_PLAYLIST_MODE") && !addVideoURLIsAPlaylistCheckbox.Value && checkIfStringIsAPlaylistURL(videoURL)) {
         msgText := "The entered video URL seems to be a playlist."
-        msgText .= "`n`nDo you want to enable playlist mode?"
+        msgText .= "`n`nDo you want to enable playlist mode to extract all videos from the playlist?"
         msgText .= "`n`nTip: You can set playlist mode as the default in the settings."
         msgTitle := "VD - Playlist Mode"
         msgHeadLine := "Enable Playlist Mode?"
@@ -743,10 +743,10 @@ handleVideoListGUI_addVideoURLUsePlaylistRangeCheckbox_onClick(pCheckbox, pInfo)
 handleVideoListGUI_addVideoSpecifyPlaylistRangeInputEdit_onChange(pEdit, pInfo) {
     ; Displays an inidicator in the text to show the validity status.
     if (checkIfStringIsValidPlaylistIndexRange(pEdit.Value)) {
-        addVideoSpecifyPlaylistRangeText.Text := "Index Range (valid)"
+        addVideoSpecifyPlaylistRangeText.Text := "Playlist Range (valid)"
     }
     else {
-        addVideoSpecifyPlaylistRangeText.Text := "Index Range (invalid)"
+        addVideoSpecifyPlaylistRangeText.Text := "Playlist Range (invalid)"
     }
 }
 
@@ -972,9 +972,9 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
         currentYTDLPActionObject.alreadyDownloadedVideoAmount - currentYTDLPActionObject.canceledDownloadVideoAmount
     ; Updates the downloaded video progress text.
     downloadProgressText.Value := "Downloaded (" . currentYTDLPActionObject.alreadyDownloadedVideoAmount . " / " .
-        currentYTDLPActionObject.completeVideoAmount . ") - [" . currentYTDLPActionObject.remainingVideos . "] Remaining"
+        currentYTDLPActionObject.completeVideoAmount . ") - " . currentYTDLPActionObject.remainingVideos . " Remaining"
     if (currentYTDLPActionObject.alreadyDownloadedVideoAmount == 1) {
-        statusText := "Downloaded 1 file to [" . targetDownloadDirectory . "]"
+        statusText := "Downloaded 1 file to '" . targetDownloadDirectory . "'"
         videoListGUIStatusBar.SetText(statusText)
         ; Updates the latest download directory.
         currentYTDLPActionObject.latestDownloadDirectory := targetDownloadDirectory
@@ -984,7 +984,7 @@ handleVideoListGUI_downloadStartButton_onClick(pButton, pInfo) {
     }
     else if (currentYTDLPActionObject.alreadyDownloadedVideoAmount > 1) {
         statusText := "Downloaded " . currentYTDLPActionObject.alreadyDownloadedVideoAmount
-        statusText .= " files to [" . targetDownloadDirectory . "]"
+        statusText .= " files to '" . targetDownloadDirectory . "'"
         videoListGUIStatusBar.SetText(statusText)
         ; Updates the latest download directory.
         currentYTDLPActionObject.latestDownloadDirectory := targetDownloadDirectory

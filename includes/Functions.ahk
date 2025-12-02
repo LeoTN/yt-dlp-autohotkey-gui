@@ -107,9 +107,9 @@ executeYTDLPCommand(pYTDLPCommandString, pLogFileLocation := A_Temp . "\yt-dlp.l
         ; Recreates the log file path because the application will put the log file in the same directory as itself.
         psRunYTDLPExecutableLocationLogFileLocation := StrReplace(psRunYTDLPExecutableLocation, ".ps1", ".log")
         errorExtraMessage := "The following log files might provide more information:`n`n"
-        errorExtraMessage .= "[" . psRunYTDLPExecutableLocationLogFileLocation . "]`n"
-        errorExtraMessage .= "[" . pLogFileLocation . "]`n"
-        errorExtraMessage .= "[" . pErrorLogFileLocation . "]"
+        errorExtraMessage .= "'" . psRunYTDLPExecutableLocationLogFileLocation . "'`n"
+        errorExtraMessage .= "'" . pLogFileLocation . "'`n"
+        errorExtraMessage .= "'" . pErrorLogFileLocation . "'"
         errorObject := Error("Failed to run yt-dlp executable with redirected stdout.", , errorExtraMessage)
         errorObject.File := psRunYTDLPExecutableLocation
         errorObject.Line := "No line information required."
@@ -149,8 +149,7 @@ monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCurrently
 
     ; Updates the downloaded video progress text.
     downloadProgressText.Value := "Downloaded (" . currentYTDLPActionObject.alreadyDownloadedVideoAmount . " / " .
-        currentYTDLPActionObject.completeVideoAmount . ") - [" . currentYTDLPActionObject.remainingVideos .
-        "] Remaining"
+        currentYTDLPActionObject.completeVideoAmount . ") - " . currentYTDLPActionObject.remainingVideos . " Remaining"
     ; Resets the download progress bar.
     downloadProgressBar.Value := 0
 
@@ -162,10 +161,8 @@ monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCurrently
             SetTimer(updateDownloadProgressStep, 0)
             downloadProgressBar.Value := 100
             ; Updates the downloaded video progress text.
-            downloadProgressText.Value := "Downloaded (" . currentYTDLPActionObject.alreadyDownloadedVideoAmount .
-                " / " .
-                currentYTDLPActionObject.completeVideoAmount . ") - [" . currentYTDLPActionObject.remainingVideos .
-                "] Remaining"
+            downloadProgressText.Value := "Downloaded (" . currentYTDLPActionObject.alreadyDownloadedVideoAmount . " / " .
+                currentYTDLPActionObject.completeVideoAmount . ") - " . currentYTDLPActionObject.remainingVideos . " Remaining"
             ; Resets all relevant values for the next download.
             booleanPhaseReached_pre_process := false
             booleanPhaseReached_after_filter := false
@@ -220,13 +217,11 @@ monitorVideoDownloadProgress(pYTDLPProcessPID, pYTDLPLogFileLocation, pCurrently
                 "[PROGRESS_INFO_VIDEO] [Tracking Point: Starting download of subtitle and other requested files...]"
             if (InStr(A_LoopReadLine, trackingLine)) {
                 booleanPhaseReached_video := true
-                statusBarText := "[" . pCurrentlyDownloadedVideoTitle .
-                    "] - Downloading video subtitle(s) and other requested files..."
+                statusBarText := "[" . pCurrentlyDownloadedVideoTitle . "] - Downloading video subtitle(s) and other requested files..."
                 handleVideoListGUI_videoListGUIStatusBar_startAnimation(statusBarText)
                 continue
             }
-            trackingLine :=
-                "[PROGRESS_INFO_BEFORE_DL] [Tracking Point: Starting video download...]"
+            trackingLine := "[PROGRESS_INFO_BEFORE_DL] [Tracking Point: Starting video download...]"
             if (InStr(A_LoopReadLine, trackingLine)) {
                 booleanPhaseReached_before_dl := true
                 statusBarText := "[" . pCurrentlyDownloadedVideoTitle . "] - Downloading video..."
@@ -506,7 +501,7 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
     if (invalidURLArray.Length > 0 && !pBooleanSkipInvalidURLs) {
         ; Asks the user if they would like to import the invalid URLs (if there are any).
         if (invalidURLArray.Length == 1) {
-            msgText := "There is [1] invalid URL in the file [" . pImportFileLocation . "]."
+            msgText := "There is 1 invalid URL in the file '" . pImportFileLocation . "'."
             msgText .= "`n`nWould you like to import it anyway?"
             msgTitle := "VD - Invalid URL Found"
             msgHeadLine := "Import Invalid URL?"
@@ -517,8 +512,7 @@ importVideoListViewElements(pImportFileLocation, pBooleanSkipInvalidURLs := fals
             msgButton3Icon := 26
         }
         else {
-            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the file ["
-                . pImportFileLocation . "]."
+            msgText := "There are " . invalidURLArray.Length . " invalid URLs in the file '" . pImportFileLocation . "'."
             msgText .= "`n`nWould you like to import them anyway?"
             msgTitle := "VD - Invalid URLs Found"
             msgHeadLine := "Import Invalid URLs?"
@@ -613,7 +607,7 @@ exportVideoListViewElements(pVideoListViewElementMap, pExportFileLocation?, pBoo
             msgButton3Icon := 26
         }
         else {
-            msgText := "There are [" . invalidURLArray.Length . "] invalid URLs in the list."
+            msgText := "There are " . invalidURLArray.Length . " invalid URLs in the list."
             msgText .= "`n`nWould you like to export them anyway?"
             msgTitle := "VD - Invalid URLs Found"
             msgHeadLine := "Export Invalid URLs?"
@@ -879,8 +873,8 @@ findAlreadyRunningVDInstance() {
         processPath := pProcessObject.ExecutablePath
         msgText := "Another instance of VideoDownloader is already running."
         msgText .= "`n`n********************"
-        msgText .= "`nName: [" . processName . "]"
-        msgText .= "`nPath: [" . processPath . "]"
+        msgText .= "`nName: " . processName
+        msgText .= "`nPath: " . processPath
         msgText .= "`n********************"
         msgText .= "`n`nRunning multiple instances can cause unpredictable issues."
         msgText .= "`n`nContinue at your own risk."
@@ -1270,12 +1264,12 @@ customMsgBox(pMsgBoxText, pMsgBoxTitle := A_ScriptName, pMsgBoxHeadLine := A_Scr
                 return returnArray
             }
             remainingSeconds := pMsgBoxTimeoutSeconds - A_Index + 1
-            statusBarText := "Please choose an option - [The window will close in " . remainingSeconds
+            statusBarText := "Please choose an option - The window will close in " . remainingSeconds
             if (remainingSeconds == 1) {
-                statusBarText .= " second]"
+                statusBarText .= " second"
             }
             else {
-                statusBarText .= " seconds]"
+                statusBarText .= " seconds"
             }
             customMsgBoxGUIStatusBar.SetText(statusBarText)
             Sleep(1000)
@@ -1422,8 +1416,7 @@ openDirectoryInExplorer(pDirectory) {
             Run('explorer.exe "' . pDirectory . '"')
         }
         else {
-            MsgBox("The directory`n[" . pDirectory . "]`ndoes not exist.", "VD - Non-existing Directory",
-                "O Icon! 262144 T3")
+            MsgBox("The directory`n'" . pDirectory . "'`ndoes not exist.", "VD - Non-existing Directory", "O Icon! 262144 T3")
         }
     }
     catch as error {

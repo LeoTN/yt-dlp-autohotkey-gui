@@ -295,7 +295,7 @@ importOldConfigFile(pOldConfigFileLocation, pBooleanAskForConfirmation := true, 
         }
     }
     if (importableConfigFileEntryMap.Count > 0 && pBooleanAskForConfirmation) {
-        msgText := "Please confirm the import of the config file [" . pOldConfigFileLocation . "]."
+        msgText := "Please confirm the import of the config file '" . pOldConfigFileLocation . "'."
         msgText .= "`n********************"
         msgText .= "`nTotal amount of imported entries: " . importableConfigFileEntryMap.Count
         msgText .= "`n********************"
@@ -399,7 +399,7 @@ readConfigFile(pKey, pSection?) {
             msgText .= "`nThe following key [" . pKey . "] could not be found."
         }
         msgText .= "`n********************"
-        msgText .= "`n`nYou could try to reset the config file at [" . configFileLocation . "]."
+        msgText .= "`n`nYou could try to reset the config file at '" . configFileLocation . "'."
         msgText .= "`n********************"
         msgText .= "`nIt is recommended to exit the program."
         msgText .= "`n`nContinue at your own risk."
@@ -411,7 +411,7 @@ readConfigFile(pKey, pSection?) {
         msgText .= "`n********************"
         msgText .= "`nThe following key [" . pKey . "] is duplicate in the config file."
         msgText .= "`n********************"
-        msgText .= "`n`nYou could try to reset the config file at [" . configFileLocation . "]."
+        msgText .= "`n`nYou could try to reset the config file at '" . configFileLocation . "'."
         msgText .= "`n********************"
         msgText .= "`nIt is recommended to exit the program."
         msgText .= "`n`nContinue at your own risk."
@@ -471,7 +471,7 @@ editConfigFile(pNewValue, pKey, pSection?) {
             msgText .= "`nThe following key [" . pKey . "] could not be found."
         }
         msgText .= "`n********************"
-        msgText .= "`n`nYou could try to reset the config file at [" . configFileLocation . "]."
+        msgText .= "`n`nYou could try to reset the config file at '" . configFileLocation . "'."
         msgText .= "`n********************"
         msgText .= "`nIt is recommended to exit the program."
         msgText .= "`n`nContinue at your own risk."
@@ -483,7 +483,7 @@ editConfigFile(pNewValue, pKey, pSection?) {
         msgText .= "`n********************"
         msgText .= "`nThe following key [" . pKey . "] is duplicate in the config file."
         msgText .= "`n********************"
-        msgText .= "`n`nYou could try to reset the config file at [" . configFileLocation . "]."
+        msgText .= "`n`nYou could try to reset the config file at '" . configFileLocation . "'."
         msgText .= "`n********************"
         msgText .= "`nIt is recommended to exit the program."
         msgText .= "`n`nContinue at your own risk."
@@ -539,7 +539,7 @@ class ConfigFileEntry {
         }
         catch as error {
             displayErrorMessage(error, "Please be sure that you have read and write permissions for this file"
-                "`n[" . this.configFileLocation . "]`nbefore submitting an issue. Thank you!")
+                "`n'" . this.configFileLocation . "'`nbefore submitting an issue. Thank you!")
         }
     }
     /*
@@ -554,7 +554,7 @@ class ConfigFileEntry {
         }
         catch as error {
             displayErrorMessage(error, "Please be sure that you have read and write permissions for this file"
-                "`n[" . this.configFileLocation . "]`nbefore submitting an issue. Thank you!")
+                "`n'" . this.configFileLocation . "'`nbefore submitting an issue. Thank you!")
             return "_error_config_file_could_not_be_read"
         }
     }
@@ -566,7 +566,7 @@ class ConfigFileEntry {
         }
         catch as error {
             displayErrorMessage(error, "Please be sure that you have read and write permissions for this file"
-                "`n[" . this.configFileLocation . "]`nbefore submitting an issue. Thank you!")
+                "`n'" . this.configFileLocation . "'`nbefore submitting an issue. Thank you!")
         }
     }
     /*
@@ -600,8 +600,8 @@ class ConfigFileEntry {
         global configFileEntryMap
         ; Used to determine input errors while creating new config file entries.
         if (configFileEntryMap.Has(this.identifierString)) {
-            MsgBox("[" . A_ThisFunc . "()] [WARNING] Entry with identifier string [" . this.identifierString .
-                "] already exists.", "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            MsgBox("[" . A_ThisFunc . "()] [WARNING] Entry with identifier string [" . this.identifierString . "] already exists.",
+                "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
             exitApplicationWithNotification(true)
         }
         configFileEntryMap.Set(this.identifierString, this)

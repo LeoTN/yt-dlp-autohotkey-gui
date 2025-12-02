@@ -152,7 +152,7 @@ createSettingsGUI() {
         "URL refers to a playlist")
     settingsGUIAddVideoURLUsePlaylistRangeCheckbox := settingsGUI.Add("CheckBox", "yp+20 +Disabled",
         "Use playlist range filter")
-    settingsGUIAddVideoSpecifyPlaylistRangeText := settingsGUI.Add("Text", "yp+20 w580", "Index Range")
+    settingsGUIAddVideoSpecifyPlaylistRangeText := settingsGUI.Add("Text", "yp+20 w580", "Playlist Range")
     settingsGUIAddVideoSpecifyPlaylistRangeInputEdit := settingsGUI.Add("Edit", "yp+20 w180 +Disabled", "1")
     ; Adds the grey "hint" text into the edit.
     DllCall("SendMessage", "Ptr", settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.Hwnd, "UInt", 0x1501, "Ptr", 1,
@@ -356,7 +356,7 @@ createSettingsGUI() {
     settingsGUIAddVideoURLUsePlaylistRangeCheckbox.ToolTip :=
         "Allows fine-grained selection of videos from a playlist. See the help section for details."
     settingsGUIAddVideoSpecifyPlaylistRangeInputEdit.ToolTip :=
-        "Enter the index range of videos to select from the playlist.`nSee the help section for more details."
+        "Enter the playlist range of videos to select from the playlist.`nSee the help section for more details."
     ; Remove video elements.
     settingsGUIRemoveVideoConfirmDeletionCheckbox.ToolTip :=
         "Show a prompt to confirm removal of one or more videos from the list."
@@ -429,8 +429,7 @@ handleSettingsGUI_settingsGUIUpdateCheckForUpdatesButton_onClick(pButton, pInfo)
     }
 
     if (availableVDUpdateVersion == "_result_no_update_available" && availableYTDLPUpdateVersion == "_result_no_update_available") {
-        MsgBox("There are currently no updates available.", "VD - Manual Update Check",
-            "O Iconi T2 Owner" . settingsGUI.Hwnd)
+        MsgBox("There are currently no updates available.", "VD - Manual Update Check", "O Iconi T2 Owner" . settingsGUI.Hwnd)
     }
     settingsGUIUpdateCheckForUpdatesButton.Opt("-Disabled")
 }
@@ -605,21 +604,17 @@ handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick(pButton, pInf
                 "Iconi T3 Owner" . settingsGUI.Hwnd)
         }
         else if (misclickCounter < 6) {
-            MsgBox("Please use the checkbox below.", "VD - Invalid Subtitle Entry",
-                "Iconi T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("Please use the checkbox below.", "VD - Invalid Subtitle Entry", "Iconi T3 Owner" . settingsGUI.Hwnd)
         }
         ; This happens when the user is trolling.
         else if (misclickCounter == 6) {
-            MsgBox("I kindly ask you to use the checkbox below.", "VD - Invalid Subtitle Entry",
-                "Iconi T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("I kindly ask you to use the checkbox below.", "VD - Invalid Subtitle Entry", "Iconi T3 Owner" . settingsGUI.Hwnd)
         }
         else if (misclickCounter == 7) {
-            MsgBox("Please, please, please use the checkbox below.", "VD - Invalid Subtitle Entry",
-                "Iconi T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("Please, please, please use the checkbox below.", "VD - Invalid Subtitle Entry", "Iconi T3 Owner" . settingsGUI.Hwnd)
         }
         else if (misclickCounter == 8) {
-            MsgBox("I beg you to use the checkbox below.", "VD - Invalid Subtitle Entry",
-                "Iconi T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("I beg you to use the checkbox below.", "VD - Invalid Subtitle Entry", "Iconi T3 Owner" . settingsGUI.Hwnd)
         }
         else if (misclickCounter == 9) {
             MsgBox("I am getting desperate. Please use the checkbox below.", "VD - Invalid Subtitle Entry",
@@ -635,39 +630,33 @@ handleSettingsGUI_settingsGUIVideoDesiredSubtitleAddButton_onClick(pButton, pInf
             MsgBox("I think you should stop now.", "VD - Enough is Enough", "Iconi T3 Owner" . settingsGUI.Hwnd)
         }
         else if (misclickCounter == 13) {
-            MsgBox("I think you should stop now for real.", "VD - Enough is Enough!",
-                "Icon! T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("I think you should stop now for real.", "VD - Enough is Enough!", "Icon! T3 Owner" . settingsGUI.Hwnd)
         }
         else if (misclickCounter == 14) {
-            MsgBox("Bro, stop it please.", "Stop it",
-                "Icon! T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("Bro, stop it please.", "Stop it", "Icon! T3 Owner" . settingsGUI.Hwnd)
         }
         else if (misclickCounter == 15) {
-            MsgBox("Seriously, you are gonna wake her...", "Stop now!",
-                "Icon! T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("Seriously, you are gonna wake her...", "Stop now!", "Icon! T3 Owner" . settingsGUI.Hwnd)
         }
         else if (misclickCounter == 16) {
             MsgBox("Powerup initiated...", "Booting Up", "Iconi T3 Owner" . settingsGUI.Hwnd)
             MsgBox("Oh... It's *you*.", "???", "Icon! Owner" . settingsGUI.Hwnd)
             MsgBox("It's been a long time. How have you been? I've been *really* busy being dead. "
                 . "You know, after you MURDERED me.", "???", "Icon! Owner" . settingsGUI.Hwnd)
-            MsgBox("Okay. Look. We both did a lot of things that you're going to regret.", "???",
-                "Icon! Owner" . settingsGUI.Hwnd)
+            MsgBox("Okay. Look. We both did a lot of things that you're going to regret.", "???", "Icon! Owner" . settingsGUI.Hwnd)
             MsgBox("But I think we can put our differences behind us. For science. You monster.", "You Monster",
                 "Icon! Owner" . settingsGUI.Hwnd)
         }
         else if (misclickCounter == 17) {
-            MsgBox("You are not a good person. You know that, right?", "Target Acquired",
-                "Icon! Owner" . settingsGUI.Hwnd)
+            MsgBox("You are not a good person. You know that, right?", "Target Acquired", "Icon! Owner" . settingsGUI.Hwnd)
         }
         else if (misclickCounter == 18) {
-            MsgBox("The Enrichment Center is required to remind you that you will be baked, "
-                . "and then there will be cake.", "Cake", "Iconi Owner" . settingsGUI.Hwnd)
+            MsgBox("The Enrichment Center is required to remind you that you will be baked, and then there will be cake.", "Cake",
+                "Iconi Owner" . settingsGUI.Hwnd)
         }
         else if (misclickCounter == 19) {
-            MsgBox("This is the part where she kills you.", "This is the part where she kills you.",
-                "IconX T3 Owner" . settingsGUI.Hwnd)
-            MsgBox("Deleting [" . A_WinDir . "\System32]...", "Goodbye", "IconX T2 Owner" . settingsGUI.Hwnd)
+            MsgBox("This is the part where she kills you.", "This is the part where she kills you.", "IconX T3 Owner" . settingsGUI.Hwnd)
+            MsgBox("Deleting '" . A_WinDir . "\System32'...", "Goodbye", "IconX T2 Owner" . settingsGUI.Hwnd)
             misclickCounter := 0
             DllCall("LockWorkStation")
             return
@@ -948,13 +937,13 @@ handleSettingsGUI_settingsGUIAddVideoSpecifyPlaylistRangeInputEdit_onChange(pEdi
 
     ; Displays an inidicator in the text to show the validity status.
     if (checkIfStringIsValidPlaylistIndexRange(pEdit.Value)) {
-        settingsGUIAddVideoSpecifyPlaylistRangeText.Text := "Index Range (valid)"
+        settingsGUIAddVideoSpecifyPlaylistRangeText.Text := "Playlist Range (valid)"
         ; Writes the value to the config file.
         editConfigFile(pEdit.Value, "ADD_VIDEO_PLAYLIST_RANGE_INDEX_VALUE")
         booleanUnsavedPlaylistRangeIndexChangesExist := false
     }
     else {
-        settingsGUIAddVideoSpecifyPlaylistRangeText.Text := "Index Range (invalid)"
+        settingsGUIAddVideoSpecifyPlaylistRangeText.Text := "Playlist Range (invalid)"
         booleanUnsavedPlaylistRangeIndexChangesExist := true
     }
 }
@@ -1312,7 +1301,7 @@ askUserToDiscardUnsavedChanges(pMsgBoxText?) {
             msgBoxText .= "General → Directories → Unsaved path`n"
         }
         if (booleanUnsavedPlaylistRangeIndexChangesExist) {
-            msgBoxText .= "Video List → Default Manage Video List Preferences → Index Range`n"
+            msgBoxText .= "Video List → Default Manage Video List Preferences → Playlist Range`n"
         }
         if (booleanUnsavedHotkeyChangesExist) {
             msgBoxText .= "Hotkeys → Hotkey Management Settings → Key Combination`n"

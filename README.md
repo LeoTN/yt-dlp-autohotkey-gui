@@ -27,12 +27,13 @@
 
 ## Additional Information
 
-| Feature                     | Description                                                                                                                      |
-|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| ⌨️ **Hotkeys**              | Convenient **hotkey control** for all **core functions**                                                                         |
-| 🎬 **Video List**           | Easily manage and download videos                                                                                                |
-| 💡 **Help Window**          | Provides additional **information** and **interactive tutorials**                                                                |
-| 🌐 **Direct URL Capture**   | Capture a **video URL** while the video is **open** in your **browser**                                                          |
+| Feature                     | Description                                                               |
+|-----------------------------|---------------------------------------------------------------------------|
+| ▶️ **Playlists**            | Download **specific parts** or **whole** playlists                        |
+| ⌨️ **Hotkeys**              | Convenient **hotkey control** for all **core functions**                  |
+| 🎬 **Video List**           | Easily manage and download videos                                         |
+| 💡 **Help Window**          | Provides additional **information** and **interactive tutorials**         |
+| 🌐 **Direct URL Capture**   | Capture a **video URL** while the video is **open** in your **browser**   |
 | 🖱️ **Indirect URL Capture** | Capture a **video URL** by **hovering** over the **video thumbnail** (e.g. on YouTube) and pressing <code><strong><em>SHIFT + CTRL + ALT + F</em></strong></code> |
 
 <details>
