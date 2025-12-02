@@ -3,7 +3,7 @@
 <p align="left">
         <a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest" style="text-decoration: none;"><img src="https://img.shields.io/github/v/release/LeoTN/yt-dlp-autohotkey-gui?sort=semver&filter=!*b*&display_name=release&style=for-the-badge&logo=Rocket&logoColor=green&label=CLICK%20TO%20INSTALL%20LATEST%20VERSION&color=green"></a>
         <br>
-        <a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases" style="text-decoration: none;"><img src="https://img.shields.io/github/v/release/LeoTN/yt-dlp-autohotkey-gui?include_prereleases&sort=semver&display_name=release&style=for-the-badge&logo=Textpattern&logoColor=orange&label=LATEST%20BETA%20VERSION&color=orange"></a>
+        <a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases" style="text-decoration: none;"><img src="https://img.shields.io/github/v/release/LeoTN/yt-dlp-autohotkey-gui?include_prereleases&sort=semver&filter=*b*&display_name=release&style=for-the-badge&logo=Textpattern&logoColor=orange&label=LATEST%20BETA%20VERSION&color=orange"></a>
         <br>
         <a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENSE" style="text-decoration: none;"><img src="https://img.shields.io/github/license/LeoTN/yt-dlp-autohotkey-gui?style=for-the-badge&logo=Google%20Docs&logoColor=blue&label=License&color=blue"></a>
 </p>
@@ -29,12 +29,11 @@
 
 | Feature                     | Description                                                               |
 |-----------------------------|---------------------------------------------------------------------------|
-| 🎬 **Playlists**            | Download **specific parts** or **whole** playlists                        |
-| ⌨️ **Hotkeys**              | Convenient **hotkey control** for all **core functions**                  |
-| 📋 **Video List**           | Easily manage and download videos                                         |
-| 💡 **Help Window**          | Provides additional **information** and **interactive tutorials**         |
-| 🌐 **Direct Capture**       | Capture a **video URL** while the video is **open** in your **browser**   |
-| 🖱️ **Indirect Capture**     | Hover over a **video thumbnail** and press <code><strong><em>SHIFT + CTRL + ALT + F</em></strong></code> |
+| 🎬 **Playlists**            | Download **specific parts** or **whole** playlists.                       |
+| ⌨️ **Hotkeys**              | Convenient **hotkey control** for all **core functions**.                 |
+| 💡 **Help Window**          | Provides additional **information** and **interactive tutorials**.        |
+| 🌐 **Direct Capture**       | Capture a **video URL** while the video is **open** in your **browser**.  |
+| 🖱️ **Indirect Capture**     | Hover over a **video thumbnail** and press <code><strong><em>SHIFT + CTRL + ALT + F</em></strong></code>. |
 
 <details>
 <summary><strong>Known Issues</strong></summary>
