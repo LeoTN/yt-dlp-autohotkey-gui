@@ -3,7 +3,7 @@
 <p align="left">
         <a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest" style="text-decoration: none;"><img src="https://img.shields.io/github/v/release/LeoTN/yt-dlp-autohotkey-gui?sort=semver&filter=!*b*&display_name=release&style=for-the-badge&logo=Rocket&logoColor=green&label=CLICK%20TO%20INSTALL%20LATEST%20VERSION&color=green"></a>
         <br>
-        <a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases" style="text-decoration: none;"><img src="https://img.shields.io/github/v/release/LeoTN/yt-dlp-autohotkey-gui?include_prereleases&sort=semver&display_name=release&style=for-the-badge&logo=Textpattern&logoColor=orange&label=LATEST%20BETA%20VERSION&color=orange"></a>
+        <a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases" style="text-decoration: none;"><img src="https://img.shields.io/github/v/release/LeoTN/yt-dlp-autohotkey-gui?include_prereleases&sort=semver&filter=*b*&display_name=release&style=for-the-badge&logo=Textpattern&logoColor=orange&label=LATEST%20BETA%20VERSION&color=orange"></a>
         <br>
         <a href="https://github.com/LeoTN/yt-dlp-autohotkey-gui/blob/main/LICENSE" style="text-decoration: none;"><img src="https://img.shields.io/github/license/LeoTN/yt-dlp-autohotkey-gui?style=for-the-badge&logo=Google%20Docs&logoColor=blue&label=License&color=blue"></a>
 </p>
@@ -19,30 +19,30 @@
 1. Download and install the latest installer [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest).
 2. Open the [video](https://www.youtube.com/watch?v=xvFZjo5PgG0) you want to download in your browser.
 3. Press <code><strong><em>SHIFT + CTRL + ALT + S</em></strong></code> to save the URL.
-4. Alternatively, you can copy the URL and enter it into the video list manually.
+4. Alternatively, copy the URL and enter it manually into the video list.
 5. Press <code><strong><em>SHIFT + CTRL + ALT + D</em></strong></code> to start the download.
 
 > [!TIP]
-> You may download the [source code](https://github.com/LeoTN/yt-dlp-autohotkey-gui/archive/refs/heads/main.zip) and **run** or **compile** the file "*VideoDownloader.ahk*" yourself.
+> You may download the [source code](https://github.com/LeoTN/yt-dlp-autohotkey-gui/archive/refs/heads/main.zip) and run or compile the file <code><strong><em>VideoDownloader.ahk</em></strong></code> yourself.
 
 ## Additional Information
 
-| Feature                     | Description                                                                                                                      |
-|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| ⌨️ **Hotkeys**              | Convenient **hotkey control** for all **core functions**                                                                         |
-| 🎬 **Video List**           | Easily manage and download videos                                                                                                |
-| 💡 **Help Window**          | Provides additional **information** and **interactive tutorials**                                                                |
-| 🌐 **Direct URL Capture**   | Capture a **video URL** while the video is **open** in your **browser**                                                          |
-| 🖱️ **Indirect URL Capture** | Capture a **video URL** by **hovering** over the **video thumbnail** (e.g. on YouTube) and pressing <code><strong><em>SHIFT + CTRL + ALT + F</em></strong></code> |
+| Feature                     | Description                                                               |
+|-----------------------------|---------------------------------------------------------------------------|
+| 🎬 **Playlists**            | Download **specific parts** or **whole** playlists.                       |
+| ⌨️ **Hotkeys**              | Convenient **hotkey control** for all **core functions**.                 |
+| 💡 **Help Window**          | Provides additional **information** and **interactive tutorials**.        |
+| 🌐 **Direct Capture**       | Capture a **video URL** while the video is **open** in your **browser**.  |
+| 🖱️ **Indirect Capture**     | Hover over a **video thumbnail** and press <code><strong><em>SHIFT + CTRL + ALT + F</em></strong></code>. |
 
 <details>
 <summary><strong>Known Issues</strong></summary>
 
-* The hotkey to indirectly capture video URLs is still **experimental** and may not work every time.
+* The hotkey for indirectly capturing video URLs is still **experimental** and may not work consistently.
 * Embedding **video subtitles** may occasionally fail, causing the download to fail as well.
-  * The issue seems to occur due to YouTube blocking requests caused by too many API calls.
+  * This usually happens when YouTube blocks requests due to too many API calls.
 * Sometimes yt-dlp requests may get temporarily **blocked (by YouTube)**, causing certain videos to show up as **not found** in the list.
-  * If this happens, simply wait a bit before trying again.
+  * If this occurs, wait a short while before trying again.
 
 </details>
 

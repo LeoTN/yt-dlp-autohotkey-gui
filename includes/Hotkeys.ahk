@@ -223,8 +223,7 @@ menu_openConfigFile() {
 menu_resetConfigFile() {
     result := MsgBox(
         "Do you really want to reset the config file?`n`nYou need to restart VideoDownloader for the changes to take effect."
-        "`n`nA backup of the old file will be created.",
-        "VD - Reset Config File", "YN Icon! Owner" . videoListGUI.Hwnd)
+        "`n`nA backup of the old file will be created.", "VD - Reset Config File", "YN Icon! Owner" . videoListGUI.Hwnd)
     if (result == "Yes") {
         createDefaultConfigFile()
         reloadApplicationPrompt()
@@ -321,8 +320,7 @@ menu_exitApplication() {
     else if (videoListViewContentMap.Count > 1) {
         result := MsgBox(
             "There are still " . videoListViewContentMap.Count . " videos in the video list."
-            "`n`nDo you want to close VideoDownloader anyway?", "VD - Confirm Exit",
-            "YN Icon? Owner" . videoListGUI.Hwnd)
+            "`n`nDo you want to close VideoDownloader anyway?", "VD - Confirm Exit", "YN Icon? Owner" . videoListGUI.Hwnd)
     }
     ; This means the user wants to close the application anyway.
     if (result == "Yes") {

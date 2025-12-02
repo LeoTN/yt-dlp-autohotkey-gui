@@ -96,7 +96,7 @@ function Get-GitHubLatestReleaseVersion {
         return $json.tag_name
     }
     catch {
-        Write-Error "[ERROR] Failed to query GitHub for '$OwnerRepo' : $($_.Exception.Message)"
+        Write-Error "[ERROR] Failed to query GitHub for '$OwnerRepo': $($_.Exception.Message)"
         return $null
     }
 }
@@ -134,7 +134,7 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
         Write-Error "[ERROR] Invalid current version tag: $pCurrentVDVersionTag"
         Exit-Script 2
     }
-    Write-Host "[INFO] VideoDownloader version detected: $pCurrentVDVersionTag."
+    Write-Host "[INFO] VideoDownloader version detected: $pCurrentVDVersionTag"
 
     if (-not $internetAvailable) {
         Write-Warning "[WARNING] Skipping VideoDownloader check, offline."
@@ -156,11 +156,11 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
             # If the latestTag is higher than the currentVDVersion this means that an update is available
             $availableVersion = if ((Compare-Versions -v1 $pCurrentVDVersionTag -v2 $latestTag) -eq $latestTag) { $latestTag } else { "no_available_update" }
             if ($availableVersion -ne "no_available_update") {
-                Write-Host "[INFO] Update available for VideoDownloader: $latestTag."
+                Write-Host "[INFO] Update available for VideoDownloader: $latestTag"
                 Set-ItemProperty -Path $pRegistryDirectory -Name $vdKey -Value $latestTag
             }
             else {
-                Write-Host "[INFO] VideoDownloader is up-to-date (version: $pCurrentVDVersionTag)."
+                Write-Host "[INFO] VideoDownloader is up-to-date (version: $pCurrentVDVersionTag)"
                 Set-ItemProperty -Path $pRegistryDirectory -Name $vdKey -Value "no_available_update"
             }
         }
@@ -175,7 +175,7 @@ if ($pGitHubRepositoryLink -and $pCurrentVDVersionTag) {
 if ($pCurrentYTDLPVersion) {
     Write-Host "`n[INFO] Checking yt-dlp updates..."
     
-    Write-Host "[INFO] yt-dlp version detected: $pCurrentYTDLPVersion."
+    Write-Host "[INFO] yt-dlp version detected: $pCurrentYTDLPVersion"
     if (-not $internetAvailable) {
         Write-Warning "[WARNING] Skipping yt-dlp check, offline."
         Set-ItemProperty -Path $pRegistryDirectory -Name $ytdlpKey -Value "no_available_update"
@@ -183,16 +183,16 @@ if ($pCurrentYTDLPVersion) {
     else {
         $latestTag = Get-GitHubLatestReleaseVersion -OwnerRepo "yt-dlp/yt-dlp"
         if (-not $latestTag) { $latestTag = "v0.0.0" }
-        Write-Host "[INFO] Latest GitHub release for yt-dlp: $latestTag."
+        Write-Host "[INFO] Latest GitHub release for yt-dlp: $latestTag"
 
         $highestTag = Compare-Versions -v1 $pCurrentYTDLPVersion -v2 $latestTag
         $availableVersion = if ($highestTag -ne "identical_versions" -and ($highestTag -eq $latestTag)) { $latestTag } else { "no_available_update" }
         
         if ($availableVersion -ne "no_available_update") {
-            Write-Host "[INFO] A newer version of yt-dlp is available (local: $pCurrentYTDLPVersion, remote: $latestTag)."
+            Write-Host "[INFO] A newer version of yt-dlp is available (local: $pCurrentYTDLPVersion, remote: $latestTag)"
         }
         elseif ($highestTag -eq "identical_versions") {
-            Write-Host "[INFO] yt-dlp is up-to-date (version: $pCurrentYTDLPVersion)."
+            Write-Host "[INFO] yt-dlp is up-to-date (version: $pCurrentYTDLPVersion)"
         }
         else {
             Write-Warning "[WARNING] Local yt-dlp version ($pCurrentYTDLPVersion) appears newer than latest release ($latestTag)."

@@ -46,7 +46,7 @@ createUpdateGUI(pUpdateVersion) {
 
     global updateGUI := Gui("+AlwaysOnTop", "VideoDownloader - Update")
 
-    updateGUIUpdateText := updateGUI.Add("Text", "w320 R3 Center", "Update Available - [" . pUpdateVersion . "]")
+    updateGUIUpdateText := updateGUI.Add("Text", "w320 R3 Center", "Update Available → " . pUpdateVersion)
     updateGUIUpdateText.SetFont("bold s12")
 
     updateGUIPatchNotesLink := updateGUI.Add("Text", "yp+40 w320 R2 Center", "Patch Notes")
@@ -54,10 +54,11 @@ createUpdateGUI(pUpdateVersion) {
     updateGUIPatchNotesLink.OnEvent("Click", (*) => Run(updatePatchNotesURL))
 
     /*
-    If the current version is a beta version and the available update is another beta version,
-    the old beta version tag will be already deleted which would eliminate the ability to compare the versions.
+    Comparing versions is only possible for these scenarios:
+        stable -> stable
+        stable -> beta
     */
-    if (RegExMatch(versionFullName, "b\d+$") && RegExMatch(pUpdateVersion, "b\d+$")) {
+    if (!RegExMatch(versionFullName, "b\d+$")) {
         updateGUICompareVersionsLink := updateGUI.Add("Text", "yp+30 w320 R2 Center", "Compare Versions")
         updateGUICompareVersionsLink.SetFont("s10 underline cBlue")
         updateGUICompareVersionsLink.OnEvent("Click", (*) => Run(compareVersionsURL))
@@ -84,7 +85,7 @@ handleUpdateGUI_downloadMSIButton_onClick(pMSIDownloadURL) {
         "This instance of VideoDownloader will exit now.`n`nSimply run the installer and follow the instructions."
         "`n`nIt is recommended to use the same installation directory as the previous version. " .
         "Otherwise you have to manually move the config files to the new location."
-        "`n`nA backup of the old version will be created at`n[" . backupDirectory . "].",
+        "`n`nA backup of the old version will be created at`n'" . backupDirectory . "'.",
         "VideoDownloader - Update Process", "OC Icon! 262144")
 
     ; Exits the application if the user confirms.

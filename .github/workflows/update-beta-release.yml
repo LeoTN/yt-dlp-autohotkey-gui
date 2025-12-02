@@ -104,11 +104,11 @@ jobs:
             final_beta_version="${MAJOR}.${MINOR}.${PATCH}b0"
 
           else
-            echo "[ERROR] Could not parse latest release version: $LATEST_RELEASE."
+            echo "[ERROR] Could not parse latest release version: $LATEST_RELEASE"
             exit 1
           fi
 
-          echo "[INFO] New beta version: $final_beta_version."
+          echo "[INFO] New beta version: $final_beta_version"
           echo "final_beta_version=$final_beta_version" >> $GITHUB_OUTPUT
 
   start_ci_workflow:

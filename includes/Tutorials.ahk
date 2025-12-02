@@ -440,8 +440,7 @@ information_reasonsForVideoNotFound() {
 ; A small tutorial to show off the help GUI of this application.
 applicationTutorial() {
     ; Welcome message.
-    result := MsgBox("Thank you for installing VideoDownloader!"
-        "`n`nWould you like to start a short tutorial?",
+    result := MsgBox("Thank you for installing VideoDownloader!`n`nWould you like to start a short tutorial?",
         "VD - Start Tutorial", "YN Iconi Owner" . videoListGUI.Hwnd)
     editConfigFile(false, "ASK_FOR_TUTORIAL")
     if (result == "Yes") {
@@ -461,15 +460,15 @@ class InteractiveTutorialListViewEntry {
         ; Used to determine input errors while creating new tutorial entries.
         allowedTopicsArray := ["General", "Video Extraction", "Audio Extraction"]
         if (!checkIfStringIsInArray(pTopic, allowedTopicsArray)) {
-            MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid topic received: [" . pTopic . "].",
-                "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid topic received: [" . pTopic . "].", "VideoDownloader - [" . A_ThisFunc . "()]",
+                "Icon! 262144")
             exitApplicationWithNotification(true)
         }
         ; Used to determine input errors while creating new tutorial entries.
         allowedTypesArray := ["Tutorial", "Information", "Guide"]
         if (!checkIfStringIsInArray(pType, allowedTypesArray)) {
-            MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid type received: [" . pType . "].",
-                "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            MsgBox("[" . A_ThisFunc . "()] [WARNING] Invalid type received: [" . pType . "].", "VideoDownloader - [" . A_ThisFunc . "()]",
+                "Icon! 262144")
             exitApplicationWithNotification(true)
         }
         /*
@@ -537,8 +536,7 @@ class InteractiveTutorialListViewEntry {
         }
         ; Only one parameter is given and the other one is missing.
         else if (!IsSet(pGuiX) || !IsSet(pGuiY)) {
-            MsgBox("[" . A_ThisFunc .
-                "()] [WARNING] Make sure that either both (pGuiX and pGuiY) are given or omitted entirely.",
+            MsgBox("[" . A_ThisFunc . "()] [WARNING] Make sure that either both (pGuiX and pGuiY) are given or omitted entirely.",
                 "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
             this.gui.Show("AutoSize")
         }
@@ -621,8 +619,8 @@ class InteractiveTutorialListViewEntry {
             pFuncObject.IsOptional()
         }
         catch {
-            MsgBox("[" . A_ThisFunc . "()]`n`n[WARNING] Received an invalid function object.", "VideoDownloader - [" .
-                A_ThisFunc . "()]", "Icon! 262144")
+            MsgBox("[" . A_ThisFunc . "()]`n`n[WARNING] Received an invalid function object.", "VideoDownloader - [" . A_ThisFunc . "()]",
+                "Icon! 262144")
             return
         }
         this.actionArray.Push(pFuncObject)
@@ -639,8 +637,8 @@ class InteractiveTutorialListViewEntry {
             pFuncObject.IsOptional()
         }
         catch {
-            MsgBox("[" . A_ThisFunc . "()]`n`n[WARNING] Received an invalid function object.", "VideoDownloader - [" .
-                A_ThisFunc . "()]", "Icon! 262144")
+            MsgBox("[" . A_ThisFunc . "()]`n`n[WARNING] Received an invalid function object.", "VideoDownloader - [" . A_ThisFunc . "()]",
+                "Icon! 262144")
             return
         }
         this.exitActionArray.Push(pFuncObject)

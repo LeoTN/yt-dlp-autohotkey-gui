@@ -137,8 +137,8 @@ handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_1(pButton, pInfo) {
     global ffmpegDirectory
 
     if (!checkInternetConnection()) {
-        result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?",
-            "VD - No Internet Connection", "YN Icon! Owner" . setupGUI.Hwnd)
+        result := MsgBox("There seems to be no connection to the Internet.`n`nContinue anyway?", "VD - No Internet Connection",
+            "YN Icon! Owner" . setupGUI.Hwnd)
         if (result != "Yes") {
             return
         }
@@ -185,8 +185,8 @@ handleSetupGUI_setupGUIStartAndCompleteSetupButton_onClick_2(pButton, pInfo) {
 }
 
 handleSetupGUI_setupGUIDeleteAllDependenciesButton_onClick(pButton, pInfo) {
-    result := MsgBox("All existing dependencies will be deleted.`n`nContinue?",
-        "VD - Delete All Dependencies", "Icon! YN Owner" . setupGUI.Hwnd)
+    result := MsgBox("All existing dependencies will be deleted.`n`nContinue?", "VD - Delete All Dependencies",
+        "Icon! YN Owner" . setupGUI.Hwnd)
     if (result != "Yes") {
         return
     }
@@ -354,10 +354,8 @@ checkIfMSISetupIsRequired() {
             }
         }
         else {
-            MsgBox("The file [" . requiredFile .
-                "] is missing.`n`nPlease reinstall or repair the software using the MSI installer.",
-                "VideoDownloader - Reinstallation Required",
-                "Icon! 262144")
+            MsgBox("The file '" . requiredFile . "' is missing.`n`nPlease reinstall or repair the software using the MSI installer.",
+                "VideoDownloader - Reinstallation Required", "Icon! 262144")
         }
         exitApplicationWithNotification(true)
     }

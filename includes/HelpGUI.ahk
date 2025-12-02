@@ -178,8 +178,7 @@ highlightControl(pControlElement, pColor := "red", pLineThickness := 2, pLineTra
         WinGetClientPos(&screenControlX, &screenControlY, &controlWidth, &controlHeight, pControlElement)
     }
     catch {
-        MsgBox("[" . A_ThisFunc . "()] [WARNING] The control with the text [" . pControlElement.Text .
-            "] does not exist.",
+        MsgBox("[" . A_ThisFunc . "()] [WARNING] The control with the text [" . pControlElement.Text . "] does not exist.",
             "VideoDownloader - [" . A_ThisFunc . "()]", "IconX 262144")
     }
     highlightBox := RectangleHollowBox(screenControlX, screenControlY, controlWidth, controlHeight, pColor,
@@ -233,19 +232,15 @@ getMenuBarInfo(pWindowHWND) {
     ; Get the menu bar info object.
     menuBarInfoDLL := DllCall("GetMenu", "Ptr", pWindowHWND, "Ptr")
     if (!menuBarInfoDLL) {
-        MsgBox("[" . A_ThisFunc . "()] [WARNING] Failed to get menu bar info from window with HWND [" . pWindowHWND .
-            "]."
-            . "`n`nError description: [`n" . A_LastError . "`n]",
-            "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+        MsgBox("[" . A_ThisFunc . "()] [WARNING] Failed to get menu bar info from window with HWND [" . pWindowHWND . "]."
+            . "`n`nError description: [`n" . A_LastError . "`n]", "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
         return
     }
     ; Finds out how many menu elements the menu bar has.
     menuBarMenuAmount := DllCall("GetMenuItemCount", "Ptr", menuBarInfoDLL, "Int")
     if (menuBarMenuAmount == -1) {
-        MsgBox("[" . A_ThisFunc . "()] [WARNING] Failed to get menu bar info from window with HWND [" . pWindowHWND .
-            "]."
-            . "`n`nError description: [`n" . A_LastError . "`n]",
-            "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+        MsgBox("[" . A_ThisFunc . "()] [WARNING] Failed to get menu bar info from window with HWND [" . pWindowHWND . "]."
+            . "`n`nError description: [`n" . A_LastError . "`n]", "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
         return
     }
 
@@ -270,10 +265,8 @@ getMenuBarInfo(pWindowHWND) {
         result := DllCall("GetMenuBarInfo", "Ptr", pWindowHWND, "Int", 0xFFFFFFFD, "Int", menuElementIndex, "Ptr",
             menuElementInfoBuffer)
         if (!result) {
-            MsgBox("[" . A_ThisFunc . "()] [WARNING] Failed to get menu element info from window with HWND [" .
-                pWindowHWND . "]."
-                . "`n`nError description: [`n" . A_LastError . "`n]",
-                "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
+            MsgBox("[" . A_ThisFunc . "()] [WARNING] Failed to get menu element info from window with HWND [" . pWindowHWND . "]."
+                . "`n`nError description: [`n" . A_LastError . "`n]", "VideoDownloader - [" . A_ThisFunc . "()]", "Icon! 262144")
         }
 
         menuElementInfo := Object()
