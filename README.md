@@ -23,7 +23,7 @@
 5. Press <code><strong><em>SHIFT + CTRL + ALT + D</em></strong></code> to start the download.
 
 > [!TIP]
-> You may download the [source code](https://github.com/LeoTN/yt-dlp-autohotkey-gui/archive/refs/heads/main.zip) and **run** or **compile** the file <code><em>VideoDownloader.ahk</em></code> yourself.
+> You may download the [source code](https://github.com/LeoTN/yt-dlp-autohotkey-gui/archive/refs/heads/main.zip) and run or compile the file <code><strong><em>VideoDownloader.ahk</em></strong></code> yourself.
 
 ## Additional Information
 
