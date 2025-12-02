@@ -34,7 +34,7 @@ jobs:
         run: |
           VERSION=${{ inputs.version }}
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+b[0-9]+$ ]]; then
-              echo "Invalid version format: $VERSION."
+              echo "Invalid version format: $VERSION"
               echo "Use X.Y.Z or X.Y.ZbN (only normal or beta releases allowed). Exiting..."
               exit 1
           else
@@ -121,9 +121,9 @@ jobs:
       - name: Get clean version for Advanced Installer
         id: get_clean_version
         run: |
-          # Advanced Installer does not support 'b' in version numbers, so we need to clean it
-          $cleanVersion = "${{ inputs.version }}" -replace "b(\d+)$", ""
-          $null = Write-Host "[INFO] Clean version for Advanced Installer: $cleanVersion."
+          # Remove "b<number>" suffix because Advanced Installer does not support it
+          cleanVersion="$(echo "${{ inputs.version }}" | sed -E 's/b[0-9]+$//')"
+          echo "[INFO] Clean version for Advanced Installer: $cleanVersion"
           echo "clean_version=$cleanVersion" >> "$GITHUB_OUTPUT"
 
   build_exe_files:
@@ -157,7 +157,7 @@ jobs:
 
           $null = Write-Host "AHK Compiler Stdout Log`n[`n$(Get-Content -Path $stdoutLogFileLocation | Out-String)]`n"
           $null = Write-Host "AHK Compiler Error Log`n[`n$(Get-Content -Path $errorLogFileLocation | Out-String)]`n"
-          $null = Write-Host "[INFO] The executable will be saved to [$scriptPathOut]."
+          $null = Write-Host "[INFO] The executable will be saved to '$scriptPathOut'."
 
       - name: Upload main executable as artifact
         uses: actions/upload-artifact@v5
@@ -260,28 +260,28 @@ jobs:
         run: |
           git fetch --prune --unshallow --tags
           latest_tag=$(git describe --tags --abbrev=0)
-          echo "[INFO] Found latest tag [$latest_tag]."
+          echo "[INFO] Found latest tag: $latest_tag"
 
           # Check if the tag is a beta release
           if [[ "$latest_tag" =~ ^v.*b[0-9]+$ ]]; then
-            echo "[INFO] Deleting old beta release and tag [$latest_tag]."
+            echo "[INFO] Deleting old beta release and tag: $latest_tag"
               
             # Delete the old beta release
             RELEASE_ID=$(gh api -X GET "/repos/${{ github.repository }}/releases" | jq -r ".[] | select(.tag_name==\"$latest_tag\") | .id")
             if [ -n "$RELEASE_ID" ]; then
               gh api -X DELETE "/repos/${{ github.repository }}/releases/$RELEASE_ID"
-              echo "[INFO] Deleted release for tag [$latest_tag]."
+              echo "[INFO] Deleted release for tag: $latest_tag"
             else
-              echo "[INFO] No release found for tag [$latest_tag]."
+              echo "[INFO] No release found for tag: $latest_tag"
             fi
 
             # Deletes the old beta tag
             git tag --delete "$latest_tag"
             git push --delete origin "$latest_tag"
-            echo "[INFO] Deleted tag [$latest_tag]."
+            echo "[INFO] Deleted tag: $latest_tag"
 
           else
-            echo "[WARNING] Could not find a beta release and tag to delete."
+            echo "[INFO] Could not find a beta release and tag to delete."
           fi
 
       - name: Create GitHub release
