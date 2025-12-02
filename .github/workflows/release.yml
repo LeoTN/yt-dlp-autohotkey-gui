@@ -19,7 +19,6 @@ env:
   FINAL_EXECUTABLE_NAME: VideoDownloader.exe
   FINAL_INSTALLER_NAME: VideoDownloader_v${{ inputs.version }}_Installer.msi
   RELEASE_TAG_NAME: v${{ inputs.version }}
-  RELEASE_VERSION: ${{ inputs.version }}
 
 jobs:
   validate_version:
@@ -32,7 +31,7 @@ jobs:
         id: check_version
         shell: bash
         run: |
-          VERSION=${{ env.RELEASE_VERSION }}
+          VERSION=${{ inputs.version }}
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+b[0-9]+$ ]]; then
               echo "Invalid version format: $VERSION."
               echo "Use X.Y.Z or X.Y.ZbN (only normal or beta releases allowed). Exiting..."
@@ -109,7 +108,7 @@ jobs:
           import sys
 
           latest = parse("$LATEST_RELEASE")
-          new = parse("${{ env.RELEASE_VERSION }}")
+          new = parse("${{ inputs.version }}")
 
           if new <= latest:
               print(f"New version {new} is not higher than latest release {latest}. Exiting...")
@@ -130,7 +129,7 @@ jobs:
       - name: Define version name file
         run: |
           # This text file will be used by the AutoHotkey compiler to set the version of the executable file
-          $null = Set-Content -Path "${{ github.workspace }}\compiler\currentVersion.txt" -Value "${{ env.RELEASE_VERSION }}" -Force
+          $null = Set-Content -Path "${{ github.workspace }}\compiler\currentVersion.txt" -Value "${{ env.RELEASE_TAG_NAME }}" -Force
 
       - name: Compile Autohotkey main executable
         run: |
@@ -211,6 +210,13 @@ jobs:
             }
           }
 
+      - name: Clean version for Advanced Installer
+        id: define_clean_version
+        run: |
+          $cleanVersion = "${{ inputs.version }}" -replace "b(\d+)$", ""
+          $null = Write-Host "[INFO] Clean version for Advanced Installer: $cleanVersion."
+          echo "clean_version=$cleanVersion" >> "$GITHUB_OUTPUT"
+
       - name: Build Advanced Installer project
         uses: caphyon/advinst-github-action@main
         with:
@@ -220,7 +226,7 @@ jobs:
           aip-package-name: ${{ env.FINAL_INSTALLER_NAME }}
           aip-output-dir: ${{ github.workspace }}
           aip-commands: |
-            SetVersion "${{ env.RELEASE_VERSION }}"
+            SetVersion "${{ steps.define_clean_version.outputs.clean_version }}"
             SetProperty releaseTagName="${{ env.RELEASE_TAG_NAME }}"
 
       - name: Upload installer as artifact
