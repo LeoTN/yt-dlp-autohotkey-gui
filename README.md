@@ -19,11 +19,11 @@
 1. Download and install the latest installer [here](https://github.com/LeoTN/yt-dlp-autohotkey-gui/releases/latest).
 2. Open the [video](https://www.youtube.com/watch?v=xvFZjo5PgG0) you want to download in your browser.
 3. Press <code><strong><em>SHIFT + CTRL + ALT + S</em></strong></code> to save the URL.
-4. Alternatively, you can copy the URL and enter it into the video list manually.
+4. Alternatively, copy the URL and enter it manually into the video list.
 5. Press <code><strong><em>SHIFT + CTRL + ALT + D</em></strong></code> to start the download.
 
 > [!TIP]
-> You may download the [source code](https://github.com/LeoTN/yt-dlp-autohotkey-gui/archive/refs/heads/main.zip) and **run** or **compile** the file "*VideoDownloader.ahk*" yourself.
+> You may download the [source code](https://github.com/LeoTN/yt-dlp-autohotkey-gui/archive/refs/heads/main.zip) and **run** or **compile** the file <code><em>VideoDownloader.ahk</em></code> yourself.
 
 ## Additional Information
 
@@ -38,11 +38,11 @@
 <details>
 <summary><strong>Known Issues</strong></summary>
 
-* The hotkey to indirectly capture video URLs is still **experimental** and may not work every time.
+* The hotkey for indirectly capturing video URLs is still **experimental** and may not work consistently.
 * Embedding **video subtitles** may occasionally fail, causing the download to fail as well.
-  * The issue seems to occur due to YouTube blocking requests caused by too many API calls.
+  * This usually happens when YouTube blocks requests due to too many API calls.
 * Sometimes yt-dlp requests may get temporarily **blocked (by YouTube)**, causing certain videos to show up as **not found** in the list.
-  * If this happens, simply wait a bit before trying again.
+  * If this occurs, wait a short while before trying again.
 
 </details>
 
