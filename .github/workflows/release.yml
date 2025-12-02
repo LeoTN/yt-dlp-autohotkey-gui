@@ -160,6 +160,8 @@ jobs:
     name: Build and upload MSI installer file
     needs: build_exe_files
     runs-on: windows-2025
+    env:
+      CLEAN_VERSION: ""
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6
@@ -211,11 +213,10 @@ jobs:
           }
 
       - name: Clean version for Advanced Installer
-        id: define_clean_version
         run: |
           $cleanVersion = "${{ inputs.version }}" -replace "b(\d+)$", ""
           $null = Write-Host "[INFO] Clean version for Advanced Installer: $cleanVersion."
-          echo clean_version=$cleanVersion >> $GITHUB_OUTPUT
+          echo "CLEAN_VERSION=$cleanVersion" >> "$GITHUB_ENV"
 
       - name: Build Advanced Installer project
         uses: caphyon/advinst-github-action@main
@@ -226,7 +227,7 @@ jobs:
           aip-package-name: ${{ env.FINAL_INSTALLER_NAME }}
           aip-output-dir: ${{ github.workspace }}
           aip-commands: |
-            SetVersion "${{ steps.define_clean_version.outputs.clean_version }}"
+            SetVersion "${{ env.CLEAN_VERSION }}"
             SetProperty releaseTagName="${{ env.RELEASE_TAG_NAME }}"
 
       - name: Upload installer as artifact
