@@ -101,7 +101,7 @@ jobs:
             f.write(f"LATEST_RELEASE={latest_version}\n")
           EOF
 
-      - name: Verify new version is higher than latest release
+      - name: Confirm the new version is higher than the latest release
         shell: bash
         run: |
           python3 - <<EOF

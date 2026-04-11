@@ -15,9 +15,6 @@ on:
       - "LICENSE"
       - "README.md"
 
-env:
-  LATEST_TAG_NAME: "null"
-
 jobs:
   figure_out_release_version:
     name: Evaluate correct beta release version
